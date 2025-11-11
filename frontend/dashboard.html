@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Estadísticas</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+  
+  <div class="dashboard-container">
+    <!-- Barra de usuario -->
+    <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="btn-back" id="btnBack" title="Volver">
+          ← Volver
+        </button>
+        <div class="header-title">
+          <h1>📊 Dashboard de Estadísticas</h1>
+          <p class="header-subtitle">Resumen general del sistema</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-export" id="btnExport" title="Exportar datos">
+          📥 Exportar
+        </button>
+        <button class="btn-refresh" id="btnRefresh" title="Actualizar datos">
+          🔄 Actualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros por Fecha -->
+    <div class="filters-section">
+      <div class="filters-card">
+        <div class="filters-header">
+          <h3>🔍 Filtrar por Fecha</h3>
+          <button class="btn-clear-filters" id="btnClearFilters">
+            ✖️ Limpiar
+          </button>
+        </div>
+        <div class="filters-body">
+          <div class="filter-group">
+            <label for="fechaInicio">
+              <span class="filter-icon">📅</span>
+              Fecha Inicio:
+            </label>
+            <input type="date" id="fechaInicio" />
+          </div>
+          <div class="filter-group">
+            <label for="fechaFin">
+              <span class="filter-icon">📅</span>
+              Fecha Fin:
+            </label>
+            <input type="date" id="fechaFin" />
+          </div>
+          <button class="btn-apply-filters" id="btnApplyFilters">
+            ✅ Aplicar Filtros
+          </button>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display: none;">
+          <span class="active-filter-label">📌 Filtro activo:</span>
+          <span class="active-filter-text" id="activeFilterText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Exportar -->
+    <div id="modalExport" class="modal-overlay">
+      <div class="modal-content-export">
+        <div class="modal-header-export">
+          <h2>📥 Exportar Datos</h2>
+          <button type="button" class="btn-close-modal" id="btnCloseModal">&times;</button>
+        </div>
+        
+        <div class="modal-body-export">
+          <p class="export-description">Selecciona el formato en el que deseas exportar los datos:</p>
+          
+          <div class="export-options">
+            <button class="export-option" onclick="exportarPDF()">
+              <div class="export-icon">📄</div>
+              <div class="export-info">
+                <h4>PDF</h4>
+                <p>Reporte completo en formato PDF</p>
+              </div>
+            </button>
+            
+            <button class="export-option" onclick="exportarExcel()">
+              <div class="export-icon">📊</div>
+              <div class="export-info">
+                <h4>Excel</h4>
+                <p>Datos en formato CSV compatible</p>
+              </div>
+            </button>
+            
+            <button class="export-option" onclick="exportarJSON()">
+              <div class="export-icon">📋</div>
+              <div class="export-info">
+                <h4>JSON</h4>
+                <p>Datos en formato JSON</p>
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        <div class="modal-footer-export">
+          <button type="button" class="btn-cancel-export" id="btnCancelExport">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de Estadísticas Principales -->
+    <div class="stats-grid">
+      <!-- Total Clientes -->
+      <div class="stat-card card-clients">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Clientes</p>
+          <h2 class="stat-value" id="totalClientes">-</h2>
+        </div>
+        <div class="stat-trend">
+          <span class="trend-icon">📈</span>
+        </div>
+      </div>
+
+      <!-- Total Consultas -->
+      <div class="stat-card card-consultas">
+        <div class="stat-icon">📋</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Consultas</p>
+          <h2 class="stat-value" id="totalConsultas">-</h2>
+        </div>
+        <div class="stat-trend">
+          <span class="trend-icon">📊</span>
+        </div>
+      </div>
+
+      <!-- Casos Abiertos -->
+      <div class="stat-card card-abiertos">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <p class="stat-label">Casos Abiertos</p>
+          <h2 class="stat-value" id="casosAbiertos">-</h2>
+        </div>
+        <div class="stat-trend trend-up">
+          <span class="trend-icon">📈</span>
+        </div>
+      </div>
+
+      <!-- Casos Cerrados -->
+      <div class="stat-card card-cerrados">
+        <div class="stat-icon">✔️</div>
+        <div class="stat-content">
+          <p class="stat-label">Casos Cerrados</p>
+          <h2 class="stat-value" id="casosCerrados">-</h2>
+        </div>
+        <div class="stat-trend trend-down">
+          <span class="trend-icon">📉</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de Gráficos -->
+    <div class="charts-grid">
+      <!-- Gráfico: Consultas por Modalidad -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>💻 Consultas por Modalidad</h3>
+          <span class="chart-badge">Distribución</span>
+        </div>
+        <div class="chart-body">
+          <div class="progress-chart">
+            <div class="progress-item">
+              <div class="progress-label">
+                <span>Virtual</span>
+                <span class="progress-value" id="virtualCount">0</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill virtual" id="virtualBar"></div>
+              </div>
+            </div>
+            <div class="progress-item">
+              <div class="progress-label">
+                <span>Presencial</span>
+                <span class="progress-value" id="presencialCount">0</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill presencial" id="presencialBar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico: Estado de Casos -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📈 Estado de Casos</h3>
+          <span class="chart-badge">Seguimiento</span>
+        </div>
+        <div class="chart-body">
+          <div class="donut-chart">
+            <div class="donut-center">
+              <h4 id="totalCasos">0</h4>
+              <p>Total Casos</p>
+            </div>
+            <svg class="donut-svg" viewBox="0 0 100 100">
+              <circle class="donut-ring" cx="50" cy="50" r="40"></circle>
+              <circle class="donut-segment segment-abiertos" cx="50" cy="50" r="40" id="segmentAbiertos"></circle>
+              <circle class="donut-segment segment-cerrados" cx="50" cy="50" r="40" id="segmentCerrados"></circle>
+            </svg>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <span class="legend-color abiertos"></span>
+              <span class="legend-label">Abiertos</span>
+              <span class="legend-value" id="porcentajeAbiertos">0%</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color cerrados"></span>
+              <span class="legend-label">Cerrados</span>
+              <span class="legend-value" id="porcentajeCerrados">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Clientes con Más Consultas -->
+    <div class="table-section">
+      <div class="section-header">
+        <h3>🏆 Clientes con Más Consultas</h3>
+        <button class="btn-view-all" onclick="window.location.href='clientes.html'">
+          Ver todos →
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Posición</th>
+              <th>Cédula</th>
+              <th>Nombre</th>
+              <th>Sede</th>
+              <th>Consultas</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="topClientesTable">
+            <tr>
+              <td colspan="6" class="loading-cell">
+                <span class="spinner"></span> Cargando datos...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estadísticas por Motivo de Consulta -->
+    <div class="motivos-section">
+      <div class="section-header">
+        <h3>🔍 Motivos de Consulta</h3>
+        <span class="section-badge">Distribución por Casos</span>
+      </div>
+      <div class="motivos-grid" id="motivosGrid">
+        <div class="loading-card">
+          <span class="spinner"></span>
+          <p>Cargando motivos...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen por Sede -->
+    <div class="sedes-section">
+      <div class="section-header">
+        <h3>🏢 Resumen por Sede</h3>
+      </div>
+      <div class="sedes-grid" id="sedesGrid">
+        <div class="loading-card">
+          <span class="spinner"></span>
+          <p>Cargando sedes...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/auth-check.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trazabilidad de Pagos</title>
+  <link rel="stylesheet" href="css/trazabilidad.css" />
+  <script src="js/auth-check.js"></script>
+</head>
+<body>
+  <header class="page-header">
+    <div id="userInfo" class="user-info-bar"></div>
+    <h1>💳 Trazabilidad de Pagos</h1>
+    <p class="page-subtitle">Análisis de Entidades Pagadoras</p>
+  </header>
+
+  <main class="page-main">
+    <!-- Botones de navegación -->
+    <div class="navigation-actions">
+      <a href="clientes.html" class="btn-nav">← Clientes Registrados</a>
+      <a href="index.html" class="btn-nav">📝 Registro de Clientes</a>
+    </div>
+
+    <!-- Sección de filtros en cascada -->
+    <div class="filters-container">
+      <h2 class="filters-title">🔍 Filtros de Búsqueda</h2>
+      
+      <div class="filters-grid">
+        <!-- Filtro Nivel 1: Tipo de Cliente -->
+        <div class="filter-group">
+          <label for="filterTipoCliente">Tipo de Cliente:</label>
+          <select id="filterTipoCliente">
+            <option value="">Todos los Tipos</option>
+            <option value="Particular">Particular</option>
+            <option value="ARL">ARL</option>
+            <option value="CCF">CCF</option>
+          </select>
+        </div>
+
+        <!-- Filtro Nivel 2: Nombre Cliente (dinámico) -->
+        <div class="filter-group" id="filterNombreClienteContainer" style="display: none;">
+          <label for="filterNombreCliente" id="labelNombreCliente">Seleccione:</label>
+          <select id="filterNombreCliente">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <!-- Filtro adicional: Vínculo -->
+        <div class="filter-group">
+          <label for="filterVinculo">Vínculo:</label>
+          <select id="filterVinculo">
+            <option value="">Todos los Vínculos</option>
+            <option value="Trabajador">Trabajador</option>
+            <option value="Familiar Trabajador">Familiar Trabajador</option>
+          </select>
+        </div>
+
+        <!-- Filtro adicional: Sede -->
+        <div class="filter-group">
+          <label for="filterSede">Sede:</label>
+          <select id="filterSede">
+            <option value="">Todas las Sedes</option>
+          </select>
+        </div>
+
+        <!-- Filtro adicional: Empresa -->
+        <div class="filter-group">
+          <label for="filterEmpresa">Empresa Usuario:</label>
+          <select id="filterEmpresa">
+            <option value="">Todas las Empresas</option>
+          </select>
+        </div>
+
+        <!-- Botón limpiar filtros -->
+        <div class="filter-group filter-actions-group">
+          <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Clientes</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🟢</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statParticular">0</div>
+          <div class="stat-label">Particular</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statARL">0</div>
+          <div class="stat-label">ARL</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🟠</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statCCF">0</div>
+          <div class="stat-label">CCF</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+      <table class="trazabilidad-table" id="trazabilidadTable">
+        <thead>
+          <tr>
+            <th>Tipo Cliente</th>
+            <th>Nombre Cliente</th>
+            <th>Empresa Usuario</th>
+            <th>Vínculo</th>
+            <th>Sede</th>
+            <th>Nombre</th>
+            <th>Cédula</th>
+          </tr>
+        </thead>
+
+        <tbody id="trazabilidadList">
+          <!-- Filas generadas dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje inicial -->
+    <div id="noDataMessage" class="no-data-message" style="display: none;">
+      <div class="no-data-icon">🔍</div>
+      <p>No se encontraron clientes con los filtros seleccionados</p>
+    </div>
+  </main>
+
+  <script src="js/trazabilidad.js"></script>
+</body>
+</html>

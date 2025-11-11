@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consulta y Seguimiento</title>
+  <!-- Estilos principales de consulta -->
+  <link rel="stylesheet" href="css/consulta.css" />
+  <!-- Estilos exclusivos para informes -->
+  <link rel="stylesheet" href="css/informe.css" />
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- Select2 Bootstrap Theme -->
+  <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+</head>
+<body>
+  
+  <div class="consulta-container">
+    <!-- Barra de usuario -->
+    <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+
+    <!-- Header con botón volver -->
+    <div class="page-header">
+      <div class="header-left-section">
+        <button class="btn-back" id="btnBack" title="Volver a clientes">
+          ← Volver
+        </button>
+        <button class="btn-dashboard" onclick="window.location.href='dashboard.html'" title="Ver estadísticas">
+          📊 Dashboard
+        </button>
+      </div>
+      <h1>📋 Orientación y Seguimiento</h1>
+    </div>
+
+    <!-- Tarjeta de Datos Personales del Cliente -->
+    <div class="client-card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="card-icon">👤</span>
+          <h2>Datos del Trabajador</h2>
+        </div>
+        <div class="card-badge" id="clientBadge">Cliente</div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-grid">
+          <!-- Cédula -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">🆔</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Cédula</label>
+              <p class="info-value" id="clientCedula">-</p>
+            </div>
+          </div>
+
+          <!-- Nombre -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">👨‍💼</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Nombre Completo</label>
+              <p class="info-value" id="clientNombre">-</p>
+            </div>
+          </div>
+
+          <!-- Vínculo -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">🔗</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Vínculo</label>
+              <p class="info-value" id="clientVinculo">-</p>
+            </div>
+          </div>
+
+          <!-- Sede -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">🏢</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Sede</label>
+              <p class="info-value" id="clientSede">-</p>
+            </div>
+          </div>
+
+          <!-- Teléfono -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">📱</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Teléfono</label>
+              <p class="info-value" id="clientTelefono">-</p>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">📧</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Correo Electrónico</label>
+              <p class="info-value" id="clientEmail">-</p>
+            </div>
+          </div>
+
+          <!-- Empresa Usuario -->
+          <div class="info-item">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">🏭</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Empresa Usuario</label>
+              <p class="info-value" id="clientEmpresa">-</p>
+            </div>
+          </div>
+
+          <!-- Entidad Pagadora -->
+          <div class="info-item info-item-with-button">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">💳</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Entidad Pagadora</label>
+              <p class="info-value" id="clientEntidadPagadora">-</p>
+            </div>
+            <button class="btn-trazabilidad" onclick="window.location.href='trazabilidad.html'" title="Ver trazabilidad de pagos">
+              📊
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decoración de tarjeta -->
+      <div class="card-decoration"></div>
+    </div>
+
+    <!-- Formulario de Consulta/Seguimiento -->
+    <div class="consulta-section">
+      <h2 class="section-title">📝 Registrar Seguimiento</h2>
+      <p class="section-subtitle">Complete la información de la consulta o seguimiento</p>
+
+      <form id="formConsulta" class="form-consulta">
+        <div class="form-grid">
+          <!-- Motivo de Consulta -->
+          <div class="form-group full-width">
+            <label for="motivo_consulta">
+              <span class="label-icon">📋</span>
+              Motivo de Consulta <span class="required">*</span>
+            </label>
+            <select id="motivo_consulta" class="select2-motivo" required style="width: 100%;">
+              <option value="">Seleccione un motivo</option>
+              <option value="DUELO">DUELO</option>
+              <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
+              <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
+              <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
+              <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
+              <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
+              <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
+              <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
+              <option value="DEPRESIÓN">DEPRESIÓN</option>
+              <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
+              <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
+              <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
+              <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
+              <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
+              <option value="ANSIEDAD">ANSIEDAD</option>
+              <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
+              <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
+              <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
+              <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
+              <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
+              <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
+              <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
+              <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
+              <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
+              <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
+              <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
+              <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
+              <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
+              <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
+              <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
+              <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+              <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+              <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
+              <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
+            </select>
+          </div>
+
+          <!-- Modalidad -->
+          <div class="form-group">
+            <label for="modalidad">
+              <span class="label-icon">💻</span>
+              Modalidad <span class="required">*</span>
+            </label>
+            <select id="modalidad" required>
+              <option value="">Seleccione...</option>
+              <option value="Virtual">Virtual</option>
+              <option value="Presencial">Presencial</option>
+            </select>
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label for="fecha">
+              <span class="label-icon">📅</span>
+              Fecha <span class="required">*</span>
+            </label>
+            <input type="date" id="fecha" required />
+          </div>
+
+          <!-- Observaciones -->
+          <div class="form-group full-width">
+            <label for="columna1">
+              <span class="label-icon">📄</span>
+              Observaciones
+            </label>
+            <textarea 
+              id="columna1" 
+              rows="3" 
+              placeholder="Notas adicionales, comentarios o seguimiento..."
+            ></textarea>
+          </div>
+
+          <!-- Estado -->
+          <div class="form-group">
+            <label for="estado">
+              <span class="label-icon">✅</span>
+              Estado del Caso <span class="required">*</span>
+            </label>
+            <select id="estado" required>
+              <option value="">Seleccione...</option>
+              <option value="Abierto">Abierto</option>
+              <option value="Cerrado">Cerrado</option>
+            </select>
+          </div>
+
+          <!-- Botón Contacto de Emergencia -->
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button type="button" id="btnContactoEmergencia" class="btn-emergency-contact">
+              👤 Contacto de Emergencia
+            </button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit-consulta">
+            💾 Registrar Consulta
+          </button>
+          <button type="reset" class="btn-reset-consulta">
+            🔄 Limpiar Formulario
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal de Contacto de Emergencia -->
+    <div id="modalVerContacto" class="modal-overlay-contacto">
+      <div class="modal-content-contacto">
+        <div class="modal-header-contacto">
+          <h2>👤 Contacto de Emergencia</h2>
+          <button type="button" class="btn-close-modal-contacto" onclick="cerrarModalContacto()">&times;</button>
+        </div>
+        
+        <div class="modal-body-contacto">
+          <div class="contacto-info-card">
+            <div class="contacto-info-row">
+              <span class="contacto-label">👤 Nombre completo:</span>
+              <span class="contacto-value" id="contactoNombreVer"></span>
+            </div>
+            <div class="contacto-info-row">
+              <span class="contacto-label">👥 Parentesco:</span>
+              <span class="contacto-value" id="contactoParentescoVer"></span>
+            </div>
+            <div class="contacto-info-row">
+              <span class="contacto-label">📞 Teléfono:</span>
+              <span class="contacto-value contacto-telefono" id="contactoTelefonoVer"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-contacto">
+          <button type="button" class="btn-edit-contacto-footer" onclick="editarContactoDesdeModal()">✏️ Editar</button>
+          <button type="button" class="btn-close-footer-contacto" onclick="cerrarModalContacto()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para EDITAR/CREAR Contacto de Emergencia -->
+    <div id="modalEditarContacto" class="modal-overlay-contacto">
+      <div class="modal-content-contacto">
+        <div class="modal-header-contacto modal-header-edit">
+          <h2>✏️ Contacto de Emergencia</h2>
+          <button type="button" class="btn-close-modal-contacto" onclick="cerrarModalEditarContacto()">&times;</button>
+        </div>
+        
+        <form id="formEditarContacto" class="form-editar-contacto">
+          <div class="form-row-modal-contacto">
+            <label for="editContactoNombre">👤 Nombre completo:</label>
+            <input type="text" id="editContactoNombre" placeholder="Nombre del contacto" required />
+          </div>
+
+          <div class="form-row-modal-contacto">
+            <label for="editContactoParentesco">👥 Parentesco:</label>
+            <select id="editContactoParentesco" required>
+              <option value="">Seleccione...</option>
+              <option value="Padre">Padre</option>
+              <option value="Madre">Madre</option>
+              <option value="Hermano/a">Hermano/a</option>
+              <option value="Hijo/a">Hijo/a</option>
+              <option value="Esposo/a">Esposo/a</option>
+              <option value="Pareja">Pareja</option>
+              <option value="Amigo/a">Amigo/a</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="form-row-modal-contacto">
+            <label for="editContactoTelefono">📞 Teléfono:</label>
+            <input type="text" id="editContactoTelefono" placeholder="Número de teléfono" required />
+          </div>
+
+          <div class="modal-footer-contacto">
+            <button type="submit" class="btn-save-contacto">💾 Guardar Contacto</button>
+            <button type="button" class="btn-cancel-contacto" onclick="cerrarModalEditarContacto()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Historial de Consultas -->
+    <div class="historial-section">
+      <div class="historial-header">
+        <h2 class="section-title">📚 Historial de Consultas</h2>
+        <button id="btnRefreshHistorial" class="btn-refresh" title="Actualizar historial">
+          🔄
+        </button>
+      </div>
+
+      <div id="historialContainer" class="historial-container">
+        <div class="loading-historial">
+          <span class="spinner"></span>
+          <p>Cargando historial...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- jQuery (necesario para Select2) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
+  
+  <!-- Scripts de la aplicación -->
+  <script src="js/auth-check.js"></script>
+  <script src="js/consulta.js"></script>
+  <script src="js/informe.js"></script>
+</body>
+</html>

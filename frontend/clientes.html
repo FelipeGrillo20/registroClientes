@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Clientes Registrados</title>
+  <link rel="stylesheet" href="css/clientes.css" />
+  <script src="js/auth-check.js"></script>
+</head>
+<body>
+  <header class="page-header">
+    <div id="userInfo" class="user-info-bar"></div>
+    <h1>📋 Trabajadores Registrados</h1>
+    <p class="page-subtitle">Datos Personales</p>
+  </header>
+
+  <main class="page-main">
+    <!-- Botones de acción -->
+    <div class="filter-actions">
+      <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
+      <a href="index.html" class="btn-back-form">← Formulario Registro</a>
+    </div>
+
+    <div class="table-container">
+      <table class="client-table" id="clientTable" aria-describedby="tabla-clientes">
+        <thead>
+          <tr>
+            <!-- ====== CÉDULA CON FILTRO ====== -->
+            <th class="filterable" data-type="cedula">
+              <span>Cédula</span>
+              <span class="filter-icon" aria-label="Filtrar por cédula" title="Filtrar por cédula">⚙️</span>
+              <div class="filter-menu" id="filterMenu-cedula">
+                <label for="filterCedula">Buscar por cédula:</label>
+                <input type="text" id="filterCedula" placeholder="Ingresa cédula..." />
+              </div>
+            </th>
+
+            <th>Nombre</th>
+
+            <!-- ====== SEDE CON FILTRO ====== -->
+            <th class="filterable" data-type="sede">
+              <span>Sede</span>
+              <span class="filter-icon" aria-label="Filtrar por sede" title="Filtrar por sede">⚙️</span>
+              <div class="filter-menu" id="filterMenu-sede">
+                <label for="filterSede">Filtrar por sede:</label>
+                <select id="filterSede">
+                  <option value="">Todas las Sedes</option>
+                </select>
+              </div>
+            </th>
+
+            <th>Email</th>
+            <th>Teléfono</th>
+
+            <!-- ====== VÍNCULO CON FILTRO ====== -->
+            <th class="filterable" data-type="vinculo">
+              <span>Vínculo</span>
+              <span class="filter-icon" aria-label="Filtrar por vínculo" title="Filtrar por vínculo">⚙️</span>
+              <div class="filter-menu" id="filterMenu-vinculo">
+                <label for="filterVinculo">Filtrar por vínculo:</label>
+                <select id="filterVinculo">
+                  <option value="">Todos los Vínculos</option>
+                  <option value="Trabajador">Trabajador</option>
+                  <option value="Familiar Trabajador">Familiar Trabajador</option>
+                </select>
+              </div>
+            </th>
+
+            <!-- ====== EMPRESA USUARIO CON FILTRO ====== -->
+            <th class="filterable" data-type="empresa">
+              <span>Empresa</span>
+              <span class="filter-icon" aria-label="Filtrar por empresa" title="Filtrar por empresa">⚙️</span>
+              <div class="filter-menu" id="filterMenu-empresa">
+                <label for="filterEmpresa">Filtrar por empresa:</label>
+                <select id="filterEmpresa">
+                  <option value="">Todas las Empresas</option>
+                </select>
+              </div>
+            </th>
+
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody id="clientList">
+          <!-- Filas generadas dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje inicial cuando no hay clientes -->
+    <p id="noFilterMessage" class="no-filter-message">
+      🔍 Usa los filtros para ver los clientes registrados.
+    </p>
+  </main>
+
+  <script src="js/clientes.js"></script>
+</body>
+</html>
+

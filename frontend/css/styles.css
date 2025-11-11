@@ -1,0 +1,377 @@
+/* css/styles.css */
+
+/* ====== ESTILOS GENERALES ====== */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f6f9;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+}
+
+/* ====== CONTENEDOR PRINCIPAL DEL FORMULARIO ====== */
+.form-container {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ====== TÍTULOS ====== */
+.form-container h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 1.6em;
+}
+
+/* Subtítulo del formulario */
+.form-subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 0.95em;
+  margin-top: -5px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-top: 30px;
+  color: #34495e;
+  font-size: 1.3em;
+  border-top: 1px solid #ecf0f1;
+  padding-top: 15px;
+}
+
+/* ============================================ */
+/* BARRA DE INFORMACIÓN DEL USUARIO */
+/* ============================================ */
+.user-info-bar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.user-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-name {
+  color: white !important;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-mi-perfil {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-mi-perfil:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background: white !important;
+  color: #667eea !important;
+  transform: translateY(-2px);
+}
+
+/* ============================================ */
+/* FORMULARIO CON 3 COLUMNAS */
+/* ============================================ */
+form#clientForm {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* ====== CADA BLOQUE DE CAMPO ====== */
+.form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Etiquetas de campos */
+.form-row label {
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #34495e;
+}
+
+/* Indicador de campo requerido */
+.required {
+  color: #e74c3c;
+  font-weight: bold;
+  margin-left: 3px;
+}
+
+/* Campos de texto, select, textarea */
+.form-row input,
+.form-row select,
+.form-row textarea {
+  padding: 10px;
+  border: 1px solid #dcdde1;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background-color: #fdfdfd;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  border-color: #2980b9;
+  outline: none;
+  box-shadow: 0px 0px 6px rgba(41, 128, 185, 0.3);
+}
+
+textarea {
+  resize: none;
+  grid-column: span 3;
+}
+
+/* ============================================ */
+/* ESTILOS PARA EL CAMPO CÉDULA CON BOTÓN */
+/* ============================================ */
+.cedula-row {
+  position: relative;
+}
+
+.cedula-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cedula-input-group input {
+  flex: 1;
+}
+
+.btn-search-cedula {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  min-width: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-search-cedula:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-search-cedula:active {
+  transform: translateY(0);
+}
+
+.btn-search-cedula:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================ */
+/* ESTILOS PARA SELECT CON OPTGROUP */
+/* ============================================ */
+.form-row select optgroup {
+  font-weight: 600;
+  font-style: normal;
+  color: #2980b9;
+  background-color: #ecf0f1;
+}
+
+.form-row select option {
+  padding: 8px;
+  background-color: white;
+  color: #2c3e50;
+}
+
+/* ============================================ */
+/* BOTONES DE ACCIÓN DEL FORMULARIO */
+/* ============================================ */
+.form-actions {
+  grid-column: span 3;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, #1f6691, #2471a3);
+  transform: translateY(-2px);
+}
+
+.btn-ver-clientes {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.btn-ver-clientes:hover {
+  background: linear-gradient(135deg, #1f6691, #2471a3);
+  transform: translateY(-2px);
+}
+
+.btn-cancel-edit {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.btn-cancel-edit:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+}
+
+.btn-cancel-edit:active {
+  transform: translateY(0);
+}
+
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+@media (max-width: 1024px) {
+  form#clientForm {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  form#clientForm {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-left-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .btn-mi-perfil {
+    font-size: 12px;
+    padding: 6px 12px !important;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit,
+  .btn-ver-clientes,
+  .btn-cancel-edit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-info-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .user-left-section {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-back {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .card-title h2 {
+    font-size: 1.2em;
+  }
+
+  .info-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit,
+  .btn-reset-consulta {
+    width: 100%;
+    justify-content: center;
+  }
+}

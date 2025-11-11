@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Perfil</title>
+  <link rel="stylesheet" href="css/perfil.css" />
+</head>
+<body>
+  
+  <div class="profile-container">
+    <!-- Botón de regreso -->
+    <button class="btn-back" id="btnBack" title="Volver">
+      ← Volver
+    </button>
+
+    <!-- Tarjeta de perfil -->
+    <div class="profile-card">
+      <!-- Header con gradiente -->
+      <div class="profile-header">
+        <div class="header-wave"></div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-container">
+          <img src="" alt="Avatar" id="avatarImage" class="avatar-image" />
+          <div class="avatar-placeholder" id="avatarPlaceholder">
+            <span class="avatar-icon">👤</span>
+          </div>
+          <label for="uploadAvatar" class="avatar-upload-btn" title="Cambiar foto">
+            📷
+          </label>
+          <input type="file" id="uploadAvatar" accept="image/*" style="display: none;" />
+        </div>
+      </div>
+
+      <!-- Información del perfil -->
+      <div class="profile-info">
+        <h1 class="profile-title">Mi Perfil</h1>
+        
+        <div class="info-grid">
+          <!-- Cédula -->
+          <div class="info-item">
+            <div class="info-icon">🆔</div>
+            <div class="info-content">
+              <label class="info-label">Cédula</label>
+              <p class="info-value" id="userCedula">-</p>
+            </div>
+          </div>
+
+          <!-- Nombre -->
+          <div class="info-item">
+            <div class="info-icon">👤</div>
+            <div class="info-content">
+              <label class="info-label">Nombre Completo</label>
+              <p class="info-value" id="userNombre">-</p>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="info-item">
+            <div class="info-icon">📧</div>
+            <div class="info-content">
+              <label class="info-label">Correo Electrónico</label>
+              <p class="info-value" id="userEmail">-</p>
+            </div>
+          </div>
+
+          <!-- Rol -->
+          <div class="info-item">
+            <div class="info-icon">🎭</div>
+            <div class="info-content">
+              <label class="info-label">Rol</label>
+              <p class="info-value" id="userRol">
+                <span class="role-badge" id="rolBadge">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón cambiar contraseña -->
+        <div class="profile-actions">
+          <button class="btn-change-password" id="btnChangePassword">
+            🔒 Cambiar Contraseña
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- PANEL DE GESTIÓN DE USUARIOS (SOLO ADMIN) -->
+    <!-- ============================================ -->
+    <div class="users-management-section" id="usersManagementSection" style="display: none;">
+      <div class="management-header">
+        <h2 class="management-title">
+          <span class="management-icon">👥</span>
+          Gestión de Usuarios
+        </h2>
+        <button class="btn-add-user" id="btnAddUser">
+          ➕ Nuevo Usuario
+        </button>
+      </div>
+
+      <!-- Tabla de usuarios -->
+      <div class="users-table-container">
+        <div id="loadingUsers" class="loading-users" style="display: none;">
+          <div class="spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
+
+        <div id="usersTableContent" class="users-table-content">
+          <!-- La tabla se genera dinámicamente -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL DE CAMBIO DE CONTRASEÑA (USUARIO) -->
+    <!-- ============================================ -->
+    <div id="modalPassword" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🔒 Cambiar Contraseña</h2>
+          <button type="button" class="btn-close-modal" id="btnCloseModal">&times;</button>
+        </div>
+        
+        <form id="formPassword" class="form-password">
+          <div class="form-row-modal">
+            <label for="currentPassword">Contraseña Actual:</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual" required />
+              <button type="button" class="btn-toggle-password" data-target="currentPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row-modal">
+            <label for="newPassword">Nueva Contraseña:</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
+              <button type="button" class="btn-toggle-password" data-target="newPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row-modal">
+            <label for="confirmPassword">Confirmar Nueva Contraseña:</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="confirmPassword" placeholder="Confirma tu nueva contraseña" required />
+              <button type="button" class="btn-toggle-password" data-target="confirmPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn-save-password">Actualizar Contraseña</button>
+            <button type="button" class="btn-cancel-modal" id="btnCancelModal">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL PARA REGISTRAR/EDITAR USUARIO -->
+    <!-- ============================================ -->
+    <div id="modalUser" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header modal-header-user">
+          <h2 id="modalUserTitle">➕ Registrar Usuario</h2>
+          <button type="button" class="btn-close-modal" id="btnCloseUserModal">&times;</button>
+        </div>
+        
+        <form id="formUser" class="form-user">
+          <div class="form-row-modal">
+            <label for="userFormCedula">Cédula: <span class="required">*</span></label>
+            <input type="text" id="userFormCedula" placeholder="Solo números" required />
+          </div>
+
+          <div class="form-row-modal">
+            <label for="userFormNombre">Nombre Completo: <span class="required">*</span></label>
+            <input type="text" id="userFormNombre" placeholder="Nombre del usuario" required />
+          </div>
+
+          <div class="form-row-modal">
+            <label for="userFormEmail">Email: <span class="required">*</span></label>
+            <input type="email" id="userFormEmail" placeholder="correo@ejemplo.com" required />
+          </div>
+
+          <div class="form-row-modal" id="passwordFieldContainer">
+            <label for="userFormPassword">Contraseña: <span class="required">*</span></label>
+            <div class="password-input-wrapper">
+              <input type="password" id="userFormPassword" placeholder="Mínimo 6 caracteres" minlength="6" />
+              <button type="button" class="btn-toggle-password" data-target="userFormPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row-modal">
+            <label for="userFormRol">Rol: <span class="required">*</span></label>
+            <select id="userFormRol" required>
+              <option value="">Seleccione...</option>
+              <option value="profesional">Profesional</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn-save-user" id="btnSaveUser">Registrar Usuario</button>
+            <button type="button" class="btn-cancel-modal" id="btnCancelUserModal">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL DE CAMBIO DE CONTRASEÑA POR ADMIN -->
+    <!-- ============================================ -->
+    <div id="modalAdminPassword" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header modal-header-admin">
+          <h2>🔑 Cambiar Contraseña de Usuario</h2>
+          <button type="button" class="btn-close-modal" id="btnCloseAdminPasswordModal">&times;</button>
+        </div>
+        
+        <form id="formAdminPassword" class="form-admin-password">
+          <div class="admin-password-info">
+            <p>Cambiando contraseña para: <strong id="adminPasswordUserName"></strong></p>
+          </div>
+
+          <div class="form-row-modal">
+            <label for="adminNewPassword">Nueva Contraseña: <span class="required">*</span></label>
+            <div class="password-input-wrapper">
+              <input type="password" id="adminNewPassword" placeholder="Mínimo 6 caracteres" required minlength="6" />
+              <button type="button" class="btn-toggle-password" data-target="adminNewPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row-modal">
+            <label for="adminConfirmPassword">Confirmar Nueva Contraseña: <span class="required">*</span></label>
+            <div class="password-input-wrapper">
+              <input type="password" id="adminConfirmPassword" placeholder="Confirma la nueva contraseña" required />
+              <button type="button" class="btn-toggle-password" data-target="adminConfirmPassword">
+                <span class="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn-save-password">Cambiar Contraseña</button>
+            <button type="button" class="btn-cancel-modal" id="btnCancelAdminPasswordModal">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/auth-check.js"></script>
+  <script src="js/perfil.js"></script>
+</body>
+</html>

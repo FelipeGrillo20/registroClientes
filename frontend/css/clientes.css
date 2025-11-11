@@ -1,0 +1,557 @@
+/* css/clientes.css */
+
+/* ====== VARIABLES DE COLOR Y BASE ====== */
+:root {
+  --primary: #2980b9;
+  --primary-dark: #1f6691;
+  --muted: #f4f6f9;
+  --table-header: #2980b9;
+  --accent: #3498db;
+  --danger: #e74c3c;
+  --warning: #f1c40f;
+  --success: #27ae60;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--muted);
+  color: #223;
+  padding: 24px;
+}
+
+/* ====== ENCABEZADO ====== */
+.page-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.page-header h1 {
+  margin: 0 0 5px 0;
+  font-size: 1.6rem;
+  color: var(--primary-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.95em;
+  font-weight: 500;
+}
+
+/* ============================================ */
+/* BARRA DE INFORMACIÓN DEL USUARIO */
+/* ============================================ */
+.user-info-bar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin: 15px auto;
+  max-width: 1600px;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.user-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-name {
+  color: white !important;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-mi-perfil {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-mi-perfil:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background: white !important;
+  color: #667eea !important;
+  transform: translateY(-2px);
+}
+
+/* ====== BOTÓN LIMPIAR FILTROS ====== */
+.filter-actions {
+  text-align: center;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.btn-clear-filters {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-clear-filters:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-clear-filters:active {
+  transform: translateY(0);
+}
+
+.btn-back-form {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-back-form:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-back-form:active {
+  transform: translateY(0);
+}
+
+/* ====== CONTENEDOR DE TABLA ====== */
+.table-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}
+
+/* ====== TABLA ====== */
+.client-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px;
+  font-size: 13px;
+}
+
+/* Encabezados centrados */
+.client-table thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(90deg, var(--table-header), var(--primary-dark));
+  color: #fff;
+  padding: 10px 8px;
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-weight: 600;
+  white-space: nowrap;
+  display: table-cell;
+  font-size: 12px;
+}
+
+/* Centrar hijos dentro del th */
+.client-table thead th > * {
+  display: inline-block;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Celdas */
+.client-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef2f6;
+  vertical-align: middle;
+  word-break: break-word;
+  white-space: normal;
+  font-size: 13px;
+}
+
+/* Filas alternas */
+.client-table tbody tr:nth-child(even) {
+  background: #fbfdff;
+}
+
+/* Hover */
+.client-table tbody tr:hover {
+  background: #f2f9ff;
+}
+
+/* ====== ANCHOS Y ALINEACIONES ACTUALIZADOS CON NUEVAS COLUMNAS ====== */
+
+/* Cédula */
+.client-table td:nth-child(1),
+.client-table th:nth-child(1) {
+  width: 9%;
+  min-width: 100px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Nombre */
+.client-table td:nth-child(2),
+.client-table th:nth-child(2) {
+  width: 16%;
+  min-width: 150px;
+  text-align: left;
+}
+
+/* Sede */
+.client-table td:nth-child(3),
+.client-table th:nth-child(3) {
+  width: 10%;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Email */
+.client-table td:nth-child(4),
+.client-table th:nth-child(4) {
+  width: 16%;
+  min-width: 160px;
+  text-align: left;
+  word-break: break-all;
+}
+
+/* Teléfono */
+.client-table td:nth-child(5),
+.client-table th:nth-child(5) {
+  width: 10%;
+  min-width: 100px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Vínculo */
+.client-table td:nth-child(6),
+.client-table th:nth-child(6) {
+  width: 12%;
+  min-width: 130px;
+  text-align: center;
+}
+
+/* Empresa Usuario */
+.client-table td:nth-child(7),
+.client-table th:nth-child(7) {
+  width: 13%;
+  min-width: 140px;
+  text-align: center;
+}
+
+/* Acciones */
+.client-table td:nth-child(8),
+.client-table th:nth-child(8) {
+  width: 14%;
+  min-width: 140px;
+  text-align: center;
+}
+
+/* ====== BADGE PARA VÍNCULO ====== */
+.badge-vinculo {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge-trabajador {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+}
+
+.badge-familiar {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
+/* ====== BADGE PARA EMPRESA ====== */
+.badge-empresa {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: white;
+  white-space: nowrap;
+}
+
+/* ====== BOTONES DE ACCIÓN MEJORADOS ====== */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action {
+  border: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 75px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-edit {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);
+}
+
+.btn-edit::before {
+  content: "✏️";
+  font-size: 12px;
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+.btn-delete::before {
+  content: "🗑️";
+  font-size: 12px;
+}
+
+.btn-consulta {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.btn-consulta:hover {
+  background: linear-gradient(135deg, #8e44ad, #7d3c98);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+}
+
+.btn-consulta::before {
+  content: "📋";
+  font-size: 12px;
+}
+
+.btn-action:active {
+  transform: translateY(0);
+}
+
+/* ====== FILTROS (ESTILO EXCEL) ====== */
+.filterable {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-icon {
+  font-size: 11px;
+  margin-left: 4px;
+  cursor: pointer;
+  color: #fff;
+  transition: color 0.2s ease;
+}
+
+.filter-icon:hover {
+  color: #f1c40f;
+}
+
+/* Menú del filtro - OCULTO POR DEFECTO */
+.filter-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  padding: 10px;
+  z-index: 100;
+  min-width: 180px;
+}
+
+/* Filtro de cédula abre hacia la izquierda */
+#filterMenu-cedula {
+  right: auto;
+  left: 0;
+}
+
+/* Cuando el menú está visible */
+.filter-menu.show {
+  display: block;
+}
+
+.filter-menu label {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 3px;
+  color: #444;
+  font-weight: 600;
+}
+
+.filter-menu select,
+.filter-menu input[type="date"],
+.filter-menu input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-menu select:focus,
+.filter-menu input[type="date"]:focus,
+.filter-menu input[type="text"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+/* ====== ESTILO CUANDO NO HAY DATOS ====== */
+.no-data {
+  padding: 28px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.no-filter-message {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 20px;
+  display: none;
+}
+
+/* ====== ANIMACIONES ====== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 1400px) {
+  .table-container {
+    max-width: 100%;
+  }
+  
+  .user-info-bar {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .user-left-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-mi-perfil {
+    font-size: 12px;
+    padding: 6px 12px !important;
+  }
+  
+  .client-table {
+    min-width: 1100px;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 15px;
+  }
+}

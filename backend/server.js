@@ -29,7 +29,11 @@ app.use("/api/empresas", authMiddleware.verifyToken, empresasRoutes);
 
 // Ruta de prueba (pública)
 app.get("/", (req, res) => {
-  res.send("🚀 API funcionando - Sistema de Gestión de Clientes");
+  res.json({
+    message: "🚀 API funcionando - Sistema de Gestión de Clientes",
+    status: "OK",
+    environment: process.env.NODE_ENV || "development"
+  });
 });
 
 // Ruta protegida de prueba
@@ -40,13 +44,32 @@ app.get("/api/protected", authMiddleware.verifyToken, (req, res) => {
   });
 });
 
+// Health check para Render
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
+// Manejo de errores global
+app.use((err, req, res, next) => {
+  console.error("Error:", err.stack);
+  res.status(500).json({ 
+    error: "Algo salió mal en el servidor",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined
+  });
+});
+
 // Configuración del puerto
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+  console.log(`🌍 Ambiente: ${process.env.NODE_ENV || "development"}`);
   console.log(`🔒 Rutas protegidas con JWT`);
   console.log(`📋 Rutas disponibles:`);
-  console.log(`   - /api/clients (Clientes)`);
-  console.log(`   - /api/consultas (Consultas y Seguimiento)`);
-  console.log(`   - /api/auth (Autenticación)`);
+  console.log(`   - GET  / (Info de la API)`);
+  console.log(`   - GET  /health (Health check)`);
+  console.log(`   - POST /api/auth/login (Login)`);
+  console.log(`   - POST /api/auth/register (Registro)`);
+  console.log(`   - GET  /api/clients (Clientes) 🔒`);
+  console.log(`   - GET  /api/consultas (Consultas) 🔒`);
+  console.log(`   - GET  /api/empresas (Empresas) 🔒`);
 });

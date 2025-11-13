@@ -18,7 +18,7 @@ const app = express();
 // Middlewares
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://tu-proyecto-frontend.onrender.com', 'https://tu-dominio-custom.com']
+    ? ['https://registroclientesfront.onrender.com', 'https://tu-dominio-custom.com']
     : '*',
   credentials: true
 }));

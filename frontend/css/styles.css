@@ -152,6 +152,8 @@ form#clientForm {
   font-size: 14px;
   transition: border-color 0.3s, box-shadow 0.3s;
   background-color: #fdfdfd;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-row input:focus,
@@ -198,6 +200,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .btn-search-cedula:hover {
@@ -240,6 +243,7 @@ textarea {
   display: flex;
   justify-content: center;
   gap: 15px;
+  margin-top: 10px;
 }
 
 .btn-submit {
@@ -272,6 +276,7 @@ textarea {
   transition: all 0.3s ease;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
   text-decoration: none;
+  display: inline-block;
 }
 
 .btn-ver-clientes:hover {
@@ -305,15 +310,44 @@ textarea {
 /* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
+
+/* Tablets */
 @media (max-width: 1024px) {
   form#clientForm {
     grid-template-columns: repeat(2, 1fr);
   }
+  
+  .form-container {
+    width: 90%;
+    padding: 25px 30px;
+  }
 }
 
+/* Móviles grandes */
 @media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+  
+  .form-container {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .form-container h1 {
+    font-size: 1.4em;
+  }
+  
   form#clientForm {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .user-info-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 15px;
   }
   
   .user-left-section {
@@ -325,36 +359,102 @@ textarea {
   .btn-mi-perfil {
     font-size: 12px;
     padding: 6px 12px !important;
+    width: fit-content;
+  }
+  
+  .btn-logout {
+    width: 100%;
+    text-align: center;
   }
 
   .form-actions {
     flex-direction: column;
+    gap: 10px;
   }
 
   .btn-submit,
   .btn-ver-clientes,
   .btn-cancel-edit {
     width: 100%;
+    text-align: center;
+  }
+  
+  textarea {
+    grid-column: span 1;
   }
 }
 
+/* Móviles pequeños */
 @media (max-width: 480px) {
-  .user-info-bar {
-    flex-direction: column;
-    gap: 10px;
+  body {
+    padding: 10px;
   }
-
-  .user-left-section {
+  
+  .form-container {
     width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 15px;
+    border-radius: 8px;
   }
-
-  .btn-back {
-    padding: 8px 16px;
-    font-size: 13px;
+  
+  .form-container h1 {
+    font-size: 1.3em;
+    margin-bottom: 8px;
   }
-
+  
+  .form-subtitle {
+    font-size: 0.85em;
+  }
+  
+  .user-info-bar {
+    padding: 12px;
+  }
+  
+  .user-name {
+    font-size: 14px;
+  }
+  
+  .btn-mi-perfil {
+    font-size: 11px;
+    padding: 5px 10px !important;
+  }
+  
+  .btn-logout {
+    font-size: 12px;
+    padding: 7px 14px !important;
+  }
+  
+  .form-row label {
+    font-size: 14px;
+  }
+  
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  .cedula-input-group {
+    gap: 6px;
+  }
+  
+  .btn-search-cedula {
+    min-width: 42px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .form-actions {
+    gap: 8px;
+  }
+  
+  .btn-submit,
+  .btn-ver-clientes,
+  .btn-cancel-edit {
+    font-size: 14px;
+    padding: 11px 20px;
+  }
+  
   .card-title h2 {
     font-size: 1.2em;
   }
@@ -365,11 +465,6 @@ textarea {
     text-align: center;
   }
 
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .btn-submit,
   .btn-reset-consulta {
     width: 100%;
     justify-content: center;

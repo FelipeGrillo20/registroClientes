@@ -1,6 +1,6 @@
 // frontend/js/script.js
 
-const API_URL = "http://localhost:5000/api/clients";
+const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 
 // Referencias al formulario
 const form = document.getElementById("clientForm");
@@ -202,7 +202,7 @@ function setupEntidadPagadoraDinamica() {
 // Cargar empresas desde la BD
 async function loadEmpresas() {
   try {
-    const res = await fetch("http://localhost:5000/api/empresas", {
+    const res = await fetch(window.API_CONFIG.ENDPOINTS.EMPRESAS, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
       }

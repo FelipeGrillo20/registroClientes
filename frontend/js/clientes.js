@@ -1,6 +1,6 @@
 // js/clientes.js
-const API_URL = "http://localhost:5000/api/clients";
-const EMPRESAS_URL = "http://localhost:5000/api/empresas";
+const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
+const EMPRESAS_URL = window.API_CONFIG.ENDPOINTS.EMPRESAS;
 
 const tbody = document.getElementById("clientList");
 const filterCedula = document.getElementById("filterCedula");

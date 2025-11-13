@@ -2,7 +2,7 @@
 // Script para proteger páginas que requieren autenticación
 
 (function() {
-  const API_URL = "http://localhost:5000/api/auth";
+  const API_URL = window.API_CONFIG.ENDPOINTS.AUTH.VERIFY.replace('/verify', '');
   
   // Verificar autenticación al cargar la página
   async function checkAuth() {

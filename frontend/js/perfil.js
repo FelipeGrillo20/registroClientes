@@ -2,7 +2,7 @@
 // Script para manejar el perfil del usuario y gestión de usuarios (admin)
 
 (function() {
-  const API_URL = "http://localhost:5000/api";
+  const API_URL = window.API_CONFIG.BASE_URL + "/api";
   
   // Elementos del DOM - Perfil
   const btnBack = document.getElementById("btnBack");

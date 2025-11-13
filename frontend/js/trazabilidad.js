@@ -1,6 +1,6 @@
 // js/trazabilidad.js
 
-const API_URL = "http://localhost:5000/api/clients";
+const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 
 const tbody = document.getElementById("trazabilidadList");
 const filterTipoCliente = document.getElementById("filterTipoCliente");

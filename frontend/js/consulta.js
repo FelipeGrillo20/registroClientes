@@ -1,7 +1,7 @@
 // frontend/js/consulta.js
 
-const API_URL = "http://localhost:5000/api/clients";
-const CONSULTAS_API_URL = "http://localhost:5000/api/consultas";
+const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
+const CONSULTAS_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 
 let clienteActual = null;
 let editandoConsultaId = null;

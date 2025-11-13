@@ -1,6 +1,6 @@
 // frontend/js/login.js
 
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = window.API_CONFIG.BASE_URL + "/api/auth";
 
 // Variables del captcha
 let captchaAnswer = 0;

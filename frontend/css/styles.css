@@ -326,12 +326,12 @@ textarea {
 /* Móviles grandes */
 @media (max-width: 768px) {
   body {
-    padding: 15px;
+    padding: 10px;
   }
   
   .form-container {
-    width: 95%;
-    padding: 20px;
+    width: 100%;
+    padding: 20px 15px;
   }
   
   .form-container h1 {
@@ -341,6 +341,11 @@ textarea {
   form#clientForm {
     grid-template-columns: 1fr;
     gap: 15px;
+  }
+  
+  /* IMPORTANTE: Todos los campos ocupan 1 columna completa */
+  .form-row {
+    grid-column: span 1 !important;
   }
   
   .user-info-bar {
@@ -370,13 +375,23 @@ textarea {
   .form-actions {
     flex-direction: column;
     gap: 10px;
+    width: 100%;
   }
 
   .btn-submit,
   .btn-ver-clientes,
   .btn-cancel-edit {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     text-align: center;
+    box-sizing: border-box;
+    display: block;
+  }
+  
+  /* Ajustar el campo de cédula para que sea más grande */
+  .cedula-input-group input {
+    min-width: 0;
+    flex: 1;
   }
   
   textarea {
@@ -387,17 +402,17 @@ textarea {
 /* Móviles pequeños */
 @media (max-width: 480px) {
   body {
-    padding: 10px;
+    padding: 5px;
   }
   
   .form-container {
     width: 100%;
-    padding: 15px;
+    padding: 15px 12px;
     border-radius: 8px;
   }
   
   .form-container h1 {
-    font-size: 1.3em;
+    font-size: 1.25em;
     margin-bottom: 8px;
   }
   
@@ -410,7 +425,7 @@ textarea {
   }
   
   .user-name {
-    font-size: 14px;
+    font-size: 13px;
   }
   
   .btn-mi-perfil {
@@ -424,14 +439,14 @@ textarea {
   }
   
   .form-row label {
-    font-size: 14px;
+    font-size: 13px;
   }
   
   .form-row input,
   .form-row select,
   .form-row textarea {
     font-size: 14px;
-    padding: 10px;
+    padding: 10px 8px;
   }
   
   .cedula-input-group {
@@ -439,20 +454,25 @@ textarea {
   }
   
   .btn-search-cedula {
-    min-width: 42px;
-    padding: 10px 12px;
+    min-width: 40px;
+    padding: 10px;
     font-size: 14px;
   }
   
   .form-actions {
     gap: 8px;
+    width: 100%;
   }
   
   .btn-submit,
   .btn-ver-clientes,
   .btn-cancel-edit {
     font-size: 14px;
-    padding: 11px 20px;
+    padding: 12px 16px;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    display: block;
   }
   
   .card-title h2 {

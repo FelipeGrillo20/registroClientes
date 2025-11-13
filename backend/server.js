@@ -16,7 +16,12 @@ const authMiddleware = require("./middleware/authMiddleware");
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://tu-proyecto-frontend.onrender.com', 'https://tu-dominio-custom.com']
+    : '*',
+  credentials: true
+}));
 app.use(express.json());
 
 // Rutas públicas (sin autenticación)

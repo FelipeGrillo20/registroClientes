@@ -338,14 +338,25 @@ textarea {
     font-size: 1.4em;
   }
   
+  /* FORZAR 1 COLUMNA EN MÓVIL */
   form#clientForm {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 15px;
+    display: grid;
   }
   
-  /* IMPORTANTE: Todos los campos ocupan 1 columna completa */
+  /* IMPORTANTE: Cada campo ocupa 1 fila completa */
   .form-row {
-    grid-column: span 1 !important;
+    grid-column: 1 / -1 !important;
+    width: 100%;
+  }
+  
+  /* Los botones también ocupan toda la fila */
+  .form-actions {
+    grid-column: 1 / -1 !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
   }
   
   .user-info-bar {
@@ -372,12 +383,6 @@ textarea {
     text-align: center;
   }
 
-  .form-actions {
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-
   .btn-submit,
   .btn-ver-clientes,
   .btn-cancel-edit {
@@ -389,13 +394,17 @@ textarea {
   }
   
   /* Ajustar el campo de cédula para que sea más grande */
+  .cedula-input-group {
+    width: 100%;
+  }
+  
   .cedula-input-group input {
     min-width: 0;
     flex: 1;
   }
   
   textarea {
-    grid-column: span 1;
+    grid-column: 1 / -1 !important;
   }
 }
 

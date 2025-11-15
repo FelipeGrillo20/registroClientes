@@ -21,18 +21,21 @@ exports.createClient = async (data) => {
     contacto_emergencia_nombre,
     contacto_emergencia_parentesco,
     contacto_emergencia_telefono,
+    profesional_id, // ← NUEVO: ID del profesional que registra
   } = data;
 
   const result = await pool.query(
     `INSERT INTO clients 
     (cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica, 
      empresa_id, actividad, modalidad, fecha, columna1, estado, email, telefono,
-     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
+     profesional_id)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, actividad, modalidad, fecha, columna1, estado, email, telefono,
-     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono]
+     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
+     profesional_id]
   );
 
   return result.rows[0];
@@ -45,11 +48,31 @@ exports.getClients = async () => {
       c.*,
       e.tipo_cliente,
       e.nombre_cliente,
-      e.cliente_final
+      e.cliente_final,
+      u.nombre AS profesional_nombre
     FROM clients c
     LEFT JOIN empresas e ON c.empresa_id = e.id
+    LEFT JOIN users u ON c.profesional_id = u.id
     ORDER BY c.id DESC
   `);
+  return result.rows;
+};
+
+// ⭐ NUEVO: Obtener clientes filtrados por profesional
+exports.getClientsByProfesional = async (profesionalId) => {
+  const result = await pool.query(`
+    SELECT 
+      c.*,
+      e.tipo_cliente,
+      e.nombre_cliente,
+      e.cliente_final,
+      u.nombre AS profesional_nombre
+    FROM clients c
+    LEFT JOIN empresas e ON c.empresa_id = e.id
+    LEFT JOIN users u ON c.profesional_id = u.id
+    WHERE c.profesional_id = $1
+    ORDER BY c.id DESC
+  `, [profesionalId]);
   return result.rows;
 };
 
@@ -60,9 +83,11 @@ exports.getClientById = async (id) => {
       c.*,
       e.tipo_cliente,
       e.nombre_cliente,
-      e.cliente_final
+      e.cliente_final,
+      u.nombre AS profesional_nombre
     FROM clients c
     LEFT JOIN empresas e ON c.empresa_id = e.id
+    LEFT JOIN users u ON c.profesional_id = u.id
     WHERE c.id = $1
   `, [id]);
   return result.rows[0];

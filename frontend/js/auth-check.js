@@ -35,7 +35,7 @@
       // Token válido, actualizar datos del usuario
       localStorage.setItem("userData", JSON.stringify(data.user));
       
-      // Mostrar información del usuario
+      // Mostrar información del usuario (solo si existe el elemento)
       displayUserInfo(data.user);
       
     } catch (err) {
@@ -63,9 +63,10 @@
   function displayUserInfo(user) {
     const userInfoElement = document.getElementById("userInfo");
     
+    // ⭐ MEJORA: Si no existe el elemento, simplemente retornar sin error
     if (!userInfoElement) {
-      console.warn("Elemento userInfo no existe en el DOM");
-      return;
+      console.log("Página sin barra de usuario (ej: dashboard-stats)");
+      return; // Salir silenciosamente
     }
     
     if (!user) {

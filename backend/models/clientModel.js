@@ -11,29 +11,24 @@ exports.createClient = async (data) => {
     tipo_entidad_pagadora,
     entidad_pagadora_especifica,
     empresa_id,
-    actividad,
-    modalidad,
-    fecha,
-    columna1,
-    estado,
     email,
     telefono,
     contacto_emergencia_nombre,
     contacto_emergencia_parentesco,
     contacto_emergencia_telefono,
-    profesional_id, // ← NUEVO: ID del profesional que registra
+    profesional_id,
   } = data;
 
   const result = await pool.query(
     `INSERT INTO clients 
     (cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica, 
-     empresa_id, actividad, modalidad, fecha, columna1, estado, email, telefono,
+     empresa_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
      profesional_id)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
-     empresa_id, actividad, modalidad, fecha, columna1, estado, email, telefono,
+     empresa_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
      profesional_id]
   );
@@ -103,16 +98,12 @@ exports.updateClient = async (id, data) => {
     tipo_entidad_pagadora,
     entidad_pagadora_especifica,
     empresa_id,
-    actividad,
-    modalidad,
-    fecha,
-    columna1,
-    estado,
     email,
     telefono,
     contacto_emergencia_nombre,
     contacto_emergencia_parentesco,
     contacto_emergencia_telefono,
+    fecha_cierre, // ⭐ AGREGAR fecha_cierre
   } = data;
 
   const result = await pool.query(
@@ -124,21 +115,18 @@ exports.updateClient = async (id, data) => {
       tipo_entidad_pagadora = $5,
       entidad_pagadora_especifica = $6,
       empresa_id = $7,
-      actividad = $8,
-      modalidad = $9,
-      fecha = $10,
-      columna1 = $11,
-      estado = $12,
-      email = $13,
-      telefono = $14,
-      contacto_emergencia_nombre = $15,
-      contacto_emergencia_parentesco = $16,
-      contacto_emergencia_telefono = $17
-    WHERE id = $18
+      email = $8,
+      telefono = $9,
+      contacto_emergencia_nombre = $10,
+      contacto_emergencia_parentesco = $11,
+      contacto_emergencia_telefono = $12,
+      fecha_cierre = $13
+    WHERE id = $14
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
-     empresa_id, actividad, modalidad, fecha, columna1, estado, email, telefono,
-     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono, id]
+     empresa_id, email, telefono,
+     contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
+     fecha_cierre, id]
   );
 
   return result.rows[0];

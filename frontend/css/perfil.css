@@ -760,6 +760,59 @@ body {
 }
 
 /* ============================================ */
+/* BOTÓN DE ESTADÍSTICAS */
+/* ============================================ */
+.management-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-stats {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-stats:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* Responsive para botones en management header */
+@media (max-width: 768px) {
+  .management-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .management-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .btn-stats,
+  .btn-add-user {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
+/* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
 

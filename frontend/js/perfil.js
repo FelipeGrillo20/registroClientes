@@ -25,6 +25,7 @@
   // Gestión de usuarios (admin)
   const usersManagementSection = document.getElementById("usersManagementSection");
   const btnAddUser = document.getElementById("btnAddUser");
+  const btnStats = document.getElementById("btnStats"); // ⭐ NUEVO
   const loadingUsers = document.getElementById("loadingUsers");
   const usersTableContent = document.getElementById("usersTableContent");
   
@@ -260,7 +261,7 @@
                           onclick="window.toggleUsuarioEstado(${user.id}, ${user.activo})" 
                           title="${user.activo ? 'Desactivar' : 'Activar'}"
                           ${isCurrentUser ? 'disabled' : ''}>
-                    ${user.activo ? '🔒' : '🔓'}
+                    ${user.activo ? '🔓' : '🔒'}
                   </button>
                 </td>
               </tr>
@@ -283,6 +284,20 @@
       btnBack.addEventListener("click", () => {
         window.location.href = "index.html";
       });
+    }
+    
+    // ⭐ NUEVO: Botón de estadísticas (solo admin)
+    if (btnStats) {
+      console.log("✅ Botón de estadísticas encontrado"); // Debug
+      btnStats.addEventListener("click", (e) => {
+        e.preventDefault(); // Prevenir comportamiento predeterminado
+        e.stopPropagation(); // Detener propagación del evento
+        console.log("🖱️ Click en botón estadísticas"); // Debug
+        console.log("📂 Redirigiendo a: dashboard-stats.html"); // Debug
+        window.location.href = "dashboard-stats.html";
+      });
+    } else {
+      console.log("❌ Botón de estadísticas NO encontrado"); // Debug
     }
     
     // Upload de avatar

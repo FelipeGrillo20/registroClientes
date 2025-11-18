@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuadro de Mando - Estadísticas</title>
+  <link rel="stylesheet" href="css/dashboard-stats.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <!-- Elemento oculto para auth-check.js -->
+  <div id="userInfo" style="display: none;"></div>
+  
+  <div class="stats-container">
+    <!-- Header -->
+    <div class="stats-header">
+      <button class="btn-back" id="btnBack">
+        ← Volver a Perfil
+      </button>
+      <div class="header-content">
+        <h1 class="stats-title">
+          <span class="title-icon">📊</span>
+          Cuadro de Mando Administrativo
+        </h1>
+        <p class="stats-subtitle">Orientación Psicológica - Análisis y Estadísticas</p>
+      </div>
+    </div>
+
+    <!-- Controles de Filtros -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="filterMonth">
+          <span class="filter-icon">📅</span>
+          Periodo:
+        </label>
+        <select id="filterMonth" class="filter-select">
+          <option value="current">Mes Actual</option>
+          <option value="last">Mes Anterior</option>
+          <option value="last3">Últimos 3 Meses</option>
+          <option value="last6">Últimos 6 Meses</option>
+          <option value="year">Año Completo</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+
+      <div class="filter-group" id="customDateGroup" style="display: none;">
+        <label for="startDate">Desde:</label>
+        <input type="date" id="startDate" class="filter-input">
+        <label for="endDate">Hasta:</label>
+        <input type="date" id="endDate" class="filter-input">
+      </div>
+
+      <div class="filter-group">
+        <label for="filterProfesional">
+          <span class="filter-icon">👤</span>
+          Profesional:
+        </label>
+        <select id="filterProfesional" class="filter-select">
+          <option value="all">Todos los Profesionales</option>
+          <!-- Se llena dinámicamente -->
+        </select>
+      </div>
+
+      <button class="btn-apply-filters" id="btnApplyFilters">
+        Aplicar Filtros
+      </button>
+
+      <button class="btn-export" id="btnExport">
+        📥 Exportar PDF
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingStats" class="loading-overlay" style="display: none;">
+      <div class="spinner-large"></div>
+      <p>Cargando estadísticas...</p>
+    </div>
+
+    <!-- Tarjetas de Resumen General -->
+    <div class="summary-cards">
+      <div class="summary-card card-blue">
+        <div class="card-icon">👥</div>
+        <div class="card-content">
+          <h3 class="card-title">Total Trabajadores</h3>
+          <p class="card-value" id="totalWorkers">0</p>
+          <p class="card-subtitle" id="workersChange">+0 este mes</p>
+        </div>
+      </div>
+
+      <div class="summary-card card-green">
+        <div class="card-icon">📋</div>
+        <div class="card-content">
+          <h3 class="card-title">Total Consultas</h3>
+          <p class="card-value" id="totalConsultas">0</p>
+          <p class="card-subtitle" id="consultasChange">+0 este mes</p>
+        </div>
+      </div>
+
+      <div class="summary-card card-orange">
+        <div class="card-icon">🔄</div>
+        <div class="card-content">
+          <h3 class="card-title">Total Sesiones</h3>
+          <p class="card-value" id="totalSesiones">0</p>
+          <p class="card-subtitle" id="sesionesChange">+0 este mes</p>
+        </div>
+      </div>
+
+      <div class="summary-card card-teal">
+        <div class="card-icon">⏱️</div>
+        <div class="card-content">
+          <h3 class="card-title">Horas de Atención</h3>
+          <p class="card-value" id="totalHours">0h</p>
+          <p class="card-subtitle" id="hoursChange">+0h este mes</p>
+        </div>
+      </div>
+
+      <div class="summary-card card-purple">
+        <div class="card-icon">✅</div>
+        <div class="card-content">
+          <h3 class="card-title">Casos Cerrados</h3>
+          <p class="card-value" id="casosCerradosPercent">0%</p>
+          <p class="card-subtitle" id="casosCerradosChange">+0% vs mes ant.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos Principales -->
+    <div class="charts-grid">
+      <!-- Consultas por Profesional -->
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">👨‍⚕️</span>
+          Consultas por Profesional
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartProfesionales"></canvas>
+        </div>
+      </div>
+
+      <!-- Modalidad de Atención -->
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">💻</span>
+          Modalidad de Atención
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartModalidad"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Motivos de Consulta -->
+      <div class="chart-container chart-wide">
+        <h3 class="chart-title">
+          <span class="chart-icon">📝</span>
+          Top 5 Motivos de Consulta
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartMotivos"></canvas>
+        </div>
+      </div>
+
+      <!-- Estado de Casos -->
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">📊</span>
+          Estado de Casos
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartEstados"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evolución Mensual -->
+    <div class="evolution-section">
+      <div class="chart-container chart-full">
+        <h3 class="chart-title">
+          <span class="chart-icon">📈</span>
+          Evolución de Consultas (Últimos 6 Meses)
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartEvolucion"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribución por Sede y Empresa -->
+    <div class="distribution-grid">
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">🏢</span>
+          Distribución por Sede
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartSedes"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">🏭</span>
+          Distribución por Empresa
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartEmpresas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Detallada de Profesionales -->
+    <div class="table-section">
+      <h3 class="section-title">
+        <span class="section-icon">📋</span>
+        Detalle por Profesional
+      </h3>
+      
+      <div class="table-container">
+        <table class="stats-table" id="tableProfesionales">
+          <thead>
+            <tr>
+              <th>Profesional</th>
+              <th>Trabajadores</th>
+              <th>Consultas</th>
+              <th>Sesiones</th>
+              <th>Virtual</th>
+              <th>Presencial</th>
+              <th>Abiertos</th>
+              <th>Cerrados</th>
+              <th>Horas</th>
+              <th>Promedio Sesiones</th>
+            </tr>
+          </thead>
+          <tbody id="tableProfesionalesBody">
+            <!-- Se llena dinámicamente -->
+          </tbody>
+          <tfoot id="tableProfesionalesFooter">
+            <!-- Totales -->
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Indicadores de Calidad -->
+    <div class="quality-section">
+      <h3 class="section-title">
+        <span class="section-icon">⭐</span>
+        Indicadores de Calidad y Seguimiento
+      </h3>
+      
+      <div class="quality-grid">
+        <div class="quality-card">
+          <div class="quality-icon">📅</div>
+          <div class="quality-content">
+            <h4>Tiempo Promedio de Atención</h4>
+            <p class="quality-value" id="avgDuration">0 días</p>
+            <p class="quality-detail">Desde primera hasta última sesión</p>
+          </div>
+        </div>
+
+        <div class="quality-card">
+          <div class="quality-icon">🔄</div>
+          <div class="quality-content">
+            <h4>Sesiones Promedio por Caso</h4>
+            <p class="quality-value" id="avgSessions">0</p>
+            <p class="quality-detail">Antes de cerrar un caso</p>
+          </div>
+        </div>
+
+        <div class="quality-card">
+          <div class="quality-icon">📞</div>
+          <div class="quality-content">
+            <h4>Contacto de Emergencia</h4>
+            <p class="quality-value" id="emergencyContact">0%</p>
+            <p class="quality-detail">Trabajadores con contacto registrado</p>
+          </div>
+        </div>
+
+        <div class="quality-card">
+          <div class="quality-icon">⚠️</div>
+          <div class="quality-content">
+            <h4>Sin Seguimiento Reciente</h4>
+            <p class="quality-value" id="noFollowup">0</p>
+            <p class="quality-detail">Más de 30 días sin consulta</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="js/dashboard-stats.js"></script>
+</body>
+</html>

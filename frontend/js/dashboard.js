@@ -84,9 +84,9 @@ async function aplicarFiltrosYMostrar() {
   // Mostrar estadísticas
   await Promise.all([
     mostrarEstadisticasGenerales(estadisticasFiltradas),
-    mostrarModalidadStats(consultasFiltradas), // Pasar consultas completas para modalidad
+    mostrarModalidadStats(consultasFiltradas),
     mostrarEstadoStats(estadisticasFiltradas),
-    mostrarMotivosStats(consultasFiltradas), // Nueva función para motivos
+    mostrarMotivosStats(consultasFiltradas),
     mostrarTopClientes(consultasFiltradas),
     loadSedesStats()
   ]);
@@ -123,7 +123,7 @@ function calcularEstadisticas(consultas) {
   });
 
   return {
-    total_consultas: Object.keys(consultasPorCliente).length, // Total de clientes con consultas
+    total_consultas: Object.keys(consultasPorCliente).length,
     casos_abiertos: casosAbiertos,
     casos_cerrados: casosCerrados
   };
@@ -183,12 +183,10 @@ async function mostrarEstadoStats(stats) {
       const segmentAbiertos = document.getElementById("segmentAbiertos");
       const segmentCerrados = document.getElementById("segmentCerrados");
 
-      // Segmento de Abiertos (comienza en la parte superior)
       const abiertosLength = (abiertosPct / 100) * circumference;
       segmentAbiertos.style.strokeDasharray = `${abiertosLength} ${circumference}`;
       segmentAbiertos.style.strokeDashoffset = '0';
 
-      // Segmento de Cerrados (comienza donde termina Abiertos)
       const cerradosLength = (cerradosPct / 100) * circumference;
       segmentCerrados.style.strokeDasharray = `${cerradosLength} ${circumference}`;
       segmentCerrados.style.strokeDashoffset = `-${abiertosLength}`;
@@ -211,13 +209,11 @@ async function mostrarMotivosStats(consultas) {
   // Agrupar por cliente y obtener el motivo de consulta (primera sesión)
   consultas.forEach(c => {
     if (!motivosPorCliente[c.cliente_id]) {
-      // Solo tomamos el motivo de la primera sesión del cliente
       motivosPorCliente[c.cliente_id] = {
         motivo: c.motivo_consulta || 'Sin especificar',
         fecha: new Date(c.fecha)
       };
     } else {
-      // Si ya existe, verificar si esta sesión es más antigua
       const fechaActual = new Date(c.fecha);
       if (fechaActual < motivosPorCliente[c.cliente_id].fecha) {
         motivosPorCliente[c.cliente_id].motivo = c.motivo_consulta || 'Sin especificar';
@@ -248,7 +244,6 @@ async function mostrarMotivosStats(consultas) {
     return;
   }
 
-  // Calcular total para porcentajes
   const totalCasos = Object.keys(motivosPorCliente).length;
 
   container.innerHTML = motivosArray.map(m => {
@@ -256,7 +251,7 @@ async function mostrarMotivosStats(consultas) {
     return `
       <div class="motivo-card">
         <div class="motivo-header">
-          <span class="motivo-icon">🔍</span>
+          <span class="motivo-icon">📋</span>
           <span class="motivo-badge">${porcentaje}%</span>
         </div>
         <h4 class="motivo-name">${escapeHtml(m.motivo)}</h4>
@@ -272,27 +267,37 @@ async function mostrarMotivosStats(consultas) {
   }).join('');
 }
 
-// Mostrar top clientes con más consultas
+// ⭐ CORREGIDO: Mostrar top clientes con más consultas
 async function mostrarTopClientes(consultas) {
   const consultasPorCliente = {};
   
-  // Contar consultas únicas y sesiones por cliente
+  // Crear un mapa de todos los clientes disponibles para tener sus datos completos
+  const clientesMap = {};
+  datosOriginales.clientes.forEach(cliente => {
+    clientesMap[cliente.id] = cliente;
+  });
+  
+  // Agrupar consultas por cliente
   consultas.forEach(c => {
     if (!consultasPorCliente[c.cliente_id]) {
-      consultasPorCliente[c.cliente_id] = {
-        totalConsultas: 0,
-        totalSesiones: 0,
+      // Buscar datos del cliente en el mapa o usar los de la consulta
+      const clienteData = clientesMap[c.cliente_id] || {
         cedula: c.cedula,
         nombre: c.nombre,
-        sede: c.sede,
-        consultasSet: new Set(),
+        sede: c.sede
+      };
+      
+      consultasPorCliente[c.cliente_id] = {
+        totalSesiones: 0,
+        cedula: clienteData.cedula,
+        nombre: clienteData.nombre,
+        sede: clienteData.sede,
         tieneAbierta: false,
         tieneCerrada: false
       };
     }
-    // Por ahora cada cliente tiene 1 consulta, pero en el futuro
-    // se podrá identificar por un campo adicional (ej: consulta_id)
-    consultasPorCliente[c.cliente_id].consultasSet.add(c.cliente_id);
+    
+    // Incrementar sesiones
     consultasPorCliente[c.cliente_id].totalSesiones++;
     
     // Verificar estado
@@ -304,17 +309,18 @@ async function mostrarTopClientes(consultas) {
     }
   });
 
-  // Contar consultas únicas
-  Object.keys(consultasPorCliente).forEach(clienteId => {
-    consultasPorCliente[clienteId].totalConsultas = consultasPorCliente[clienteId].consultasSet.size;
-    delete consultasPorCliente[clienteId].consultasSet; // Limpiar
-  });
+  // Convertir a array y ordenar por número de sesiones
+  const todosLosClientes = Object.entries(consultasPorCliente)
+    .map(([id, data]) => ({ 
+      id: parseInt(id), 
+      totalConsultas: 1, // Por ahora cada cliente = 1 consulta
+      ...data 
+    }))
+    .sort((a, b) => b.totalSesiones - a.totalSesiones);
 
-  // Convertir a array y ordenar por número de consultas
-  const clientesArray = Object.entries(consultasPorCliente)
-    .map(([id, data]) => ({ id: parseInt(id), ...data }))
-    .sort((a, b) => b.totalConsultas - a.totalConsultas)
-    .slice(0, 5);
+  const totalClientes = todosLosClientes.length;
+  const mostrandoTop10 = totalClientes > 10;
+  const clientesArray = mostrandoTop10 ? todosLosClientes.slice(0, 10) : todosLosClientes;
 
   const tbody = document.getElementById("topClientesTable");
   
@@ -336,10 +342,8 @@ async function mostrarTopClientes(consultas) {
     // Determinar el estado visual
     let estadoIndicador = '';
     if (cliente.tieneCerrada && !cliente.tieneAbierta) {
-      // Todas cerradas
       estadoIndicador = '<span class="estado-indicator cerrado" title="Consulta cerrada">🔴</span>';
     } else if (cliente.tieneAbierta) {
-      // Tiene al menos una abierta
       estadoIndicador = '<span class="estado-indicator abierto" title="Consulta abierta">🟢</span>';
     }
     
@@ -366,6 +370,95 @@ async function mostrarTopClientes(consultas) {
       </tr>
     `;
   }).join('');
+
+  // ⭐ NUEVO: Mostrar u ocultar el botón "Ver todos"
+  const btnVerTodosContainer = document.getElementById("btnVerTodosClientesContainer");
+  const btnVerTodosClientes = document.getElementById("btnVerTodosClientes");
+  
+  if (mostrandoTop10) {
+    // Hay más de 10 clientes, mostrar el botón
+    if (!btnVerTodosContainer) {
+      // Crear el contenedor del botón si no existe
+      const tableSection = document.querySelector('.table-section');
+      const tableContainer = tableSection.querySelector('.table-container');
+      
+      const btnContainer = document.createElement('div');
+      btnContainer.id = 'btnVerTodosClientesContainer';
+      btnContainer.style.cssText = 'text-align: center; margin-top: 20px;';
+      btnContainer.innerHTML = `
+        <button id="btnVerTodosClientes" class="btn-view-all" style="padding: 12px 24px; font-size: 14px;">
+          📋 Ver todos los ${totalClientes} clientes
+        </button>
+      `;
+      tableContainer.after(btnContainer);
+      
+      // Agregar evento al botón
+      document.getElementById("btnVerTodosClientes").addEventListener("click", () => {
+        mostrarTodosLosClientes(todosLosClientes);
+      });
+    } else {
+      // Actualizar el texto del botón
+      btnVerTodosContainer.style.display = 'block';
+      btnVerTodosClientes.textContent = `📋 Ver todos los ${totalClientes} clientes`;
+    }
+  } else {
+    // 10 o menos clientes, ocultar el botón
+    if (btnVerTodosContainer) {
+      btnVerTodosContainer.style.display = 'none';
+    }
+  }
+}
+
+// ⭐ NUEVA FUNCIÓN: Mostrar todos los clientes en la tabla
+function mostrarTodosLosClientes(todosLosClientes) {
+  const tbody = document.getElementById("topClientesTable");
+  
+  tbody.innerHTML = todosLosClientes.map((cliente, index) => {
+    const position = index + 1;
+    const positionClass = position <= 3 ? `position-${position}` : 'position-default';
+    
+    let estadoIndicador = '';
+    if (cliente.tieneCerrada && !cliente.tieneAbierta) {
+      estadoIndicador = '<span class="estado-indicator cerrado" title="Consulta cerrada">🔴</span>';
+    } else if (cliente.tieneAbierta) {
+      estadoIndicador = '<span class="estado-indicator abierto" title="Consulta abierta">🟢</span>';
+    }
+    
+    return `
+      <tr>
+        <td>
+          <span class="position-badge ${positionClass}">${position}</span>
+        </td>
+        <td>${cliente.cedula}</td>
+        <td>${escapeHtml(cliente.nombre)}</td>
+        <td>${escapeHtml(cliente.sede)}</td>
+        <td>
+          <div class="consultas-info">
+            <strong>${cliente.totalConsultas}</strong>
+            <span class="sesiones-count">(${cliente.totalSesiones} sesiones)</span>
+            ${estadoIndicador}
+          </div>
+        </td>
+        <td>
+          <button class="btn-ver-cliente" onclick="verCliente(${cliente.id})">
+            Ver →
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Ocultar el botón después de mostrar todos
+  const btnVerTodosContainer = document.getElementById("btnVerTodosClientesContainer");
+  if (btnVerTodosContainer) {
+    btnVerTodosContainer.style.display = 'none';
+  }
+
+  // Scroll suave hacia la tabla
+  document.querySelector('.table-section').scrollIntoView({ 
+    behavior: 'smooth', 
+    block: 'start' 
+  });
 }
 
 // Cargar estadísticas por sede
@@ -642,7 +735,6 @@ window.exportarExcel = function() {
 
 window.exportarJSON = function() {
   try {
-    // Calcular estadísticas correctamente para exportación
     const estadisticasExport = calcularEstadisticas(datosOriginales.consultas);
     
     const dataToExport = {

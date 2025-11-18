@@ -12,6 +12,7 @@ const consultasRoutes = require("./routes/consultas");
 const empresasRoutes = require("./routes/empresas");
 const authRoutes = require("./routes/auth");
 const authMiddleware = require("./middleware/authMiddleware");
+const statsRoutes = require("./routes/stats");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/clients", authMiddleware.verifyToken, clientsRoutes);
 app.use("/api/consultas", authMiddleware.verifyToken, consultasRoutes);
 app.use("/api/empresas", authMiddleware.verifyToken, empresasRoutes);
+app.use("/api/stats", statsRoutes);
 
 // Ruta de prueba (pública)
 app.get("/", (req, res) => {

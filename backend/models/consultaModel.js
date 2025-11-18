@@ -39,6 +39,22 @@ exports.getAllConsultas = async () => {
   return result.rows;
 };
 
+// ⭐ NUEVO: Obtener consultas filtradas por profesional
+exports.getConsultasByProfesional = async (profesionalId) => {
+  const result = await pool.query(`
+    SELECT 
+      c.*,
+      cl.cedula,
+      cl.nombre,
+      cl.sede
+    FROM consultas c
+    INNER JOIN clients cl ON c.cliente_id = cl.id
+    WHERE cl.profesional_id = $1
+    ORDER BY c.fecha DESC, c.created_at DESC
+  `, [profesionalId]);
+  return result.rows;
+};
+
 // Obtener consultas de un cliente específico
 exports.getConsultasByCliente = async (cliente_id) => {
   const result = await pool.query(
@@ -116,5 +132,21 @@ exports.getEstadisticas = async () => {
       COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
     FROM consultas
   `);
+  return result.rows[0];
+};
+
+// ⭐ NUEVO: Obtener estadísticas filtradas por profesional
+exports.getEstadisticasByProfesional = async (profesionalId) => {
+  const result = await pool.query(`
+    SELECT 
+      COUNT(*) as total_consultas,
+      COUNT(CASE WHEN c.estado = 'Abierto' THEN 1 END) as casos_abiertos,
+      COUNT(CASE WHEN c.estado = 'Cerrado' THEN 1 END) as casos_cerrados,
+      COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
+      COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
+    FROM consultas c
+    INNER JOIN clients cl ON c.cliente_id = cl.id
+    WHERE cl.profesional_id = $1
+  `, [profesionalId]);
   return result.rows[0];
 };

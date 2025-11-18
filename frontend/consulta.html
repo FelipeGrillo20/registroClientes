@@ -12,6 +12,59 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <!-- Select2 Bootstrap Theme -->
   <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+  
+  <style>
+    /* Estilos para el campo de fecha de cierre */
+    .form-group-fecha-cierre {
+      display: none;
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+      animation: slideDown 0.3s ease;
+    }
+    
+    .form-group-fecha-cierre.show {
+      display: block;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .fecha-cierre-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #856404;
+      margin-bottom: 8px;
+    }
+    
+    .fecha-cierre-icon {
+      font-size: 18px;
+    }
+    
+    .fecha-cierre-info {
+      font-size: 12px;
+      color: #856404;
+      margin-top: 5px;
+      font-style: italic;
+    }
+    
+    #fecha_cierre {
+      border: 2px solid #ffc107;
+      background: white;
+    }
+  </style>
 </head>
 <body>
   
@@ -134,6 +187,17 @@
               📊
             </button>
           </div>
+          
+          <!-- ⭐ NUEVO: Mostrar fecha de cierre si el caso está cerrado -->
+          <div class="info-item" id="fechaCierreInfo" style="display: none;">
+            <div class="info-icon-wrapper">
+              <span class="info-icon">🔒</span>
+            </div>
+            <div class="info-content">
+              <label class="info-label">Caso Cerrado el</label>
+              <p class="info-value" id="clientFechaCierre">-</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -248,6 +312,18 @@
               👤 Contacto de Emergencia
             </button>
           </div>
+        </div>
+
+        <!-- ⭐ NUEVO: Campo de Fecha de Cierre (se muestra solo cuando estado = "Cerrado") -->
+        <div class="form-group-fecha-cierre" id="fechaCierreContainer">
+          <div class="fecha-cierre-label">
+            <span class="fecha-cierre-icon">🔒</span>
+            <span>Fecha de Cierre del Caso <span class="required">*</span></span>
+          </div>
+          <input type="date" id="fecha_cierre" />
+          <p class="fecha-cierre-info">
+            Esta fecha se guardará como la fecha oficial de cierre del caso del trabajador
+          </p>
         </div>
 
         <div class="form-actions">

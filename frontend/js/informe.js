@@ -25,7 +25,7 @@ function escapeHtmlInforme(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Calcular días en proceso con lógica especial
+// ⭐ MODIFICADO: Calcular días en proceso usando fecha_cierre del cliente
 function calcularDiasEnProceso(fechaInicial, fechaFinal) {
   const fecha1 = new Date(fechaInicial);
   const fecha2 = new Date(fechaFinal);
@@ -48,6 +48,10 @@ window.generarInformePaciente = function() {
   const clienteActual = window.clienteActual;
   const consultasDelCliente = window.consultasDelCliente;
   
+  console.log("📊 Generando informe...");
+  console.log("Cliente:", clienteActual);
+  console.log("Consultas:", consultasDelCliente);
+  
   // Obtener usuario logueado
   const userData = window.getUserData();
   const profesionalNombre = userData ? userData.nombre : 'No especificado';
@@ -57,9 +61,23 @@ window.generarInformePaciente = function() {
   const rutaFirma = profesionalCedula ? `img/firmas/firma_${profesionalCedula}.png` : null;
 
   if (!clienteActual || !consultasDelCliente || consultasDelCliente.length === 0) {
+    console.error("❌ No hay información suficiente");
     alert("⚠️ No hay información suficiente para generar el informe");
     return;
   }
+
+  // ⭐ VALIDAR: El caso debe estar cerrado para generar informe
+  console.log("🔍 Verificando fecha de cierre...");
+  console.log("fecha_cierre del cliente:", clienteActual.fecha_cierre);
+  
+  if (!clienteActual.fecha_cierre) {
+    console.error("❌ El caso NO está cerrado");
+    console.log("Estado del cliente completo:", JSON.stringify(clienteActual, null, 2));
+    alert("⚠️ El caso debe estar cerrado para generar el informe.\n\nPor favor, cierra el caso desde el formulario de consulta seleccionando estado 'Cerrado' y estableciendo una fecha de cierre.");
+    return;
+  }
+  
+  console.log("✅ Caso cerrado, generando informe...");
 
   // Ordenar consultas por fecha y por ID para mantener el orden correcto en el informe
   const consultasOrdenadas = [...consultasDelCliente].sort((a, b) => {
@@ -71,17 +89,9 @@ window.generarInformePaciente = function() {
   const numeroSesiones = consultasDelCliente.length;
   const numeroHoras = numeroSesiones; // 1 hora por sesión
   
-  // Cálculo de fechas y días en proceso
+  // ⭐ MODIFICADO: Cálculo de fechas usando fecha_cierre del cliente
   const fechaInicial = new Date(consultasOrdenadas[0].fecha);
-  
-  const consultasCerradas = consultasOrdenadas.filter(c => c.estado === 'Cerrado');
-  let fechaCierre;
-  
-  if (consultasCerradas.length > 0) {
-    fechaCierre = new Date(consultasCerradas[consultasCerradas.length - 1].fecha);
-  } else {
-    fechaCierre = new Date(consultasOrdenadas[consultasOrdenadas.length - 1].fecha);
-  }
+  const fechaCierre = new Date(clienteActual.fecha_cierre); // ← Usar fecha_cierre del cliente
   
   const diasEnProceso = calcularDiasEnProceso(fechaInicial, fechaCierre);
   
@@ -210,7 +220,7 @@ window.generarInformePaciente = function() {
         <!-- Motivo Principal -->
         <div class="informe-section informe-motivo">
           <h2 class="informe-section-title">
-            <span class="section-icon">🔍</span>
+            <span class="section-icon">📋</span>
             Motivo de Consulta
           </h2>
           <div class="motivo-principal">

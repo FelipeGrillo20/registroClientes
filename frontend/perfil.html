@@ -97,9 +97,14 @@
           <span class="management-icon">👥</span>
           Gestión de Usuarios
         </h2>
-        <button class="btn-add-user" id="btnAddUser">
-          ➕ Nuevo Usuario
-        </button>
+        <div class="management-actions">
+          <button type="button" class="btn-stats" id="btnStats" title="Ver Cuadro de Mando">
+            📊 Cuadro Estadísticas
+          </button>
+          <button type="button" class="btn-add-user" id="btnAddUser">
+            ➕ Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       <!-- Tabla de usuarios -->
@@ -223,7 +228,7 @@
     <div id="modalAdminPassword" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header modal-header-admin">
-          <h2>🔑 Cambiar Contraseña de Usuario</h2>
+          <h2>🔒 Cambiar Contraseña de Usuario</h2>
           <button type="button" class="btn-close-modal" id="btnCloseAdminPasswordModal">&times;</button>
         </div>
         

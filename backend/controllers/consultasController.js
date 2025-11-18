@@ -53,10 +53,22 @@ exports.createConsulta = async (req, res) => {
   }
 };
 
-// Obtener todas las consultas
+// ⭐ MODIFICADO: Obtener consultas según el rol del usuario
 exports.getAllConsultas = async (req, res) => {
   try {
-    const consultas = await consultaModel.getAllConsultas();
+    const userRole = req.user.rol; // Del token JWT
+    const userId = req.user.id;    // Del token JWT
+    
+    let consultas;
+    
+    if (userRole === 'admin') {
+      // Admin ve TODAS las consultas
+      consultas = await consultaModel.getAllConsultas();
+    } else {
+      // Profesionales solo ven consultas de sus clientes
+      consultas = await consultaModel.getConsultasByProfesional(userId);
+    }
+    
     res.json(consultas);
   } catch (err) {
     console.error("Error obteniendo consultas:", err);
@@ -167,10 +179,22 @@ exports.deleteConsulta = async (req, res) => {
   }
 };
 
-// Obtener estadísticas
+// ⭐ MODIFICADO: Obtener estadísticas según el rol del usuario
 exports.getEstadisticas = async (req, res) => {
   try {
-    const stats = await consultaModel.getEstadisticas();
+    const userRole = req.user.rol; // Del token JWT
+    const userId = req.user.id;    // Del token JWT
+    
+    let stats;
+    
+    if (userRole === 'admin') {
+      // Admin ve estadísticas de TODAS las consultas
+      stats = await consultaModel.getEstadisticas();
+    } else {
+      // Profesionales solo ven estadísticas de sus clientes
+      stats = await consultaModel.getEstadisticasByProfesional(userId);
+    }
+    
     res.json(stats);
   } catch (err) {
     console.error("Error obteniendo estadísticas:", err);

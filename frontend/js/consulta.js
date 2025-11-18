@@ -5,7 +5,7 @@ const CONSULTAS_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 
 let clienteActual = null;
 let editandoConsultaId = null;
-let consultasDelCliente = []; // Para almacenar todas las consultas
+let consultasDelCliente = [];
 
 // Exponer variables globalmente para informe.js
 window.clienteActual = null;
@@ -30,6 +30,34 @@ function getClienteIdFromURL() {
   return params.get("cliente");
 }
 
+// ⭐ NUEVO: Mostrar/Ocultar campo de fecha de cierre según el estado
+function toggleFechaCierreField() {
+  const estadoSelect = document.getElementById("estado");
+  const fechaCierreContainer = document.getElementById("fechaCierreContainer");
+  const fechaCierreInput = document.getElementById("fecha_cierre");
+  
+  if (estadoSelect.value === "Cerrado") {
+    fechaCierreContainer.classList.add("show");
+    fechaCierreInput.required = true;
+    
+    // Si no tiene valor, establecer la fecha de hoy por defecto
+    if (!fechaCierreInput.value) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      fechaCierreInput.value = `${year}-${month}-${day}`;
+    }
+  } else {
+    fechaCierreContainer.classList.remove("show");
+    fechaCierreInput.required = false;
+    fechaCierreInput.value = "";
+  }
+}
+
+// ⭐ NUEVO: Agregar listener al campo de estado
+document.getElementById("estado")?.addEventListener("change", toggleFechaCierreField);
+
 // Cargar datos del cliente
 async function loadClientData() {
   const clienteId = getClienteIdFromURL();
@@ -53,7 +81,7 @@ async function loadClientData() {
 
     const cliente = await res.json();
     clienteActual = cliente;
-    window.clienteActual = cliente; // Exponer para informe.js
+    window.clienteActual = cliente;
 
     // Mostrar datos en la tarjeta
     displayClientData(cliente);
@@ -94,19 +122,15 @@ function displayClientData(cliente) {
     empresaElement.textContent = "-";
   }
 
-  // ============================================
-  // MOSTRAR ENTIDAD PAGADORA
-  // ============================================
+  // Mostrar Entidad Pagadora
   const entidadPagadoraElement = document.getElementById("clientEntidadPagadora");
   
   if (cliente.tipo_entidad_pagadora) {
     let textoEntidad = '';
     
     if (cliente.tipo_entidad_pagadora === 'Particular') {
-      // Si es Particular, mostrar solo "Particular"
       textoEntidad = '<span class="badge-entidad-pagadora badge-particular">Particular</span>';
     } else {
-      // Si es ARL o CCF, mostrar: "ARL → Positiva" o "CCF → Compensar"
       const entidadEspecifica = cliente.entidad_pagadora_especifica || '';
       textoEntidad = `
         <span class="badge-entidad-pagadora badge-${cliente.tipo_entidad_pagadora.toLowerCase()}">
@@ -124,6 +148,17 @@ function displayClientData(cliente) {
     entidadPagadoraElement.textContent = "-";
   }
 
+  // ⭐ NUEVO: Mostrar fecha de cierre si existe
+  const fechaCierreInfo = document.getElementById("fechaCierreInfo");
+  const fechaCierreValue = document.getElementById("clientFechaCierre");
+  
+  if (cliente.fecha_cierre) {
+    fechaCierreValue.textContent = formatDate(cliente.fecha_cierre);
+    fechaCierreInfo.style.display = "flex";
+  } else {
+    fechaCierreInfo.style.display = "none";
+  }
+
   // Actualizar badge con nombre del cliente
   const badge = document.getElementById("clientBadge");
   const primerNombre = cliente.nombre ? cliente.nombre.split(" ")[0] : "Cliente";
@@ -134,14 +169,12 @@ function displayClientData(cliente) {
 // FUNCIONALIDAD CONTACTO DE EMERGENCIA
 // ============================================
 
-// Abrir modal de contacto de emergencia desde el formulario
 document.getElementById("btnContactoEmergencia")?.addEventListener("click", () => {
   if (!clienteActual) {
     alert("⚠️ No hay datos del cliente cargados");
     return;
   }
 
-  // Si ya tiene contacto, mostrar para ver
   if (clienteActual.contacto_emergencia_nombre) {
     document.getElementById("contactoNombreVer").textContent = 
       clienteActual.contacto_emergencia_nombre;
@@ -151,14 +184,11 @@ document.getElementById("btnContactoEmergencia")?.addEventListener("click", () =
       clienteActual.contacto_emergencia_telefono;
     document.getElementById("modalVerContacto").classList.add("show");
   } else {
-    // Si no tiene, abrir modal para crear
     abrirModalCrearContacto();
   }
 });
 
-// Función para abrir modal de crear/editar contacto
 function abrirModalCrearContacto() {
-  // Limpiar formulario
   document.getElementById("editContactoNombre").value = clienteActual.contacto_emergencia_nombre || "";
   document.getElementById("editContactoParentesco").value = clienteActual.contacto_emergencia_parentesco || "";
   document.getElementById("editContactoTelefono").value = clienteActual.contacto_emergencia_telefono || "";
@@ -166,17 +196,14 @@ function abrirModalCrearContacto() {
   document.getElementById("modalEditarContacto").classList.add("show");
 }
 
-// Cerrar modal de visualización
 window.cerrarModalContacto = function() {
   document.getElementById("modalVerContacto").classList.remove("show");
 };
 
-// Cerrar modal de edición
 window.cerrarModalEditarContacto = function() {
   document.getElementById("modalEditarContacto").classList.remove("show");
 };
 
-// Cerrar modales al hacer clic fuera
 document.getElementById("modalVerContacto")?.addEventListener("click", (e) => {
   if (e.target.id === "modalVerContacto") {
     cerrarModalContacto();
@@ -189,7 +216,6 @@ document.getElementById("modalEditarContacto")?.addEventListener("click", (e) =>
   }
 });
 
-// Guardar contacto de emergencia
 document.getElementById("formEditarContacto")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -205,7 +231,6 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
   try {
     const clienteId = getClienteIdFromURL();
     
-    // Actualizar cliente con contacto de emergencia
     const datosActualizados = {
       ...clienteActual,
       contacto_emergencia_nombre: nombre,
@@ -228,11 +253,10 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
 
     alert("✅ Contacto de emergencia guardado correctamente");
     
-    // Actualizar datos del cliente actual
     clienteActual.contacto_emergencia_nombre = nombre;
     clienteActual.contacto_emergencia_parentesco = parentesco;
     clienteActual.contacto_emergencia_telefono = telefono;
-    window.clienteActual = clienteActual; // Actualizar referencia global
+    window.clienteActual = clienteActual;
     
     cerrarModalEditarContacto();
     
@@ -242,7 +266,6 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
   }
 });
 
-// Ver contacto desde historial
 window.verContactoDesdeHistorial = async function() {
   if (!clienteActual) {
     alert("⚠️ No hay datos del cliente");
@@ -250,10 +273,8 @@ window.verContactoDesdeHistorial = async function() {
   }
 
   if (!clienteActual.contacto_emergencia_nombre) {
-    // Si no tiene contacto, abrir para crear
     abrirModalCrearContacto();
   } else {
-    // Si tiene contacto, mostrar
     document.getElementById("contactoNombreVer").textContent = 
       clienteActual.contacto_emergencia_nombre;
     document.getElementById("contactoParentescoVer").textContent = 
@@ -264,7 +285,6 @@ window.verContactoDesdeHistorial = async function() {
   }
 };
 
-// Editar contacto desde modal de visualización
 window.editarContactoDesdeModal = function() {
   cerrarModalContacto();
   abrirModalCrearContacto();
@@ -274,15 +294,12 @@ window.editarContactoDesdeModal = function() {
 // FUNCIONES PARA SISTEMA DE SESIONES
 // ============================================
 
-// Verificar si hay consultas con estado cerrado
 function hayCasoCerrado() {
   return consultasDelCliente.some(c => c.estado === 'Cerrado');
 }
 
-// Obtener el motivo de la primera sesión
 function getMotivoSesion1() {
   if (consultasDelCliente.length > 0) {
-    // Ordenar por fecha para obtener la primera
     const ordenadas = [...consultasDelCliente].sort((a, b) => 
       new Date(a.fecha) - new Date(b.fecha)
     );
@@ -291,47 +308,56 @@ function getMotivoSesion1() {
   return null;
 }
 
-// Configurar el campo motivo_consulta según el número de sesiones
 function configurarCampoMotivo() {
   const select = $('#motivo_consulta');
   const numSesiones = consultasDelCliente.length;
   const casoCerrado = hayCasoCerrado();
 
   if (editandoConsultaId) {
-    // Si estamos editando, mantener el campo habilitado
     select.prop('disabled', false);
     return;
   }
 
   if (casoCerrado) {
-    // Si hay caso cerrado, deshabilitar el campo
     select.prop('disabled', true);
     return;
   }
 
   if (numSesiones === 0) {
-    // Primera sesión: campo habilitado
     select.prop('disabled', false);
     select.val(null).trigger('change');
   } else {
-    // Sesión 2 o más: campo deshabilitado con el motivo de la sesión 1
     const motivoSesion1 = getMotivoSesion1();
     select.val(motivoSesion1).trigger('change');
     select.prop('disabled', true);
   }
 }
 
-// Cerrar todas las consultas de un cliente
-async function cerrarTodasLasConsultas(clienteId) {
+// ⭐ MODIFICADO: Cerrar todas las consultas Y actualizar fecha_cierre del cliente
+// Reemplaza TODA la función cerrarTodasLasConsultas en tu consulta.js
+
+// ⭐ CORREGIDO: Cerrar todas las consultas Y actualizar fecha_cierre del cliente
+async function cerrarTodasLasConsultas(clienteId, fechaCierre) {
   try {
+    console.log("🔄 Iniciando cierre de caso...");
+    console.log("Cliente ID:", clienteId);
+    console.log("Fecha de cierre a guardar:", fechaCierre);
+    
+    // 1. Cerrar todas las consultas
     const promises = consultasDelCliente.map(consulta => {
       if (consulta.estado !== 'Cerrado') {
+        console.log(`Cerrando consulta ${consulta.id}...`);
         return fetch(`${CONSULTAS_API_URL}/${consulta.id}`, {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({
-            ...consulta,
-            estado: 'Cerrado'
+            motivo_consulta: consulta.motivo_consulta,
+            actividad: consulta.actividad,
+            modalidad: consulta.modalidad,
+            fecha: consulta.fecha.split('T')[0],
+            columna1: consulta.columna1,
+            estado: 'Cerrado',
+            cliente_id: parseInt(clienteId)
           })
         });
       }
@@ -339,18 +365,69 @@ async function cerrarTodasLasConsultas(clienteId) {
     });
 
     await Promise.all(promises);
+    console.log("✅ Todas las consultas cerradas");
+
+    // 2. Obtener datos actuales del cliente
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!resCliente.ok) {
+      throw new Error("Error al obtener datos del cliente");
+    }
+    
+    const clienteData = await resCliente.json();
+    console.log("📋 Cliente actual antes de actualizar:", clienteData);
+    
+    // 3. Preparar datos actualizados CON fecha_cierre
+    const clienteActualizado = {
+      cedula: clienteData.cedula,
+      nombre: clienteData.nombre,
+      vinculo: clienteData.vinculo,
+      sede: clienteData.sede,
+      tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+      entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+      empresa_id: clienteData.empresa_id,
+      email: clienteData.email,
+      telefono: clienteData.telefono,
+      contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+      contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+      contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+      fecha_cierre: fechaCierre // ⭐ CRÍTICO: Fecha de cierre
+    };
+    
+    console.log("📝 Datos a enviar:", clienteActualizado);
+    
+    // 4. Actualizar el cliente con la fecha de cierre
+    const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clienteActualizado)
+    });
+    
+    if (!resUpdate.ok) {
+      const errorData = await resUpdate.json();
+      console.error("❌ Error actualizando cliente:", errorData);
+      throw new Error(errorData.message || "Error al actualizar fecha de cierre del cliente");
+    }
+    
+    const clienteActualizadoRes = await resUpdate.json();
+    console.log("✅ Cliente actualizado exitosamente:", clienteActualizadoRes);
+    console.log("✅ Fecha de cierre guardada:", clienteActualizadoRes.fecha_cierre);
+
     return true;
   } catch (err) {
-    console.error("Error cerrando consultas:", err);
+    console.error("❌ Error cerrando caso:", err);
+    alert("Error al cerrar el caso: " + err.message);
     return false;
   }
 }
 
-// Cargar historial de consultas
 async function loadHistorialConsultas(clienteId) {
   const container = document.getElementById("historialContainer");
   
-  // Mostrar loading
   container.innerHTML = `
     <div class="loading-historial">
       <span class="spinner"></span>
@@ -371,9 +448,8 @@ async function loadHistorialConsultas(clienteId) {
 
     const consultas = await res.json();
     
-    // Guardar consultas en variable global (copia profunda)
     consultasDelCliente = consultas ? JSON.parse(JSON.stringify(consultas)) : [];
-    window.consultasDelCliente = consultasDelCliente; // Exponer para informe.js
+    window.consultasDelCliente = consultasDelCliente;
 
     if (!consultas || consultas.length === 0) {
       container.innerHTML = `
@@ -383,27 +459,21 @@ async function loadHistorialConsultas(clienteId) {
         </div>
       `;
       
-      // Configurar campo motivo para nueva consulta
       configurarCampoMotivo();
       return;
     }
 
-    // Ordenar consultas por fecha y por ID para evitar inversión de sesiones
     const consultasOrdenadas = JSON.parse(JSON.stringify(consultas)).sort((a, b) => {
       const diffFecha = new Date(a.fecha) - new Date(b.fecha);
       if (diffFecha !== 0) return diffFecha;
       return a.id - b.id;
     });
     
-    // Asignar número de sesión a cada consulta
     consultasOrdenadas.forEach((consulta, index) => {
       consulta.numeroSesion = index + 1;
     });
 
-    // Renderizar consultas en orden cronológico
     renderHistorial(consultasOrdenadas);
-
-    // Configurar campo motivo
     configurarCampoMotivo();
 
   } catch (err) {
@@ -417,7 +487,6 @@ async function loadHistorialConsultas(clienteId) {
   }
 }
 
-// Renderizar historial de consultas
 function renderHistorial(consultas) {
   const container = document.getElementById("historialContainer");
   const casoCerrado = hayCasoCerrado();
@@ -480,7 +549,6 @@ function renderHistorial(consultas) {
     `;
   }).join('');
   
-  // Agregar botón de reabrir caso si hay casos cerrados
   const botonesAccionHTML = casoCerrado ? `
     <div class="acciones-caso-container">
       <button class="btn-informe-paciente" onclick="generarInformePaciente()">
@@ -498,7 +566,6 @@ function renderHistorial(consultas) {
   container.innerHTML = consultasHTML + botonesAccionHTML;
 }
 
-// Formatear fecha
 function formatDate(dateString) {
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, '0');
@@ -507,7 +574,6 @@ function formatDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
-// Escape HTML
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -517,7 +583,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Manejar envío del formulario
+// ⭐ MODIFICADO: Manejar envío del formulario con fecha_cierre
 document.getElementById("formConsulta")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -526,10 +592,17 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const fecha = document.getElementById("fecha").value;
   const columna1 = document.getElementById("columna1").value.trim();
   const estado = document.getElementById("estado").value;
+  const fecha_cierre = document.getElementById("fecha_cierre").value;
 
   // Validaciones
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
     alert("⚠️ Por favor completa todos los campos obligatorios");
+    return;
+  }
+
+  // Validar que si el estado es "Cerrado", debe haber fecha de cierre
+  if (estado === "Cerrado" && !fecha_cierre) {
+    alert("⚠️ Por favor especifica la fecha de cierre del caso");
     return;
   }
 
@@ -542,7 +615,8 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     modalidad,
     fecha,
     columna1: columna1 || null,
-    estado
+    estado,
+    fecha_cierre: estado === "Cerrado" ? fecha_cierre : null
   };
 
   try {
@@ -563,13 +637,8 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     }
 
     // Si el estado es "Cerrado", cerrar todas las consultas
-    if (estado === 'Cerrado' && !editandoConsultaId) {
-      await cerrarTodasLasConsultas(clienteId);
-    }
-
-    // Si estamos editando una consulta y la cambiamos a "Cerrado"
-    if (estado === 'Cerrado' && editandoConsultaId) {
-      await cerrarTodasLasConsultas(clienteId);
+    if (estado === 'Cerrado') {
+      await cerrarTodasLasConsultas(clienteId, fecha_cierre);
     }
 
     const mensaje = editandoConsultaId 
@@ -583,11 +652,10 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     $('#motivo_consulta').val(null).trigger('change');
     editandoConsultaId = null;
     
-    // Cambiar texto del botón
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
 
-    // Recargar historial
-    await loadHistorialConsultas(clienteId);
+    // Recargar datos del cliente para actualizar fecha_cierre en la tarjeta
+    await loadClientData();
 
   } catch (err) {
     console.error("Error guardando consulta:", err);
@@ -595,9 +663,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   }
 });
 
-// Editar consulta
 window.editarConsulta = async function(id) {
-  // Verificar si hay caso cerrado
   if (hayCasoCerrado()) {
     alert("⚠️ No se puede editar una sesión cuando el caso está cerrado");
     return;
@@ -616,7 +682,6 @@ window.editarConsulta = async function(id) {
 
     const consulta = await res.json();
 
-    // Llenar formulario
     $('#motivo_consulta').val(consulta.motivo_consulta).trigger('change');
     $('#motivo_consulta').prop('disabled', false);
     document.getElementById("modalidad").value = consulta.modalidad;
@@ -624,12 +689,13 @@ window.editarConsulta = async function(id) {
     document.getElementById("columna1").value = consulta.columna1 || "";
     document.getElementById("estado").value = consulta.estado;
 
+    // Actualizar campo de fecha de cierre
+    toggleFechaCierreField();
+
     editandoConsultaId = id;
 
-    // Cambiar texto del botón
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Actualizar Consulta";
 
-    // Scroll al formulario
     document.querySelector(".consulta-section").scrollIntoView({ behavior: "smooth" });
 
   } catch (err) {
@@ -638,9 +704,7 @@ window.editarConsulta = async function(id) {
   }
 };
 
-// Eliminar consulta
 window.eliminarConsulta = async function(id) {
-  // Verificar si hay caso cerrado
   if (hayCasoCerrado()) {
     alert("⚠️ No se puede eliminar una sesión cuando el caso está cerrado");
     return;
@@ -664,7 +728,6 @@ window.eliminarConsulta = async function(id) {
 
     alert("✅ Consulta eliminada correctamente");
 
-    // Recargar historial
     const clienteId = getClienteIdFromURL();
     loadHistorialConsultas(clienteId);
 
@@ -674,7 +737,7 @@ window.eliminarConsulta = async function(id) {
   }
 };
 
-// Reabrir caso - Cambiar todas las consultas a "Abierto"
+// ⭐ MODIFICADO: Reabrir caso también limpia la fecha_cierre del cliente
 window.reabrirCaso = async function() {
   if (!confirm("¿Estás seguro de reabrir el caso? Todas las sesiones volverán a estar disponibles para editar.")) {
     return;
@@ -683,7 +746,7 @@ window.reabrirCaso = async function() {
   const clienteId = getClienteIdFromURL();
 
   try {
-    // Actualizar todas las consultas a estado "Abierto"
+    // 1. Actualizar todas las consultas a estado "Abierto"
     const promises = consultasDelCliente.map(consulta => {
       if (consulta.estado === 'Cerrado') {
         return fetch(`${CONSULTAS_API_URL}/${consulta.id}`, {
@@ -691,7 +754,8 @@ window.reabrirCaso = async function() {
           headers: getAuthHeaders(),
           body: JSON.stringify({
             ...consulta,
-            estado: 'Abierto'
+            estado: 'Abierto',
+            cliente_id: clienteId
           })
         });
       }
@@ -700,10 +764,44 @@ window.reabrirCaso = async function() {
 
     await Promise.all(promises);
 
+    // 2. Limpiar fecha_cierre del cliente (solo campos de la tabla clients)
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (resCliente.ok) {
+      const clienteData = await resCliente.json();
+      
+      // ⭐ Solo campos que existen en la tabla clients
+      const clienteActualizado = {
+        cedula: clienteData.cedula,
+        nombre: clienteData.nombre,
+        vinculo: clienteData.vinculo,
+        sede: clienteData.sede,
+        tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+        entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+        empresa_id: clienteData.empresa_id,
+        email: clienteData.email,
+        telefono: clienteData.telefono,
+        contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+        contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+        contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+        fecha_cierre: null
+      };
+      
+      await fetch(`${API_URL}/${clienteId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(clienteActualizado)
+      });
+    }
+
     alert("✅ Caso reabierto correctamente. Todas las sesiones están disponibles nuevamente.");
 
-    // Recargar historial
-    await loadHistorialConsultas(clienteId);
+    // Recargar datos del cliente para actualizar la vista
+    await loadClientData();
 
   } catch (err) {
     console.error("Error reabriendo caso:", err);
@@ -711,31 +809,28 @@ window.reabrirCaso = async function() {
   }
 };
 
-// Botón volver
 document.getElementById("btnBack")?.addEventListener("click", () => {
   window.location.href = "clientes.html";
 });
 
-// Botón refresh historial
 document.getElementById("btnRefreshHistorial")?.addEventListener("click", () => {
   const clienteId = getClienteIdFromURL();
   loadHistorialConsultas(clienteId);
 });
 
-// Manejar reset del formulario
 document.getElementById("formConsulta")?.addEventListener("reset", () => {
   editandoConsultaId = null;
   document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
   
-  // Reconfigurar el campo motivo después de limpiar
+  // Ocultar campo de fecha de cierre
+  document.getElementById("fechaCierreContainer").classList.remove("show");
+  
   setTimeout(() => {
     configurarCampoMotivo();
   }, 100);
 });
 
-// Inicializar Select2 cuando el DOM esté listo
 $(document).ready(function() {
-  // Inicializar Select2 para motivo de consulta
   $('#motivo_consulta').select2({
     theme: 'default',
     language: 'es',
@@ -745,11 +840,9 @@ $(document).ready(function() {
   });
 });
 
-// Cargar datos cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", () => {
   loadClientData();
   
-  // Establecer fecha de hoy por defecto
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');

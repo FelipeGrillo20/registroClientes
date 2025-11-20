@@ -299,6 +299,10 @@
       chartsInstances.modalidad.destroy();
     }
     
+    const total = data.virtual + data.presencial;
+    const virtualPercent = total > 0 ? Math.round((data.virtual / total) * 100) : 0;
+    const presencialPercent = total > 0 ? Math.round((data.presencial / total) * 100) : 0;
+    
     chartsInstances.modalidad = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -321,14 +325,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: {
-              padding: 15,
-              font: {
-                size: 12,
-                weight: '600'
-              }
-            }
+            display: false
           },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -346,6 +343,23 @@
         }
       }
     });
+    
+    // Mostrar datos debajo del gráfico
+    const dataContainer = document.getElementById('modalidadData');
+    if (dataContainer) {
+      dataContainer.innerHTML = `
+        <div class="chart-data-item">
+          <div class="chart-data-color" style="background: rgba(52, 152, 219, 0.8);"></div>
+          <span class="chart-data-label">Virtual:</span>
+          <span class="chart-data-value">${data.virtual} (${virtualPercent}%)</span>
+        </div>
+        <div class="chart-data-item">
+          <div class="chart-data-color" style="background: rgba(230, 126, 34, 0.8);"></div>
+          <span class="chart-data-label">Presencial:</span>
+          <span class="chart-data-value">${data.presencial} (${presencialPercent}%)</span>
+        </div>
+      `;
+    }
   }
   
   // ============================================
@@ -418,6 +432,10 @@
       chartsInstances.estados.destroy();
     }
     
+    const total = data.abiertos + data.cerrados;
+    const abiertosPercent = total > 0 ? Math.round((data.abiertos / total) * 100) : 0;
+    const cerradosPercent = total > 0 ? Math.round((data.cerrados / total) * 100) : 0;
+    
     chartsInstances.estados = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -440,14 +458,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: {
-              padding: 15,
-              font: {
-                size: 12,
-                weight: '600'
-              }
-            }
+            display: false
           },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -465,6 +476,23 @@
         }
       }
     });
+    
+    // Mostrar datos debajo del gráfico
+    const dataContainer = document.getElementById('estadosData');
+    if (dataContainer) {
+      dataContainer.innerHTML = `
+        <div class="chart-data-item">
+          <div class="chart-data-color" style="background: rgba(241, 196, 15, 0.8);"></div>
+          <span class="chart-data-label">Abiertos:</span>
+          <span class="chart-data-value">${data.abiertos} (${abiertosPercent}%)</span>
+        </div>
+        <div class="chart-data-item">
+          <div class="chart-data-color" style="background: rgba(39, 174, 96, 0.8);"></div>
+          <span class="chart-data-label">Cerrados:</span>
+          <span class="chart-data-value">${data.cerrados} (${cerradosPercent}%)</span>
+        </div>
+      `;
+    }
   }
   
   // ============================================
@@ -540,20 +568,26 @@
       chartsInstances.sedes.destroy();
     }
     
+    const colores = [
+      'rgba(52, 152, 219, 0.8)',
+      'rgba(46, 204, 113, 0.8)',
+      'rgba(155, 89, 182, 0.8)',
+      'rgba(230, 126, 34, 0.8)',
+      'rgba(231, 76, 60, 0.8)',
+      'rgba(26, 188, 156, 0.8)',
+      'rgba(52, 73, 94, 0.8)',
+      'rgba(241, 196, 15, 0.8)'
+    ];
+    
     chartsInstances.sedes = new Chart(ctx, {
-      type: 'pie',
+      type: 'doughnut', // ⭐ Cambiado de 'pie' a 'doughnut' para consistencia
       data: {
         labels: data.labels,
         datasets: [{
           data: data.values,
-          backgroundColor: [
-            'rgba(52, 152, 219, 0.8)',
-            'rgba(46, 204, 113, 0.8)',
-            'rgba(155, 89, 182, 0.8)',
-            'rgba(230, 126, 34, 0.8)',
-            'rgba(231, 76, 60, 0.8)'
-          ],
-          borderWidth: 2
+          backgroundColor: colores.slice(0, data.labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
         }]
       },
       options: {
@@ -561,22 +595,50 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: {
-              padding: 12,
-              font: {
-                size: 11,
-                weight: '600'
-              }
-            }
+            display: false
           },
           tooltip: {
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12
+            padding: 12,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
     });
+    
+    // ⭐ Mostrar datos debajo del gráfico
+    const total = data.values.reduce((a, b) => a + b, 0);
+    const dataContainer = document.getElementById('sedesData');
+    
+    console.log('📊 Renderizando datos de sedes:', data);
+    console.log('📦 Contenedor sedesData:', dataContainer);
+    
+    if (dataContainer) {
+      const htmlContent = data.labels.map((label, index) => {
+        const value = data.values[index];
+        const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+        return `
+          <div class="chart-data-item">
+            <div class="chart-data-color" style="background: ${colores[index]};"></div>
+            <span class="chart-data-label">${label}:</span>
+            <span class="chart-data-value">${value} (${percent}%)</span>
+          </div>
+        `;
+      }).join('');
+      
+      dataContainer.innerHTML = htmlContent;
+      console.log('✅ Datos de sedes renderizados correctamente');
+    } else {
+      console.error('❌ No se encontró el contenedor sedesData');
+    }
   }
   
   // ============================================

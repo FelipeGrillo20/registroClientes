@@ -147,16 +147,8 @@
         <div class="chart-wrapper">
           <canvas id="chartModalidad"></canvas>
         </div>
-      </div>
-
-      <!-- Top Motivos de Consulta -->
-      <div class="chart-container chart-wide">
-        <h3 class="chart-title">
-          <span class="chart-icon">📝</span>
-          Top 5 Motivos de Consulta
-        </h3>
-        <div class="chart-wrapper">
-          <canvas id="chartMotivos"></canvas>
+        <div class="chart-data-summary" id="modalidadData">
+          <!-- Se llena dinámicamente -->
         </div>
       </div>
 
@@ -169,12 +161,27 @@
         <div class="chart-wrapper">
           <canvas id="chartEstados"></canvas>
         </div>
+        <div class="chart-data-summary" id="estadosData">
+          <!-- Se llena dinámicamente -->
+        </div>
       </div>
     </div>
 
-    <!-- Evolución Mensual -->
-    <div class="evolution-section">
-      <div class="chart-container chart-full">
+    <!-- Segunda fila: Motivos y Evolución -->
+    <div class="charts-row-2">
+      <!-- Top Motivos de Consulta -->
+      <div class="chart-container">
+        <h3 class="chart-title">
+          <span class="chart-icon">📝</span>
+          Top 5 Motivos de Consulta
+        </h3>
+        <div class="chart-wrapper">
+          <canvas id="chartMotivos"></canvas>
+        </div>
+      </div>
+
+      <!-- Evolución Mensual -->
+      <div class="chart-container">
         <h3 class="chart-title">
           <span class="chart-icon">📈</span>
           Evolución de Consultas (Últimos 6 Meses)

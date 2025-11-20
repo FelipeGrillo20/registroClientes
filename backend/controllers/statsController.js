@@ -60,9 +60,35 @@ exports.getDashboardStats = async (req, res) => {
     }
     
     // 1. RESUMEN GENERAL
+    // ⭐ CORREGIDO: Contar total de trabajadores desde la tabla clients
+    let totalTrabajadoresQuery;
+    let totalTrabajadoresParams = [];
+    
+    if (profesionalFilter) {
+      // Si hay filtro de profesional, contar solo sus trabajadores
+      const profesionalIdMatch = profesionalFilter.match(/profesional_id = (\d+)/);
+      if (profesionalIdMatch) {
+        totalTrabajadoresQuery = `
+          SELECT COUNT(DISTINCT id) as total_trabajadores
+          FROM clients
+          WHERE profesional_id = $1
+        `;
+        totalTrabajadoresParams = [profesionalIdMatch[1]];
+      }
+    } else {
+      // Admin: contar todos los trabajadores
+      totalTrabajadoresQuery = `
+        SELECT COUNT(DISTINCT id) as total_trabajadores
+        FROM clients
+      `;
+    }
+    
+    const totalTrabajadoresResult = await pool.query(totalTrabajadoresQuery, totalTrabajadoresParams);
+    const totalTrabajadores = parseInt(totalTrabajadoresResult.rows[0].total_trabajadores) || 0;
+    
+    // Consultas y sesiones
     const summaryQuery = `
       SELECT 
-        COUNT(DISTINCT cl.id) as total_trabajadores,
         COUNT(DISTINCT CONCAT(cl.id, '-', motivo_consulta)) as total_consultas,
         COUNT(c.id) as total_sesiones,
         COUNT(c.id) as total_horas,
@@ -84,19 +110,27 @@ exports.getDashboardStats = async (req, res) => {
     // 2. CONSULTAS POR PROFESIONAL
     const profesionalQuery = `
       SELECT 
+        u.id as profesional_id,
         u.nombre,
-        COUNT(DISTINCT cl.id) as trabajadores,
-        COUNT(DISTINCT CONCAT(cl.id, '-', c.motivo_consulta)) as consultas,
-        COUNT(c.id) as sesiones,
-        COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as virtual,
-        COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as presencial,
-        COUNT(DISTINCT CASE WHEN estado = 'Abierto' THEN CONCAT(cl.id, '-', c.motivo_consulta) END) as abiertos,
-        COUNT(DISTINCT CASE WHEN estado = 'Cerrado' THEN CONCAT(cl.id, '-', c.motivo_consulta) END) as cerrados
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      INNER JOIN users u ON cl.profesional_id = u.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
+        (
+          SELECT COUNT(DISTINCT id) 
+          FROM clients 
+          WHERE profesional_id = u.id
+        ) as trabajadores,
+        COALESCE(COUNT(DISTINCT CASE WHEN c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as consultas,
+        COALESCE(COUNT(c.id), 0) as sesiones,
+        COALESCE(COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END), 0) as virtual,
+        COALESCE(COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END), 0) as presencial,
+        COALESCE(COUNT(DISTINCT CASE WHEN c.estado = 'Abierto' AND c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as abiertos,
+        COALESCE(COUNT(DISTINCT CASE WHEN c.estado = 'Cerrado' AND c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as cerrados
+      FROM users u
+      LEFT JOIN clients cl ON cl.profesional_id = u.id
+      LEFT JOIN consultas c ON c.cliente_id = cl.id 
+        ${dateFilter ? 'AND ' + dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '') : ''}
+      WHERE u.rol = 'profesional' AND u.activo = true 
+        ${profesionalFilter ? 'AND ' + profesionalFilter.replace('AND cl.profesional_id', 'u.id') : ''}
       GROUP BY u.id, u.nombre
+      HAVING COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
       ORDER BY consultas DESC
     `;
     
@@ -115,10 +149,11 @@ exports.getDashboardStats = async (req, res) => {
     const modalidadResult = await pool.query(modalidadQuery, dateParams);
     
     // 4. TOP MOTIVOS DE CONSULTA
+    // ⭐ CORREGIDO: Contar consultas únicas por motivo, no sesiones
     const motivosQuery = `
       SELECT 
         motivo_consulta,
-        COUNT(*) as cantidad
+        COUNT(DISTINCT CONCAT(cl.id, '-', motivo_consulta)) as cantidad
       FROM consultas c
       INNER JOIN clients cl ON c.cliente_id = cl.id
       WHERE 1=1 ${dateFilter} ${profesionalFilter}
@@ -234,8 +269,8 @@ exports.getDashboardStats = async (req, res) => {
     // Construir respuesta
     const stats = {
       summary: {
-        totalTrabajadores: parseInt(summary.total_trabajadores) || 0,
-        trabajadoresMes: parseInt(summary.total_trabajadores) || 0,
+        totalTrabajadores: totalTrabajadores, // ⭐ Usar el conteo correcto
+        trabajadoresMes: totalTrabajadores,
         totalConsultas: parseInt(summary.total_consultas) || 0,
         consultasMes: parseInt(summary.total_consultas) || 0,
         totalSesiones: parseInt(summary.total_sesiones) || 0,

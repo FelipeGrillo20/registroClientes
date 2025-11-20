@@ -308,15 +308,15 @@ body {
 /* ============================================ */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
 }
 
 .chart-container {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -329,39 +329,106 @@ body {
 }
 
 .chart-title {
-  font-size: 18px;
+  font-size: 16px;
   color: #2c3e50;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 3px solid #f0f0f0;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .chart-icon {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .chart-wrapper {
   position: relative;
-  height: 300px;
+  height: 240px;
+}
+
+/* Resumen de datos debajo de gráficos circulares */
+.chart-data-summary {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.chart-data-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chart-data-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.chart-data-label {
+  color: #2c3e50;
+}
+
+.chart-data-value {
+  color: #667eea;
+  font-weight: 700;
+  margin-left: 4px;
 }
 
 .evolution-section {
-  margin-bottom: 30px;
+  margin-bottom: 25px;
+}
+
+.evolution-section .chart-container {
+  padding: 20px;
 }
 
 .evolution-section .chart-wrapper {
-  height: 350px;
+  height: 260px;
+}
+
+/* Segunda fila de gráficos */
+.charts-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.charts-row-2 .chart-container {
+  padding: 20px;
+}
+
+.charts-row-2 .chart-wrapper {
+  height: 240px;
 }
 
 .distribution-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.distribution-grid .chart-container {
+  padding: 20px;
+}
+
+.distribution-grid .chart-wrapper {
+  height: 240px;
 }
 
 /* ============================================ */
@@ -515,6 +582,10 @@ body {
   
   .chart-wide {
     grid-column: span 1;
+  }
+  
+  .charts-row-2 {
+    grid-template-columns: 1fr;
   }
   
   .distribution-grid {

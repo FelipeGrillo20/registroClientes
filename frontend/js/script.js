@@ -20,7 +20,7 @@ let contactoEmergencia = {
 
 // Catálogo de entidades según tipo
 const ENTIDADES = {
-  ARL: ['Sura', 'Positiva', 'Colpatria', 'Seguros Bolívar', 'Colmena'],
+  ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
 };
 

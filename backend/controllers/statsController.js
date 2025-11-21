@@ -15,6 +15,14 @@ exports.getDashboardStats = async (req, res) => {
     
     const { period, profesionalId, startDate, endDate } = req.query;
     
+    // DEBUG: Ver qué llega del frontend
+    console.log('=== PARAMETROS RECIBIDOS ===');
+    console.log('req.query completo:', req.query);
+    console.log('period:', period);
+    console.log('profesionalId:', profesionalId);
+    console.log('startDate:', startDate);
+    console.log('endDate:', endDate);
+    
     // Construir filtro de fechas según el periodo
     let dateFilter = '';
     let dateParams = [];
@@ -60,7 +68,7 @@ exports.getDashboardStats = async (req, res) => {
     }
     
     // 1. RESUMEN GENERAL
-    // ⭐ CORREGIDO: Contar total de trabajadores desde la tabla clients
+    // ✅ CORREGIDO: Contar total de trabajadores desde la tabla clients
     let totalTrabajadoresQuery;
     let totalTrabajadoresParams = [];
     
@@ -127,14 +135,21 @@ exports.getDashboardStats = async (req, res) => {
       LEFT JOIN clients cl ON cl.profesional_id = u.id
       LEFT JOIN consultas c ON c.cliente_id = cl.id 
         ${dateFilter ? 'AND ' + dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '') : ''}
-      WHERE u.rol = 'profesional' AND u.activo = true 
+      WHERE u.rol IN ('profesional', 'admin') AND u.activo = true 
         ${profesionalFilter ? 'AND ' + profesionalFilter.replace('AND cl.profesional_id', 'u.id') : ''}
       GROUP BY u.id, u.nombre
-      HAVING COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
-      ORDER BY consultas DESC
+      HAVING u.rol = 'admin' OR COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
+      ORDER BY 
+        CASE WHEN u.rol = 'admin' THEN 0 ELSE 1 END,
+        consultas DESC
     `;
     
     const profesionalResult = await pool.query(profesionalQuery, dateParams);
+    
+    // DEBUG: Ver qué profesionales se están trayendo
+    console.log('=== PROFESIONALES ENCONTRADOS ===');
+    console.log('Total:', profesionalResult.rows.length);
+    console.log('Lista:', profesionalResult.rows.map(p => `${p.nombre} (ID: ${p.profesional_id}, Trabajadores: ${p.trabajadores})`));
     
     // 3. MODALIDAD DE ATENCIÓN
     const modalidadQuery = `
@@ -149,7 +164,7 @@ exports.getDashboardStats = async (req, res) => {
     const modalidadResult = await pool.query(modalidadQuery, dateParams);
     
     // 4. TOP MOTIVOS DE CONSULTA
-    // ⭐ CORREGIDO: Contar consultas únicas por motivo, no sesiones
+    // ✅ CORREGIDO: Contar consultas únicas por motivo, no sesiones
     const motivosQuery = `
       SELECT 
         motivo_consulta,
@@ -246,22 +261,108 @@ exports.getDashboardStats = async (req, res) => {
       };
     });
     
-    // 10. INDICADORES DE CALIDAD
+    // 10. INDICADORES DE CALIDAD - ✅ CORREGIDO
+    // Preparar filtros limpios para la subquery
+    const cleanDateFilter = dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '');
+    const dateFilterForJoin = cleanDateFilter ? `AND ${cleanDateFilter}` : '';
+    const dateFilterForSubquery = cleanDateFilter ? `AND ${cleanDateFilter}` : '';
+    
+    // Extraer el ID del profesional si existe el filtro
+    let profesionalIdForCalidad = '';
+    if (profesionalFilter) {
+      const profesionalIdMatch = profesionalFilter.match(/profesional_id = (\d+)/);
+      if (profesionalIdMatch) {
+        profesionalIdForCalidad = `AND cl.profesional_id = ${profesionalIdMatch[1]}`;
+      }
+    }
+    
+    // DEBUG: Ver qué filtros se están aplicando
+    console.log('=== DEBUG CALIDAD ===');
+    console.log('profesionalFilter:', profesionalFilter);
+    console.log('profesionalIdForCalidad:', profesionalIdForCalidad);
+    console.log('profesionalId del query:', profesionalId);
+    
     const calidadQuery = `
+      WITH consultas_unicas AS (
+        SELECT DISTINCT
+          cl.id as cliente_id,
+          cl.profesional_id,
+          cl.contacto_emergencia_telefono,
+          cl.fecha_cierre,
+          c.motivo_consulta,
+          (
+            SELECT MIN(c_min.fecha)::date 
+            FROM consultas c_min 
+            WHERE c_min.cliente_id = cl.id 
+            AND c_min.motivo_consulta = c.motivo_consulta
+          ) as primera_sesion
+        FROM clients cl
+        INNER JOIN consultas c ON c.cliente_id = cl.id ${dateFilterForJoin}
+        WHERE 1=1 ${profesionalIdForCalidad}
+      ),
+      duraciones AS (
+        SELECT 
+          cliente_id,
+          motivo_consulta,
+          CASE 
+            WHEN fecha_cierre IS NOT NULL 
+            THEN fecha_cierre::date - primera_sesion
+            ELSE NULL 
+          END as dias_duracion
+        FROM consultas_unicas
+      )
       SELECT 
-        COUNT(DISTINCT CASE WHEN cl.contacto_emergencia_telefono IS NOT NULL AND cl.contacto_emergencia_telefono != '' THEN cl.id END) as con_contacto,
-        COUNT(DISTINCT cl.id) as total_clientes
-      FROM clients cl
-      WHERE EXISTS (
-        SELECT 1 FROM consultas c 
-        WHERE c.cliente_id = cl.id ${dateFilter.replace(/\$\d+/g, (match) => {
-          const index = parseInt(match.substring(1));
-          return `'${dateParams[index-1]}'`;
-        })}
-      ) ${profesionalFilter}
+        -- Contacto de emergencia
+        COUNT(DISTINCT CASE 
+          WHEN cu.contacto_emergencia_telefono IS NOT NULL 
+          AND cu.contacto_emergencia_telefono != '' 
+          THEN cu.cliente_id 
+        END) as con_contacto,
+        COUNT(DISTINCT cu.cliente_id) as total_clientes,
+        
+        -- Tiempo promedio (ahora sobre consultas únicas, no sesiones)
+        CEIL(AVG(d.dias_duracion)) as tiempo_promedio_dias,
+        
+        -- Sesiones promedio por caso
+        ROUND(
+          (SELECT COUNT(*) FROM consultas c3 
+           INNER JOIN clients cl3 ON c3.cliente_id = cl3.id
+           WHERE 1=1 ${profesionalIdForCalidad.replace('cl.', 'cl3.')} ${dateFilterForJoin.replace('c.', 'c3.')})::numeric / 
+          NULLIF(COUNT(DISTINCT CONCAT(cu.cliente_id, '-', cu.motivo_consulta)), 0),
+          1
+        ) as sesiones_promedio
+        
+      FROM consultas_unicas cu
+      LEFT JOIN duraciones d ON d.cliente_id = cu.cliente_id 
+        AND d.motivo_consulta = cu.motivo_consulta
     `;
     
-    const calidadResult = await pool.query(calidadQuery);
+    const calidadResult = await pool.query(calidadQuery, dateParams);
+    
+    // DEBUG: Ver resultado de la query de calidad
+    console.log('=== RESULTADO CALIDAD ===');
+    console.log('Resultado completo:', calidadResult.rows[0]);
+    console.log('tiempo_promedio_dias:', calidadResult.rows[0].tiempo_promedio_dias);
+    
+    // Sin seguimiento reciente: consultas abiertas sin sesiones en últimos 30 días
+    // NOTA: Cambia temporalmente a 3 días para pruebas, luego devuelve a 30
+    const sinSeguimientoQuery = `
+      SELECT COUNT(DISTINCT CONCAT(cl.id, '-', c.motivo_consulta)) as sin_seguimiento
+      FROM consultas c
+      INNER JOIN clients cl ON c.cliente_id = cl.id
+      WHERE c.estado = 'Abierto'
+        AND NOT EXISTS (
+          SELECT 1 FROM consultas c2
+          WHERE c2.cliente_id = c.cliente_id 
+            AND c2.motivo_consulta = c.motivo_consulta
+            AND c2.fecha >= NOW() - INTERVAL '3 days'
+        )
+        ${profesionalIdForCalidad}
+    `;
+    
+    const sinSeguimientoResult = await pool.query(sinSeguimientoQuery);
+    
+    // Calcular porcentaje de contacto de emergencia
     const contactoPercent = calidadResult.rows[0].total_clientes > 0
       ? Math.round((calidadResult.rows[0].con_contacto / calidadResult.rows[0].total_clientes) * 100)
       : 0;
@@ -269,7 +370,7 @@ exports.getDashboardStats = async (req, res) => {
     // Construir respuesta
     const stats = {
       summary: {
-        totalTrabajadores: totalTrabajadores, // ⭐ Usar el conteo correcto
+        totalTrabajadores: totalTrabajadores,
         trabajadoresMes: totalTrabajadores,
         totalConsultas: parseInt(summary.total_consultas) || 0,
         consultasMes: parseInt(summary.total_consultas) || 0,
@@ -310,10 +411,10 @@ exports.getDashboardStats = async (req, res) => {
       },
       detalleProfesionales,
       calidad: {
-        tiempoPromedio: 15,
-        sesionesPromedio: 3,
+        tiempoPromedio: parseInt(calidadResult.rows[0].tiempo_promedio_dias) || 0,
+        sesionesPromedio: parseFloat(calidadResult.rows[0].sesiones_promedio) || 0,
         contactoEmergencia: contactoPercent,
-        sinSeguimiento: 0
+        sinSeguimiento: parseInt(sinSeguimientoResult.rows[0].sin_seguimiento) || 0
       }
     };
     

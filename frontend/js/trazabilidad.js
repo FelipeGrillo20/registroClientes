@@ -18,7 +18,7 @@ let allClients = [];
 
 // Catálogo de entidades según tipo (mismo que en script.js)
 const ENTIDADES = {
-  ARL: ['Sura', 'Positiva', 'Colpatria', 'Seguros Bolívar', 'Colmena'],
+  ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
 };
 

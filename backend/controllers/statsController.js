@@ -135,21 +135,14 @@ exports.getDashboardStats = async (req, res) => {
       LEFT JOIN clients cl ON cl.profesional_id = u.id
       LEFT JOIN consultas c ON c.cliente_id = cl.id 
         ${dateFilter ? 'AND ' + dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '') : ''}
-      WHERE u.rol IN ('profesional', 'admin') AND u.activo = true 
+      WHERE u.rol = 'profesional' AND u.activo = true 
         ${profesionalFilter ? 'AND ' + profesionalFilter.replace('AND cl.profesional_id', 'u.id') : ''}
       GROUP BY u.id, u.nombre
-      HAVING u.rol = 'admin' OR COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
-      ORDER BY 
-        CASE WHEN u.rol = 'admin' THEN 0 ELSE 1 END,
-        consultas DESC
+      HAVING COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
+      ORDER BY consultas DESC
     `;
     
     const profesionalResult = await pool.query(profesionalQuery, dateParams);
-    
-    // DEBUG: Ver qué profesionales se están trayendo
-    console.log('=== PROFESIONALES ENCONTRADOS ===');
-    console.log('Total:', profesionalResult.rows.length);
-    console.log('Lista:', profesionalResult.rows.map(p => `${p.nombre} (ID: ${p.profesional_id}, Trabajadores: ${p.trabajadores})`));
     
     // 3. MODALIDAD DE ATENCIÓN
     const modalidadQuery = `
@@ -345,7 +338,6 @@ exports.getDashboardStats = async (req, res) => {
     console.log('tiempo_promedio_dias:', calidadResult.rows[0].tiempo_promedio_dias);
     
     // Sin seguimiento reciente: consultas abiertas sin sesiones en últimos 30 días
-    // NOTA: Cambia temporalmente a 3 días para pruebas, luego devuelve a 30
     const sinSeguimientoQuery = `
       SELECT COUNT(DISTINCT CONCAT(cl.id, '-', c.motivo_consulta)) as sin_seguimiento
       FROM consultas c
@@ -355,7 +347,7 @@ exports.getDashboardStats = async (req, res) => {
           SELECT 1 FROM consultas c2
           WHERE c2.cliente_id = c.cliente_id 
             AND c2.motivo_consulta = c.motivo_consulta
-            AND c2.fecha >= NOW() - INTERVAL '3 days'
+            AND c2.fecha >= NOW() - INTERVAL '30 days'
         )
         ${profesionalIdForCalidad}
     `;

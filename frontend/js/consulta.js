@@ -30,15 +30,17 @@ function getClienteIdFromURL() {
   return params.get("cliente");
 }
 
-// ⭐ NUEVO: Mostrar/Ocultar campo de fecha de cierre según el estado
+// ⭐ ACTUALIZADO: Mostrar/Ocultar campo de fecha de cierre y recomendaciones según el estado
 function toggleFechaCierreField() {
   const estadoSelect = document.getElementById("estado");
   const fechaCierreContainer = document.getElementById("fechaCierreContainer");
   const fechaCierreInput = document.getElementById("fecha_cierre");
+  const recomendacionesInput = document.getElementById("recomendaciones_finales");
   
   if (estadoSelect.value === "Cerrado") {
     fechaCierreContainer.classList.add("show");
     fechaCierreInput.required = true;
+    recomendacionesInput.required = true;
     
     // Si no tiene valor, establecer la fecha de hoy por defecto
     if (!fechaCierreInput.value) {
@@ -51,11 +53,13 @@ function toggleFechaCierreField() {
   } else {
     fechaCierreContainer.classList.remove("show");
     fechaCierreInput.required = false;
+    recomendacionesInput.required = false;
     fechaCierreInput.value = "";
+    recomendacionesInput.value = "";
   }
 }
 
-// ⭐ NUEVO: Agregar listener al campo de estado
+// Agregar listener al campo de estado
 document.getElementById("estado")?.addEventListener("change", toggleFechaCierreField);
 
 // Cargar datos del cliente
@@ -148,7 +152,7 @@ function displayClientData(cliente) {
     entidadPagadoraElement.textContent = "-";
   }
 
-  // ⭐ NUEVO: Mostrar fecha de cierre si existe
+  // Mostrar fecha de cierre si existe
   const fechaCierreInfo = document.getElementById("fechaCierreInfo");
   const fechaCierreValue = document.getElementById("clientFechaCierre");
   
@@ -333,15 +337,13 @@ function configurarCampoMotivo() {
   }
 }
 
-// ⭐ MODIFICADO: Cerrar todas las consultas Y actualizar fecha_cierre del cliente
-// Reemplaza TODA la función cerrarTodasLasConsultas en tu consulta.js
-
-// ⭐ CORREGIDO: Cerrar todas las consultas Y actualizar fecha_cierre del cliente
-async function cerrarTodasLasConsultas(clienteId, fechaCierre) {
+// ⭐ ACTUALIZADO: Cerrar todas las consultas Y actualizar fecha_cierre + recomendaciones del cliente
+async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFinales) {
   try {
-    console.log("🔄 Iniciando cierre de caso...");
+    console.log("📄 Iniciando cierre de caso...");
     console.log("Cliente ID:", clienteId);
-    console.log("Fecha de cierre a guardar:", fechaCierre);
+    console.log("Fecha de cierre:", fechaCierre);
+    console.log("Recomendaciones:", recomendacionesFinales);
     
     // 1. Cerrar todas las consultas
     const promises = consultasDelCliente.map(consulta => {
@@ -381,7 +383,7 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre) {
     const clienteData = await resCliente.json();
     console.log("📋 Cliente actual antes de actualizar:", clienteData);
     
-    // 3. Preparar datos actualizados CON fecha_cierre
+    // 3. Preparar datos actualizados CON fecha_cierre Y recomendaciones_finales
     const clienteActualizado = {
       cedula: clienteData.cedula,
       nombre: clienteData.nombre,
@@ -395,12 +397,13 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre) {
       contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
       contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
-      fecha_cierre: fechaCierre // ⭐ CRÍTICO: Fecha de cierre
+      fecha_cierre: fechaCierre,
+      recomendaciones_finales: recomendacionesFinales
     };
     
     console.log("📝 Datos a enviar:", clienteActualizado);
     
-    // 4. Actualizar el cliente con la fecha de cierre
+    // 4. Actualizar el cliente con la fecha de cierre Y recomendaciones
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -410,12 +413,13 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre) {
     if (!resUpdate.ok) {
       const errorData = await resUpdate.json();
       console.error("❌ Error actualizando cliente:", errorData);
-      throw new Error(errorData.message || "Error al actualizar fecha de cierre del cliente");
+      throw new Error(errorData.message || "Error al actualizar el cliente");
     }
     
     const clienteActualizadoRes = await resUpdate.json();
     console.log("✅ Cliente actualizado exitosamente:", clienteActualizadoRes);
     console.log("✅ Fecha de cierre guardada:", clienteActualizadoRes.fecha_cierre);
+    console.log("✅ Recomendaciones guardadas:", clienteActualizadoRes.recomendaciones_finales);
 
     return true;
   } catch (err) {
@@ -583,7 +587,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// ⭐ MODIFICADO: Manejar envío del formulario con fecha_cierre
+// ⭐ ACTUALIZADO: Manejar envío del formulario con fecha_cierre y recomendaciones_finales
 document.getElementById("formConsulta")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -593,6 +597,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const columna1 = document.getElementById("columna1").value.trim();
   const estado = document.getElementById("estado").value;
   const fecha_cierre = document.getElementById("fecha_cierre").value;
+  const recomendaciones_finales = document.getElementById("recomendaciones_finales").value.trim();
 
   // Validaciones
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
@@ -600,10 +605,16 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     return;
   }
 
-  // Validar que si el estado es "Cerrado", debe haber fecha de cierre
-  if (estado === "Cerrado" && !fecha_cierre) {
-    alert("⚠️ Por favor especifica la fecha de cierre del caso");
-    return;
+  // Validar que si el estado es "Cerrado", debe haber fecha de cierre Y recomendaciones
+  if (estado === "Cerrado") {
+    if (!fecha_cierre) {
+      alert("⚠️ Por favor especifica la fecha de cierre del caso");
+      return;
+    }
+    if (!recomendaciones_finales) {
+      alert("⚠️ Por favor escribe las recomendaciones finales antes de cerrar el caso");
+      return;
+    }
   }
 
   const clienteId = getClienteIdFromURL();
@@ -636,9 +647,9 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
       throw new Error(errorData.message || "Error al guardar consulta");
     }
 
-    // Si el estado es "Cerrado", cerrar todas las consultas
+    // Si el estado es "Cerrado", cerrar todas las consultas Y guardar recomendaciones
     if (estado === 'Cerrado') {
-      await cerrarTodasLasConsultas(clienteId, fecha_cierre);
+      await cerrarTodasLasConsultas(clienteId, fecha_cierre, recomendaciones_finales);
     }
 
     const mensaje = editandoConsultaId 
@@ -654,7 +665,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
 
-    // Recargar datos del cliente para actualizar fecha_cierre en la tarjeta
+    // Recargar datos del cliente
     await loadClientData();
 
   } catch (err) {
@@ -737,7 +748,7 @@ window.eliminarConsulta = async function(id) {
   }
 };
 
-// ⭐ MODIFICADO: Reabrir caso también limpia la fecha_cierre del cliente
+// ⭐ ACTUALIZADO: Reabrir caso también limpia la fecha_cierre y recomendaciones_finales del cliente
 window.reabrirCaso = async function() {
   if (!confirm("¿Estás seguro de reabrir el caso? Todas las sesiones volverán a estar disponibles para editar.")) {
     return;
@@ -764,7 +775,7 @@ window.reabrirCaso = async function() {
 
     await Promise.all(promises);
 
-    // 2. Limpiar fecha_cierre del cliente (solo campos de la tabla clients)
+    // 2. Limpiar fecha_cierre Y recomendaciones_finales del cliente
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
@@ -774,7 +785,6 @@ window.reabrirCaso = async function() {
     if (resCliente.ok) {
       const clienteData = await resCliente.json();
       
-      // ⭐ Solo campos que existen en la tabla clients
       const clienteActualizado = {
         cedula: clienteData.cedula,
         nombre: clienteData.nombre,
@@ -788,7 +798,8 @@ window.reabrirCaso = async function() {
         contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
         contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
         contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
-        fecha_cierre: null
+        fecha_cierre: null,
+        recomendaciones_finales: null
       };
       
       await fetch(`${API_URL}/${clienteId}`, {
@@ -800,7 +811,7 @@ window.reabrirCaso = async function() {
 
     alert("✅ Caso reabierto correctamente. Todas las sesiones están disponibles nuevamente.");
 
-    // Recargar datos del cliente para actualizar la vista
+    // Recargar datos del cliente
     await loadClientData();
 
   } catch (err) {
@@ -822,7 +833,7 @@ document.getElementById("formConsulta")?.addEventListener("reset", () => {
   editandoConsultaId = null;
   document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
   
-  // Ocultar campo de fecha de cierre
+  // Ocultar campo de fecha de cierre y recomendaciones
   document.getElementById("fechaCierreContainer").classList.remove("show");
   
   setTimeout(() => {

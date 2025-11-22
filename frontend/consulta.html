@@ -64,6 +64,13 @@
       border: 2px solid #ffc107;
       background: white;
     }
+    
+    /* Estilos para recomendaciones finales */
+    .recomendaciones-container {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #ffc107;
+    }
   </style>
 </head>
 <body>
@@ -314,7 +321,7 @@
           </div>
         </div>
 
-        <!-- ⭐ NUEVO: Campo de Fecha de Cierre (se muestra solo cuando estado = "Cerrado") -->
+        <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones (se muestra solo cuando estado = "Cerrado") -->
         <div class="form-group-fecha-cierre" id="fechaCierreContainer">
           <div class="fecha-cierre-label">
             <span class="fecha-cierre-icon">🔒</span>
@@ -324,6 +331,23 @@
           <p class="fecha-cierre-info">
             Esta fecha se guardará como la fecha oficial de cierre del caso del trabajador
           </p>
+          
+          <!-- ⭐ NUEVO: Campo de Recomendaciones Finales -->
+          <div class="recomendaciones-container">
+            <div class="fecha-cierre-label" style="margin-top: 15px;">
+              <span class="fecha-cierre-icon">📝</span>
+              <span>Recomendaciones Finales <span class="required">*</span></span>
+            </div>
+            <textarea 
+              id="recomendaciones_finales" 
+              rows="6" 
+              placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso. Estas recomendaciones aparecerán en el informe final..."
+              style="width: 100%; padding: 12px; border: 2px solid #ffc107; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
+            ></textarea>
+            <p class="fecha-cierre-info">
+              💡 Estas recomendaciones aparecerán en el informe final del trabajador
+            </p>
+          </div>
         </div>
 
         <div class="form-actions">

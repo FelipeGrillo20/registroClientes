@@ -25,7 +25,7 @@ function escapeHtmlInforme(str) {
     .replace(/'/g, "&#039;");
 }
 
-// ⭐ MODIFICADO: Calcular días en proceso usando fecha_cierre del cliente
+// Calcular días en proceso usando fecha_cierre del cliente
 function calcularDiasEnProceso(fechaInicial, fechaFinal) {
   const fecha1 = new Date(fechaInicial);
   const fecha2 = new Date(fechaFinal);
@@ -66,7 +66,7 @@ window.generarInformePaciente = function() {
     return;
   }
 
-  // ⭐ VALIDAR: El caso debe estar cerrado para generar informe
+  // Validar: El caso debe estar cerrado para generar informe
   console.log("🔍 Verificando fecha de cierre...");
   console.log("fecha_cierre del cliente:", clienteActual.fecha_cierre);
   
@@ -89,9 +89,9 @@ window.generarInformePaciente = function() {
   const numeroSesiones = consultasDelCliente.length;
   const numeroHoras = numeroSesiones; // 1 hora por sesión
   
-  // ⭐ MODIFICADO: Cálculo de fechas usando fecha_cierre del cliente
+  // Cálculo de fechas usando fecha_cierre del cliente
   const fechaInicial = new Date(consultasOrdenadas[0].fecha);
-  const fechaCierre = new Date(clienteActual.fecha_cierre); // ← Usar fecha_cierre del cliente
+  const fechaCierre = new Date(clienteActual.fecha_cierre);
   
   const diasEnProceso = calcularDiasEnProceso(fechaInicial, fechaCierre);
   
@@ -254,6 +254,19 @@ window.generarInformePaciente = function() {
             </div>
           `).join('')}
         </div>
+
+        <!-- ⭐ NUEVA SECCIÓN: Recomendaciones Finales -->
+        ${clienteActual.recomendaciones_finales ? `
+        <div class="informe-section informe-recomendaciones">
+          <h2 class="informe-section-title">
+            <span class="section-icon">📝</span>
+            Recomendaciones Finales
+          </h2>
+          <div class="recomendaciones-contenido">
+            <p>${escapeHtmlInforme(clienteActual.recomendaciones_finales).replace(/\n/g, '<br>')}</p>
+          </div>
+        </div>
+        ` : ''}
 
         <!-- Firma -->
         <div class="informe-footer">

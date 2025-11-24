@@ -124,7 +124,8 @@ exports.updateClient = async (req, res) => {
       contacto_emergencia_parentesco,
       contacto_emergencia_telefono,
       fecha_cierre,
-      recomendaciones_finales, // ⭐ NUEVO
+      recomendaciones_finales,
+      consultas_sugeridas, // ⭐ AGREGADO
     } = req.body;
 
     // Verificar que el cliente existe
@@ -160,7 +161,8 @@ exports.updateClient = async (req, res) => {
       contacto_emergencia_parentesco: contacto_emergencia_parentesco || null,
       contacto_emergencia_telefono: contacto_emergencia_telefono || null,
       fecha_cierre: fecha_cierre || null,
-      recomendaciones_finales: recomendaciones_finales || null, // ⭐ NUEVO
+      recomendaciones_finales: recomendaciones_finales || null,
+      consultas_sugeridas: consultas_sugeridas || null, // ⭐ AGREGADO
     });
 
     res.json(updatedClient);

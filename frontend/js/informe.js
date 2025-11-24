@@ -241,10 +241,14 @@ window.generarInformePaciente = function() {
                 <span class="sesion-fecha">📅 ${formatDateInforme(consulta.fecha)}</span>
                 <span class="sesion-modalidad badge-modalidad-informe">${consulta.modalidad}</span>
               </div>
-              ${consulta.columna1 ? `
+              ${consulta.columna1 && !consulta.observaciones_confidenciales ? `
                 <div class="sesion-observaciones">
                   <strong>Observaciones:</strong>
                   <p>${escapeHtmlInforme(consulta.columna1)}</p>
+                </div>
+              ` : consulta.observaciones_confidenciales ? `
+                <div class="sesion-observaciones-confidencial">
+                  <p>🔒 Información confidencial reservada por el profesional</p>
                 </div>
               ` : `
                 <div class="sesion-sin-observaciones">

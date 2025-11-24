@@ -104,7 +104,8 @@ exports.updateClient = async (id, data) => {
     contacto_emergencia_parentesco,
     contacto_emergencia_telefono,
     fecha_cierre,
-    recomendaciones_finales, // ⭐ NUEVO
+    recomendaciones_finales,
+    consultas_sugeridas, // ⭐ NUEVO
   } = data;
 
   const result = await pool.query(
@@ -122,13 +123,14 @@ exports.updateClient = async (id, data) => {
       contacto_emergencia_parentesco = $11,
       contacto_emergencia_telefono = $12,
       fecha_cierre = $13,
-      recomendaciones_finales = $14
-    WHERE id = $15
+      recomendaciones_finales = $14,
+      consultas_sugeridas = $15
+    WHERE id = $16
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     fecha_cierre, recomendaciones_finales, id]
+     fecha_cierre, recomendaciones_finales, consultas_sugeridas, id]
   );
 
   return result.rows[0];

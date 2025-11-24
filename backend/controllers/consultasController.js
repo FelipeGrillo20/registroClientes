@@ -12,7 +12,8 @@ exports.createConsulta = async (req, res) => {
       modalidad,
       fecha,
       columna1,
-      estado
+      estado,
+      observaciones_confidenciales // ⭐ NUEVO
     } = req.body;
 
     // Validaciones
@@ -43,7 +44,8 @@ exports.createConsulta = async (req, res) => {
       modalidad,
       fecha,
       columna1: columna1 || null,
-      estado
+      estado,
+      observaciones_confidenciales: observaciones_confidenciales || false // ⭐ NUEVO (default: false)
     });
 
     res.status(201).json(newConsulta);
@@ -115,7 +117,8 @@ exports.updateConsulta = async (req, res) => {
       modalidad,
       fecha,
       columna1,
-      estado
+      estado,
+      observaciones_confidenciales // ⭐ NUEVO
     } = req.body;
 
     // Validaciones
@@ -145,7 +148,8 @@ exports.updateConsulta = async (req, res) => {
       modalidad,
       fecha,
       columna1: columna1 || null,
-      estado
+      estado,
+      observaciones_confidenciales: observaciones_confidenciales !== undefined ? observaciones_confidenciales : false // ⭐ NUEVO
     });
 
     if (!updatedConsulta) {

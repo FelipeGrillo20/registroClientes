@@ -476,6 +476,22 @@
   border-radius: 6px;
 }
 
+/* ⭐ NUEVO: Estilos para observaciones confidenciales */
+.sesion-observaciones-confidencial {
+  background: #fff3e0;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #ff9800;
+  text-align: center;
+}
+
+.sesion-observaciones-confidencial p {
+  margin: 0;
+  color: #e65100;
+  font-style: italic;
+  font-weight: 500;
+}
+
 /* Footer del Informe */
 .informe-footer {
   margin-top: 40px;
@@ -547,6 +563,21 @@
 .informe-nota strong {
   color: #e65100;
   font-weight: 700;
+}
+
+/* Badge para indicador de observaciones confidenciales en el historial */
+.badge-confidencial {
+  display: inline-block;
+  background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
 }
 
 /* ============================================ */

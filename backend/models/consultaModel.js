@@ -10,15 +10,16 @@ exports.createConsulta = async (data) => {
     modalidad,
     fecha,
     columna1,
-    estado
+    estado,
+    observaciones_confidenciales // ⭐ NUEVO
   } = data;
 
   const result = await pool.query(
     `INSERT INTO consultas 
-    (cliente_id, motivo_consulta, actividad, modalidad, fecha, columna1, estado)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    (cliente_id, motivo_consulta, actividad, modalidad, fecha, columna1, estado, observaciones_confidenciales)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *`,
-    [cliente_id, motivo_consulta, actividad, modalidad, fecha, columna1, estado]
+    [cliente_id, motivo_consulta, actividad, modalidad, fecha, columna1, estado, observaciones_confidenciales]
   );
 
   return result.rows[0];
@@ -92,7 +93,8 @@ exports.updateConsulta = async (id, data) => {
     modalidad,
     fecha,
     columna1,
-    estado
+    estado,
+    observaciones_confidenciales // ⭐ NUEVO
   } = data;
 
   const result = await pool.query(
@@ -103,10 +105,11 @@ exports.updateConsulta = async (id, data) => {
       fecha = $4,
       columna1 = $5,
       estado = $6,
+      observaciones_confidenciales = $7,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $7
+    WHERE id = $8
     RETURNING *`,
-    [motivo_consulta, actividad, modalidad, fecha, columna1, estado, id]
+    [motivo_consulta, actividad, modalidad, fecha, columna1, estado, observaciones_confidenciales, id]
   );
 
   return result.rows[0];

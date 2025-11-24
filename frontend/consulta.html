@@ -71,6 +71,85 @@
       padding-top: 15px;
       border-top: 1px dashed #ffc107;
     }
+    
+    /* ⭐ NUEVO: Estilos para campo info */
+    .field-info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
+    }
+    
+    /* ⭐ NUEVO: Estilos para el toggle de confidencialidad */
+    .confidencialidad-toggle {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .btn-candado {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 2px solid #4caf50;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    
+    .btn-candado:hover {
+      background: #c8e6c9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+    }
+    
+    .btn-candado.confidencial {
+      border-color: #f44336;
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .btn-candado.confidencial:hover {
+      background: #ffcdd2;
+      box-shadow: 0 4px 8px rgba(244, 67, 54, 0.2);
+    }
+    
+    .candado-icon {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+    
+    .btn-candado.confidencial .candado-icon {
+      transform: rotate(10deg);
+    }
+    
+    .candado-texto {
+      font-size: 13px;
+    }
+    
+    .observaciones-info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #e8f5e9;
+      border-left: 3px solid #4caf50;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    .observaciones-info.confidencial {
+      background: #ffebee;
+      border-left-color: #f44336;
+      color: #c62828;
+    }
   </style>
 </head>
 <body>
@@ -195,14 +274,14 @@
             </button>
           </div>
           
-          <!-- ⭐ NUEVO: Mostrar fecha de cierre si el caso está cerrado -->
-          <div class="info-item" id="fechaCierreInfo" style="display: none;">
+          <!-- ⭐ Consultas Sugeridas (siempre en este espacio) -->
+          <div class="info-item" id="consultasSugeridasInfo" style="display: none;">
             <div class="info-icon-wrapper">
-              <span class="info-icon">🔒</span>
+              <span class="info-icon">📊</span>
             </div>
             <div class="info-content">
-              <label class="info-label">Caso Cerrado el</label>
-              <p class="info-value" id="clientFechaCierre">-</p>
+              <label class="info-label">Consultas Sugeridas</label>
+              <p class="info-value" id="clientConsultasSugeridas">-</p>
             </div>
           </div>
         </div>
@@ -292,11 +371,24 @@
               <span class="label-icon">📄</span>
               Observaciones
             </label>
+            
+            <!-- ⭐ NUEVO: Toggle de confidencialidad -->
+            <div class="confidencialidad-toggle">
+              <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
+                <span class="candado-icon" id="candadoIcon">🔓</span>
+                <span class="candado-texto" id="candadoTexto">Visible en informe</span>
+              </button>
+              <input type="hidden" id="observaciones_confidenciales" value="false">
+            </div>
+            
             <textarea 
               id="columna1" 
               rows="3" 
               placeholder="Notas adicionales, comentarios o seguimiento..."
             ></textarea>
+            <p class="observaciones-info" id="observacionesInfo">
+              💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador
+            </p>
           </div>
 
           <!-- Estado -->
@@ -318,6 +410,23 @@
             <button type="button" id="btnContactoEmergencia" class="btn-emergency-contact">
               👤 Contacto de Emergencia
             </button>
+          </div>
+          
+          <!-- ⭐ NUEVO: Consultas Sugeridas (solo primera sesión) -->
+          <div class="form-group" id="consultasSugeridasGroup" style="display: none;">
+            <label for="consultas_sugeridas">
+              <span class="label-icon">📊</span>
+              Consultas Sugeridas <span class="required">*</span>
+            </label>
+            <input 
+              type="number" 
+              id="consultas_sugeridas" 
+              min="1" 
+              max="50" 
+              placeholder="Ej: 5"
+              title="Número de sesiones proyectadas para este trabajador"
+            />
+            <p class="field-info">💡 Proyección de sesiones necesarias</p>
           </div>
         </div>
 

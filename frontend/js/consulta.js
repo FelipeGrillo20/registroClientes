@@ -50,17 +50,52 @@ function toggleFechaCierreField() {
       const day = String(today.getDate()).padStart(2, '0');
       fechaCierreInput.value = `${year}-${month}-${day}`;
     }
+    
+    // ⭐ NUEVO: Cargar recomendaciones existentes si las hay
+    if (clienteActual && clienteActual.recomendaciones_finales && !recomendacionesInput.value) {
+      recomendacionesInput.value = clienteActual.recomendaciones_finales;
+    }
   } else {
     fechaCierreContainer.classList.remove("show");
     fechaCierreInput.required = false;
     recomendacionesInput.required = false;
     fechaCierreInput.value = "";
-    recomendacionesInput.value = "";
+    // ⭐ MODIFICADO: NO borrar las recomendaciones al cambiar a "Abierto"
+    // recomendacionesInput.value = "";
   }
 }
 
 // Agregar listener al campo de estado
 document.getElementById("estado")?.addEventListener("change", toggleFechaCierreField);
+
+// ⭐ NUEVO: Función para toggle de confidencialidad
+window.toggleConfidencialidad = function() {
+  const btnCandado = document.getElementById("btnCandado");
+  const candadoIcon = document.getElementById("candadoIcon");
+  const candadoTexto = document.getElementById("candadoTexto");
+  const observacionesInfo = document.getElementById("observacionesInfo");
+  const hiddenInput = document.getElementById("observaciones_confidenciales");
+  
+  const esConfidencial = hiddenInput.value === "true";
+  
+  if (esConfidencial) {
+    // Cambiar a NO confidencial (visible en informe)
+    hiddenInput.value = "false";
+    btnCandado.classList.remove("confidencial");
+    candadoIcon.textContent = "🔓";
+    candadoTexto.textContent = "Visible en informe";
+    observacionesInfo.innerHTML = '💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador';
+    observacionesInfo.classList.remove("confidencial");
+  } else {
+    // Cambiar a confidencial (NO visible en informe)
+    hiddenInput.value = "true";
+    btnCandado.classList.add("confidencial");
+    candadoIcon.textContent = "🔒";
+    candadoTexto.textContent = "Confidencial (No visible)";
+    observacionesInfo.innerHTML = '🔒 Estas observaciones <strong>NO se mostrarán</strong> en el informe del trabajador';
+    observacionesInfo.classList.add("confidencial");
+  }
+};
 
 // Cargar datos del cliente
 async function loadClientData() {
@@ -152,15 +187,15 @@ function displayClientData(cliente) {
     entidadPagadoraElement.textContent = "-";
   }
 
-  // Mostrar fecha de cierre si existe
-  const fechaCierreInfo = document.getElementById("fechaCierreInfo");
-  const fechaCierreValue = document.getElementById("clientFechaCierre");
+  // ⭐ Mostrar consultas sugeridas si existe (sin importar si el caso está cerrado)
+  const consultasSugeridasInfo = document.getElementById("consultasSugeridasInfo");
+  const consultasSugeridasValue = document.getElementById("clientConsultasSugeridas");
   
-  if (cliente.fecha_cierre) {
-    fechaCierreValue.textContent = formatDate(cliente.fecha_cierre);
-    fechaCierreInfo.style.display = "flex";
+  if (cliente.consultas_sugeridas) {
+    consultasSugeridasValue.textContent = `${cliente.consultas_sugeridas} sesiones`;
+    consultasSugeridasInfo.style.display = "flex";
   } else {
-    fechaCierreInfo.style.display = "none";
+    consultasSugeridasInfo.style.display = "none";
   }
 
   // Actualizar badge con nombre del cliente
@@ -335,9 +370,33 @@ function configurarCampoMotivo() {
     select.val(motivoSesion1).trigger('change');
     select.prop('disabled', true);
   }
+  
+  // ⭐ NUEVO: Mostrar/ocultar campo de consultas sugeridas
+  mostrarCampoConsultasSugeridas(numSesiones, casoCerrado);
 }
 
-// ⭐ ACTUALIZADO: Cerrar todas las consultas Y actualizar fecha_cierre + recomendaciones del cliente
+// ⭐ NUEVO: Función para mostrar campo de consultas sugeridas solo en primera sesión
+function mostrarCampoConsultasSugeridas(numSesiones, casoCerrado) {
+  const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");
+  const consultasSugeridasInput = document.getElementById("consultas_sugeridas");
+  
+  // Solo mostrar en la primera sesión y si el caso no está cerrado
+  if (numSesiones === 0 && !casoCerrado && !editandoConsultaId) {
+    consultasSugeridasGroup.style.display = "block";
+    consultasSugeridasInput.required = true;
+    
+    // Pre-cargar valor si ya existe en el cliente
+    if (clienteActual && clienteActual.consultas_sugeridas) {
+      consultasSugeridasInput.value = clienteActual.consultas_sugeridas;
+    }
+  } else {
+    consultasSugeridasGroup.style.display = "none";
+    consultasSugeridasInput.required = false;
+    consultasSugeridasInput.value = "";
+  }
+}
+
+// ⭐ CORREGIDO: Cerrar todas las consultas manteniendo el estado de confidencialidad individual
 async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFinales) {
   try {
     console.log("📄 Iniciando cierre de caso...");
@@ -345,7 +404,7 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
     console.log("Fecha de cierre:", fechaCierre);
     console.log("Recomendaciones:", recomendacionesFinales);
     
-    // 1. Cerrar todas las consultas
+    // 1. Cerrar todas las consultas MANTENIENDO su estado individual de confidencialidad
     const promises = consultasDelCliente.map(consulta => {
       if (consulta.estado !== 'Cerrado') {
         console.log(`Cerrando consulta ${consulta.id}...`);
@@ -359,7 +418,8 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
             fecha: consulta.fecha.split('T')[0],
             columna1: consulta.columna1,
             estado: 'Cerrado',
-            cliente_id: parseInt(clienteId)
+            cliente_id: parseInt(clienteId),
+            observaciones_confidenciales: consulta.observaciones_confidenciales || false // ⭐ MANTENER el estado individual
           })
         });
       }
@@ -398,7 +458,8 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
       contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
       fecha_cierre: fechaCierre,
-      recomendaciones_finales: recomendacionesFinales
+      recomendaciones_finales: recomendacionesFinales,
+      consultas_sugeridas: clienteData.consultas_sugeridas
     };
     
     console.log("📝 Datos a enviar:", clienteActualizado);
@@ -453,7 +514,14 @@ async function loadHistorialConsultas(clienteId) {
     const consultas = await res.json();
     
     consultasDelCliente = consultas ? JSON.parse(JSON.stringify(consultas)) : [];
-    window.consultasDelCliente = consultasDelCliente;
+window.consultasDelCliente = consultasDelCliente;
+
+    // ⭐ Asignar numeroSesion también al array original usado por editarConsulta()
+    consultasDelCliente
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+    .forEach((consulta, index) => {
+      consulta.numeroSesion = index + 1;
+    });
 
     if (!consultas || consultas.length === 0) {
       container.innerHTML = `
@@ -526,7 +594,9 @@ function renderHistorial(consultas) {
         
         ${c.columna1 ? `
           <div class="consulta-observaciones">
-            <strong>📄 Observaciones:</strong><br>
+            <strong>📄 Observaciones:</strong>
+            ${c.observaciones_confidenciales ? '<span class="badge-confidencial">🔒 Confidencial</span>' : ''}
+            <br>
             ${escapeHtml(c.columna1)}
           </div>
         ` : ''}
@@ -553,6 +623,24 @@ function renderHistorial(consultas) {
     `;
   }).join('');
   
+  // ⭐ NUEVO: Mostrar recomendaciones finales si el caso está cerrado
+  const recomendacionesHTML = (casoCerrado && clienteActual && clienteActual.recomendaciones_finales) ? `
+    <div class="recomendaciones-finales-card">
+      <div class="recomendaciones-header">
+        <span class="recomendaciones-icon">📝</span>
+        <h3 class="recomendaciones-titulo">Recomendaciones Finales</h3>
+      </div>
+      <div class="recomendaciones-contenido-historial">
+        ${escapeHtml(clienteActual.recomendaciones_finales).replace(/\n/g, '<br>')}
+      </div>
+      <div class="recomendaciones-footer">
+        <span class="recomendaciones-fecha">
+          📅 Fecha de cierre: ${clienteActual.fecha_cierre ? formatDate(clienteActual.fecha_cierre) : '-'}
+        </span>
+      </div>
+    </div>
+  ` : '';
+  
   const botonesAccionHTML = casoCerrado ? `
     <div class="acciones-caso-container">
       <button class="btn-informe-paciente" onclick="generarInformePaciente()">
@@ -567,7 +655,7 @@ function renderHistorial(consultas) {
     </p>
   ` : '';
   
-  container.innerHTML = consultasHTML + botonesAccionHTML;
+  container.innerHTML = consultasHTML + recomendacionesHTML + botonesAccionHTML;
 }
 
 function formatDate(dateString) {
@@ -587,7 +675,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// ⭐ ACTUALIZADO: Manejar envío del formulario con fecha_cierre y recomendaciones_finales
+// ⭐ ACTUALIZADO: Manejar envío del formulario con consultas_sugeridas
 document.getElementById("formConsulta")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -598,10 +686,18 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const estado = document.getElementById("estado").value;
   const fecha_cierre = document.getElementById("fecha_cierre").value;
   const recomendaciones_finales = document.getElementById("recomendaciones_finales").value.trim();
+  const observaciones_confidenciales = document.getElementById("observaciones_confidenciales").value === "true";
+  const consultas_sugeridas = document.getElementById("consultas_sugeridas").value; // ⭐ NUEVO
 
   // Validaciones
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
     alert("⚠️ Por favor completa todos los campos obligatorios");
+    return;
+  }
+  
+  // ⭐ NUEVO: Validar consultas sugeridas en primera sesión
+  if (consultasDelCliente.length === 0 && !editandoConsultaId && !consultas_sugeridas) {
+    alert("⚠️ Por favor indica el número de consultas sugeridas para este trabajador");
     return;
   }
 
@@ -627,7 +723,8 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     fecha,
     columna1: columna1 || null,
     estado,
-    fecha_cierre: estado === "Cerrado" ? fecha_cierre : null
+    fecha_cierre: estado === "Cerrado" ? fecha_cierre : null,
+    observaciones_confidenciales
   };
 
   try {
@@ -647,6 +744,23 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
       throw new Error(errorData.message || "Error al guardar consulta");
     }
 
+    // ⭐ CORREGIDO: Guardar consultas sugeridas en primera sesión (crear o editar)
+    const esPrimeraSesionNueva = consultasDelCliente.length === 0 && !editandoConsultaId;
+    
+    let esPrimeraSesionEditando = false;
+    if (editandoConsultaId) {
+      const consultaEditada = consultasDelCliente.find(c => c.id === editandoConsultaId);
+      esPrimeraSesionEditando = consultaEditada && consultaEditada.numeroSesion === 1;
+    }
+    
+    console.log("💾 Primera sesión nueva:", esPrimeraSesionNueva);
+    console.log("💾 Primera sesión editando:", esPrimeraSesionEditando);
+    console.log("💾 Consultas sugeridas valor:", consultas_sugeridas);
+    
+    if ((esPrimeraSesionNueva || esPrimeraSesionEditando) && consultas_sugeridas) {
+      await guardarConsultasSugeridas(clienteId, parseInt(consultas_sugeridas));
+    }
+
     // Si el estado es "Cerrado", cerrar todas las consultas Y guardar recomendaciones
     if (estado === 'Cerrado') {
       await cerrarTodasLasConsultas(clienteId, fecha_cierre, recomendaciones_finales);
@@ -663,6 +777,14 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     $('#motivo_consulta').val(null).trigger('change');
     editandoConsultaId = null;
     
+    // Resetear el candado a estado abierto
+    document.getElementById("observaciones_confidenciales").value = "false";
+    document.getElementById("btnCandado").classList.remove("confidencial");
+    document.getElementById("candadoIcon").textContent = "🔓";
+    document.getElementById("candadoTexto").textContent = "Visible en informe";
+    document.getElementById("observacionesInfo").innerHTML = '💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador';
+    document.getElementById("observacionesInfo").classList.remove("confidencial");
+    
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
 
     // Recargar datos del cliente
@@ -673,6 +795,66 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     alert("❌ " + err.message);
   }
 });
+
+// ⭐ NUEVO: Función para guardar consultas sugeridas en el cliente
+async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
+  try {
+    console.log("💾 Guardando consultas sugeridas:", consultas_sugeridas); // ⭐ DEBUG
+    
+    // Obtener datos actuales del cliente
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!resCliente.ok) {
+      throw new Error("Error al obtener datos del cliente");
+    }
+    
+    const clienteData = await resCliente.json();
+    console.log("📋 Cliente actual:", clienteData); // ⭐ DEBUG
+    
+    // Actualizar solo las consultas sugeridas
+    const clienteActualizado = {
+      cedula: clienteData.cedula,
+      nombre: clienteData.nombre,
+      vinculo: clienteData.vinculo,
+      sede: clienteData.sede,
+      tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+      entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+      empresa_id: clienteData.empresa_id,
+      email: clienteData.email,
+      telefono: clienteData.telefono,
+      contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+      contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+      contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+      fecha_cierre: clienteData.fecha_cierre,
+      recomendaciones_finales: clienteData.recomendaciones_finales,
+      consultas_sugeridas: consultas_sugeridas
+    };
+    
+    console.log("📤 Datos a enviar:", clienteActualizado); // ⭐ DEBUG
+    
+    const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clienteActualizado)
+    });
+    
+    if (!resUpdate.ok) {
+      const errorData = await resUpdate.json();
+      console.error("❌ Error del servidor:", errorData); // ⭐ DEBUG
+      throw new Error("Error al guardar consultas sugeridas");
+    }
+    
+    const resultado = await resUpdate.json();
+    console.log("✅ Consultas sugeridas guardadas:", resultado); // ⭐ DEBUG
+  } catch (err) {
+    console.error("❌ Error guardando consultas sugeridas:", err);
+    alert("⚠️ Error al guardar consultas sugeridas: " + err.message); // ⭐ Mostrar error
+  }
+}
 
 window.editarConsulta = async function(id) {
   if (hayCasoCerrado()) {
@@ -700,6 +882,63 @@ window.editarConsulta = async function(id) {
     document.getElementById("columna1").value = consulta.columna1 || "";
     document.getElementById("estado").value = consulta.estado;
 
+    // Cargar estado de confidencialidad
+    const esConfidencial = consulta.observaciones_confidenciales || false;
+    document.getElementById("observaciones_confidenciales").value = esConfidencial.toString();
+    
+    const btnCandado = document.getElementById("btnCandado");
+    const candadoIcon = document.getElementById("candadoIcon");
+    const candadoTexto = document.getElementById("candadoTexto");
+    const observacionesInfo = document.getElementById("observacionesInfo");
+    
+    if (esConfidencial) {
+      btnCandado.classList.add("confidencial");
+      candadoIcon.textContent = "🔒";
+      candadoTexto.textContent = "Confidencial (No visible)";
+      observacionesInfo.innerHTML = '🔒 Estas observaciones <strong>NO se mostrarán</strong> en el informe del trabajador';
+      observacionesInfo.classList.add("confidencial");
+    } else {
+      btnCandado.classList.remove("confidencial");
+      candadoIcon.textContent = "🔓";
+      candadoTexto.textContent = "Visible en informe";
+      observacionesInfo.innerHTML = '💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador';
+      observacionesInfo.classList.remove("confidencial");
+    }
+
+    // ⭐ DEBUGGING: Ver todo el array de consultas
+    console.log("📋 TODAS las consultas del cliente:", consultasDelCliente);
+    console.log("🔍 Editando consulta ID:", id);
+    
+    // ⭐ CORREGIDO: Determinar si es la primera sesión buscando en consultasDelCliente
+    const consultaEnHistorial = consultasDelCliente.find(c => c.id === id);
+    console.log("🔍 Consulta encontrada en historial:", consultaEnHistorial);
+    
+    const esPrimeraSesion = consultaEnHistorial && consultaEnHistorial.numeroSesion === 1;
+    console.log("🔍 Es primera sesión:", esPrimeraSesion);
+    console.log("🔍 Número de sesión:", consultaEnHistorial?.numeroSesion);
+    
+    const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");
+    const consultasSugeridasInput = document.getElementById("consultas_sugeridas");
+    
+    if (esPrimeraSesion) {
+      console.log("✅ Mostrando campo de consultas sugeridas");
+      consultasSugeridasGroup.style.display = "block";
+      consultasSugeridasInput.required = true;
+      
+      // Cargar el valor guardado en el cliente
+      if (clienteActual && clienteActual.consultas_sugeridas) {
+        consultasSugeridasInput.value = clienteActual.consultas_sugeridas;
+        console.log("✅ Cargando consultas sugeridas:", clienteActual.consultas_sugeridas);
+      } else {
+        console.log("⚠️ No hay consultas sugeridas guardadas");
+      }
+    } else {
+      console.log("❌ NO es primera sesión, ocultando campo");
+      consultasSugeridasGroup.style.display = "none";
+      consultasSugeridasInput.required = false;
+      consultasSugeridasInput.value = "";
+    }
+
     // Actualizar campo de fecha de cierre
     toggleFechaCierreField();
 
@@ -726,6 +965,13 @@ window.eliminarConsulta = async function(id) {
   }
 
   try {
+    // ⭐ NUEVO: Verificar si es la primera sesión antes de eliminar
+    const consultaAEliminar = consultasDelCliente.find(c => c.id === id);
+    const esPrimeraSesion = consultaAEliminar && consultaAEliminar.numeroSesion === 1;
+    
+    console.log("🗑️ Eliminando consulta ID:", id);
+    console.log("🗑️ Es primera sesión:", esPrimeraSesion);
+
     const res = await fetch(`${CONSULTAS_API_URL}/${id}`, {
       method: "DELETE",
       headers: {
@@ -735,6 +981,13 @@ window.eliminarConsulta = async function(id) {
 
     if (!res.ok) {
       throw new Error("Error al eliminar consulta");
+    }
+
+    // ⭐ NUEVO: Si se eliminó la primera sesión, limpiar consultas_sugeridas
+    if (esPrimeraSesion) {
+      const clienteId = getClienteIdFromURL();
+      await limpiarConsultasSugeridas(clienteId);
+      console.log("✅ Consultas sugeridas limpiadas");
     }
 
     alert("✅ Consulta eliminada correctamente");
@@ -748,7 +1001,58 @@ window.eliminarConsulta = async function(id) {
   }
 };
 
-// ⭐ ACTUALIZADO: Reabrir caso también limpia la fecha_cierre y recomendaciones_finales del cliente
+// ⭐ NUEVO: Función para limpiar consultas sugeridas
+async function limpiarConsultasSugeridas(clienteId) {
+  try {
+    // Obtener datos actuales del cliente
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!resCliente.ok) {
+      throw new Error("Error al obtener datos del cliente");
+    }
+    
+    const clienteData = await resCliente.json();
+    
+    // Actualizar con consultas_sugeridas en null
+    const clienteActualizado = {
+      cedula: clienteData.cedula,
+      nombre: clienteData.nombre,
+      vinculo: clienteData.vinculo,
+      sede: clienteData.sede,
+      tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+      entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+      empresa_id: clienteData.empresa_id,
+      email: clienteData.email,
+      telefono: clienteData.telefono,
+      contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+      contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+      contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+      fecha_cierre: clienteData.fecha_cierre,
+      recomendaciones_finales: clienteData.recomendaciones_finales,
+      consultas_sugeridas: null // ⭐ Limpiar
+    };
+    
+    const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clienteActualizado)
+    });
+    
+    if (!resUpdate.ok) {
+      throw new Error("Error al limpiar consultas sugeridas");
+    }
+    
+    console.log("✅ Consultas sugeridas limpiadas correctamente");
+  } catch (err) {
+    console.error("❌ Error limpiando consultas sugeridas:", err);
+  }
+}
+
+// ⭐ ACTUALIZADO: Reabrir caso SIN borrar las recomendaciones_finales del cliente
 window.reabrirCaso = async function() {
   if (!confirm("¿Estás seguro de reabrir el caso? Todas las sesiones volverán a estar disponibles para editar.")) {
     return;
@@ -775,7 +1079,7 @@ window.reabrirCaso = async function() {
 
     await Promise.all(promises);
 
-    // 2. Limpiar fecha_cierre Y recomendaciones_finales del cliente
+    // 2. Limpiar SOLO fecha_cierre del cliente (MANTENER recomendaciones_finales)
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
@@ -785,6 +1089,7 @@ window.reabrirCaso = async function() {
     if (resCliente.ok) {
       const clienteData = await resCliente.json();
       
+      // MODIFICADO: Mantener las recomendaciones_finales y consultas_sugeridas
       const clienteActualizado = {
         cedula: clienteData.cedula,
         nombre: clienteData.nombre,
@@ -799,7 +1104,8 @@ window.reabrirCaso = async function() {
         contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
         contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
         fecha_cierre: null,
-        recomendaciones_finales: null
+        recomendaciones_finales: clienteData.recomendaciones_finales, // ⭐ MANTENER las recomendaciones
+        consultas_sugeridas: clienteData.consultas_sugeridas // ⭐ MANTENER las consultas sugeridas
       };
       
       await fetch(`${API_URL}/${clienteId}`, {
@@ -809,7 +1115,7 @@ window.reabrirCaso = async function() {
       });
     }
 
-    alert("✅ Caso reabierto correctamente. Todas las sesiones están disponibles nuevamente.");
+    alert("✅ Caso reabierto correctamente. Todas las sesiones están disponibles nuevamente.\n\n💡 Las recomendaciones finales se han conservado y podrás editarlas al cerrar el caso nuevamente.");
 
     // Recargar datos del cliente
     await loadClientData();
@@ -836,8 +1142,15 @@ document.getElementById("formConsulta")?.addEventListener("reset", () => {
   // Ocultar campo de fecha de cierre y recomendaciones
   document.getElementById("fechaCierreContainer").classList.remove("show");
   
+  // ⭐ NUEVO: Guardar las recomendaciones antes de resetear
+  const recomendacionesActuales = document.getElementById("recomendaciones_finales").value;
+  
   setTimeout(() => {
     configurarCampoMotivo();
+    // ⭐ NUEVO: Restaurar las recomendaciones después del reset
+    if (recomendacionesActuales) {
+      document.getElementById("recomendaciones_finales").value = recomendacionesActuales;
+    }
   }, 100);
 });
 

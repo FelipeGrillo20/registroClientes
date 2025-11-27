@@ -41,46 +41,25 @@
         </select>
       </div>
 
-      <!-- Busca esta sección en tu index.html -->
-    <div class="form-row">
-      <label for="sede">Sede: <span class="required">*</span></label>
-      <select id="sede" required>
-        <option value="">Seleccione...</option>
-        <option value="Neiva">Neiva</option>
-        <option value="Bogotá">Bogotá</option>
-        <option value="Medellín">Medellín</option>
-        <option value="Cali">Cali</option>
-        <option value="Barranquilla">Barranquilla</option>
-        <option value="Pereira">Pereira</option>
-        <option value="Leticia">Leticia</option>
-        <option value="Arauca">Arauca</option>
-        <option value="Cartagena de Indias">Cartagena de Indias</option>
-        <option value="Tunja">Tunja</option>
-        <option value="Manizales">Manizales</option>
-        <option value="Florencia">Florencia</option>
-        <option value="Yopal">Yopal</option>
-        <option value="Popayán">Popayán</option>
-        <option value="Valledupar">Valledupar</option>
-        <option value="Quibdó">Quibdó</option>
-        <option value="Montería">Montería</option>
-        <option value="Inírida">Inírida</option>
-        <option value="San José del Guaviare">San José del Guaviare</option>
-        <option value="Riohacha">Riohacha</option>
-        <option value="Santa Marta">Santa Marta</option>
-        <option value="Villavicencio">Villavicencio</option>
-        <option value="San Juan de Pasto">San Juan de Pasto</option>
-        <option value="Cúcuta">Cúcuta</option>
-        <option value="Mocoa">Mocoa</option>
-        <option value="Armenia">Armenia</option>
-        <option value="San Andrés">San Andrés</option>
-        <option value="Bucaramanga">Bucaramanga</option>
-        <option value="Sincelejo">Sincelejo</option>
-        <option value="Ibagué">Ibagué</option>
-        <option value="Cali">Cali</option>
-        <option value="Mitú">Mitú</option>
-        <option value="Puerto Carreño">Puerto Carreño</option>
-      </select>
-    </div>
+      <!-- Campo Sede con BUSCADOR -->
+      <div class="form-row">
+        <label for="sede">Sede: <span class="required">*</span></label>
+        <div class="searchable-select-wrapper">
+          <div class="searchable-select-trigger">
+            <input 
+              type="text" 
+              id="sedeSearch" 
+              class="searchable-input" 
+              placeholder="Buscar sede..."
+              autocomplete="off"
+              readonly
+            />
+            <span class="searchable-arrow">▼</span>
+          </div>
+          <input type="hidden" id="sede" required />
+          <div id="sedeDropdown" class="searchable-dropdown"></div>
+        </div>
+      </div>
 
       <!-- NUEVO: Campo Entidad Pagadora (Dinámico en Cascada) -->
       <div class="form-row">
@@ -93,21 +72,44 @@
         </select>
       </div>
 
-      <!-- Campo que se muestra dinámicamente cuando se elige ARL o CCF -->
+      <!-- Campo que se muestra dinámicamente cuando se elige ARL o CCF con BUSCADOR -->
       <div class="form-row" id="entidadEspecificaContainer" style="display: none;">
         <label for="entidadEspecifica" id="labelEntidadEspecifica">Seleccione:</label>
-        <select id="entidadEspecifica">
-          <option value="">Seleccione...</option>
-        </select>
+        <div class="searchable-select-wrapper">
+          <div class="searchable-select-trigger">
+            <input 
+              type="text" 
+              id="entidadEspecificaSearch" 
+              class="searchable-input" 
+              placeholder="Buscar..."
+              autocomplete="off"
+              readonly
+            />
+            <span class="searchable-arrow">▼</span>
+          </div>
+          <input type="hidden" id="entidadEspecifica" />
+          <div id="entidadEspecificaDropdown" class="searchable-dropdown"></div>
+        </div>
       </div>
 
-      <!-- Campo Empresa Usuario (Cliente Final) -->
+      <!-- Campo Empresa Usuario (Cliente Final) con BUSCADOR -->
       <div class="form-row">
         <label for="empresaUsuario">Empresa Usuario: <span class="required">*</span></label>
-        <select id="empresaUsuario" required>
-          <option value="">Seleccione...</option>
-          <!-- Las opciones se cargarán dinámicamente desde la BD -->
-        </select>
+        <div class="searchable-select-wrapper">
+          <div class="searchable-select-trigger">
+            <input 
+              type="text" 
+              id="empresaUsuarioSearch" 
+              class="searchable-input" 
+              placeholder="Buscar empresa..."
+              autocomplete="off"
+              readonly
+            />
+            <span class="searchable-arrow">▼</span>
+          </div>
+          <input type="hidden" id="empresaUsuario" required />
+          <div id="empresaUsuarioDropdown" class="searchable-dropdown"></div>
+        </div>
       </div>
 
       <div class="form-row">

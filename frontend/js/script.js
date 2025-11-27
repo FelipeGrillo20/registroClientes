@@ -24,6 +24,16 @@ const ENTIDADES = {
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
 };
 
+// Lista de sedes (todas las capitales de departamento de Colombia)
+const SEDES = [
+  'Neiva', 'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Pereira', 'Leticia',
+  'Arauca', 'Cartagena de Indias', 'Tunja', 'Manizales', 'Florencia', 'Yopal',
+  'Popayán', 'Valledupar', 'Quibdó', 'Montería', 'Inírida', 'San José del Guaviare',
+  'Riohacha', 'Santa Marta', 'Villavicencio', 'San Juan de Pasto', 'Cúcuta',
+  'Mocoa', 'Armenia', 'San Andrés', 'Bucaramanga', 'Sincelejo', 'Ibagué', 'Mitú',
+  'Puerto Carreño'
+].sort();
+
 // Función para obtener el token de autenticación
 function getAuthToken() {
   return localStorage.getItem("authToken");
@@ -37,6 +47,185 @@ function getAuthHeaders() {
   };
 }
 
+// ============================================
+// CLASE PARA SELECT CON BÚSQUEDA
+// ============================================
+class SearchableSelect {
+  constructor(inputId, hiddenId, dropdownId, options, displayFn = null) {
+    this.input = document.getElementById(inputId);
+    this.hidden = document.getElementById(hiddenId);
+    this.dropdown = document.getElementById(dropdownId);
+    this.options = options;
+    this.displayFn = displayFn || ((item) => typeof item === 'object' ? item.text : item);
+    this.valueFn = (item) => typeof item === 'object' ? item.value : item;
+    this.filteredOptions = [...options];
+    this.selectedIndex = -1;
+    
+    this.init();
+  }
+
+  init() {
+    // Evento al escribir en el input
+    this.input.addEventListener('input', () => this.filterOptions());
+    
+    // Evento al hacer clic en el input o en la flecha (abrir dropdown)
+    const wrapper = this.input.closest('.searchable-select-wrapper');
+    const trigger = wrapper.querySelector('.searchable-select-trigger');
+    
+    trigger.addEventListener('mousedown', (e) => {
+      e.preventDefault();      // Evita que el input reciba focus antes de tiempo
+      e.stopPropagation();     // Evita que el evento llegue al document y cierre el dropdown
+
+  if (this.dropdown.style.display === 'block') {
+    // Si ya está abierto, lo cerramos
+    this.hideDropdown();
+    this.input.setAttribute('readonly', 'readonly');
+  } else {
+    // Abrir correctamente
+    this.input.removeAttribute('readonly');
+    this.input.focus();        // Enfocar el input manualmente
+    this.filterOptions();      // Actualizar lista filtrada
+    this.showDropdown();       // Mostrar el dropdown
+  }
+  });
+
+    
+    // Evento al hacer focus en el input (habilitar escritura)
+    this.input.addEventListener('focus', () => {
+      this.input.removeAttribute('readonly');
+      this.filterOptions();
+      this.showDropdown();
+    });
+    
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target)) {
+        this.hideDropdown();
+        this.input.setAttribute('readonly', 'readonly');
+      }
+    });
+    
+    // Navegación con teclado
+    this.input.addEventListener('keydown', (e) => this.handleKeyboard(e));
+  }
+
+  filterOptions() {
+    const searchTerm = this.input.value.toLowerCase().trim();
+    
+    this.filteredOptions = this.options.filter(option => {
+      const text = this.displayFn(option).toLowerCase();
+      return text.includes(searchTerm);
+    });
+    
+    this.selectedIndex = -1;
+    this.renderDropdown();
+  }
+
+  renderDropdown() {
+    this.dropdown.innerHTML = '';
+    
+    if (this.filteredOptions.length === 0) {
+      this.dropdown.innerHTML = '<div class="searchable-option no-results">No se encontraron resultados</div>';
+      this.showDropdown();
+      return;
+    }
+    
+    this.filteredOptions.forEach((option, index) => {
+      const div = document.createElement('div');
+      div.className = 'searchable-option';
+      div.textContent = this.displayFn(option);
+      div.dataset.index = index;
+      
+      div.addEventListener('click', () => {
+        this.selectOption(option);
+      });
+      
+      this.dropdown.appendChild(div);
+    });
+    
+    this.showDropdown();
+  }
+
+  selectOption(option) {
+    const displayText = this.displayFn(option);
+    const value = this.valueFn(option);
+    
+    this.input.value = displayText;
+    this.hidden.value = value;
+    this.hideDropdown();
+    this.input.setAttribute('readonly', 'readonly');
+    
+    // Disparar evento change en el campo oculto
+    const event = new Event('change', { bubbles: true });
+    this.hidden.dispatchEvent(event);
+  }
+
+  handleKeyboard(e) {
+    const options = this.dropdown.querySelectorAll('.searchable-option:not(.no-results)');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.selectedIndex = Math.min(this.selectedIndex + 1, options.length - 1);
+      this.highlightOption(options);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+      this.highlightOption(options);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this.selectedIndex >= 0 && options[this.selectedIndex]) {
+        const index = parseInt(options[this.selectedIndex].dataset.index);
+        this.selectOption(this.filteredOptions[index]);
+      }
+    } else if (e.key === 'Escape') {
+      this.hideDropdown();
+    }
+  }
+
+  highlightOption(options) {
+    options.forEach((opt, idx) => {
+      opt.classList.toggle('highlighted', idx === this.selectedIndex);
+    });
+    
+    if (options[this.selectedIndex]) {
+      options[this.selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  showDropdown() {
+    this.dropdown.style.display = 'block';
+  }
+
+  hideDropdown() {
+    this.dropdown.style.display = 'none';
+    this.selectedIndex = -1;
+    this.input.setAttribute('readonly', 'readonly');
+  }
+
+  setOptions(newOptions) {
+    this.options = newOptions;
+    this.filteredOptions = [...newOptions];
+    this.renderDropdown();
+  }
+
+  setValue(value, displayText) {
+    this.hidden.value = value;
+    this.input.value = displayText;
+  }
+
+  reset() {
+    this.input.value = '';
+    this.hidden.value = '';
+    this.input.setAttribute('readonly', 'readonly');
+    this.hideDropdown();
+  }
+}
+
+// Variables globales para los selectores con búsqueda
+let sedeSelector;
+let empresaSelector;
+let entidadEspecificaSelector;
+
 // Esperar a que el DOM esté listo
 window.addEventListener('DOMContentLoaded', () => {
   initializeForm();
@@ -44,7 +233,21 @@ window.addEventListener('DOMContentLoaded', () => {
   loadEmpresas(); // Cargar empresas desde la BD
   setupEntidadPagadoraDinamica(); // Configurar campo dinámico
   setupCancelarEdicion(); // Configurar botón cancelar edición
+  initializeSearchableSelects(); // Inicializar selectores con búsqueda
 });
+
+function initializeSearchableSelects() {
+  // Inicializar selector de Sede
+  sedeSelector = new SearchableSelect(
+    'sedeSearch',
+    'sede',
+    'sedeDropdown',
+    SEDES
+  );
+
+  // El selector de Empresa Usuario se inicializará después de cargar las empresas
+  // Ver función loadEmpresas()
+}
 
 function initializeForm() {
   const btnBuscarCedula = document.getElementById("btnBuscarCedula");
@@ -87,7 +290,11 @@ function initializeForm() {
           // Pre-llenar el formulario con los datos encontrados
           document.getElementById("name").value = clienteEncontrado.nombre || "";
           document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
-          document.getElementById("sede").value = clienteEncontrado.sede || "";
+          
+          // Cargar Sede con el nuevo selector
+          if (clienteEncontrado.sede) {
+            sedeSelector.setValue(clienteEncontrado.sede, clienteEncontrado.sede);
+          }
           
           // Cargar Entidad Pagadora
           if (clienteEncontrado.tipo_entidad_pagadora) {
@@ -100,12 +307,25 @@ function initializeForm() {
             // Después de cargar las opciones, seleccionar la específica
             if (clienteEncontrado.entidad_pagadora_especifica) {
               setTimeout(() => {
-                document.getElementById("entidadEspecifica").value = clienteEncontrado.entidad_pagadora_especifica;
+                if (entidadEspecificaSelector) {
+                  entidadEspecificaSelector.setValue(
+                    clienteEncontrado.entidad_pagadora_especifica,
+                    clienteEncontrado.entidad_pagadora_especifica
+                  );
+                }
               }, 100);
             }
           }
           
-          document.getElementById("empresaUsuario").value = clienteEncontrado.empresa_id || "";
+          // Cargar Empresa Usuario
+          if (clienteEncontrado.empresa_id && empresaSelector) {
+            const empresas = empresaSelector.options;
+            const empresaEncontrada = empresas.find(e => e.value === clienteEncontrado.empresa_id);
+            if (empresaEncontrada) {
+              empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
+            }
+          }
+          
           document.getElementById("email").value = clienteEncontrado.email || "";
           document.getElementById("phone").value = clienteEncontrado.telefono || "";
 
@@ -121,21 +341,7 @@ function initializeForm() {
           alert("❌ No se encontró ningún cliente con esa cédula");
           
           // Limpiar campos excepto cédula
-          document.getElementById("name").value = "";
-          document.getElementById("vinculo").value = "";
-          document.getElementById("sede").value = "";
-          document.getElementById("entidadPagadora").value = "";
-          document.getElementById("entidadEspecifica").value = "";
-          document.getElementById("entidadEspecificaContainer").style.display = "none";
-          document.getElementById("empresaUsuario").value = "";
-          document.getElementById("email").value = "";
-          document.getElementById("phone").value = "";
-          
-          editingId = null;
-          form.querySelector("button[type='submit']").textContent = "Registrar Cliente";
-          
-          // Ocultar botón "Descartar cambios"
-          document.getElementById("btnCancelarEdicion").style.display = "none";
+          resetForm();
         }
       } catch (err) {
         console.error("Error buscando cliente:", err);
@@ -152,49 +358,66 @@ function initializeForm() {
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("edit");
   if (editId) {
-    startEdit(parseInt(editId)); // IMPORTANTE: Convertir a número
+    startEdit(parseInt(editId));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+}
+
+function resetForm() {
+  document.getElementById("name").value = "";
+  document.getElementById("vinculo").value = "";
+  sedeSelector.reset();
+  document.getElementById("entidadPagadora").value = "";
+  if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
+  document.getElementById("entidadEspecificaContainer").style.display = "none";
+  if (empresaSelector) empresaSelector.reset();
+  document.getElementById("email").value = "";
+  document.getElementById("phone").value = "";
+  
+  editingId = null;
+  form.querySelector("button[type='submit']").textContent = "Registrar Trabajador";
+  document.getElementById("btnCancelarEdicion").style.display = "none";
 }
 
 // === CONFIGURACIÓN DEL CAMPO DINÁMICO "ENTIDAD PAGADORA" ===
 function setupEntidadPagadoraDinamica() {
   const selectTipo = document.getElementById("entidadPagadora");
   const containerEspecifica = document.getElementById("entidadEspecificaContainer");
-  const selectEspecifica = document.getElementById("entidadEspecifica");
-  const labelEspecifica = document.getElementById("labelEntidadEspecifica");
 
   selectTipo.addEventListener("change", function() {
     const tipoSeleccionado = this.value;
 
-    // Limpiar select específica
-    selectEspecifica.innerHTML = '<option value="">Seleccione...</option>';
-
     if (tipoSeleccionado === "Particular") {
       // Si es Particular, ocultar el segundo campo
       containerEspecifica.style.display = "none";
-      selectEspecifica.removeAttribute("required");
-      selectEspecifica.value = "";
+      document.getElementById("entidadEspecifica").removeAttribute("required");
+      if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
     } else if (tipoSeleccionado === "ARL" || tipoSeleccionado === "CCF") {
       // Mostrar el segundo campo y cargar opciones
       containerEspecifica.style.display = "block";
-      selectEspecifica.setAttribute("required", "required");
+      document.getElementById("entidadEspecifica").setAttribute("required", "required");
       
       // Cambiar el label según el tipo
-      labelEspecifica.textContent = `Seleccione ${tipoSeleccionado}: `;
+      document.getElementById("labelEntidadEspecifica").innerHTML = `Seleccione ${tipoSeleccionado}: <span class="required">*</span>`;
       
-      // Cargar las opciones correspondientes
+      // Inicializar o actualizar el selector con búsqueda
       const opciones = ENTIDADES[tipoSeleccionado];
-      opciones.forEach(entidad => {
-        const option = document.createElement("option");
-        option.value = entidad;
-        option.textContent = entidad;
-        selectEspecifica.appendChild(option);
-      });
+      
+      if (!entidadEspecificaSelector) {
+        entidadEspecificaSelector = new SearchableSelect(
+          'entidadEspecificaSearch',
+          'entidadEspecifica',
+          'entidadEspecificaDropdown',
+          opciones
+        );
+      } else {
+        entidadEspecificaSelector.setOptions(opciones);
+        entidadEspecificaSelector.reset();
+      }
     } else {
       // Si no hay selección, ocultar
       containerEspecifica.style.display = "none";
-      selectEspecifica.removeAttribute("required");
+      document.getElementById("entidadEspecifica").removeAttribute("required");
     }
   });
 }
@@ -214,18 +437,21 @@ async function loadEmpresas() {
     }
     
     const empresas = await res.json();
-    const selectEmpresa = document.getElementById("empresaUsuario");
     
-    // Limpiar opciones existentes (excepto la primera)
-    selectEmpresa.innerHTML = '<option value="">Seleccione...</option>';
+    // Formatear empresas para el selector con búsqueda
+    const empresasFormateadas = empresas.map(empresa => ({
+      value: empresa.id,
+      text: empresa.cliente_final
+    }));
     
-    // Agregar opciones dinámicamente
-    empresas.forEach(empresa => {
-      const option = document.createElement("option");
-      option.value = empresa.id;
-      option.textContent = empresa.cliente_final;
-      selectEmpresa.appendChild(option);
-    });
+    // Inicializar selector de Empresa Usuario
+    empresaSelector = new SearchableSelect(
+      'empresaUsuarioSearch',
+      'empresaUsuario',
+      'empresaUsuarioDropdown',
+      empresasFormateadas,
+      (item) => item.text
+    );
     
   } catch (err) {
     console.error("Error cargando empresas:", err);
@@ -328,7 +554,7 @@ form.addEventListener("submit", async (e) => {
     }
   }
 
-  // Objeto con TODOS los datos (personales + entidad pagadora + empresa)
+  // Objeto con TODOS los datos
   const nuevoCliente = {
     cedula,
     nombre,
@@ -339,13 +565,11 @@ form.addEventListener("submit", async (e) => {
     empresa_id: parseInt(empresaId),
     email,
     telefono,
-    // Campos de consulta/seguimiento en NULL (para uso futuro)
     actividad: null,
     modalidad: null,
     fecha: null,
     columna1: null,
     estado: null,
-    // Contacto de emergencia en NULL (se registra desde consulta.html)
     contacto_emergencia_nombre: null,
     contacto_emergencia_parentesco: null,
     contacto_emergencia_telefono: null,
@@ -367,12 +591,7 @@ form.addEventListener("submit", async (e) => {
         alert("✅ Cliente actualizado exitosamente");
         editingId = null;
         form.reset();
-        document.getElementById("entidadEspecificaContainer").style.display = "none";
-        form.querySelector("button[type='submit']").textContent = "Registrar Cliente";
-        
-        // Ocultar botón "Descartar cambios"
-        document.getElementById("btnCancelarEdicion").style.display = "none";
-        
+        resetForm();
         loadClientsForCache();
       }
     } else {
@@ -389,7 +608,7 @@ form.addEventListener("submit", async (e) => {
       } else {
         alert("✅ Cliente registrado exitosamente");
         form.reset();
-        document.getElementById("entidadEspecificaContainer").style.display = "none";
+        resetForm();
         loadClientsForCache();
       }
     }
@@ -413,76 +632,69 @@ window.startEdit = async function (id) {
     }
     const client = await res.json();
 
-    // IMPORTANTE: Actualizar el cache antes de editar
+    // Actualizar el cache antes de editar
     await loadClientsForCache();
 
-    // Llenamos los campos de DATOS PERSONALES
+    // Llenar campos
     document.getElementById("cedula").value = client.cedula || "";
     document.getElementById("name").value = client.nombre || "";
     document.getElementById("vinculo").value = client.vinculo || "";
-    document.getElementById("sede").value = client.sede || "";
+    
+    // Cargar Sede
+    if (client.sede) {
+      sedeSelector.setValue(client.sede, client.sede);
+    }
     
     // Cargar Entidad Pagadora
     if (client.tipo_entidad_pagadora) {
       document.getElementById("entidadPagadora").value = client.tipo_entidad_pagadora;
       
-      // Disparar el evento change para cargar el segundo select si es ARL o CCF
       const event = new Event('change');
       document.getElementById("entidadPagadora").dispatchEvent(event);
       
-      // Después de cargar las opciones, seleccionar la específica
       if (client.entidad_pagadora_especifica) {
         setTimeout(() => {
-          document.getElementById("entidadEspecifica").value = client.entidad_pagadora_especifica;
+          if (entidadEspecificaSelector) {
+            entidadEspecificaSelector.setValue(
+              client.entidad_pagadora_especifica,
+              client.entidad_pagadora_especifica
+            );
+          }
         }, 100);
       }
     }
     
-    document.getElementById("empresaUsuario").value = client.empresa_id || "";
+    // Cargar Empresa Usuario
+    if (client.empresa_id && empresaSelector) {
+      const empresas = empresaSelector.options;
+      const empresaEncontrada = empresas.find(e => e.value === client.empresa_id);
+      if (empresaEncontrada) {
+        empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
+      }
+    }
+    
     document.getElementById("email").value = client.email || "";
     document.getElementById("phone").value = client.telefono || "";
 
     editingId = id;
     form.querySelector("button[type='submit']").textContent = "Guardar cambios";
-    
-    // Mostrar botón "Descartar cambios"
     document.getElementById("btnCancelarEdicion").style.display = "inline-block";
     
-    console.log("Modo edición activado. ID:", editingId); // Debug
   } catch (err) {
     console.error("Error al cargar cliente para editar:", err);
     alert("Error al obtener datos de cliente");
   }
 };
 
-// ============================================
-// CONFIGURAR BOTÓN "DESCARTAR CAMBIOS"
-// ============================================
+// Configurar botón "Descartar cambios"
 function setupCancelarEdicion() {
   const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
   
   if (btnCancelarEdicion) {
     btnCancelarEdicion.addEventListener("click", function() {
-      // Confirmar antes de descartar
       if (confirm("¿Estás seguro de descartar los cambios?\n\nLos datos del formulario se limpiarán y volverás al modo de registro.")) {
-        // Limpiar formulario
         form.reset();
-        
-        // Ocultar campo específico de entidad pagadora
-        document.getElementById("entidadEspecificaContainer").style.display = "none";
-        
-        // Resetear modo edición
-        editingId = null;
-        
-        // Cambiar texto del botón submit
-        form.querySelector("button[type='submit']").textContent = "Registrar Cliente";
-        
-        // Ocultar botón "Descartar cambios"
-        btnCancelarEdicion.style.display = "none";
-        
-        // Opcionalmente, redirigir a clientes.html
-        // window.location.href = "clientes.html";
-        
+        resetForm();
         alert("✅ Cambios descartados. Formulario listo para nuevo registro.");
       }
     });

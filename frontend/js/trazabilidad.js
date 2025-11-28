@@ -10,6 +10,7 @@ const labelNombreCliente = document.getElementById("labelNombreCliente");
 const filterVinculo = document.getElementById("filterVinculo");
 const filterSede = document.getElementById("filterSede");
 const filterEmpresa = document.getElementById("filterEmpresa");
+const filterSubcontratista = document.getElementById("filterSubcontratista");
 const btnClearFilters = document.getElementById("btnClearFilters");
 const noDataMessage = document.getElementById("noDataMessage");
 const tableContainer = document.querySelector(".table-container");
@@ -35,7 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Cargar todos los clientes
 async function loadClients() {
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px;">Cargando datos...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">Cargando datos...</td></tr>`;
+  console.log("🔄 Cargando clientes para trazabilidad...");
   
   try {
     const res = await fetch(API_URL, {
@@ -70,11 +72,11 @@ async function loadClients() {
     
   } catch (err) {
     console.error("Error loading clients:", err);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">Error al cargar datos</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al cargar datos</td></tr>`;
   }
 }
 
-// Poblar filtros de Sede y Empresa
+// Poblar filtros de Sede, Empresa y Subcontratista
 function populateFilterOptions() {
   // Sedes únicas
   const sedes = [...new Set(allClients.map(c => c.sede).filter(Boolean))];
@@ -83,6 +85,25 @@ function populateFilterOptions() {
   // Empresas únicas (cliente_final)
   const empresas = [...new Set(allClients.map(c => c.cliente_final).filter(Boolean))];
   fillSelect(filterEmpresa, empresas, "Empresa");
+  
+  // Subcontratistas únicos (subcontratista_nombre o subcontratista_definitivo)
+  const subcontratistas = [...new Set(
+    allClients
+      .map(c => c.subcontratista_definitivo || c.subcontratista_nombre)
+      .filter(Boolean)
+  )].sort();
+  
+  // Llenar select de subcontratistas
+  filterSubcontratista.innerHTML = `
+    <option value="">Todos los Subcontratistas</option>
+    <option value="NO_APLICA">Sin Subcontratista</option>
+  `;
+  subcontratistas.forEach(sub => {
+    const option = document.createElement("option");
+    option.value = sub;
+    option.textContent = sub;
+    filterSubcontratista.appendChild(option);
+  });
 }
 
 // Llenar select con opciones
@@ -123,6 +144,15 @@ function renderClients(clients) {
       `<span class="badge badge-empresa">${escapeHtml(client.cliente_final)}</span>` : 
       '-';
     
+    // Badge de subcontratista
+    let subcontratistaBadge = '-';
+    const subcontratistaName = client.subcontratista_definitivo || client.subcontratista_nombre;
+    if (subcontratistaName) {
+      subcontratistaBadge = `<span class="badge badge-subcontratista">${escapeHtml(subcontratistaName)}</span>`;
+    } else {
+      subcontratistaBadge = '<span class="badge badge-no-subcontratista">N/A</span>';
+    }
+    
     // Badge de tipo cliente
     let tipoBadge = '-';
     if (client.tipo_entidad_pagadora === 'Particular') {
@@ -151,6 +181,7 @@ function renderClients(clients) {
       <td>${tipoBadge}</td>
       <td>${nombreClienteBadge}</td>
       <td>${empresaBadge}</td>
+      <td>${subcontratistaBadge}</td>
       <td>${vinculoBadge}</td>
       <td>${escapeHtml(client.sede || '-')}</td>
       <td>${escapeHtml(client.nombre || '-')}</td>
@@ -230,6 +261,7 @@ function setupFilterEvents() {
   filterVinculo.addEventListener("change", applyFilters);
   filterSede.addEventListener("change", applyFilters);
   filterEmpresa.addEventListener("change", applyFilters);
+  filterSubcontratista.addEventListener("change", applyFilters);
   
   // Botón limpiar filtros
   btnClearFilters.addEventListener("click", clearAllFilters);
@@ -244,6 +276,7 @@ function applyFilters() {
   const vinculoVal = filterVinculo.value;
   const sedeVal = filterSede.value;
   const empresaVal = filterEmpresa.value;
+  const subcontratistaVal = filterSubcontratista.value;
   
   // Filtro por tipo de cliente
   if (tipoVal) {
@@ -270,6 +303,20 @@ function applyFilters() {
     filtered = filtered.filter(c => c.cliente_final === empresaVal);
   }
   
+  // Filtro por subcontratista
+  if (subcontratistaVal) {
+    if (subcontratistaVal === "NO_APLICA") {
+      // Filtrar solo los que NO tienen subcontratista
+      filtered = filtered.filter(c => !c.subcontratista_id && !c.subcontratista_nombre && !c.subcontratista_definitivo);
+    } else {
+      // Filtrar por el subcontratista específico
+      filtered = filtered.filter(c => {
+        const subName = c.subcontratista_definitivo || c.subcontratista_nombre;
+        return subName === subcontratistaVal;
+      });
+    }
+  }
+  
   // Renderizar resultados filtrados
   renderClients(filtered);
   
@@ -285,6 +332,7 @@ function clearAllFilters() {
   filterVinculo.value = "";
   filterSede.value = "";
   filterEmpresa.value = "";
+  filterSubcontratista.value = "";
   
   // Renderizar todos los clientes
   renderClients(allClients);

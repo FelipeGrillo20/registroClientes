@@ -310,7 +310,7 @@ body {
 .trazabilidad-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1000px;
+  min-width: 1200px;
   font-size: 13px;
 }
 
@@ -345,7 +345,7 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Alineaciones específicas según nuevo orden - TODAS A LA IZQUIERDA */
+/* Alineaciones específicas - TODAS A LA IZQUIERDA */
 .trazabilidad-table td:nth-child(1) { /* Tipo Cliente */
   text-align: left;
 }
@@ -358,20 +358,24 @@ body {
   text-align: left;
 }
 
-.trazabilidad-table td:nth-child(4) { /* Vínculo */
+.trazabilidad-table td:nth-child(4) { /* Subcontratista */
   text-align: left;
 }
 
-.trazabilidad-table td:nth-child(5) { /* Sede */
+.trazabilidad-table td:nth-child(5) { /* Vínculo */
   text-align: left;
 }
 
-.trazabilidad-table td:nth-child(6) { /* Nombre */
+.trazabilidad-table td:nth-child(6) { /* Sede */
+  text-align: left;
+}
+
+.trazabilidad-table td:nth-child(7) { /* Nombre */
   text-align: left;
   font-weight: 600;
 }
 
-.trazabilidad-table td:nth-child(7) { /* Cédula */
+.trazabilidad-table td:nth-child(8) { /* Cédula */
   text-align: left;
   white-space: nowrap;
   font-weight: 600;
@@ -430,6 +434,18 @@ body {
 /* Badge Empresa */
 .badge-empresa {
   background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: white;
+}
+
+/* Badge Subcontratista */
+.badge-subcontratista {
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  color: white;
+}
+
+/* Badge Sin Subcontratista */
+.badge-no-subcontratista {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
   color: white;
 }
 

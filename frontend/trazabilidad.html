@@ -71,6 +71,15 @@
           </select>
         </div>
 
+        <!-- NUEVO: Filtro adicional: Subcontratista -->
+        <div class="filter-group">
+          <label for="filterSubcontratista">Subcontratista:</label>
+          <select id="filterSubcontratista">
+            <option value="">Todos los Subcontratistas</option>
+            <option value="NO_APLICA">Sin Subcontratista</option>
+          </select>
+        </div>
+
         <!-- Botón limpiar filtros -->
         <div class="filter-group filter-actions-group">
           <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
@@ -102,7 +111,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">🟠</div>
+        <div class="stat-icon">🟡</div>
         <div class="stat-info">
           <div class="stat-value" id="statCCF">0</div>
           <div class="stat-label">CCF</div>
@@ -118,6 +127,7 @@
             <th>Tipo Cliente</th>
             <th>Nombre Cliente</th>
             <th>Empresa Usuario</th>
+            <th>Subcontratista</th>
             <th>Vínculo</th>
             <th>Sede</th>
             <th>Nombre</th>
@@ -133,7 +143,7 @@
 
     <!-- Mensaje inicial -->
     <div id="noDataMessage" class="no-data-message" style="display: none;">
-      <div class="no-data-icon">🔍</div>
+      <div class="no-data-icon">📊</div>
       <p>No se encontraron clientes con los filtros seleccionados</p>
     </div>
   </main>

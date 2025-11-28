@@ -12,6 +12,7 @@ exports.createClient = async (req, res) => {
       tipo_entidad_pagadora,
       entidad_pagadora_especifica,
       empresa_id,
+      subcontratista_id,
       email,
       telefono,
       contacto_emergencia_nombre,
@@ -39,6 +40,7 @@ exports.createClient = async (req, res) => {
       tipo_entidad_pagadora: tipo_entidad_pagadora || null,
       entidad_pagadora_especifica: entidad_pagadora_especifica || null,
       empresa_id: empresa_id || null,
+      subcontratista_id: subcontratista_id || null,
       email: email || null,
       telefono: telefono || null,
       contacto_emergencia_nombre: contacto_emergencia_nombre || null,
@@ -118,6 +120,7 @@ exports.updateClient = async (req, res) => {
       tipo_entidad_pagadora,
       entidad_pagadora_especifica,
       empresa_id,
+      subcontratista_id,
       email,
       telefono,
       contacto_emergencia_nombre,
@@ -125,7 +128,7 @@ exports.updateClient = async (req, res) => {
       contacto_emergencia_telefono,
       fecha_cierre,
       recomendaciones_finales,
-      consultas_sugeridas, // ⭐ AGREGADO
+      consultas_sugeridas,
     } = req.body;
 
     // Verificar que el cliente existe
@@ -155,6 +158,7 @@ exports.updateClient = async (req, res) => {
       tipo_entidad_pagadora: tipo_entidad_pagadora || null,
       entidad_pagadora_especifica: entidad_pagadora_especifica || null,
       empresa_id: empresa_id || null,
+      subcontratista_id: subcontratista_id || null,
       email: email || null,
       telefono: telefono || null,
       contacto_emergencia_nombre: contacto_emergencia_nombre || null,
@@ -162,7 +166,7 @@ exports.updateClient = async (req, res) => {
       contacto_emergencia_telefono: contacto_emergencia_telefono || null,
       fecha_cierre: fecha_cierre || null,
       recomendaciones_finales: recomendaciones_finales || null,
-      consultas_sugeridas: consultas_sugeridas || null, // ⭐ AGREGADO
+      consultas_sugeridas: consultas_sugeridas || null,
     });
 
     res.json(updatedClient);

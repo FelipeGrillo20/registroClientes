@@ -73,22 +73,19 @@ class SearchableSelect {
     const trigger = wrapper.querySelector('.searchable-select-trigger');
     
     trigger.addEventListener('mousedown', (e) => {
-      e.preventDefault();      // Evita que el input reciba focus antes de tiempo
-      e.stopPropagation();     // Evita que el evento llegue al document y cierre el dropdown
+      e.preventDefault();
+      e.stopPropagation();
 
-  if (this.dropdown.style.display === 'block') {
-    // Si ya está abierto, lo cerramos
-    this.hideDropdown();
-    this.input.setAttribute('readonly', 'readonly');
-  } else {
-    // Abrir correctamente
-    this.input.removeAttribute('readonly');
-    this.input.focus();        // Enfocar el input manualmente
-    this.filterOptions();      // Actualizar lista filtrada
-    this.showDropdown();       // Mostrar el dropdown
-  }
-  });
-
+      if (this.dropdown.style.display === 'block') {
+        this.hideDropdown();
+        this.input.setAttribute('readonly', 'readonly');
+      } else {
+        this.input.removeAttribute('readonly');
+        this.input.focus();
+        this.filterOptions();
+        this.showDropdown();
+      }
+    });
     
     // Evento al hacer focus en el input (habilitar escritura)
     this.input.addEventListener('focus', () => {
@@ -225,6 +222,7 @@ class SearchableSelect {
 let sedeSelector;
 let empresaSelector;
 let entidadEspecificaSelector;
+let subcontratistaSelector;
 
 // Esperar a que el DOM esté listo
 window.addEventListener('DOMContentLoaded', () => {
@@ -245,7 +243,7 @@ function initializeSearchableSelects() {
     SEDES
   );
 
-  // El selector de Empresa Usuario se inicializará después de cargar las empresas
+  // El selector de Empresa Usuario y Subcontratista se inicializarán después de cargar las empresas
   // Ver función loadEmpresas()
 }
 
@@ -326,6 +324,15 @@ function initializeForm() {
             }
           }
           
+          // Cargar Subcontratista
+          if (clienteEncontrado.subcontratista_id && subcontratistaSelector) {
+            const subcontratistas = subcontratistaSelector.options;
+            const subcontratistaEncontrado = subcontratistas.find(s => s.value === clienteEncontrado.subcontratista_id);
+            if (subcontratistaEncontrado) {
+              subcontratistaSelector.setValue(subcontratistaEncontrado.value, subcontratistaEncontrado.text);
+            }
+          }
+          
           document.getElementById("email").value = clienteEncontrado.email || "";
           document.getElementById("phone").value = clienteEncontrado.telefono || "";
 
@@ -371,6 +378,7 @@ function resetForm() {
   if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
   document.getElementById("entidadEspecificaContainer").style.display = "none";
   if (empresaSelector) empresaSelector.reset();
+  if (subcontratistaSelector) subcontratistaSelector.reset();
   document.getElementById("email").value = "";
   document.getElementById("phone").value = "";
   
@@ -432,13 +440,15 @@ async function loadEmpresas() {
     });
     
     if (!res.ok) {
-      console.error("Error cargando empresas");
+      console.error("Error cargando empresas - Status:", res.status);
       return;
     }
     
     const empresas = await res.json();
+    console.log("📦 Empresas cargadas:", empresas.length);
+    console.log("📋 Primera empresa:", empresas[0]);
     
-    // Formatear empresas para el selector con búsqueda
+    // Formatear empresas para el selector con búsqueda (Empresa Usuario)
     const empresasFormateadas = empresas.map(empresa => ({
       value: empresa.id,
       text: empresa.cliente_final
@@ -453,8 +463,35 @@ async function loadEmpresas() {
       (item) => item.text
     );
     
+    // Formatear empresas para Subcontratista (agregando "No Aplica" al inicio)
+    const subcontratistasFormateados = [
+      { value: null, text: 'No Aplica' },
+      ...empresas.map(empresa => ({
+        value: empresa.id,
+        text: empresa.cliente_definitivo || empresa.cliente_final || 'Sin nombre'
+      }))
+    ];
+    
+    console.log("🏢 Subcontratistas formateados:", subcontratistasFormateados.length);
+    console.log("🏢 Primeros 3 subcontratistas:", subcontratistasFormateados.slice(0, 3));
+    
+    // Inicializar selector de Subcontratista
+    console.log("🔧 Inicializando selector de Subcontratista...");
+    subcontratistaSelector = new SearchableSelect(
+      'subcontratistaSearch',
+      'subcontratista',
+      'subcontratistaDropdown',
+      subcontratistasFormateados,
+      (item) => item.text
+    );
+    console.log("✅ Selector de Subcontratista inicializado");
+    
+    // NO establecer valor por defecto - dejarlo vacío
+    // El usuario puede seleccionar "No Aplica" si lo necesita
+    console.log("✅ Selector de Subcontratista listo (sin valor por defecto)");
+    
   } catch (err) {
-    console.error("Error cargando empresas:", err);
+    console.error("❌ Error cargando empresas:", err);
   }
 }
 
@@ -501,6 +538,10 @@ form.addEventListener("submit", async (e) => {
 
   // Captura de Empresa Usuario (solo el ID)
   const empresaId = document.getElementById("empresaUsuario").value;
+
+  // Captura de Subcontratista (puede ser null si está vacío o es "No Aplica")
+  const subcontratistaId = document.getElementById("subcontratista").value;
+  const subcontratistaIdFinal = (subcontratistaId && subcontratistaId !== 'null' && subcontratistaId.trim() !== '') ? parseInt(subcontratistaId) : null;
 
   // Forzamos email a minúsculas
   email = email.toLowerCase();
@@ -563,6 +604,7 @@ form.addEventListener("submit", async (e) => {
     tipo_entidad_pagadora: tipoEntidadPagadora,
     entidad_pagadora_especifica: entidadPagadoraEspecifica,
     empresa_id: parseInt(empresaId),
+    subcontratista_id: subcontratistaIdFinal,
     email,
     telefono,
     actividad: null,
@@ -671,6 +713,18 @@ window.startEdit = async function (id) {
       if (empresaEncontrada) {
         empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
       }
+    }
+    
+    // Cargar Subcontratista
+    if (client.subcontratista_id && subcontratistaSelector) {
+      const subcontratistas = subcontratistaSelector.options;
+      const subcontratistaEncontrado = subcontratistas.find(s => s.value === client.subcontratista_id);
+      if (subcontratistaEncontrado) {
+        subcontratistaSelector.setValue(subcontratistaEncontrado.value, subcontratistaEncontrado.text);
+      }
+    } else if (subcontratistaSelector) {
+      // Si no hay subcontratista, seleccionar "No Aplica"
+      subcontratistaSelector.setValue(null, 'No Aplica');
     }
     
     document.getElementById("email").value = client.email || "";

@@ -80,6 +80,57 @@ exports.getClientsByProfesional = async (profesionalId) => {
   return result.rows;
 };
 
+// ⭐ NUEVO: Obtener clientes con filtros avanzados (profesional y fechas)
+exports.getClientsWithFilters = async (filters) => {
+  const { profesional_id, fecha_inicio, fecha_fin } = filters;
+  
+  let query = `
+    SELECT 
+      c.*,
+      e.tipo_cliente,
+      e.nombre_cliente,
+      e.cliente_final,
+      e.cliente_definitivo,
+      s.cliente_final AS subcontratista_nombre,
+      s.cliente_definitivo AS subcontratista_definitivo,
+      u.nombre AS profesional_nombre
+    FROM clients c
+    LEFT JOIN empresas e ON c.empresa_id = e.id
+    LEFT JOIN empresas s ON c.subcontratista_id = s.id
+    LEFT JOIN users u ON c.profesional_id = u.id
+    WHERE 1=1
+  `;
+  
+  const params = [];
+  let paramIndex = 1;
+  
+  // Filtro por profesional
+  if (profesional_id) {
+    query += ` AND c.profesional_id = $${paramIndex}`;
+    params.push(profesional_id);
+    paramIndex++;
+  }
+  
+  // Filtro por fecha de inicio
+  if (fecha_inicio) {
+    query += ` AND c.created_at >= $${paramIndex}`;
+    params.push(fecha_inicio);
+    paramIndex++;
+  }
+  
+  // Filtro por fecha de fin
+  if (fecha_fin) {
+    query += ` AND c.created_at <= $${paramIndex}`;
+    params.push(fecha_fin);
+    paramIndex++;
+  }
+  
+  query += ` ORDER BY c.id DESC`;
+  
+  const result = await pool.query(query, params);
+  return result.rows;
+};
+
 // Obtener cliente por ID con información de empresa y subcontratista
 exports.getClientById = async (id) => {
   const result = await pool.query(`

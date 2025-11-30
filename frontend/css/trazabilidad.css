@@ -141,6 +141,95 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* ====== FILTROS AVANZADOS ADMIN ====== */
+.admin-filters-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.5s ease;
+}
+
+.admin-filters-container .filters-title {
+  color: white;
+  font-size: 1.3em;
+  margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  align-items: end;
+}
+
+.admin-filters-container .filter-group label {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.admin-filters-container .filter-group select,
+.admin-filters-container .filter-group input {
+  background: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.admin-filters-container .filter-group select:focus,
+.admin-filters-container .filter-group input:focus {
+  border-color: #f093fb;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(240, 147, 251, 0.2);
+}
+
+.btn-apply-advanced {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  width: 100%;
+}
+
+.btn-apply-advanced:hover {
+  background: linear-gradient(135deg, #229954, #27ae60);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+}
+
+.btn-clear-advanced {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  width: 100%;
+}
+
+.btn-clear-advanced:hover {
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+}
+
 /* ====== CONTENEDOR DE FILTROS ====== */
 .filters-container {
   background: white;
@@ -381,6 +470,18 @@ body {
   font-weight: 600;
 }
 
+/* ⭐ COLUMNAS COMENTADAS: Descomentar si se necesitan en el futuro */
+/*
+.trazabilidad-table td:nth-child(9) {
+  text-align: left;
+}
+
+.trazabilidad-table td:nth-child(10) {
+  text-align: left;
+  white-space: nowrap;
+}
+*/
+
 /* ====== BADGES ====== */
 .badge {
   display: inline-block;
@@ -449,6 +550,12 @@ body {
   color: white;
 }
 
+/* Badge Profesional */
+.badge-profesional {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
 /* ====== MENSAJE SIN DATOS ====== */
 .no-data-message {
   text-align: center;
@@ -479,6 +586,10 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   
+  .admin-filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -494,6 +605,10 @@ body {
   }
   
   .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-filters-grid {
     grid-template-columns: 1fr;
   }
   

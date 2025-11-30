@@ -6,6 +6,9 @@ const clientsController = require("../controllers/clientsController");
 // Crear un nuevo cliente
 router.post("/", clientsController.createClient);
 
+// ⭐ NUEVO: Obtener clientes con filtros avanzados (debe ir ANTES de "/:id")
+router.get("/filters", clientsController.getClientsWithFilters);
+
 // Obtener todos los clientes
 router.get("/", clientsController.getClients);
 
@@ -19,5 +22,4 @@ router.put("/:id", clientsController.updateClient);
 router.delete("/:id", clientsController.deleteClient);
 
 module.exports = router;
-
 

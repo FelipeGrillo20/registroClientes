@@ -83,6 +83,32 @@ exports.getClients = async (req, res) => {
   }
 };
 
+// ⭐ NUEVO: Obtener clientes con filtros avanzados (profesional y fechas)
+exports.getClientsWithFilters = async (req, res) => {
+  try {
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+
+    // Solo admin puede usar estos filtros
+    if (userRole !== 'admin') {
+      return res.status(403).json({ message: "No tienes permisos para usar estos filtros" });
+    }
+
+    const { profesional_id, fecha_inicio, fecha_fin } = req.query;
+
+    const clients = await clientModel.getClientsWithFilters({
+      profesional_id: profesional_id || null,
+      fecha_inicio: fecha_inicio || null,
+      fecha_fin: fecha_fin || null
+    });
+
+    res.json(clients);
+  } catch (err) {
+    console.error("Error obteniendo clientes con filtros:", err);
+    res.status(500).json({ message: "Error al obtener clientes" });
+  }
+};
+
 // Obtener cliente por ID
 exports.getClientById = async (req, res) => {
   try {

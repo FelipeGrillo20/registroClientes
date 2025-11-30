@@ -21,6 +21,59 @@
       <a href="index.html" class="btn-nav">📝 Registro de Clientes</a>
     </div>
 
+    <!-- ⭐ NUEVO: Filtros Avanzados para Administrador -->
+    <div id="adminFiltersContainer" class="admin-filters-container" style="display: none;">
+      <h2 class="filters-title">👤 Filtros de Administrador</h2>
+      
+      <div class="admin-filters-grid">
+        <!-- Filtro por Profesional -->
+        <div class="filter-group">
+          <label for="filterProfesional">Profesional:</label>
+          <select id="filterProfesional">
+            <option value="">Todos los Profesionales</option>
+          </select>
+        </div>
+
+        <!-- Filtro por Mes Predefinido -->
+        <div class="filter-group">
+          <label for="filterMes">Filtrar por Mes:</label>
+          <select id="filterMes">
+            <option value="">Seleccionar mes...</option>
+            <option value="mes_actual">Mes Actual</option>
+            <option value="mes_anterior">Mes Anterior</option>
+            <option value="ultimos_3_meses">Últimos 3 Meses</option>
+            <option value="ultimos_6_meses">Últimos 6 Meses</option>
+            <option value="este_año">Este Año</option>
+          </select>
+        </div>
+
+        <!-- Rango de Fechas Personalizado -->
+        <div class="filter-group">
+          <label for="filterFechaInicio">Fecha Inicio:</label>
+          <input type="date" id="filterFechaInicio" />
+        </div>
+
+        <div class="filter-group">
+          <label for="filterFechaFin">Fecha Fin:</label>
+          <input type="date" id="filterFechaFin" />
+        </div>
+
+        <!-- Botón Aplicar Filtros Avanzados -->
+        <div class="filter-group filter-actions-group">
+          <button id="btnApplyAdvancedFilters" class="btn-apply-advanced">
+            🔍 Aplicar Filtros
+          </button>
+        </div>
+
+        <!-- Botón Limpiar Filtros Avanzados -->
+        <div class="filter-group filter-actions-group">
+          <button id="btnClearAdvancedFilters" class="btn-clear-advanced">
+            🔄 Limpiar Avanzados
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Sección de filtros en cascada -->
     <div class="filters-container">
       <h2 class="filters-title">🔍 Filtros de Búsqueda</h2>
@@ -71,7 +124,7 @@
           </select>
         </div>
 
-        <!-- NUEVO: Filtro adicional: Subcontratista -->
+        <!-- Filtro adicional: Subcontratista -->
         <div class="filter-group">
           <label for="filterSubcontratista">Subcontratista:</label>
           <select id="filterSubcontratista">
@@ -132,6 +185,9 @@
             <th>Sede</th>
             <th>Nombre</th>
             <th>Cédula</th>
+            <!-- ⭐ COLUMNAS COMENTADAS: Descomentar si se necesitan en el futuro -->
+            <!-- <th>Profesional</th> -->
+            <!-- <th>Fecha Registro</th> -->
           </tr>
         </thead>
 

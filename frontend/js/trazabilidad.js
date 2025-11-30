@@ -1,6 +1,7 @@
 // js/trazabilidad.js
 
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
+const API_USERS = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
 
 const tbody = document.getElementById("trazabilidadList");
 const filterTipoCliente = document.getElementById("filterTipoCliente");
@@ -15,9 +16,19 @@ const btnClearFilters = document.getElementById("btnClearFilters");
 const noDataMessage = document.getElementById("noDataMessage");
 const tableContainer = document.querySelector(".table-container");
 
-let allClients = [];
+// ⭐ NUEVOS: Elementos de filtros avanzados
+const adminFiltersContainer = document.getElementById("adminFiltersContainer");
+const filterProfesional = document.getElementById("filterProfesional");
+const filterMes = document.getElementById("filterMes");
+const filterFechaInicio = document.getElementById("filterFechaInicio");
+const filterFechaFin = document.getElementById("filterFechaFin");
+const btnApplyAdvancedFilters = document.getElementById("btnApplyAdvancedFilters");
+const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters");
 
-// Catálogo de entidades según tipo (mismo que en script.js)
+let allClients = [];
+let currentUserRole = null;
+
+// Catálogo de entidades según tipo
 const ENTIDADES = {
   ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
@@ -28,11 +39,62 @@ function getAuthToken() {
   return localStorage.getItem("authToken");
 }
 
+// Función para obtener datos del usuario
+function getUserData() {
+  const userData = localStorage.getItem("userData");
+  return userData ? JSON.parse(userData) : null;
+}
+
 // Cargar clientes al iniciar
-document.addEventListener("DOMContentLoaded", () => {
-  loadClients();
+document.addEventListener("DOMContentLoaded", async () => {
+  // Verificar rol del usuario
+  const userData = getUserData();
+  currentUserRole = userData?.rol;
+  
+  // Si es admin, mostrar filtros avanzados
+  if (currentUserRole === 'admin') {
+    adminFiltersContainer.style.display = "block";
+    await loadProfesionales();
+  }
+  
+  await loadClients();
   setupFilterEvents();
 });
+
+// ⭐ NUEVO: Cargar lista de profesionales (solo para admin)
+async function loadProfesionales() {
+  try {
+    const res = await fetch(API_USERS, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error("Error al cargar profesionales");
+    }
+    
+    const data = await res.json();
+    
+    // El backend devuelve { success: true, users: [...] }
+    const users = data.users || data;
+    
+    // Filtrar solo profesionales
+    const profesionales = users.filter(u => u.rol === 'profesional');
+    
+    // Llenar el select
+    filterProfesional.innerHTML = '<option value="">Todos los Profesionales</option>';
+    profesionales.forEach(prof => {
+      const option = document.createElement("option");
+      option.value = prof.id;
+      option.textContent = prof.nombre;
+      filterProfesional.appendChild(option);
+    });
+    
+  } catch (err) {
+    console.error("Error cargando profesionales:", err);
+  }
+}
 
 // Cargar todos los clientes
 async function loadClients() {
@@ -76,6 +138,129 @@ async function loadClients() {
   }
 }
 
+// ⭐ NUEVO: Aplicar filtros avanzados (profesional y fechas)
+async function applyAdvancedFilters() {
+  const profesionalId = filterProfesional.value;
+  const mesSeleccionado = filterMes.value;
+  let fechaInicio = filterFechaInicio.value;
+  let fechaFin = filterFechaFin.value;
+  
+  // Si se seleccionó un mes predefinido, calcular las fechas
+  if (mesSeleccionado) {
+    const fechas = calcularRangoFechas(mesSeleccionado);
+    fechaInicio = fechas.inicio;
+    fechaFin = fechas.fin;
+    
+    // Actualizar los inputs de fecha
+    filterFechaInicio.value = fechaInicio;
+    filterFechaFin.value = fechaFin;
+  }
+  
+  // Construir query string
+  const params = new URLSearchParams();
+  if (profesionalId) params.append('profesional_id', profesionalId);
+  if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+  if (fechaFin) params.append('fecha_fin', fechaFin);
+  
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">Filtrando datos...</td></tr>`;
+  
+  try {
+    const res = await fetch(`${API_URL}/filters?${params.toString()}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error("Error al filtrar clientes");
+    }
+    
+    const clients = await res.json();
+    
+    if (!Array.isArray(clients) || clients.length === 0) {
+      showNoData();
+      updateStats(0, 0, 0, 0);
+      return;
+    }
+    
+    // Ordenar por ID descendente
+    allClients = clients.sort((a, b) => b.id - a.id);
+    
+    // Poblar filtros dinámicos
+    populateFilterOptions();
+    
+    // Renderizar clientes filtrados
+    renderClients(allClients);
+    
+    // Actualizar estadísticas
+    updateStatistics(allClients);
+    
+  } catch (err) {
+    console.error("Error aplicando filtros avanzados:", err);
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al filtrar datos</td></tr>`;
+  }
+}
+
+// ⭐ NUEVO: Calcular rango de fechas según opción seleccionada
+function calcularRangoFechas(opcion) {
+  const hoy = new Date();
+  let inicio, fin;
+  
+  switch(opcion) {
+    case 'mes_actual':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+      break;
+      
+    case 'mes_anterior':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+      fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+      break;
+      
+    case 'ultimos_3_meses':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
+      fin = hoy;
+      break;
+      
+    case 'ultimos_6_meses':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
+      fin = hoy;
+      break;
+      
+    case 'este_año':
+      inicio = new Date(hoy.getFullYear(), 0, 1);
+      fin = hoy;
+      break;
+      
+    default:
+      return { inicio: '', fin: '' };
+  }
+  
+  return {
+    inicio: formatearFecha(inicio),
+    fin: formatearFecha(fin)
+  };
+}
+
+// Formatear fecha a YYYY-MM-DD
+function formatearFecha(fecha) {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, '0');
+  const day = String(fecha.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// ⭐ NUEVO: Limpiar filtros avanzados
+function clearAdvancedFilters() {
+  filterProfesional.value = "";
+  filterMes.value = "";
+  filterFechaInicio.value = "";
+  filterFechaFin.value = "";
+  
+  // Recargar todos los clientes
+  loadClients();
+}
+
 // Poblar filtros de Sede, Empresa y Subcontratista
 function populateFilterOptions() {
   // Sedes únicas
@@ -86,7 +271,7 @@ function populateFilterOptions() {
   const empresas = [...new Set(allClients.map(c => c.cliente_final).filter(Boolean))];
   fillSelect(filterEmpresa, empresas, "Empresa");
   
-  // Subcontratistas únicos (subcontratista_nombre o subcontratista_definitivo)
+  // Subcontratistas únicos
   const subcontratistas = [...new Set(
     allClients
       .map(c => c.subcontratista_definitivo || c.subcontratista_nombre)
@@ -163,19 +348,37 @@ function renderClients(clients) {
       tipoBadge = '<span class="badge badge-tipo-ccf">CCF</span>';
     }
     
-    // Badge de nombre cliente (entidad específica)
+    // Badge de nombre cliente
     let nombreClienteBadge = '-';
     if (client.tipo_entidad_pagadora === 'Particular') {
-      // Si es Particular, mostrar el nombre de la empresa (cliente_final)
       nombreClienteBadge = client.cliente_final ? 
         `<span class="badge badge-nombre-cliente">${escapeHtml(client.cliente_final)}</span>` : 
         '-';
     } else {
-      // Si es ARL o CCF, mostrar la entidad específica
       nombreClienteBadge = client.entidad_pagadora_especifica ? 
         `<span class="badge badge-nombre-cliente">${escapeHtml(client.entidad_pagadora_especifica)}</span>` : 
         '-';
     }
+    
+    // ⭐ NUEVO: Badge de profesional (COMENTADO - no se muestra en la tabla)
+    /*
+    let profesionalBadge = client.profesional_nombre ? 
+      `<span class="badge badge-profesional">${escapeHtml(client.profesional_nombre)}</span>` : 
+      '-';
+    */
+    
+    // ⭐ NUEVO: Fecha de registro (COMENTADO - no se muestra en la tabla)
+    /*
+    let fechaRegistro = '-';
+    if (client.created_at) {
+      const fecha = new Date(client.created_at);
+      fechaRegistro = fecha.toLocaleDateString('es-CO', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      });
+    }
+    */
     
     tr.innerHTML = `
       <td>${tipoBadge}</td>
@@ -224,25 +427,55 @@ function updateStats(total, particular, arl, ccf) {
 
 // Configurar eventos de filtros
 function setupFilterEvents() {
-  // ============================================
-  // FILTRO EN CASCADA: Tipo Cliente → Nombre Cliente
-  // ============================================
+  // ⭐ NUEVO: Eventos para filtros avanzados
+  if (btnApplyAdvancedFilters) {
+    btnApplyAdvancedFilters.addEventListener("click", applyAdvancedFilters);
+  }
+  
+  if (btnClearAdvancedFilters) {
+    btnClearAdvancedFilters.addEventListener("click", clearAdvancedFilters);
+  }
+  
+  // Cuando se selecciona un mes, limpiar las fechas manuales
+  if (filterMes) {
+    filterMes.addEventListener("change", function() {
+      if (this.value) {
+        filterFechaInicio.value = "";
+        filterFechaFin.value = "";
+      }
+    });
+  }
+  
+  // Cuando se seleccionan fechas manuales, limpiar el selector de mes
+  if (filterFechaInicio) {
+    filterFechaInicio.addEventListener("change", function() {
+      if (this.value) {
+        filterMes.value = "";
+      }
+    });
+  }
+  
+  if (filterFechaFin) {
+    filterFechaFin.addEventListener("change", function() {
+      if (this.value) {
+        filterMes.value = "";
+      }
+    });
+  }
+  
+  // Filtros en cascada existentes
   filterTipoCliente.addEventListener("change", function() {
     const tipoSeleccionado = this.value;
     
-    // Limpiar el segundo filtro
     filterNombreCliente.innerHTML = '<option value="">Todos</option>';
     
     if (tipoSeleccionado === "Particular" || tipoSeleccionado === "") {
-      // Si es Particular o "Todos", ocultar segundo filtro
       filterNombreClienteContainer.style.display = "none";
       filterNombreCliente.value = "";
     } else if (tipoSeleccionado === "ARL" || tipoSeleccionado === "CCF") {
-      // Si es ARL o CCF, mostrar y cargar opciones
       filterNombreClienteContainer.style.display = "block";
       labelNombreCliente.textContent = `Seleccione ${tipoSeleccionado}:`;
       
-      // Cargar opciones según el tipo
       const opciones = ENTIDADES[tipoSeleccionado];
       opciones.forEach(entidad => {
         const option = document.createElement("option");
@@ -252,22 +485,19 @@ function setupFilterEvents() {
       });
     }
     
-    // Aplicar filtros
     applyFilters();
   });
   
-  // Eventos para los demás filtros
   filterNombreCliente.addEventListener("change", applyFilters);
   filterVinculo.addEventListener("change", applyFilters);
   filterSede.addEventListener("change", applyFilters);
   filterEmpresa.addEventListener("change", applyFilters);
   filterSubcontratista.addEventListener("change", applyFilters);
   
-  // Botón limpiar filtros
   btnClearFilters.addEventListener("click", clearAllFilters);
 }
 
-// Aplicar todos los filtros
+// Aplicar todos los filtros (locales)
 function applyFilters() {
   let filtered = [...allClients];
   
@@ -278,38 +508,30 @@ function applyFilters() {
   const empresaVal = filterEmpresa.value;
   const subcontratistaVal = filterSubcontratista.value;
   
-  // Filtro por tipo de cliente
   if (tipoVal) {
     filtered = filtered.filter(c => c.tipo_entidad_pagadora === tipoVal);
   }
   
-  // Filtro por nombre cliente (entidad específica)
   if (nombreVal) {
     filtered = filtered.filter(c => c.entidad_pagadora_especifica === nombreVal);
   }
   
-  // Filtro por vínculo
   if (vinculoVal) {
     filtered = filtered.filter(c => c.vinculo === vinculoVal);
   }
   
-  // Filtro por sede
   if (sedeVal) {
     filtered = filtered.filter(c => c.sede === sedeVal);
   }
   
-  // Filtro por empresa (cliente_final)
   if (empresaVal) {
     filtered = filtered.filter(c => c.cliente_final === empresaVal);
   }
   
-  // Filtro por subcontratista
   if (subcontratistaVal) {
     if (subcontratistaVal === "NO_APLICA") {
-      // Filtrar solo los que NO tienen subcontratista
       filtered = filtered.filter(c => !c.subcontratista_id && !c.subcontratista_nombre && !c.subcontratista_definitivo);
     } else {
-      // Filtrar por el subcontratista específico
       filtered = filtered.filter(c => {
         const subName = c.subcontratista_definitivo || c.subcontratista_nombre;
         return subName === subcontratistaVal;
@@ -317,10 +539,7 @@ function applyFilters() {
     }
   }
   
-  // Renderizar resultados filtrados
   renderClients(filtered);
-  
-  // Actualizar estadísticas con los datos filtrados
   updateStatistics(filtered);
 }
 
@@ -334,10 +553,7 @@ function clearAllFilters() {
   filterEmpresa.value = "";
   filterSubcontratista.value = "";
   
-  // Renderizar todos los clientes
   renderClients(allClients);
-  
-  // Actualizar estadísticas
   updateStatistics(allClients);
 }
 

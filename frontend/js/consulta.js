@@ -1,4 +1,4 @@
-// frontend/js/consulta.js
+// frontend/js/consulta.js 
 
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const CONSULTAS_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
@@ -102,7 +102,7 @@ async function loadClientData() {
   const clienteId = getClienteIdFromURL();
 
   if (!clienteId) {
-    alert("⚠ No se especificó un cliente");
+    alert("⚠️ No se especificó un cliente");
     window.location.href = "clientes.html";
     return;
   }
@@ -159,6 +159,22 @@ function displayClientData(cliente) {
     empresaElement.innerHTML = `<span class="badge-empresa-consulta">${escapeHtml(cliente.cliente_final)}</span>`;
   } else {
     empresaElement.textContent = "-";
+  }
+
+  // ⭐ NUEVO: Mostrar Subcontratista si existe
+  const subcontratistaElement = document.getElementById("clientSubcontratista");
+  const labelSubcontratista = document.getElementById("labelSubcontratista");
+  const nombreSubcontratista = cliente.subcontratista_definitivo || cliente.subcontratista_nombre;
+  
+  if (nombreSubcontratista) {
+    // Si hay subcontratista, mostrar el label y el badge
+    labelSubcontratista.style.display = "inline";
+    subcontratistaElement.style.display = "block";
+    subcontratistaElement.innerHTML = `<span class="badge-subcontratista-consulta">${escapeHtml(nombreSubcontratista)}</span>`;
+  } else {
+    // Si no hay subcontratista, ocultar
+    labelSubcontratista.style.display = "none";
+    subcontratistaElement.style.display = "none";
   }
 
   // Mostrar Entidad Pagadora
@@ -399,7 +415,7 @@ function mostrarCampoConsultasSugeridas(numSesiones, casoCerrado) {
 // ⭐ CORREGIDO: Cerrar todas las consultas manteniendo el estado de confidencialidad individual
 async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFinales) {
   try {
-    console.log("📄 Iniciando cierre de caso...");
+    console.log("🔄 Iniciando cierre de caso...");
     console.log("Cliente ID:", clienteId);
     console.log("Fecha de cierre:", fechaCierre);
     console.log("Recomendaciones:", recomendacionesFinales);
@@ -452,6 +468,7 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
       tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
       entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
       empresa_id: clienteData.empresa_id,
+      subcontratista_id: clienteData.subcontratista_id,
       email: clienteData.email,
       telefono: clienteData.telefono,
       contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
@@ -514,14 +531,14 @@ async function loadHistorialConsultas(clienteId) {
     const consultas = await res.json();
     
     consultasDelCliente = consultas ? JSON.parse(JSON.stringify(consultas)) : [];
-window.consultasDelCliente = consultasDelCliente;
+    window.consultasDelCliente = consultasDelCliente;
 
     // ⭐ Asignar numeroSesion también al array original usado por editarConsulta()
     consultasDelCliente
-    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-    .forEach((consulta, index) => {
-      consulta.numeroSesion = index + 1;
-    });
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+      .forEach((consulta, index) => {
+        consulta.numeroSesion = index + 1;
+      });
 
     if (!consultas || consultas.length === 0) {
       container.innerHTML = `
@@ -799,7 +816,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
 // ⭐ NUEVO: Función para guardar consultas sugeridas en el cliente
 async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
   try {
-    console.log("💾 Guardando consultas sugeridas:", consultas_sugeridas); // ⭐ DEBUG
+    console.log("💾 Guardando consultas sugeridas:", consultas_sugeridas);
     
     // Obtener datos actuales del cliente
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
@@ -813,7 +830,7 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
     }
     
     const clienteData = await resCliente.json();
-    console.log("📋 Cliente actual:", clienteData); // ⭐ DEBUG
+    console.log("📋 Cliente actual:", clienteData);
     
     // Actualizar solo las consultas sugeridas
     const clienteActualizado = {
@@ -824,6 +841,7 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
       tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
       entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
       empresa_id: clienteData.empresa_id,
+      subcontratista_id: clienteData.subcontratista_id,
       email: clienteData.email,
       telefono: clienteData.telefono,
       contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
@@ -834,7 +852,7 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
       consultas_sugeridas: consultas_sugeridas
     };
     
-    console.log("📤 Datos a enviar:", clienteActualizado); // ⭐ DEBUG
+    console.log("📤 Datos a enviar:", clienteActualizado);
     
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
       method: "PUT",
@@ -844,15 +862,15 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
     
     if (!resUpdate.ok) {
       const errorData = await resUpdate.json();
-      console.error("❌ Error del servidor:", errorData); // ⭐ DEBUG
+      console.error("❌ Error del servidor:", errorData);
       throw new Error("Error al guardar consultas sugeridas");
     }
     
     const resultado = await resUpdate.json();
-    console.log("✅ Consultas sugeridas guardadas:", resultado); // ⭐ DEBUG
+    console.log("✅ Consultas sugeridas guardadas:", resultado);
   } catch (err) {
     console.error("❌ Error guardando consultas sugeridas:", err);
-    alert("⚠️ Error al guardar consultas sugeridas: " + err.message); // ⭐ Mostrar error
+    alert("⚠️ Error al guardar consultas sugeridas: " + err.message);
   }
 }
 
@@ -1026,6 +1044,7 @@ async function limpiarConsultasSugeridas(clienteId) {
       tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
       entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
       empresa_id: clienteData.empresa_id,
+      subcontratista_id: clienteData.subcontratista_id,
       email: clienteData.email,
       telefono: clienteData.telefono,
       contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
@@ -1098,6 +1117,7 @@ window.reabrirCaso = async function() {
         tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
         entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
         empresa_id: clienteData.empresa_id,
+        subcontratista_id: clienteData.subcontratista_id,
         email: clienteData.email,
         telefono: clienteData.telefono,
         contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,

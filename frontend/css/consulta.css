@@ -1490,6 +1490,37 @@ body {
   }
 }
 
+/* Badge para Subcontratista en consulta */
+.badge-subcontratista-consulta {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  color: white;
+  box-shadow: 0 2px 8px rgba(22, 160, 133, 0.3);
+  letter-spacing: 0.3px;
+}
+
+/* Estilo para el valor de subcontratista */
+.info-subcontratista {
+  padding-top: 8px;
+  border-top: 1px dashed #e9ecef;
+}
+
+/* Responsive para subcontratista */
+@media (max-width: 480px) {
+  .badge-subcontratista-consulta {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  
+  #labelSubcontratista {
+    display: block !important;
+    margin-top: 5px;
+  }
+}
 
 /* ============================================ */
 /* RESPONSIVE */

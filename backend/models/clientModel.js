@@ -25,8 +25,8 @@ exports.createClient = async (data) => {
     (cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica, 
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     profesional_id)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+     profesional_id, created_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP)
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, subcontratista_id, email, telefono,
@@ -111,17 +111,17 @@ exports.getClientsWithFilters = async (filters) => {
     paramIndex++;
   }
   
-  // Filtro por fecha de inicio
+  // Filtro por fecha de inicio (comparar solo la fecha, sin hora)
   if (fecha_inicio) {
-    query += ` AND c.created_at >= $${paramIndex}`;
-    params.push(fecha_inicio);
+    query += ` AND c.created_at >= $${paramIndex}::timestamp`;
+    params.push(fecha_inicio + ' 00:00:00');
     paramIndex++;
   }
   
-  // Filtro por fecha de fin
+  // Filtro por fecha de fin (comparar solo la fecha, sin hora)
   if (fecha_fin) {
-    query += ` AND c.created_at <= $${paramIndex}`;
-    params.push(fecha_fin);
+    query += ` AND c.created_at <= $${paramIndex}::timestamp`;
+    params.push(fecha_fin + ' 23:59:59');
     paramIndex++;
   }
   

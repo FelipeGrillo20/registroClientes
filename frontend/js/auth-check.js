@@ -78,9 +78,12 @@
     userInfoElement.style.display = "flex";
     userInfoElement.innerHTML = `
       <div class="user-left-section">
-        <span class="user-name"> ${user.nombre}</span>
+        <span class="user-name">🔹 ${user.nombre}</span>
         <button type="button" id="btnMiPerfil" class="btn-mi-perfil">
           👤 Mi Perfil
+        </button>
+        <button type="button" id="btnMapaSitio" class="btn-sitemap">
+          🗺️ Mapa de Sitio
         </button>
       </div>
       <button id="btnLogout" class="btn-logout">Cerrar sesión</button>
@@ -97,11 +100,22 @@
     if (btnMiPerfil) {
       btnMiPerfil.addEventListener("click", abrirMiPerfil);
     }
+    
+    // ⭐ NUEVO: Agregar evento al botón Mapa de Sitio
+    const btnMapaSitio = document.getElementById("btnMapaSitio");
+    if (btnMapaSitio) {
+      btnMapaSitio.addEventListener("click", abrirMapaSitio);
+    }
   }
   
   // Función para abrir Mi Perfil
   function abrirMiPerfil() {
     window.location.href = "perfil.html";
+  }
+  
+  // ⭐ NUEVA: Función para abrir Mapa de Sitio
+  function abrirMapaSitio() {
+    window.location.href = "sitemap.html";
   }
   
   // Función de logout

@@ -205,3 +205,27 @@ exports.getEstadisticas = async (req, res) => {
     res.status(500).json({ message: "Error al obtener estadísticas" });
   }
 };
+
+// ⭐ NUEVO: Obtener estadísticas detalladas por profesional (solo para admin)
+exports.getEstadisticasDetalladasByProfesional = async (req, res) => {
+  try {
+    const userRole = req.user?.rol;
+    const { profesional_id } = req.query;
+
+    // Solo admin puede consultar estadísticas de otros profesionales
+    if (userRole !== 'admin') {
+      return res.status(403).json({ message: "No tienes permisos para ver estas estadísticas" });
+    }
+
+    if (!profesional_id) {
+      return res.status(400).json({ message: "Se requiere el ID del profesional" });
+    }
+
+    const stats = await consultaModel.getEstadisticasDetalladasByProfesional(profesional_id);
+    
+    res.json(stats);
+  } catch (err) {
+    console.error("Error obteniendo estadísticas detalladas:", err);
+    res.status(500).json({ message: "Error al obtener estadísticas" });
+  }
+};

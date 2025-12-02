@@ -15,6 +15,9 @@ router.get("/", consultasController.getAllConsultas);
 // Obtener estadísticas (filtradas según rol)
 router.get("/estadisticas", consultasController.getEstadisticas);
 
+// ⭐ NUEVO: Obtener estadísticas detalladas por profesional (solo admin)
+router.get("/estadisticas-profesional", consultasController.getEstadisticasDetalladasByProfesional);
+
 // Obtener consultas de un cliente específico
 router.get("/cliente/:cliente_id", consultasController.getConsultasByCliente);
 

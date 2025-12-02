@@ -153,3 +153,34 @@ exports.getEstadisticasByProfesional = async (profesionalId) => {
   `, [profesionalId]);
   return result.rows[0];
 };
+
+// ⭐ NUEVO: Obtener estadísticas detalladas por profesional
+exports.getEstadisticasDetalladasByProfesional = async (profesionalId) => {
+  const result = await pool.query(`
+    SELECT 
+      -- Total de consultas realizadas
+      COUNT(c.id) as total_consultas,
+      
+      -- Total de pacientes únicos atendidos
+      COUNT(DISTINCT c.cliente_id) as pacientes_atendidos,
+      
+      -- Total de casos cerrados (clientes con fecha_cierre)
+      COUNT(DISTINCT CASE 
+        WHEN cl.fecha_cierre IS NOT NULL THEN cl.id 
+      END) as casos_cerrados,
+      
+      -- Consultas por estado
+      COUNT(CASE WHEN c.estado = 'Abierto' THEN 1 END) as consultas_abiertas,
+      COUNT(CASE WHEN c.estado = 'Cerrado' THEN 1 END) as consultas_cerradas,
+      
+      -- Consultas por modalidad
+      COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
+      COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
+      
+    FROM consultas c
+    INNER JOIN clients cl ON c.cliente_id = cl.id
+    WHERE cl.profesional_id = $1
+  `, [profesionalId]);
+  
+  return result.rows[0];
+};

@@ -385,6 +385,53 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* ====== ESTADÍSTICAS DEL PROFESIONAL ====== */
+.stats-profesional-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.5s ease;
+  transition: opacity 0.3s ease;
+}
+
+.stats-profesional-title {
+  color: white;
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+}
+
+.stats-profesional-title span {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.stats-profesional-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.stat-card-profesional {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-profesional:hover {
+  background: white;
+  border-color: white;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
 /* ====== CONTENEDOR DE TABLA ====== */
 .table-container {
   background: white;

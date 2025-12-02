@@ -2,6 +2,7 @@
 
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const API_USERS = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
+const API_CONSULTAS = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 
 const tbody = document.getElementById("trazabilidadList");
 const filterTipoCliente = document.getElementById("filterTipoCliente");
@@ -24,6 +25,13 @@ const filterFechaInicio = document.getElementById("filterFechaInicio");
 const filterFechaFin = document.getElementById("filterFechaFin");
 const btnApplyAdvancedFilters = document.getElementById("btnApplyAdvancedFilters");
 const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters");
+
+// ⭐ NUEVO: Elementos de estadísticas del profesional
+const statsProfesionalContainer = document.getElementById("statsProfesionalContainer");
+const statsProfesionalNombre = document.getElementById("statsProfesionalNombre");
+const statConsultasRealizadas = document.getElementById("statConsultasRealizadas");
+const statPacientesAtendidos = document.getElementById("statPacientesAtendidos");
+const statCasosCerrados = document.getElementById("statCasosCerrados");
 
 let allClients = [];
 let currentUserRole = null;
@@ -180,6 +188,7 @@ async function applyAdvancedFilters() {
     if (!Array.isArray(clients) || clients.length === 0) {
       showNoData();
       updateStats(0, 0, 0, 0);
+      hideStatsProfesional();
       return;
     }
     
@@ -195,9 +204,17 @@ async function applyAdvancedFilters() {
     // Actualizar estadísticas
     updateStatistics(allClients);
     
+    // ⭐ NUEVO: Cargar estadísticas del profesional si se seleccionó uno
+    if (profesionalId) {
+      await loadStatsProfesional(profesionalId);
+    } else {
+      hideStatsProfesional();
+    }
+    
   } catch (err) {
     console.error("Error aplicando filtros avanzados:", err);
     tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al filtrar datos</td></tr>`;
+    hideStatsProfesional();
   }
 }
 
@@ -256,6 +273,9 @@ function clearAdvancedFilters() {
   filterMes.value = "";
   filterFechaInicio.value = "";
   filterFechaFin.value = "";
+  
+  // Ocultar estadísticas del profesional
+  hideStatsProfesional();
   
   // Recargar todos los clientes
   loadClients();
@@ -566,4 +586,58 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// ⭐ NUEVO: Cargar estadísticas del profesional seleccionado
+async function loadStatsProfesional(profesionalId) {
+  try {
+    console.log("📊 Cargando estadísticas del profesional:", profesionalId);
+    
+    const res = await fetch(`${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error("Error al cargar estadísticas del profesional");
+    }
+    
+    const stats = await res.json();
+    console.log("✅ Estadísticas recibidas:", stats);
+    
+    // Obtener nombre del profesional
+    const profesionalSelect = document.getElementById("filterProfesional");
+    const profesionalNombre = profesionalSelect.options[profesionalSelect.selectedIndex].text;
+    
+    // Mostrar estadísticas
+    showStatsProfesional(profesionalNombre, stats);
+    
+  } catch (err) {
+    console.error("Error cargando estadísticas del profesional:", err);
+    hideStatsProfesional();
+  }
+}
+
+// ⭐ NUEVO: Mostrar estadísticas del profesional
+function showStatsProfesional(nombre, stats) {
+  statsProfesionalNombre.textContent = nombre;
+  statConsultasRealizadas.textContent = stats.total_consultas || 0;
+  statPacientesAtendidos.textContent = stats.pacientes_atendidos || 0;
+  statCasosCerrados.textContent = stats.casos_cerrados || 0;
+  
+  statsProfesionalContainer.style.display = "block";
+  
+  // Animación suave
+  statsProfesionalContainer.style.opacity = "0";
+  setTimeout(() => {
+    statsProfesionalContainer.style.opacity = "1";
+  }, 100);
+}
+
+// ⭐ NUEVO: Ocultar estadísticas del profesional
+function hideStatsProfesional() {
+  if (statsProfesionalContainer) {
+    statsProfesionalContainer.style.display = "none";
+  }
 }

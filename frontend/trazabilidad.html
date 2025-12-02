@@ -172,6 +172,39 @@
       </div>
     </div>
 
+    <!-- ⭐ NUEVO: Estadísticas del Profesional Seleccionado -->
+    <div id="statsProfesionalContainer" class="stats-profesional-container" style="display: none;">
+      <h3 class="stats-profesional-title">
+        📊 Estadísticas del Profesional: <span id="statsProfesionalNombre"></span>
+      </h3>
+      
+      <div class="stats-profesional-grid">
+        <div class="stat-card stat-card-profesional">
+          <div class="stat-icon">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statConsultasRealizadas">0</div>
+            <div class="stat-label">Consultas Realizadas</div>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-card-profesional">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statPacientesAtendidos">0</div>
+            <div class="stat-label">Pacientes Atendidos</div>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-card-profesional">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="statCasosCerrados">0</div>
+            <div class="stat-label">Casos Cerrados</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla de resultados -->
     <div class="table-container">
       <table class="trazabilidad-table" id="trazabilidadTable">
@@ -205,6 +238,7 @@
   </main>
 
   <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
   <script src="js/trazabilidad.js"></script>
 </body>
 </html>

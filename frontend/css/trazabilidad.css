@@ -627,6 +627,48 @@ body {
   font-weight: 500;
 }
 
+/* BOTÓN MAPA DE SITIO (Agregar al final de trazabilidad.css) */
+/* ============================================ */
+
+.btn-sitemap {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-sitemap:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================ */
+/* RESPONSIVE PARA BOTÓN MAPA DE SITIO */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .btn-sitemap {
+    font-size: 12px;
+    padding: 6px 12px !important;
+    width: fit-content;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-sitemap {
+    font-size: 11px;
+    padding: 5px 10px !important;
+  }
+}
+
 /* ====== RESPONSIVE ====== */
 @media (max-width: 1200px) {
   .filters-grid {

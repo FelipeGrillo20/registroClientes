@@ -29,8 +29,9 @@ const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters
 // ⭐ NUEVO: Elementos de estadísticas del profesional
 const statsProfesionalContainer = document.getElementById("statsProfesionalContainer");
 const statsProfesionalNombre = document.getElementById("statsProfesionalNombre");
-const statConsultasRealizadas = document.getElementById("statConsultasRealizadas");
 const statPacientesAtendidos = document.getElementById("statPacientesAtendidos");
+const statSesionesRealizadas = document.getElementById("statSesionesRealizadas");
+const statHorasAtendidas = document.getElementById("statHorasAtendidas");
 const statCasosCerrados = document.getElementById("statCasosCerrados");
 
 let allClients = [];
@@ -592,6 +593,7 @@ function escapeHtml(str) {
 async function loadStatsProfesional(profesionalId) {
   try {
     console.log("📊 Cargando estadísticas del profesional:", profesionalId);
+    console.log("📡 URL:", `${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`);
     
     const res = await fetch(`${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`, {
       headers: {
@@ -599,7 +601,11 @@ async function loadStatsProfesional(profesionalId) {
       }
     });
     
+    console.log("📥 Response status:", res.status);
+    
     if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Error response:", errorText);
       throw new Error("Error al cargar estadísticas del profesional");
     }
     
@@ -610,11 +616,13 @@ async function loadStatsProfesional(profesionalId) {
     const profesionalSelect = document.getElementById("filterProfesional");
     const profesionalNombre = profesionalSelect.options[profesionalSelect.selectedIndex].text;
     
+    console.log("👤 Nombre profesional:", profesionalNombre);
+    
     // Mostrar estadísticas
     showStatsProfesional(profesionalNombre, stats);
     
   } catch (err) {
-    console.error("Error cargando estadísticas del profesional:", err);
+    console.error("❌ Error cargando estadísticas del profesional:", err);
     hideStatsProfesional();
   }
 }
@@ -622,8 +630,9 @@ async function loadStatsProfesional(profesionalId) {
 // ⭐ NUEVO: Mostrar estadísticas del profesional
 function showStatsProfesional(nombre, stats) {
   statsProfesionalNombre.textContent = nombre;
-  statConsultasRealizadas.textContent = stats.total_consultas || 0;
   statPacientesAtendidos.textContent = stats.pacientes_atendidos || 0;
+  statSesionesRealizadas.textContent = stats.total_consultas || 0;
+  statHorasAtendidas.textContent = stats.total_consultas || 0;
   statCasosCerrados.textContent = stats.casos_cerrados || 0;
   
   statsProfesionalContainer.style.display = "block";

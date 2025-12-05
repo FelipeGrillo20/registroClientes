@@ -11,6 +11,13 @@
   <div class="form-container">
     <!-- Barra de usuario DESPUÉS del título -->
     <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+    
+    <!-- Indicador de Modalidad Seleccionada -->
+    <div id="modalidadIndicador" class="modalidad-indicador" style="display: none;">
+      <span class="modalidad-icon">📌</span>
+      <span class="modalidad-text">Modalidad: <strong id="modalidadNombre">Orientación Psicosocial</strong></span>
+    </div>
+    
     <h1>📋 Registro de Trabajadores</h1>
     <p class="form-subtitle">Datos Personales del Trabajador</p>
 
@@ -148,6 +155,10 @@
           ❌ Descartar Cambios
         </button>
         <a href="clientes.html" class="btn-ver-clientes">Ver Trabajadores Registrados</a>
+      </div>
+      
+      <div class="form-actions-secondary">
+        <a href="modalidad.html" class="btn-seleccionar-modalidad">🔄 Seleccionar Modalidad</a>
       </div>
     </form>
   </div>

@@ -14,6 +14,47 @@
   <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
   
   <style>
+    /* ⭐ NUEVO: Estilos para mensaje en construcción */
+    .construccion-container {
+      display: none;
+      text-align: center;
+      padding: 60px 40px;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-radius: 16px;
+      border: 3px dashed #ff9800;
+      margin: 20px 0;
+    }
+    
+    .construccion-container.show {
+      display: block;
+    }
+    
+    .construccion-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: swing 2s ease-in-out infinite;
+    }
+    
+    @keyframes swing {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+    
+    .construccion-titulo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 15px;
+    }
+    
+    .construccion-descripcion {
+      font-size: 16px;
+      color: #f57c00;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
     /* Estilos para el campo de fecha de cierre */
     .form-group-fecha-cierre {
       display: none;
@@ -157,6 +198,12 @@
   <div class="consulta-container">
     <!-- Barra de usuario -->
     <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+    
+    <!-- ⭐ NUEVO: Indicador de Modalidad Seleccionada -->
+    <div id="modalidadIndicadorConsulta" class="modalidad-indicador" style="display: none;">
+      <span class="modalidad-icon">📌</span>
+      <span class="modalidad-text">Modalidad: <strong id="modalidadNombreConsulta">Orientación Psicosocial</strong></span>
+    </div>
 
     <!-- Header con botón volver -->
     <div class="page-header">
@@ -292,184 +339,197 @@
       <div class="card-decoration"></div>
     </div>
 
-    <!-- Formulario de Consulta/Seguimiento -->
+    <!-- ⭐ CONTENEDOR DINÁMICO SEGÚN MODALIDAD -->
     <div class="consulta-section">
       <h2 class="section-title">📝 Registrar Seguimiento</h2>
       <p class="section-subtitle">Complete la información de la consulta o seguimiento</p>
 
-      <form id="formConsulta" class="form-consulta">
-        <div class="form-grid">
-          <!-- Motivo de Consulta -->
-          <div class="form-group full-width">
-            <label for="motivo_consulta">
-              <span class="label-icon">📋</span>
-              Motivo de Consulta <span class="required">*</span>
-            </label>
-            <select id="motivo_consulta" class="select2-motivo" required style="width: 100%;">
-              <option value="">Seleccione un motivo</option>
-              <option value="DUELO">DUELO</option>
-              <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
-              <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
-              <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
-              <option value="ESTABILIDAD EMOCIONAL">ESTABILIDAD EMOCIONAL</option>
-              <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
-              <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
-              <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
-              <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
-              <option value="DEPRESIÓN">DEPRESIÓN</option>
-              <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
-              <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
-              <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
-              <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
-              <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
-              <option value="ANSIEDAD">ANSIEDAD</option>
-              <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
-              <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
-              <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
-              <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
-              <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
-              <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
-              <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
-              <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
-              <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
-              <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
-              <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
-              <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
-              <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
-              <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
-              <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
-              <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-              <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-              <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
-              <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
-            </select>
-          </div>
+      <!-- ⭐ FORMULARIO ORIENTACIÓN PSICOSOCIAL (Por defecto) -->
+      <div id="formOrientacionPsicosocial" style="display: none;">
+        <form id="formConsulta" class="form-consulta">
+          <div class="form-grid">
+            <!-- Motivo de Consulta -->
+            <div class="form-group full-width">
+              <label for="motivo_consulta">
+                <span class="label-icon">📋</span>
+                Motivo de Consulta <span class="required">*</span>
+              </label>
+              <select id="motivo_consulta" class="select2-motivo" required style="width: 100%;">
+                <option value="">Seleccione un motivo</option>
+                <option value="DUELO">DUELO</option>
+                <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
+                <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
+                <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
+                <option value="ESTABILIDAD EMOCIONAL">ESTABILIDAD EMOCIONAL</option>
+                <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
+                <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
+                <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
+                <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
+                <option value="DEPRESIÓN">DEPRESIÓN</option>
+                <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
+                <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
+                <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
+                <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
+                <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
+                <option value="ANSIEDAD">ANSIEDAD</option>
+                <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
+                <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
+                <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
+                <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
+                <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
+                <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
+                <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
+                <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
+                <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
+                <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
+                <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
+                <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
+                <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
+                <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
+                <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
+                <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+                <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+                <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
+                <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
+              </select>
+            </div>
 
-          <!-- Modalidad -->
-          <div class="form-group">
-            <label for="modalidad">
-              <span class="label-icon">💻</span>
-              Modalidad <span class="required">*</span>
-            </label>
-            <select id="modalidad" required>
-              <option value="">Seleccione...</option>
-              <option value="Virtual">Virtual</option>
-              <option value="Presencial">Presencial</option>
-            </select>
-          </div>
+            <!-- Modalidad -->
+            <div class="form-group">
+              <label for="modalidad">
+                <span class="label-icon">💻</span>
+                Modalidad <span class="required">*</span>
+              </label>
+              <select id="modalidad" required>
+                <option value="">Seleccione...</option>
+                <option value="Virtual">Virtual</option>
+                <option value="Presencial">Presencial</option>
+              </select>
+            </div>
 
-          <!-- Fecha -->
-          <div class="form-group">
-            <label for="fecha">
-              <span class="label-icon">📅</span>
-              Fecha <span class="required">*</span>
-            </label>
-            <input type="date" id="fecha" required />
-          </div>
+            <!-- Fecha -->
+            <div class="form-group">
+              <label for="fecha">
+                <span class="label-icon">📅</span>
+                Fecha <span class="required">*</span>
+              </label>
+              <input type="date" id="fecha" required />
+            </div>
 
-          <!-- Observaciones -->
-          <div class="form-group full-width">
-            <label for="columna1">
-              <span class="label-icon">📄</span>
-              Observaciones
-            </label>
-            
-            <!-- ⭐ NUEVO: Toggle de confidencialidad -->
-            <div class="confidencialidad-toggle">
-              <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
-                <span class="candado-icon" id="candadoIcon">🔓</span>
-                <span class="candado-texto" id="candadoTexto">Visible en informe</span>
+            <!-- Observaciones -->
+            <div class="form-group full-width">
+              <label for="columna1">
+                <span class="label-icon">📄</span>
+                Observaciones
+              </label>
+              
+              <!-- ⭐ NUEVO: Toggle de confidencialidad -->
+              <div class="confidencialidad-toggle">
+                <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
+                  <span class="candado-icon" id="candadoIcon">🔓</span>
+                  <span class="candado-texto" id="candadoTexto">Visible en informe</span>
+                </button>
+                <input type="hidden" id="observaciones_confidenciales" value="false">
+              </div>
+              
+              <textarea 
+                id="columna1" 
+                rows="3" 
+                placeholder="Notas adicionales, comentarios o seguimiento..."
+              ></textarea>
+              <p class="observaciones-info" id="observacionesInfo">
+                💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador
+              </p>
+            </div>
+
+            <!-- Estado -->
+            <div class="form-group">
+              <label for="estado">
+                <span class="label-icon">✅</span>
+                Estado del Caso <span class="required">*</span>
+              </label>
+              <select id="estado" required>
+                <option value="">Seleccione...</option>
+                <option value="Abierto">Abierto</option>
+                <option value="Cerrado">Cerrado</option>
+              </select>
+            </div>
+
+            <!-- Botón Contacto de Emergencia -->
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="button" id="btnContactoEmergencia" class="btn-emergency-contact">
+                👤 Contacto de Emergencia
               </button>
-              <input type="hidden" id="observaciones_confidenciales" value="false">
             </div>
             
-            <textarea 
-              id="columna1" 
-              rows="3" 
-              placeholder="Notas adicionales, comentarios o seguimiento..."
-            ></textarea>
-            <p class="observaciones-info" id="observacionesInfo">
-              💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador
+            <!-- ⭐ NUEVO: Consultas Sugeridas (solo primera sesión) -->
+            <div class="form-group" id="consultasSugeridasGroup" style="display: none;">
+              <label for="consultas_sugeridas">
+                <span class="label-icon">📊</span>
+                Consultas Sugeridas <span class="required">*</span>
+              </label>
+              <input 
+                type="number" 
+                id="consultas_sugeridas" 
+                min="1" 
+                max="50" 
+                placeholder="Ej: 5"
+                title="Número de sesiones proyectadas para este trabajador"
+              />
+              <p class="field-info">💡 Proyección de sesiones necesarias</p>
+            </div>
+          </div>
+
+          <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones (se muestra solo cuando estado = "Cerrado") -->
+          <div class="form-group-fecha-cierre" id="fechaCierreContainer">
+            <div class="fecha-cierre-label">
+              <span class="fecha-cierre-icon">🔒</span>
+              <span>Fecha de Cierre del Caso <span class="required">*</span></span>
+            </div>
+            <input type="date" id="fecha_cierre" />
+            <p class="fecha-cierre-info">
+              Esta fecha se guardará como la fecha oficial de cierre del caso del trabajador
             </p>
+            
+            <!-- ⭐ NUEVO: Campo de Recomendaciones Finales -->
+            <div class="recomendaciones-container">
+              <div class="fecha-cierre-label" style="margin-top: 15px;">
+                <span class="fecha-cierre-icon">📝</span>
+                <span>Recomendaciones Finales <span class="required">*</span></span>
+              </div>
+              <textarea 
+                id="recomendaciones_finales" 
+                rows="6" 
+                placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso. Estas recomendaciones aparecerán en el informe final..."
+                style="width: 100%; padding: 12px; border: 2px solid #ffc107; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
+              ></textarea>
+              <p class="fecha-cierre-info">
+                💡 Estas recomendaciones aparecerán en el informe final del trabajador
+              </p>
+            </div>
           </div>
 
-          <!-- Estado -->
-          <div class="form-group">
-            <label for="estado">
-              <span class="label-icon">✅</span>
-              Estado del Caso <span class="required">*</span>
-            </label>
-            <select id="estado" required>
-              <option value="">Seleccione...</option>
-              <option value="Abierto">Abierto</option>
-              <option value="Cerrado">Cerrado</option>
-            </select>
-          </div>
-
-          <!-- Botón Contacto de Emergencia -->
-          <div class="form-group">
-            <label>&nbsp;</label>
-            <button type="button" id="btnContactoEmergencia" class="btn-emergency-contact">
-              👤 Contacto de Emergencia
+          <div class="form-actions">
+            <button type="submit" class="btn-submit-consulta">
+              💾 Registrar Consulta
+            </button>
+            <button type="reset" class="btn-reset-consulta">
+              🔄 Limpiar Formulario
             </button>
           </div>
-          
-          <!-- ⭐ NUEVO: Consultas Sugeridas (solo primera sesión) -->
-          <div class="form-group" id="consultasSugeridasGroup" style="display: none;">
-            <label for="consultas_sugeridas">
-              <span class="label-icon">📊</span>
-              Consultas Sugeridas <span class="required">*</span>
-            </label>
-            <input 
-              type="number" 
-              id="consultas_sugeridas" 
-              min="1" 
-              max="50" 
-              placeholder="Ej: 5"
-              title="Número de sesiones proyectadas para este trabajador"
-            />
-            <p class="field-info">💡 Proyección de sesiones necesarias</p>
-          </div>
-        </div>
+        </form>
+      </div>
 
-        <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones (se muestra solo cuando estado = "Cerrado") -->
-        <div class="form-group-fecha-cierre" id="fechaCierreContainer">
-          <div class="fecha-cierre-label">
-            <span class="fecha-cierre-icon">🔒</span>
-            <span>Fecha de Cierre del Caso <span class="required">*</span></span>
-          </div>
-          <input type="date" id="fecha_cierre" />
-          <p class="fecha-cierre-info">
-            Esta fecha se guardará como la fecha oficial de cierre del caso del trabajador
-          </p>
-          
-          <!-- ⭐ NUEVO: Campo de Recomendaciones Finales -->
-          <div class="recomendaciones-container">
-            <div class="fecha-cierre-label" style="margin-top: 15px;">
-              <span class="fecha-cierre-icon">📝</span>
-              <span>Recomendaciones Finales <span class="required">*</span></span>
-            </div>
-            <textarea 
-              id="recomendaciones_finales" 
-              rows="6" 
-              placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso. Estas recomendaciones aparecerán en el informe final..."
-              style="width: 100%; padding: 12px; border: 2px solid #ffc107; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
-            ></textarea>
-            <p class="fecha-cierre-info">
-              💡 Estas recomendaciones aparecerán en el informe final del trabajador
-            </p>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-submit-consulta">
-            💾 Registrar Consulta
-          </button>
-          <button type="reset" class="btn-reset-consulta">
-            🔄 Limpiar Formulario
-          </button>
-        </div>
-      </form>
+      <!-- ⭐ NUEVO: MENSAJE EN CONSTRUCCIÓN PARA VIGILANCIA EPIDEMIOLÓGICA -->
+      <div id="formVigilanciaEpidemiologica" class="construccion-container">
+        <div class="construccion-icon">🚧</div>
+        <h3 class="construccion-titulo">Módulo en Construcción</h3>
+        <p class="construccion-descripcion">
+          El formulario de registro para <strong>Sistema de Vigilancia Epidemiológica</strong> 
+          está actualmente en desarrollo. Pronto estará disponible con todas sus funcionalidades.
+        </p>
+      </div>
     </div>
 
     <!-- Modal de Contacto de Emergencia -->
@@ -576,5 +636,36 @@
   <script src="js/auth-check.js"></script>
   <script src="js/consulta.js"></script>
   <script src="js/informe.js"></script>
+  
+  <!-- ⭐ NUEVO: Script para manejar modalidades -->
+  <script>
+    // Detectar modalidad y mostrar formulario correspondiente
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
+      
+      // Mostrar indicador de modalidad
+      const modalidadIndicador = document.getElementById('modalidadIndicadorConsulta');
+      const modalidadNombre = document.getElementById('modalidadNombreConsulta');
+      
+      if (modalidadIndicador && modalidadNombre) {
+        modalidadNombre.textContent = modalidad;
+        modalidadIndicador.style.display = 'flex';
+      }
+      
+      // Mostrar formulario correspondiente
+      const formOrientacion = document.getElementById('formOrientacionPsicosocial');
+      const formVigilancia = document.getElementById('formVigilanciaEpidemiologica');
+      
+      if (modalidad === 'Orientación Psicosocial') {
+        formOrientacion.style.display = 'block';
+        formVigilancia.classList.remove('show');
+      } else if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+        formOrientacion.style.display = 'none';
+        formVigilancia.classList.add('show');
+      }
+      
+      console.log('✅ Modalidad cargada:', modalidad);
+    });
+  </script>
 </body>
 </html>

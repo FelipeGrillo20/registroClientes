@@ -38,6 +38,9 @@
       // Mostrar información del usuario (solo si existe el elemento)
       displayUserInfo(data.user);
       
+      // ⭐ NUEVO: Mostrar modalidad seleccionada
+      displayModalidadIndicador();
+      
     } catch (err) {
       console.error("Error verificando autenticación:", err);
       clearAuth();
@@ -57,6 +60,32 @@
   function clearAuth() {
     localStorage.removeItem("authToken");
     localStorage.removeItem("userData");
+  }
+  
+  // ⭐ NUEVO: Mostrar modalidad seleccionada
+  function displayModalidadIndicador() {
+    const modalidadIndicador = document.getElementById("modalidadIndicador");
+    
+    if (!modalidadIndicador) {
+      return; // Si no existe el elemento, salir
+    }
+    
+    // Obtener la modalidad desde localStorage
+    let modalidad = localStorage.getItem('modalidadSeleccionada');
+    
+    // Si no hay modalidad, usar por defecto "Orientación Psicosocial"
+    if (!modalidad) {
+      modalidad = 'Orientación Psicosocial';
+      localStorage.setItem('modalidadSeleccionada', modalidad);
+    }
+    
+    // Mostrar el indicador con la modalidad
+    const modalidadNombre = document.getElementById("modalidadNombre");
+    if (modalidadNombre) {
+      modalidadNombre.textContent = modalidad;
+    }
+    
+    modalidadIndicador.style.display = "flex";
   }
   
   // Mostrar información del usuario en la página
@@ -138,8 +167,9 @@
       console.error("Error en logout:", err);
     }
     
-    // Limpiar localStorage
+    // Limpiar localStorage (incluyendo modalidad)
     clearAuth();
+    localStorage.removeItem('modalidadSeleccionada');
     
     // Redireccionar a login
     window.location.href = "login.html";

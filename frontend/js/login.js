@@ -157,10 +157,10 @@ loginForm.addEventListener("submit", async (e) => {
       // Mostrar mensaje de éxito
       showSuccess("¡Bienvenido! Redirigiendo...");
       
-      // Redireccionar después de 1 segundo
+      // ⭐ CAMBIO: Redireccionar a modalidad.html en lugar de index.html
       setTimeout(() => {
-        console.log("Redirigiendo a index.html");
-        window.location.href = "index.html";
+        console.log("Redirigiendo a modalidad.html");
+        window.location.href = "modalidad.html";
       }, 1000);
     } else {
       throw new Error("Respuesta inválida del servidor");
@@ -229,8 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       if (data.success) {
         console.log("Token válido, redirigiendo...");
-        // Token válido, redireccionar
-        window.location.href = "index.html";
+        // ⭐ CAMBIO: Token válido, redireccionar a modalidad.html
+        window.location.href = "modalidad.html";
       } else {
         console.log("Token inválido, limpiando...");
         // Token inválido, limpiar localStorage

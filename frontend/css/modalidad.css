@@ -1,0 +1,456 @@
+/* css/modalidad.css */
+
+/* ====== ESTILOS GENERALES ====== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* ====== BARRA DE USUARIO ====== */
+.user-info-bar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-name {
+  color: white !important;
+  font-weight: 600;
+  font-size: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-mi-perfil {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-mi-perfil:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-sitemap {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-sitemap:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background: white !important;
+  color: #667eea !important;
+  transform: translateY(-2px);
+}
+
+/* ====== CONTENEDOR PRINCIPAL ====== */
+.modalidad-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* ====== ENCABEZADO ====== */
+.header-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.main-title {
+  font-size: 3em;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 10px;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 1.3em;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ====== CONTENEDOR DE TARJETAS ====== */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ====== TARJETAS DE MODALIDAD ====== */
+.modalidad-card {
+  background: white;
+  border-radius: 20px;
+  padding: 50px 40px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  min-height: 400px;
+}
+
+.modalidad-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transition: all 0.3s ease;
+}
+
+.card-psicosocial::before {
+  background: linear-gradient(90deg, #00b4db, #0083b0);
+}
+
+.card-vigilancia::before {
+  background: linear-gradient(90deg, #56ab2f, #a8e063);
+}
+
+.modalidad-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modalidad-card:hover::before {
+  height: 100%;
+  opacity: 0.05;
+}
+
+/* ====== ICONO DE LA TARJETA ====== */
+.card-icon {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+}
+
+.card-psicosocial .card-icon {
+  background: linear-gradient(135deg, #00b4db, #0083b0);
+  color: white;
+}
+
+.card-vigilancia .card-icon {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+}
+
+.modalidad-card:hover .card-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* ====== TÍTULO DE LA TARJETA ====== */
+.card-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.2;
+}
+
+.card-psicosocial .card-title {
+  color: #0083b0;
+}
+
+.card-vigilancia .card-title {
+  color: #56ab2f;
+}
+
+/* ====== DESCRIPCIÓN ====== */
+.card-description {
+  font-size: 1.05em;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  flex: 1;
+}
+
+/* ====== FLECHA ====== */
+.card-arrow {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-top: auto;
+}
+
+.card-psicosocial .card-arrow {
+  background: rgba(0, 131, 176, 0.1);
+  color: #0083b0;
+}
+
+.card-vigilancia .card-arrow {
+  background: rgba(86, 171, 47, 0.1);
+  color: #56ab2f;
+}
+
+.modalidad-card:hover .card-arrow {
+  transform: translateX(5px);
+}
+
+.card-psicosocial:hover .card-arrow {
+  background: #0083b0;
+  color: white;
+}
+
+.card-vigilancia:hover .card-arrow {
+  background: #56ab2f;
+  color: white;
+}
+
+/* ====== FOOTER ====== */
+.footer-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ====== RESPONSIVE ====== */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .main-title {
+    font-size: 2.5em;
+  }
+
+  .subtitle {
+    font-size: 1.15em;
+  }
+
+  .cards-container {
+    gap: 25px;
+  }
+
+  .modalidad-card {
+    padding: 40px 30px;
+    min-height: 380px;
+  }
+
+  .card-title {
+    font-size: 1.6em;
+  }
+}
+
+/* Móviles */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  .user-info-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .user-left-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-logout {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modalidad-container {
+    gap: 30px;
+  }
+
+  .main-title {
+    font-size: 2em;
+  }
+
+  .subtitle {
+    font-size: 1em;
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .modalidad-card {
+    padding: 35px 25px;
+    min-height: 350px;
+  }
+
+  .card-icon {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 25px;
+  }
+
+  .card-icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .card-title {
+    font-size: 1.5em;
+  }
+
+  .card-description {
+    font-size: 1em;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  .user-info-bar {
+    padding: 12px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .btn-mi-perfil,
+  .btn-sitemap {
+    font-size: 11px;
+    padding: 5px 10px !important;
+  }
+
+  .btn-logout {
+    font-size: 12px;
+    padding: 7px 14px !important;
+  }
+
+  .main-title {
+    font-size: 1.6em;
+  }
+
+  .subtitle {
+    font-size: 0.9em;
+  }
+
+  .modalidad-card {
+    padding: 30px 20px;
+    min-height: 320px;
+  }
+
+  .card-icon {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 20px;
+  }
+
+  .card-icon svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .card-title {
+    font-size: 1.3em;
+  }
+
+  .card-description {
+    font-size: 0.95em;
+  }
+
+  .card-arrow {
+    width: 45px;
+    height: 45px;
+  }
+
+  .card-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .footer-text {
+    font-size: 0.85em;
+  }
+}

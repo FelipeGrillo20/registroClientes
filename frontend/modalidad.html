@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Selección de Modalidad - Sistema de Orientación</title>
+  <link rel="stylesheet" href="css/modalidad.css" />
+</head>
+<body>
+  <!-- Barra de usuario -->
+  <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+
+  <div class="modalidad-container">
+    <!-- Encabezado -->
+    <div class="header-section">
+      <h1 class="main-title">Modalidad de Atención</h1>
+      <p class="subtitle">Selecciona la modalidad con la que deseas trabajar</p>
+    </div>
+
+    <!-- Tarjetas de modalidad -->
+    <div class="cards-container">
+      <!-- Tarjeta Orientación Psicosocial -->
+      <a href="#" class="modalidad-card card-psicosocial">
+        <div class="card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <h2 class="card-title">Orientación Psicosocial</h2>
+        <p class="card-description">
+          Acompañamiento y orientación para el bienestar emocional y social de los trabajadores
+        </p>
+        <div class="card-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+      </a>
+
+      <!-- Tarjeta Sistema de Vigilancia Epidemiológica -->
+      <a href="#" class="modalidad-card card-vigilancia">
+        <div class="card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+        </div>
+        <h2 class="card-title">Sistema de Vigilancia Epidemiológica</h2>
+        <p class="card-description">
+          Monitoreo y prevención de riesgos laborales para la salud de los trabajadores
+        </p>
+        <div class="card-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-section">
+      <p class="footer-text">Sistema de Gestión de Trabajadores v2.0</p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  
+  <script>
+    // Script para manejar la selección de modalidad
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.modalidad-card');
+      
+      cards.forEach(card => {
+        card.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Obtener el texto de la modalidad desde el h2
+          const modalidadTexto = card.querySelector('.card-title').textContent.trim();
+          
+          // Guardar en localStorage
+          localStorage.setItem('modalidadSeleccionada', modalidadTexto);
+          
+          // Redireccionar a index.html
+          window.location.href = 'index.html';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -471,6 +471,121 @@ textarea {
 }
 
 /* ============================================ */
+/* INDICADOR DE MODALIDAD SELECCIONADA */
+/* ============================================ */
+.modalidad-indicador {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(86, 171, 47, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.modalidad-icon {
+  font-size: 20px;
+}
+
+.modalidad-text {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.modalidad-text strong {
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================ */
+/* BOTÓN SELECCIONAR MODALIDAD */
+/* ============================================ */
+.form-actions-secondary {
+  grid-column: span 3;
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #ecf0f1;
+}
+
+.btn-seleccionar-modalidad {
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-seleccionar-modalidad:hover {
+  background: linear-gradient(135deg, #732d91, #8e44ad);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+}
+
+/* ============================================ */
+/* BOTÓN MODALIDAD EN LA BARRA SUPERIOR */
+/* ============================================ */
+.btn-modalidad-bar {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  cursor: default;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================ */
+/* RESPONSIVE PARA INDICADOR DE MODALIDAD */
+/* ============================================ */
+@media (max-width: 768px) {
+  .modalidad-indicador {
+    padding: 10px 15px;
+  }
+  
+  .modalidad-icon {
+    font-size: 18px;
+  }
+  
+  .modalidad-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalidad-indicador {
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .modalidad-icon {
+    font-size: 16px;
+  }
+  
+  .modalidad-text {
+    font-size: 12px;
+  }
+}
+
+/* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
 

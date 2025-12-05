@@ -521,16 +521,591 @@
         </form>
       </div>
 
-      <!-- ⭐ NUEVO: MENSAJE EN CONSTRUCCIÓN PARA VIGILANCIA EPIDEMIOLÓGICA -->
-      <div id="formVigilanciaEpidemiologica" class="construccion-container">
-        <div class="construccion-icon">🚧</div>
-        <h3 class="construccion-titulo">Módulo en Construcción</h3>
-        <p class="construccion-descripcion">
-          El formulario de registro para <strong>Sistema de Vigilancia Epidemiológica</strong> 
-          está actualmente en desarrollo. Pronto estará disponible con todas sus funcionalidades.
-        </p>
+      <!-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA -->
+<div id="formVigilanciaEpidemiologica" class="construccion-container">
+  
+  <!-- ========================================
+       FORMULARIO 1: MESA DE TRABAJO (Obligatorio primero)
+       ======================================== -->
+  <div id="contenedorMesaTrabajo" class="formulario-vigilancia-container">
+    <div class="formulario-vigilancia-header">
+      <span class="formulario-icon">📋</span>
+      <div>
+        <h3 class="formulario-titulo">Formulario 1: Registro Mesa de Trabajo</h3>
+        <p class="formulario-descripcion">Complete este formulario para iniciar el seguimiento epidemiológico</p>
       </div>
     </div>
+
+    <form id="formMesaTrabajo" class="form-vigilancia">
+      <div class="form-grid-vigilancia">
+        
+        <!-- Criterio de Inclusión al SVE -->
+        <div class="form-group-vigilancia full-width">
+          <label for="criterio_inclusion">
+            <span class="label-icon">✓</span>
+            Criterio de Inclusión al SVE <span class="required">*</span>
+          </label>
+          <select id="criterio_inclusion" required>
+            <option value="">Seleccione un criterio...</option>
+            <option value="Casos o eventos identificados por quejas de acoso laboral">Casos o eventos identificados por quejas de acoso laboral</option>
+            <option value="Consumo problemático de alcohol y sustancias psicoactivas">Consumo problemático de alcohol y sustancias psicoactivas</option>
+            <option value="Trabajadores accidentados de forma reincidente">Trabajadores accidentados de forma reincidente</option>
+            <option value="Patologías comunes o laborales por exposición a factores psicosociales calificadas o en proceso de calificación">Patologías comunes o laborales por exposición a factores psicosociales calificadas o en proceso de calificación</option>
+            <option value="Casos que reporten incapacidades con diagnósticos relacionados con riesgo psicosocial">Casos que reporten incapacidades con diagnósticos relacionados con riesgo psicosocial</option>
+            <option value="Eventos vitales estresantes o significativos como muerte de seres queridos y eventos familiares o personales">Eventos vitales estresantes o significativos como muerte de seres queridos y eventos familiares o personales</option>
+            <option value="Casos de estrés postraumático">Casos de estrés postraumático</option>
+            <option value="Trabajadores con efectos en la salud mental derivados de las situaciones de emergencia sanitaria, ambiental y social">Trabajadores con efectos en la salud mental derivados de las situaciones de emergencia sanitaria, ambiental y social</option>
+          </select>
+        </div>
+
+        <!-- Diagnóstico -->
+        <div class="form-group-vigilancia">
+          <label for="diagnostico">
+            <span class="label-icon">🩺</span>
+            Diagnóstico <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="diagnostico" 
+            placeholder="Ingrese el diagnóstico"
+            required
+          />
+        </div>
+
+        <!-- Código de diagnóstico -->
+        <div class="form-group-vigilancia">
+          <label for="codigo_diagnostico">
+            <span class="label-icon">🔢</span>
+            Código de Diagnóstico <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="codigo_diagnostico" 
+            placeholder="Ej: F41.1"
+            required
+          />
+        </div>
+
+        <!-- Motivo de Evaluación y Situación Actual -->
+        <div class="form-group-vigilancia full-width">
+          <label for="motivo_evaluacion">
+            <span class="label-icon">📝</span>
+            Motivo de Evaluación y Situación Actual <span class="required">*</span>
+          </label>
+          <textarea 
+            id="motivo_evaluacion" 
+            rows="4"
+            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Ajuste a las funciones -->
+        <div class="form-group-vigilancia full-width">
+          <label for="ajuste_funciones">
+            <span class="label-icon">⚙️</span>
+            Ajuste a las Funciones <span class="required">*</span>
+          </label>
+          <textarea 
+            id="ajuste_funciones" 
+            rows="3"
+            placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Implementar las siguientes recomendaciones médicas -->
+        <div class="form-group-vigilancia full-width">
+          <label for="recomendaciones_medicas">
+            <span class="label-icon">💊</span>
+            Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_medicas" 
+            rows="3"
+            placeholder="Describa las recomendaciones médicas a implementar..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Recomendaciones al trabajador -->
+        <div class="form-group-vigilancia full-width">
+          <label for="recomendaciones_trabajador">
+            <span class="label-icon">👤</span>
+            Recomendaciones al Trabajador <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_trabajador" 
+            rows="3"
+            placeholder="Describa las recomendaciones dirigidas al trabajador..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Recomendaciones a la Empresa -->
+        <div class="form-group-vigilancia full-width">
+          <label for="recomendaciones_empresa">
+            <span class="label-icon">🏢</span>
+            Recomendaciones a la Empresa <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_empresa" 
+            rows="3"
+            placeholder="Describa las recomendaciones dirigidas a la empresa..."
+            required
+          ></textarea>
+        </div>
+
+      </div>
+
+      <div class="form-actions-vigilancia">
+        <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarMesaTrabajo">
+          💾 Registrar Mesa de Trabajo
+        </button>
+        <button type="reset" class="btn-reset-vigilancia">
+          🔄 Limpiar Formulario
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================
+       FORMULARIO 2: REGISTRO DE CONSULTA (Bloqueado hasta completar Formulario 1)
+       ======================================== -->
+  <div id="contenedorConsulta" class="formulario-vigilancia-container bloqueado">
+    <div class="formulario-vigilancia-header">
+      <span class="formulario-icon">📝</span>
+      <div>
+        <h3 class="formulario-titulo">Formulario 2: Registro de Consulta</h3>
+        <p class="formulario-descripcion">Registre las consultas de seguimiento epidemiológico</p>
+      </div>
+      <div class="bloqueo-badge" id="bloqueoConsulta">
+        🔒 Complete primero la Mesa de Trabajo
+      </div>
+    </div>
+
+    <form id="formConsultaVigilancia" class="form-vigilancia">
+      <div class="form-grid-vigilancia">
+        
+        <!-- Fecha de Consulta -->
+        <div class="form-group-vigilancia">
+          <label for="fecha_consulta_sve">
+            <span class="label-icon">📅</span>
+            Fecha de Consulta <span class="required">*</span>
+          </label>
+          <input 
+            type="date" 
+            id="fecha_consulta_sve" 
+            required
+            disabled
+          />
+        </div>
+
+        <!-- Modalidad -->
+        <div class="form-group-vigilancia">
+          <label for="modalidad_sve">
+            <span class="label-icon">💻</span>
+            Modalidad <span class="required">*</span>
+          </label>
+          <select id="modalidad_sve" required disabled>
+            <option value="">Seleccione...</option>
+            <option value="Virtual">Virtual</option>
+            <option value="Presencial">Presencial</option>
+          </select>
+        </div>
+
+        <!-- Observaciones de la Consulta -->
+        <div class="form-group-vigilancia full-width">
+          <label for="observaciones_consulta_sve">
+            <span class="label-icon">📄</span>
+            Observaciones de la Consulta <span class="required">*</span>
+          </label>
+          <textarea 
+            id="observaciones_consulta_sve" 
+            rows="4"
+            placeholder="Registre las observaciones de la consulta de seguimiento..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Estado del Caso -->
+        <div class="form-group-vigilancia">
+          <label for="estado_sve">
+            <span class="label-icon">✅</span>
+            Estado del Caso <span class="required">*</span>
+          </label>
+          <select id="estado_sve" required disabled>
+            <option value="">Seleccione...</option>
+            <option value="Abierto">Abierto</option>
+            <option value="Cerrado">Cerrado</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="form-actions-vigilancia">
+        <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarConsultaSVE" disabled>
+          💾 Registrar Consulta
+        </button>
+        <button type="reset" class="btn-reset-vigilancia" disabled>
+          🔄 Limpiar Formulario
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================
+       HISTORIAL DE FORMULARIOS SVE
+       ======================================== -->
+  <div id="historialSVE" class="historial-sve-container" style="display: none;">
+    <div class="historial-sve-header">
+      <h3 class="historial-sve-titulo">📚 Historial del Caso SVE</h3>
+      <button type="button" class="btn-refresh-sve" id="btnRefreshSVE" title="Actualizar historial">
+        🔄
+      </button>
+    </div>
+
+    <!-- Mesa de Trabajo Registrada -->
+    <div id="mesaTrabajoRegistrada" class="mesa-trabajo-card" style="display: none;">
+      <div class="mesa-trabajo-header">
+        <div class="mesa-trabajo-titulo">
+          <span class="mesa-icon">📋</span>
+          <strong>Mesa de Trabajo</strong>
+        </div>
+        <button type="button" class="btn-edit-mesa" id="btnEditarMesaTrabajo">
+          ✏️ Editar
+        </button>
+      </div>
+      <div class="mesa-trabajo-body" id="mesaTrabajoContenido">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+
+    <!-- Consultas Registradas -->
+    <div id="consultasSVERegistradas" class="consultas-sve-lista">
+      <!-- Consultas dinámicas -->
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* ========================================
+   ESTILOS PARA VIGILANCIA EPIDEMIOLÓGICA
+   ======================================== */
+
+.formulario-vigilancia-container {
+  background: white;
+  border-radius: 14px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.formulario-vigilancia-container.bloqueado {
+  opacity: 0.6;
+  pointer-events: none;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.formulario-vigilancia-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+  position: relative;
+}
+
+.formulario-icon {
+  font-size: 48px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.formulario-titulo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 5px 0;
+}
+
+.formulario-descripcion {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.bloqueo-badge {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+/* Grid del formulario */
+.form-vigilancia {
+  margin-top: 20px;
+}
+
+.form-grid-vigilancia {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.form-group-vigilancia {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-vigilancia.full-width {
+  grid-column: span 2;
+}
+
+.form-group-vigilancia label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group-vigilancia input,
+.form-group-vigilancia select,
+.form-group-vigilancia textarea {
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.form-group-vigilancia input:focus,
+.form-group-vigilancia select:focus,
+.form-group-vigilancia textarea:focus {
+  border-color: #56ab2f;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(86, 171, 47, 0.1);
+  background: white;
+}
+
+.form-group-vigilancia textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Botones de acción */
+.form-actions-vigilancia {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+.btn-submit-vigilancia,
+.btn-reset-vigilancia {
+  padding: 14px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-submit-vigilancia {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  color: white;
+}
+
+.btn-submit-vigilancia:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4a9628, #8cc84b);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(86, 171, 47, 0.4);
+}
+
+.btn-submit-vigilancia:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-reset-vigilancia {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-reset-vigilancia:hover:not(:disabled) {
+  background: #7f8c8d;
+}
+
+/* Historial SVE */
+.historial-sve-container {
+  background: white;
+  border-radius: 14px;
+  padding: 30px;
+  margin-top: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e9ecef;
+}
+
+.historial-sve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.historial-sve-titulo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.btn-refresh-sve {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+}
+
+.btn-refresh-sve:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: rotate(180deg);
+}
+
+/* Card Mesa de Trabajo */
+.mesa-trabajo-card {
+  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.mesa-trabajo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px dashed #ffc107;
+}
+
+.mesa-trabajo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  color: #856404;
+}
+
+.mesa-icon {
+  font-size: 24px;
+}
+
+.btn-edit-mesa {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-edit-mesa:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: translateY(-2px);
+}
+
+.mesa-trabajo-body {
+  display: grid;
+  gap: 12px;
+}
+
+.mesa-trabajo-item {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.mesa-trabajo-item strong {
+  display: block;
+  color: #856404;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.mesa-trabajo-item p {
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid-vigilancia {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-group-vigilancia.full-width {
+    grid-column: span 1;
+  }
+  
+  .formulario-vigilancia-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .bloqueo-badge {
+    position: static;
+    margin-top: 10px;
+  }
+  
+  .form-actions-vigilancia {
+    flex-direction: column;
+  }
+  
+  .btn-submit-vigilancia,
+  .btn-reset-vigilancia {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
 
     <!-- Modal de Contacto de Emergencia -->
     <div id="modalVerContacto" class="modal-overlay-contacto">

@@ -1564,6 +1564,110 @@ body {
   }
 }
 
+/* ============================================
+   ESTILOS PARA CONSULTAS SVE EN HISTORIAL
+   Agregar al final de consulta.css
+   ============================================ */
+
+.consultas-sve-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.consulta-sve-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #56ab2f;
+}
+
+.consulta-sve-card:hover {
+  border-color: #56ab2f;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.2);
+  transform: translateX(5px);
+}
+
+.consulta-sve-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.consulta-sve-numero {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.consulta-sve-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.consulta-sve-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.consulta-sve-item strong {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+.consulta-sve-item span {
+  font-size: 15px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.consulta-sve-item p {
+  font-size: 14px;
+  color: #2c3e50;
+  line-height: 1.6;
+  margin: 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #56ab2f;
+}
+
+/* Responsive para consultas SVE */
+@media (max-width: 768px) {
+  .consulta-sve-header {
+    flex-wrap: wrap;
+  }
+  
+  .consulta-sve-numero {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .consulta-sve-card {
+    padding: 15px;
+  }
+  
+  .consulta-sve-numero {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+}
 
 /* ============================================ */
 /* RESPONSIVE */

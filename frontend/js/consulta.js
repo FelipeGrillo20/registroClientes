@@ -1195,3 +1195,359 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("fecha").value = fechaHoy;
 });
+
+// ============================================
+// SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA (SVE)
+// Agregar al final de consulta.js
+// ============================================
+
+// Variables globales para SVE
+let mesaTrabajoRegistrada = false;
+let mesaTrabajoData = null;
+let consultasSVE = [];
+let editandoMesaTrabajo = false;
+
+// ============================================
+// INICIALIZACIÓN SVE
+// ============================================
+function inicializarSVE() {
+  const modalidad = localStorage.getItem('modalidadSeleccionada');
+  
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    console.log('✅ Inicializando Sistema de Vigilancia Epidemiológica');
+    
+    // Cargar datos guardados si existen
+    cargarDatosSVE();
+    
+    // Eventos del Formulario 1: Mesa de Trabajo
+    const formMesaTrabajo = document.getElementById('formMesaTrabajo');
+    if (formMesaTrabajo) {
+      formMesaTrabajo.addEventListener('submit', registrarMesaTrabajo);
+    }
+    
+    // Eventos del Formulario 2: Consulta SVE
+    const formConsultaSVE = document.getElementById('formConsultaVigilancia');
+    if (formConsultaSVE) {
+      formConsultaSVE.addEventListener('submit', registrarConsultaSVE);
+    }
+    
+    // Botón editar mesa de trabajo
+    const btnEditarMesa = document.getElementById('btnEditarMesaTrabajo');
+    if (btnEditarMesa) {
+      btnEditarMesa.addEventListener('click', habilitarEdicionMesaTrabajo);
+    }
+    
+    // Fecha por defecto en consulta
+    const fechaConsultaSVE = document.getElementById('fecha_consulta_sve');
+    if (fechaConsultaSVE) {
+      const today = new Date().toISOString().split('T')[0];
+      fechaConsultaSVE.value = today;
+    }
+  }
+}
+
+// ============================================
+// CARGAR DATOS SVE DESDE BACKEND
+// ============================================
+async function cargarDatosSVE() {
+  const clienteId = getClienteIdFromURL();
+  if (!clienteId) return;
+  
+  try {
+    // Aquí deberás crear un endpoint en el backend para SVE
+    // Por ahora usamos localStorage como demo
+    const datosSVE = localStorage.getItem(`sve_${clienteId}`);
+    
+    if (datosSVE) {
+      const datos = JSON.parse(datosSVE);
+      
+      if (datos.mesaTrabajo) {
+        mesaTrabajoData = datos.mesaTrabajo;
+        mesaTrabajoRegistrada = true;
+        mostrarMesaTrabajoRegistrada();
+        desbloquearFormularioConsulta();
+      }
+      
+      if (datos.consultas && datos.consultas.length > 0) {
+        consultasSVE = datos.consultas;
+        mostrarConsultasSVE();
+      }
+      
+      // Mostrar historial si hay datos
+      if (mesaTrabajoRegistrada || consultasSVE.length > 0) {
+        document.getElementById('historialSVE').style.display = 'block';
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando datos SVE:', err);
+  }
+}
+
+// ============================================
+// REGISTRAR MESA DE TRABAJO (Formulario 1)
+// ============================================
+async function registrarMesaTrabajo(e) {
+  e.preventDefault();
+  
+  const clienteId = getClienteIdFromURL();
+  if (!clienteId) {
+    alert('⚠️ Error: No se pudo identificar el cliente');
+    return;
+  }
+  
+  // Capturar datos del formulario
+  const datos = {
+    criterio_inclusion: document.getElementById('criterio_inclusion').value,
+    diagnostico: document.getElementById('diagnostico').value.trim(),
+    codigo_diagnostico: document.getElementById('codigo_diagnostico').value.trim(),
+    motivo_evaluacion: document.getElementById('motivo_evaluacion').value.trim(),
+    ajuste_funciones: document.getElementById('ajuste_funciones').value.trim(),
+    recomendaciones_medicas: document.getElementById('recomendaciones_medicas').value.trim(),
+    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador').value.trim(),
+    recomendaciones_empresa: document.getElementById('recomendaciones_empresa').value.trim(),
+    fecha_registro: new Date().toISOString(),
+    cliente_id: clienteId
+  };
+  
+  try {
+    // Guardar en localStorage (temporal - luego implementar backend)
+    const datosSVE = JSON.parse(localStorage.getItem(`sve_${clienteId}`) || '{}');
+    datosSVE.mesaTrabajo = datos;
+    localStorage.setItem(`sve_${clienteId}`, JSON.stringify(datosSVE));
+    
+    mesaTrabajoData = datos;
+    mesaTrabajoRegistrada = true;
+    editandoMesaTrabajo = false;
+    
+    alert('✅ Mesa de Trabajo registrada correctamente');
+    
+    // Deshabilitar formulario 1
+    deshabilitarFormularioMesaTrabajo();
+    
+    // Mostrar en historial
+    mostrarMesaTrabajoRegistrada();
+    
+    // Desbloquear formulario 2
+    desbloquearFormularioConsulta();
+    
+    // Mostrar historial
+    document.getElementById('historialSVE').style.display = 'block';
+    
+    // Scroll al formulario de consulta
+    document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
+    
+  } catch (err) {
+    console.error('Error registrando mesa de trabajo:', err);
+    alert('❌ Error al registrar mesa de trabajo');
+  }
+}
+
+// ============================================
+// DESHABILITAR FORMULARIO MESA DE TRABAJO
+// ============================================
+function deshabilitarFormularioMesaTrabajo() {
+  const form = document.getElementById('formMesaTrabajo');
+  const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"], button[type="reset"]');
+  
+  inputs.forEach(input => {
+    input.disabled = true;
+  });
+  
+  // Cambiar apariencia del contenedor
+  const contenedor = document.getElementById('contenedorMesaTrabajo');
+  contenedor.style.opacity = '0.8';
+  contenedor.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
+  
+  // Cambiar texto del botón
+  const btnSubmit = document.getElementById('btnRegistrarMesaTrabajo');
+  btnSubmit.innerHTML = '✅ Mesa de Trabajo Registrada';
+}
+
+// ============================================
+// HABILITAR EDICIÓN MESA DE TRABAJO
+// ============================================
+function habilitarEdicionMesaTrabajo() {
+  if (!confirm('¿Desea editar la Mesa de Trabajo registrada?')) {
+    return;
+  }
+  
+  editandoMesaTrabajo = true;
+  
+  const form = document.getElementById('formMesaTrabajo');
+  const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"], button[type="reset"]');
+  
+  inputs.forEach(input => {
+    input.disabled = false;
+  });
+  
+  // Restaurar apariencia del contenedor
+  const contenedor = document.getElementById('contenedorMesaTrabajo');
+  contenedor.style.opacity = '1';
+  contenedor.style.background = 'white';
+  
+  // Cambiar texto del botón
+  const btnSubmit = document.getElementById('btnRegistrarMesaTrabajo');
+  btnSubmit.innerHTML = '💾 Actualizar Mesa de Trabajo';
+  
+  // Scroll al formulario
+  contenedor.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================
+// MOSTRAR MESA DE TRABAJO EN HISTORIAL
+// ============================================
+function mostrarMesaTrabajoRegistrada() {
+  if (!mesaTrabajoData) return;
+  
+  const contenedor = document.getElementById('mesaTrabajoRegistrada');
+  const contenido = document.getElementById('mesaTrabajoContenido');
+  
+  contenido.innerHTML = `
+    <div class="mesa-trabajo-item">
+      <strong>✓ Criterio de Inclusión:</strong>
+      <p>${escapeHtml(mesaTrabajoData.criterio_inclusion)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>🩺 Diagnóstico:</strong>
+      <p>${escapeHtml(mesaTrabajoData.diagnostico)} (Código: ${escapeHtml(mesaTrabajoData.codigo_diagnostico)})</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>📝 Motivo de Evaluación:</strong>
+      <p>${escapeHtml(mesaTrabajoData.motivo_evaluacion)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>⚙️ Ajuste a las Funciones:</strong>
+      <p>${escapeHtml(mesaTrabajoData.ajuste_funciones)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>💊 Recomendaciones Médicas:</strong>
+      <p>${escapeHtml(mesaTrabajoData.recomendaciones_medicas)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>👤 Recomendaciones al Trabajador:</strong>
+      <p>${escapeHtml(mesaTrabajoData.recomendaciones_trabajador)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>🏢 Recomendaciones a la Empresa:</strong>
+      <p>${escapeHtml(mesaTrabajoData.recomendaciones_empresa)}</p>
+    </div>
+  `;
+  
+  contenedor.style.display = 'block';
+}
+
+// ============================================
+// DESBLOQUEAR FORMULARIO DE CONSULTA
+// ============================================
+function desbloquearFormularioConsulta() {
+  const contenedor = document.getElementById('contenedorConsulta');
+  const form = document.getElementById('formConsultaVigilancia');
+  const inputs = form.querySelectorAll('input, select, textarea, button');
+  const bloqueoBadge = document.getElementById('bloqueoConsulta');
+  
+  contenedor.classList.remove('bloqueado');
+  bloqueoBadge.style.display = 'none';
+  
+  inputs.forEach(input => {
+    input.disabled = false;
+  });
+}
+
+// ============================================
+// REGISTRAR CONSULTA SVE (Formulario 2)
+// ============================================
+async function registrarConsultaSVE(e) {
+  e.preventDefault();
+  
+  if (!mesaTrabajoRegistrada) {
+    alert('⚠️ Debe completar primero la Mesa de Trabajo');
+    return;
+  }
+  
+  const clienteId = getClienteIdFromURL();
+  if (!clienteId) {
+    alert('⚠️ Error: No se pudo identificar el cliente');
+    return;
+  }
+  
+  // Capturar datos de la consulta
+  const consulta = {
+    fecha: document.getElementById('fecha_consulta_sve').value,
+    modalidad: document.getElementById('modalidad_sve').value,
+    observaciones: document.getElementById('observaciones_consulta_sve').value.trim(),
+    estado: document.getElementById('estado_sve').value,
+    fecha_registro: new Date().toISOString(),
+    cliente_id: clienteId
+  };
+  
+  try {
+    // Guardar en localStorage (temporal)
+    const datosSVE = JSON.parse(localStorage.getItem(`sve_${clienteId}`) || '{}');
+    if (!datosSVE.consultas) {
+      datosSVE.consultas = [];
+    }
+    datosSVE.consultas.push(consulta);
+    localStorage.setItem(`sve_${clienteId}`, JSON.stringify(datosSVE));
+    
+    consultasSVE.push(consulta);
+    
+    alert('✅ Consulta SVE registrada correctamente');
+    
+    // Limpiar formulario
+    document.getElementById('formConsultaVigilancia').reset();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_consulta_sve').value = today;
+    
+    // Actualizar historial
+    mostrarConsultasSVE();
+    
+  } catch (err) {
+    console.error('Error registrando consulta SVE:', err);
+    alert('❌ Error al registrar consulta');
+  }
+}
+
+// ============================================
+// MOSTRAR CONSULTAS SVE EN HISTORIAL
+// ============================================
+function mostrarConsultasSVE() {
+  const contenedor = document.getElementById('consultasSVERegistradas');
+  
+  if (consultasSVE.length === 0) {
+    contenedor.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">No hay consultas registradas</p>';
+    return;
+  }
+  
+  const html = consultasSVE.map((consulta, index) => `
+    <div class="consulta-sve-card">
+      <div class="consulta-sve-header">
+        <div class="consulta-sve-numero">Consulta #${index + 1}</div>
+        <span class="badge badge-modalidad">${consulta.modalidad}</span>
+        <span class="badge badge-estado ${consulta.estado.toLowerCase()}">${consulta.estado}</span>
+      </div>
+      <div class="consulta-sve-body">
+        <div class="consulta-sve-item">
+          <strong>📅 Fecha:</strong>
+          <span>${formatDate(consulta.fecha)}</span>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>📄 Observaciones:</strong>
+          <p>${escapeHtml(consulta.observaciones)}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  contenedor.innerHTML = html;
+}
+
+// ============================================
+// LLAMAR A INICIALIZACIÓN EN DOMContentLoaded
+// ============================================
+// Agregar al final del evento DOMContentLoaded existente:
+document.addEventListener('DOMContentLoaded', () => {
+  // ... código existente ...
+  
+  // Inicializar SVE si corresponde
+  inicializarSVE();
+});

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/consulta.css" />
   <!-- Estilos exclusivos para informes -->
   <link rel="stylesheet" href="css/informe.css" />
+  <link rel="stylesheet" href="css/epidemiologica.css" />
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <!-- Select2 Bootstrap Theme -->
@@ -521,11 +522,14 @@
         </form>
       </div>
 
-      <!-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA -->
+<!-- ⭐ REEMPLAZO COMPLETO DEL DIV #formVigilanciaEpidemiologica EN consulta.html -->
+<!-- IMPORTANTE: Los estilos están en css/epidemiologica.css -->
+
+<!-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA -->
 <div id="formVigilanciaEpidemiologica" class="construccion-container">
   
   <!-- ========================================
-       FORMULARIO 1: MESA DE TRABAJO (Obligatorio primero)
+       FORMULARIO 1: MESA DE TRABAJO (Solo 3 campos)
        ======================================== -->
   <div id="contenedorMesaTrabajo" class="formulario-vigilancia-container">
     <div class="formulario-vigilancia-header">
@@ -586,76 +590,6 @@
           />
         </div>
 
-        <!-- Motivo de Evaluación y Situación Actual -->
-        <div class="form-group-vigilancia full-width">
-          <label for="motivo_evaluacion">
-            <span class="label-icon">📝</span>
-            Motivo de Evaluación y Situación Actual <span class="required">*</span>
-          </label>
-          <textarea 
-            id="motivo_evaluacion" 
-            rows="4"
-            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
-            required
-          ></textarea>
-        </div>
-
-        <!-- Ajuste a las funciones -->
-        <div class="form-group-vigilancia full-width">
-          <label for="ajuste_funciones">
-            <span class="label-icon">⚙️</span>
-            Ajuste a las Funciones <span class="required">*</span>
-          </label>
-          <textarea 
-            id="ajuste_funciones" 
-            rows="3"
-            placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
-            required
-          ></textarea>
-        </div>
-
-        <!-- Implementar las siguientes recomendaciones médicas -->
-        <div class="form-group-vigilancia full-width">
-          <label for="recomendaciones_medicas">
-            <span class="label-icon">💊</span>
-            Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_medicas" 
-            rows="3"
-            placeholder="Describa las recomendaciones médicas a implementar..."
-            required
-          ></textarea>
-        </div>
-
-        <!-- Recomendaciones al trabajador -->
-        <div class="form-group-vigilancia full-width">
-          <label for="recomendaciones_trabajador">
-            <span class="label-icon">👤</span>
-            Recomendaciones al Trabajador <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_trabajador" 
-            rows="3"
-            placeholder="Describa las recomendaciones dirigidas al trabajador..."
-            required
-          ></textarea>
-        </div>
-
-        <!-- Recomendaciones a la Empresa -->
-        <div class="form-group-vigilancia full-width">
-          <label for="recomendaciones_empresa">
-            <span class="label-icon">🏢</span>
-            Recomendaciones a la Empresa <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_empresa" 
-            rows="3"
-            placeholder="Describa las recomendaciones dirigidas a la empresa..."
-            required
-          ></textarea>
-        </div>
-
       </div>
 
       <div class="form-actions-vigilancia">
@@ -714,17 +648,91 @@
           </select>
         </div>
 
-        <!-- Observaciones de la Consulta -->
+        <!-- Motivo de Evaluación y Situación Actual -->
         <div class="form-group-vigilancia full-width">
+          <label for="motivo_evaluacion_sve">
+            <span class="label-icon">📝</span>
+            Motivo de Evaluación y Situación Actual <span class="required">*</span>
+          </label>
+          <textarea 
+            id="motivo_evaluacion_sve" 
+            rows="4"
+            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Ajuste a las funciones (ocupa 1 columna) -->
+        <div class="form-group-vigilancia">
+          <label for="ajuste_funciones_sve">
+            <span class="label-icon">⚙️</span>
+            Ajuste a las Funciones <span class="required">*</span>
+          </label>
+          <textarea 
+            id="ajuste_funciones_sve" 
+            rows="3"
+            placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Implementar las siguientes recomendaciones médicas (ocupa 1 columna) -->
+        <div class="form-group-vigilancia">
+          <label for="recomendaciones_medicas_sve">
+            <span class="label-icon">💊</span>
+            Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_medicas_sve" 
+            rows="3"
+            placeholder="Describa las recomendaciones médicas a implementar..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Recomendaciones al trabajador (ocupa 1 columna) -->
+        <div class="form-group-vigilancia">
+          <label for="recomendaciones_trabajador_sve">
+            <span class="label-icon">👤</span>
+            Recomendaciones al Trabajador <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_trabajador_sve" 
+            rows="3"
+            placeholder="Describa las recomendaciones dirigidas al trabajador..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Recomendaciones a la Empresa (ocupa 1 columna) -->
+        <div class="form-group-vigilancia">
+          <label for="recomendaciones_empresa_sve">
+            <span class="label-icon">🏢</span>
+            Recomendaciones a la Empresa <span class="required">*</span>
+          </label>
+          <textarea 
+            id="recomendaciones_empresa_sve" 
+            rows="3"
+            placeholder="Describa las recomendaciones dirigidas a la empresa..."
+            required
+            disabled
+          ></textarea>
+        </div>
+
+        <!-- Observaciones de la Consulta (ocupa 1 columna, para balance visual) -->
+        <div class="form-group-vigilancia">
           <label for="observaciones_consulta_sve">
             <span class="label-icon">📄</span>
-            Observaciones de la Consulta <span class="required">*</span>
+            Observaciones de la Consulta
           </label>
           <textarea 
             id="observaciones_consulta_sve" 
-            rows="4"
-            placeholder="Registre las observaciones de la consulta de seguimiento..."
-            required
+            rows="3"
+            placeholder="Registre observaciones adicionales de la consulta..."
             disabled
           ></textarea>
         </div>
@@ -789,323 +797,6 @@
   </div>
 
 </div>
-
-<style>
-/* ========================================
-   ESTILOS PARA VIGILANCIA EPIDEMIOLÓGICA
-   ======================================== */
-
-.formulario-vigilancia-container {
-  background: white;
-  border-radius: 14px;
-  padding: 30px;
-  margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid #e9ecef;
-  transition: all 0.3s ease;
-}
-
-.formulario-vigilancia-container.bloqueado {
-  opacity: 0.6;
-  pointer-events: none;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.formulario-vigilancia-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e9ecef;
-  position: relative;
-}
-
-.formulario-icon {
-  font-size: 48px;
-  min-width: 60px;
-  text-align: center;
-}
-
-.formulario-titulo {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 5px 0;
-}
-
-.formulario-descripcion {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin: 0;
-}
-
-.bloqueo-badge {
-  position: absolute;
-  top: 10px;
-  right: 0;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-}
-
-/* Grid del formulario */
-.form-vigilancia {
-  margin-top: 20px;
-}
-
-.form-grid-vigilancia {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.form-group-vigilancia {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group-vigilancia.full-width {
-  grid-column: span 2;
-}
-
-.form-group-vigilancia label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-group-vigilancia input,
-.form-group-vigilancia select,
-.form-group-vigilancia textarea {
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  background: #f8f9fa;
-}
-
-.form-group-vigilancia input:focus,
-.form-group-vigilancia select:focus,
-.form-group-vigilancia textarea:focus {
-  border-color: #56ab2f;
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(86, 171, 47, 0.1);
-  background: white;
-}
-
-.form-group-vigilancia textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-/* Botones de acción */
-.form-actions-vigilancia {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  padding-top: 10px;
-}
-
-.btn-submit-vigilancia,
-.btn-reset-vigilancia {
-  padding: 14px 32px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.btn-submit-vigilancia {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-  color: white;
-}
-
-.btn-submit-vigilancia:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4a9628, #8cc84b);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(86, 171, 47, 0.4);
-}
-
-.btn-submit-vigilancia:disabled {
-  background: #95a5a6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-reset-vigilancia {
-  background: #95a5a6;
-  color: white;
-}
-
-.btn-reset-vigilancia:hover:not(:disabled) {
-  background: #7f8c8d;
-}
-
-/* Historial SVE */
-.historial-sve-container {
-  background: white;
-  border-radius: 14px;
-  padding: 30px;
-  margin-top: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid #e9ecef;
-}
-
-.historial-sve-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.historial-sve-titulo {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-}
-
-.btn-refresh-sve {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
-}
-
-.btn-refresh-sve:hover {
-  background: linear-gradient(135deg, #2980b9, #1f6691);
-  transform: rotate(180deg);
-}
-
-/* Card Mesa de Trabajo */
-.mesa-trabajo-card {
-  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
-  border: 2px solid #ffc107;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.mesa-trabajo-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 2px dashed #ffc107;
-}
-
-.mesa-trabajo-titulo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  color: #856404;
-}
-
-.mesa-icon {
-  font-size: 24px;
-}
-
-.btn-edit-mesa {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-edit-mesa:hover {
-  background: linear-gradient(135deg, #2980b9, #1f6691);
-  transform: translateY(-2px);
-}
-
-.mesa-trabajo-body {
-  display: grid;
-  gap: 12px;
-}
-
-.mesa-trabajo-item {
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 4px solid #ffc107;
-}
-
-.mesa-trabajo-item strong {
-  display: block;
-  color: #856404;
-  font-size: 12px;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.mesa-trabajo-item p {
-  color: #2c3e50;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .form-grid-vigilancia {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-group-vigilancia.full-width {
-    grid-column: span 1;
-  }
-  
-  .formulario-vigilancia-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .bloqueo-badge {
-    position: static;
-    margin-top: 10px;
-  }
-  
-  .form-actions-vigilancia {
-    flex-direction: column;
-  }
-  
-  .btn-submit-vigilancia,
-  .btn-reset-vigilancia {
-    width: 100%;
-    justify-content: center;
-  }
-}
-</style>
 
     <!-- Modal de Contacto de Emergencia -->
     <div id="modalVerContacto" class="modal-overlay-contacto">

@@ -1284,7 +1284,7 @@ async function cargarDatosSVE() {
 }
 
 // ============================================
-// REGISTRAR MESA DE TRABAJO (Formulario 1)
+// REGISTRAR MESA DE TRABAJO (Formulario 1) - SOLO 3 CAMPOS
 // ============================================
 async function registrarMesaTrabajo(e) {
   e.preventDefault();
@@ -1295,16 +1295,11 @@ async function registrarMesaTrabajo(e) {
     return;
   }
   
-  // Capturar datos del formulario
+  // Capturar datos del formulario (SOLO 3 campos)
   const datos = {
     criterio_inclusion: document.getElementById('criterio_inclusion').value,
     diagnostico: document.getElementById('diagnostico').value.trim(),
     codigo_diagnostico: document.getElementById('codigo_diagnostico').value.trim(),
-    motivo_evaluacion: document.getElementById('motivo_evaluacion').value.trim(),
-    ajuste_funciones: document.getElementById('ajuste_funciones').value.trim(),
-    recomendaciones_medicas: document.getElementById('recomendaciones_medicas').value.trim(),
-    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador').value.trim(),
-    recomendaciones_empresa: document.getElementById('recomendaciones_empresa').value.trim(),
     fecha_registro: new Date().toISOString(),
     cliente_id: clienteId
   };
@@ -1394,7 +1389,7 @@ function habilitarEdicionMesaTrabajo() {
 }
 
 // ============================================
-// MOSTRAR MESA DE TRABAJO EN HISTORIAL
+// MOSTRAR MESA DE TRABAJO EN HISTORIAL (SOLO 3 CAMPOS)
 // ============================================
 function mostrarMesaTrabajoRegistrada() {
   if (!mesaTrabajoData) return;
@@ -1409,27 +1404,11 @@ function mostrarMesaTrabajoRegistrada() {
     </div>
     <div class="mesa-trabajo-item">
       <strong>🩺 Diagnóstico:</strong>
-      <p>${escapeHtml(mesaTrabajoData.diagnostico)} (Código: ${escapeHtml(mesaTrabajoData.codigo_diagnostico)})</p>
+      <p>${escapeHtml(mesaTrabajoData.diagnostico)}</p>
     </div>
     <div class="mesa-trabajo-item">
-      <strong>📝 Motivo de Evaluación:</strong>
-      <p>${escapeHtml(mesaTrabajoData.motivo_evaluacion)}</p>
-    </div>
-    <div class="mesa-trabajo-item">
-      <strong>⚙️ Ajuste a las Funciones:</strong>
-      <p>${escapeHtml(mesaTrabajoData.ajuste_funciones)}</p>
-    </div>
-    <div class="mesa-trabajo-item">
-      <strong>💊 Recomendaciones Médicas:</strong>
-      <p>${escapeHtml(mesaTrabajoData.recomendaciones_medicas)}</p>
-    </div>
-    <div class="mesa-trabajo-item">
-      <strong>👤 Recomendaciones al Trabajador:</strong>
-      <p>${escapeHtml(mesaTrabajoData.recomendaciones_trabajador)}</p>
-    </div>
-    <div class="mesa-trabajo-item">
-      <strong>🏢 Recomendaciones a la Empresa:</strong>
-      <p>${escapeHtml(mesaTrabajoData.recomendaciones_empresa)}</p>
+      <strong>🔢 Código de Diagnóstico:</strong>
+      <p>${escapeHtml(mesaTrabajoData.codigo_diagnostico)}</p>
     </div>
   `;
   
@@ -1454,7 +1433,7 @@ function desbloquearFormularioConsulta() {
 }
 
 // ============================================
-// REGISTRAR CONSULTA SVE (Formulario 2)
+// REGISTRAR CONSULTA SVE (Formulario 2) - CON TODOS LOS CAMPOS
 // ============================================
 async function registrarConsultaSVE(e) {
   e.preventDefault();
@@ -1470,10 +1449,15 @@ async function registrarConsultaSVE(e) {
     return;
   }
   
-  // Capturar datos de la consulta
+  // Capturar datos de la consulta (TODOS LOS CAMPOS DEL FORM 2)
   const consulta = {
     fecha: document.getElementById('fecha_consulta_sve').value,
     modalidad: document.getElementById('modalidad_sve').value,
+    motivo_evaluacion: document.getElementById('motivo_evaluacion_sve').value.trim(),
+    ajuste_funciones: document.getElementById('ajuste_funciones_sve').value.trim(),
+    recomendaciones_medicas: document.getElementById('recomendaciones_medicas_sve').value.trim(),
+    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim(),
+    recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim(),
     observaciones: document.getElementById('observaciones_consulta_sve').value.trim(),
     estado: document.getElementById('estado_sve').value,
     fecha_registro: new Date().toISOString(),
@@ -1508,7 +1492,7 @@ async function registrarConsultaSVE(e) {
 }
 
 // ============================================
-// MOSTRAR CONSULTAS SVE EN HISTORIAL
+// MOSTRAR CONSULTAS SVE EN HISTORIAL (CON TODOS LOS CAMPOS)
 // ============================================
 function mostrarConsultasSVE() {
   const contenedor = document.getElementById('consultasSVERegistradas');
@@ -1531,9 +1515,31 @@ function mostrarConsultasSVE() {
           <span>${formatDate(consulta.fecha)}</span>
         </div>
         <div class="consulta-sve-item">
-          <strong>📄 Observaciones:</strong>
-          <p>${escapeHtml(consulta.observaciones)}</p>
+          <strong>📝 Motivo de Evaluación:</strong>
+          <p>${escapeHtml(consulta.motivo_evaluacion)}</p>
         </div>
+        <div class="consulta-sve-item">
+          <strong>⚙️ Ajuste a las Funciones:</strong>
+          <p>${escapeHtml(consulta.ajuste_funciones)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>💊 Recomendaciones Médicas:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_medicas)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>👤 Recomendaciones al Trabajador:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_trabajador)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>🏢 Recomendaciones a la Empresa:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_empresa)}</p>
+        </div>
+        ${consulta.observaciones ? `
+          <div class="consulta-sve-item">
+            <strong>📄 Observaciones:</strong>
+            <p>${escapeHtml(consulta.observaciones)}</p>
+          </div>
+        ` : ''}
       </div>
     </div>
   `).join('');

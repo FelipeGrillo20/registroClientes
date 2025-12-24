@@ -1,4 +1,4 @@
-// frontend/js/consulta.js 
+// frontend/js/consulta.js - PARTE 1: ORIENTACIÓN PSICOSOCIAL
 
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const CONSULTAS_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
@@ -60,8 +60,6 @@ function toggleFechaCierreField() {
     fechaCierreInput.required = false;
     recomendacionesInput.required = false;
     fechaCierreInput.value = "";
-    // ⭐ MODIFICADO: NO borrar las recomendaciones al cambiar a "Abierto"
-    // recomendacionesInput.value = "";
   }
 }
 
@@ -125,8 +123,13 @@ async function loadClientData() {
     // Mostrar datos en la tarjeta
     displayClientData(cliente);
     
-    // Cargar historial de consultas
-    loadHistorialConsultas(clienteId);
+    // ⭐ MODIFICADO: Solo cargar historial si estamos en modalidad Orientación Psicosocial
+    const modalidad = localStorage.getItem('modalidadSeleccionada');
+    if (modalidad !== 'Sistema de Vigilancia Epidemiológica') {
+      // Solo cargar historial de consultas en modalidad Orientación Psicosocial
+      loadHistorialConsultas(clienteId);
+    }
+    // Si es SVE, el historial se carga en cargarDatosSVE()
 
   } catch (err) {
     console.error("Error cargando cliente:", err);
@@ -167,12 +170,10 @@ function displayClientData(cliente) {
   const nombreSubcontratista = cliente.subcontratista_definitivo || cliente.subcontratista_nombre;
   
   if (nombreSubcontratista) {
-    // Si hay subcontratista, mostrar el label y el badge
     labelSubcontratista.style.display = "inline";
     subcontratistaElement.style.display = "block";
     subcontratistaElement.innerHTML = `<span class="badge-subcontratista-consulta">${escapeHtml(nombreSubcontratista)}</span>`;
   } else {
-    // Si no hay subcontratista, ocultar
     labelSubcontratista.style.display = "none";
     subcontratistaElement.style.display = "none";
   }
@@ -203,7 +204,7 @@ function displayClientData(cliente) {
     entidadPagadoraElement.textContent = "-";
   }
 
-  // ⭐ Mostrar consultas sugeridas si existe (sin importar si el caso está cerrado)
+  // ⭐ Mostrar consultas sugeridas si existe
   const consultasSugeridasInfo = document.getElementById("consultasSugeridasInfo");
   const consultasSugeridasValue = document.getElementById("clientConsultasSugeridas");
   
@@ -387,21 +388,17 @@ function configurarCampoMotivo() {
     select.prop('disabled', true);
   }
   
-  // ⭐ NUEVO: Mostrar/ocultar campo de consultas sugeridas
   mostrarCampoConsultasSugeridas(numSesiones, casoCerrado);
 }
 
-// ⭐ NUEVO: Función para mostrar campo de consultas sugeridas solo en primera sesión
 function mostrarCampoConsultasSugeridas(numSesiones, casoCerrado) {
   const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");
   const consultasSugeridasInput = document.getElementById("consultas_sugeridas");
   
-  // Solo mostrar en la primera sesión y si el caso no está cerrado
   if (numSesiones === 0 && !casoCerrado && !editandoConsultaId) {
     consultasSugeridasGroup.style.display = "block";
     consultasSugeridasInput.required = true;
     
-    // Pre-cargar valor si ya existe en el cliente
     if (clienteActual && clienteActual.consultas_sugeridas) {
       consultasSugeridasInput.value = clienteActual.consultas_sugeridas;
     }
@@ -412,18 +409,10 @@ function mostrarCampoConsultasSugeridas(numSesiones, casoCerrado) {
   }
 }
 
-// ⭐ CORREGIDO: Cerrar todas las consultas manteniendo el estado de confidencialidad individual
 async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFinales) {
   try {
-    console.log("🔄 Iniciando cierre de caso...");
-    console.log("Cliente ID:", clienteId);
-    console.log("Fecha de cierre:", fechaCierre);
-    console.log("Recomendaciones:", recomendacionesFinales);
-    
-    // 1. Cerrar todas las consultas MANTENIENDO su estado individual de confidencialidad
     const promises = consultasDelCliente.map(consulta => {
       if (consulta.estado !== 'Cerrado') {
-        console.log(`Cerrando consulta ${consulta.id}...`);
         return fetch(`${CONSULTAS_API_URL}/${consulta.id}`, {
           method: "PUT",
           headers: getAuthHeaders(),
@@ -435,7 +424,7 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
             columna1: consulta.columna1,
             estado: 'Cerrado',
             cliente_id: parseInt(clienteId),
-            observaciones_confidenciales: consulta.observaciones_confidenciales || false // ⭐ MANTENER el estado individual
+            observaciones_confidenciales: consulta.observaciones_confidenciales || false
           })
         });
       }
@@ -443,23 +432,15 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
     });
 
     await Promise.all(promises);
-    console.log("✅ Todas las consultas cerradas");
 
-    // 2. Obtener datos actuales del cliente
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
     
-    if (!resCliente.ok) {
-      throw new Error("Error al obtener datos del cliente");
-    }
+    if (!resCliente.ok) throw new Error("Error al obtener datos del cliente");
     
     const clienteData = await resCliente.json();
-    console.log("📋 Cliente actual antes de actualizar:", clienteData);
     
-    // 3. Preparar datos actualizados CON fecha_cierre Y recomendaciones_finales
     const clienteActualizado = {
       cedula: clienteData.cedula,
       nombre: clienteData.nombre,
@@ -479,9 +460,6 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
       consultas_sugeridas: clienteData.consultas_sugeridas
     };
     
-    console.log("📝 Datos a enviar:", clienteActualizado);
-    
-    // 4. Actualizar el cliente con la fecha de cierre Y recomendaciones
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -490,18 +468,12 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
     
     if (!resUpdate.ok) {
       const errorData = await resUpdate.json();
-      console.error("❌ Error actualizando cliente:", errorData);
       throw new Error(errorData.message || "Error al actualizar el cliente");
     }
-    
-    const clienteActualizadoRes = await resUpdate.json();
-    console.log("✅ Cliente actualizado exitosamente:", clienteActualizadoRes);
-    console.log("✅ Fecha de cierre guardada:", clienteActualizadoRes.fecha_cierre);
-    console.log("✅ Recomendaciones guardadas:", clienteActualizadoRes.recomendaciones_finales);
 
     return true;
   } catch (err) {
-    console.error("❌ Error cerrando caso:", err);
+    console.error("Error cerrando caso:", err);
     alert("Error al cerrar el caso: " + err.message);
     return false;
   }
@@ -519,21 +491,16 @@ async function loadHistorialConsultas(clienteId) {
 
   try {
     const res = await fetch(`${CONSULTAS_API_URL}/cliente/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
 
-    if (!res.ok) {
-      throw new Error("Error al cargar historial");
-    }
+    if (!res.ok) throw new Error("Error al cargar historial");
 
     const consultas = await res.json();
     
     consultasDelCliente = consultas ? JSON.parse(JSON.stringify(consultas)) : [];
     window.consultasDelCliente = consultasDelCliente;
 
-    // ⭐ Asignar numeroSesion también al array original usado por editarConsulta()
     consultasDelCliente
       .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
       .forEach((consulta, index) => {
@@ -549,7 +516,15 @@ async function loadHistorialConsultas(clienteId) {
       `;
       
       configurarCampoMotivo();
+      
+      // ⭐ NO MOSTRAR la sección si no hay consultas
       return;
+    }
+
+    // ⭐ MOSTRAR la sección solo si HAY consultas
+    const historialSection = document.querySelector('.historial-section');
+    if (historialSection) {
+      historialSection.style.display = 'block';
     }
 
     const consultasOrdenadas = JSON.parse(JSON.stringify(consultas)).sort((a, b) => {
@@ -640,7 +615,6 @@ function renderHistorial(consultas) {
     `;
   }).join('');
   
-  // ⭐ NUEVO: Mostrar recomendaciones finales si el caso está cerrado
   const recomendacionesHTML = (casoCerrado && clienteActual && clienteActual.recomendaciones_finales) ? `
     <div class="recomendaciones-finales-card">
       <div class="recomendaciones-header">
@@ -692,7 +666,6 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// ⭐ ACTUALIZADO: Manejar envío del formulario con consultas_sugeridas
 document.getElementById("formConsulta")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -704,21 +677,18 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const fecha_cierre = document.getElementById("fecha_cierre").value;
   const recomendaciones_finales = document.getElementById("recomendaciones_finales").value.trim();
   const observaciones_confidenciales = document.getElementById("observaciones_confidenciales").value === "true";
-  const consultas_sugeridas = document.getElementById("consultas_sugeridas").value; // ⭐ NUEVO
+  const consultas_sugeridas = document.getElementById("consultas_sugeridas").value;
 
-  // Validaciones
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
     alert("⚠️ Por favor completa todos los campos obligatorios");
     return;
   }
   
-  // ⭐ NUEVO: Validar consultas sugeridas en primera sesión
   if (consultasDelCliente.length === 0 && !editandoConsultaId && !consultas_sugeridas) {
     alert("⚠️ Por favor indica el número de consultas sugeridas para este trabajador");
     return;
   }
 
-  // Validar que si el estado es "Cerrado", debe haber fecha de cierre Y recomendaciones
   if (estado === "Cerrado") {
     if (!fecha_cierre) {
       alert("⚠️ Por favor especifica la fecha de cierre del caso");
@@ -761,7 +731,6 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
       throw new Error(errorData.message || "Error al guardar consulta");
     }
 
-    // ⭐ CORREGIDO: Guardar consultas sugeridas en primera sesión (crear o editar)
     const esPrimeraSesionNueva = consultasDelCliente.length === 0 && !editandoConsultaId;
     
     let esPrimeraSesionEditando = false;
@@ -770,15 +739,10 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
       esPrimeraSesionEditando = consultaEditada && consultaEditada.numeroSesion === 1;
     }
     
-    console.log("💾 Primera sesión nueva:", esPrimeraSesionNueva);
-    console.log("💾 Primera sesión editando:", esPrimeraSesionEditando);
-    console.log("💾 Consultas sugeridas valor:", consultas_sugeridas);
-    
     if ((esPrimeraSesionNueva || esPrimeraSesionEditando) && consultas_sugeridas) {
       await guardarConsultasSugeridas(clienteId, parseInt(consultas_sugeridas));
     }
 
-    // Si el estado es "Cerrado", cerrar todas las consultas Y guardar recomendaciones
     if (estado === 'Cerrado') {
       await cerrarTodasLasConsultas(clienteId, fecha_cierre, recomendaciones_finales);
     }
@@ -789,12 +753,10 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     
     alert(mensaje);
 
-    // Limpiar formulario
     document.getElementById("formConsulta").reset();
     $('#motivo_consulta').val(null).trigger('change');
     editandoConsultaId = null;
     
-    // Resetear el candado a estado abierto
     document.getElementById("observaciones_confidenciales").value = "false";
     document.getElementById("btnCandado").classList.remove("confidencial");
     document.getElementById("candadoIcon").textContent = "🔓";
@@ -804,7 +766,6 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
 
-    // Recargar datos del cliente
     await loadClientData();
 
   } catch (err) {
@@ -813,26 +774,16 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   }
 });
 
-// ⭐ NUEVO: Función para guardar consultas sugeridas en el cliente
 async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
   try {
-    console.log("💾 Guardando consultas sugeridas:", consultas_sugeridas);
-    
-    // Obtener datos actuales del cliente
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
     
-    if (!resCliente.ok) {
-      throw new Error("Error al obtener datos del cliente");
-    }
+    if (!resCliente.ok) throw new Error("Error al obtener datos del cliente");
     
     const clienteData = await resCliente.json();
-    console.log("📋 Cliente actual:", clienteData);
     
-    // Actualizar solo las consultas sugeridas
     const clienteActualizado = {
       cedula: clienteData.cedula,
       nombre: clienteData.nombre,
@@ -852,8 +803,6 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
       consultas_sugeridas: consultas_sugeridas
     };
     
-    console.log("📤 Datos a enviar:", clienteActualizado);
-    
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -862,14 +811,10 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
     
     if (!resUpdate.ok) {
       const errorData = await resUpdate.json();
-      console.error("❌ Error del servidor:", errorData);
       throw new Error("Error al guardar consultas sugeridas");
     }
-    
-    const resultado = await resUpdate.json();
-    console.log("✅ Consultas sugeridas guardadas:", resultado);
   } catch (err) {
-    console.error("❌ Error guardando consultas sugeridas:", err);
+    console.error("Error guardando consultas sugeridas:", err);
     alert("⚠️ Error al guardar consultas sugeridas: " + err.message);
   }
 }
@@ -882,14 +827,10 @@ window.editarConsulta = async function(id) {
 
   try {
     const res = await fetch(`${CONSULTAS_API_URL}/${id}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
 
-    if (!res.ok) {
-      throw new Error("Consulta no encontrada");
-    }
+    if (!res.ok) throw new Error("Consulta no encontrada");
 
     const consulta = await res.json();
 
@@ -900,7 +841,6 @@ window.editarConsulta = async function(id) {
     document.getElementById("columna1").value = consulta.columna1 || "";
     document.getElementById("estado").value = consulta.estado;
 
-    // Cargar estado de confidencialidad
     const esConfidencial = consulta.observaciones_confidenciales || false;
     document.getElementById("observaciones_confidenciales").value = esConfidencial.toString();
     
@@ -923,47 +863,28 @@ window.editarConsulta = async function(id) {
       observacionesInfo.classList.remove("confidencial");
     }
 
-    // ⭐ DEBUGGING: Ver todo el array de consultas
-    console.log("📋 TODAS las consultas del cliente:", consultasDelCliente);
-    console.log("🔍 Editando consulta ID:", id);
-    
-    // ⭐ CORREGIDO: Determinar si es la primera sesión buscando en consultasDelCliente
     const consultaEnHistorial = consultasDelCliente.find(c => c.id === id);
-    console.log("🔍 Consulta encontrada en historial:", consultaEnHistorial);
-    
     const esPrimeraSesion = consultaEnHistorial && consultaEnHistorial.numeroSesion === 1;
-    console.log("🔍 Es primera sesión:", esPrimeraSesion);
-    console.log("🔍 Número de sesión:", consultaEnHistorial?.numeroSesion);
     
     const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");
     const consultasSugeridasInput = document.getElementById("consultas_sugeridas");
     
     if (esPrimeraSesion) {
-      console.log("✅ Mostrando campo de consultas sugeridas");
       consultasSugeridasGroup.style.display = "block";
       consultasSugeridasInput.required = true;
       
-      // Cargar el valor guardado en el cliente
       if (clienteActual && clienteActual.consultas_sugeridas) {
         consultasSugeridasInput.value = clienteActual.consultas_sugeridas;
-        console.log("✅ Cargando consultas sugeridas:", clienteActual.consultas_sugeridas);
-      } else {
-        console.log("⚠️ No hay consultas sugeridas guardadas");
       }
     } else {
-      console.log("❌ NO es primera sesión, ocultando campo");
       consultasSugeridasGroup.style.display = "none";
       consultasSugeridasInput.required = false;
       consultasSugeridasInput.value = "";
     }
 
-    // Actualizar campo de fecha de cierre
     toggleFechaCierreField();
-
     editandoConsultaId = id;
-
     document.querySelector(".btn-submit-consulta").innerHTML = "💾 Actualizar Consulta";
-
     document.querySelector(".consulta-section").scrollIntoView({ behavior: "smooth" });
 
   } catch (err) {
@@ -978,34 +899,22 @@ window.eliminarConsulta = async function(id) {
     return;
   }
 
-  if (!confirm("¿Estás seguro de eliminar esta consulta?")) {
-    return;
-  }
+  if (!confirm("¿Estás seguro de eliminar esta consulta?")) return;
 
   try {
-    // ⭐ NUEVO: Verificar si es la primera sesión antes de eliminar
     const consultaAEliminar = consultasDelCliente.find(c => c.id === id);
     const esPrimeraSesion = consultaAEliminar && consultaAEliminar.numeroSesion === 1;
-    
-    console.log("🗑️ Eliminando consulta ID:", id);
-    console.log("🗑️ Es primera sesión:", esPrimeraSesion);
 
     const res = await fetch(`${CONSULTAS_API_URL}/${id}`, {
       method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
 
-    if (!res.ok) {
-      throw new Error("Error al eliminar consulta");
-    }
+    if (!res.ok) throw new Error("Error al eliminar consulta");
 
-    // ⭐ NUEVO: Si se eliminó la primera sesión, limpiar consultas_sugeridas
     if (esPrimeraSesion) {
       const clienteId = getClienteIdFromURL();
       await limpiarConsultasSugeridas(clienteId);
-      console.log("✅ Consultas sugeridas limpiadas");
     }
 
     alert("✅ Consulta eliminada correctamente");
@@ -1019,23 +928,16 @@ window.eliminarConsulta = async function(id) {
   }
 };
 
-// ⭐ NUEVO: Función para limpiar consultas sugeridas
 async function limpiarConsultasSugeridas(clienteId) {
   try {
-    // Obtener datos actuales del cliente
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
     
-    if (!resCliente.ok) {
-      throw new Error("Error al obtener datos del cliente");
-    }
+    if (!resCliente.ok) throw new Error("Error al obtener datos del cliente");
     
     const clienteData = await resCliente.json();
     
-    // Actualizar con consultas_sugeridas en null
     const clienteActualizado = {
       cedula: clienteData.cedula,
       nombre: clienteData.nombre,
@@ -1052,7 +954,7 @@ async function limpiarConsultasSugeridas(clienteId) {
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
       fecha_cierre: clienteData.fecha_cierre,
       recomendaciones_finales: clienteData.recomendaciones_finales,
-      consultas_sugeridas: null // ⭐ Limpiar
+      consultas_sugeridas: null
     };
     
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
@@ -1061,17 +963,13 @@ async function limpiarConsultasSugeridas(clienteId) {
       body: JSON.stringify(clienteActualizado)
     });
     
-    if (!resUpdate.ok) {
-      throw new Error("Error al limpiar consultas sugeridas");
-    }
+    if (!resUpdate.ok) throw new Error("Error al limpiar consultas sugeridas");
     
-    console.log("✅ Consultas sugeridas limpiadas correctamente");
   } catch (err) {
-    console.error("❌ Error limpiando consultas sugeridas:", err);
+    console.error("Error limpiando consultas sugeridas:", err);
   }
 }
 
-// ⭐ ACTUALIZADO: Reabrir caso SIN borrar las recomendaciones_finales del cliente
 window.reabrirCaso = async function() {
   if (!confirm("¿Estás seguro de reabrir el caso? Todas las sesiones volverán a estar disponibles para editar.")) {
     return;
@@ -1080,7 +978,6 @@ window.reabrirCaso = async function() {
   const clienteId = getClienteIdFromURL();
 
   try {
-    // 1. Actualizar todas las consultas a estado "Abierto"
     const promises = consultasDelCliente.map(consulta => {
       if (consulta.estado === 'Cerrado') {
         return fetch(`${CONSULTAS_API_URL}/${consulta.id}`, {
@@ -1098,17 +995,13 @@ window.reabrirCaso = async function() {
 
     await Promise.all(promises);
 
-    // 2. Limpiar SOLO fecha_cierre del cliente (MANTENER recomendaciones_finales)
     const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
     
     if (resCliente.ok) {
       const clienteData = await resCliente.json();
       
-      // MODIFICADO: Mantener las recomendaciones_finales y consultas_sugeridas
       const clienteActualizado = {
         cedula: clienteData.cedula,
         nombre: clienteData.nombre,
@@ -1124,8 +1017,8 @@ window.reabrirCaso = async function() {
         contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
         contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
         fecha_cierre: null,
-        recomendaciones_finales: clienteData.recomendaciones_finales, // ⭐ MANTENER las recomendaciones
-        consultas_sugeridas: clienteData.consultas_sugeridas // ⭐ MANTENER las consultas sugeridas
+        recomendaciones_finales: clienteData.recomendaciones_finales,
+        consultas_sugeridas: clienteData.consultas_sugeridas
       };
       
       await fetch(`${API_URL}/${clienteId}`, {
@@ -1136,8 +1029,6 @@ window.reabrirCaso = async function() {
     }
 
     alert("✅ Caso reabierto correctamente. Todas las sesiones están disponibles nuevamente.\n\n💡 Las recomendaciones finales se han conservado y podrás editarlas al cerrar el caso nuevamente.");
-
-    // Recargar datos del cliente
     await loadClientData();
 
   } catch (err) {
@@ -1158,16 +1049,12 @@ document.getElementById("btnRefreshHistorial")?.addEventListener("click", () => 
 document.getElementById("formConsulta")?.addEventListener("reset", () => {
   editandoConsultaId = null;
   document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
-  
-  // Ocultar campo de fecha de cierre y recomendaciones
   document.getElementById("fechaCierreContainer").classList.remove("show");
   
-  // ⭐ NUEVO: Guardar las recomendaciones antes de resetear
   const recomendacionesActuales = document.getElementById("recomendaciones_finales").value;
   
   setTimeout(() => {
     configurarCampoMotivo();
-    // ⭐ NUEVO: Restaurar las recomendaciones después del reset
     if (recomendacionesActuales) {
       document.getElementById("recomendaciones_finales").value = recomendacionesActuales;
     }
@@ -1184,6 +1071,96 @@ $(document).ready(function() {
   });
 });
 
+// ⭐ NUEVA FUNCIÓN: Actualizar botón Dashboard en consulta.html según modalidad
+function actualizarBotonDashboardConsulta() {
+  const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
+  
+  // Buscar el botón de dashboard en la página
+  const btnDashboard = document.querySelector('.btn-dashboard');
+  
+  if (!btnDashboard) {
+    console.warn('⚠️ No se encontró el botón dashboard');
+    return;
+  }
+  
+  // Configurar el botón según la modalidad
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    // 🟢 Botón VERDE para SVE
+    btnDashboard.innerHTML = '📊 Dashboard SVE';
+    btnDashboard.style.background = 'linear-gradient(135deg, #56ab2f, #a8e063)';
+    btnDashboard.style.boxShadow = '0 4px 15px rgba(86, 171, 47, 0.3)';
+    btnDashboard.title = 'Ver Dashboard del Sistema de Vigilancia Epidemiológica';
+    
+    // Actualizar el evento onclick
+    btnDashboard.onclick = () => {
+      window.location.href = 'dashboardSVE.html';
+    };
+    
+    console.log('✅ Botón Dashboard actualizado a SVE (Verde)');
+    
+  } else {
+    // 🟣 Botón MORADO para Orientación Psicosocial
+    btnDashboard.innerHTML = '📊 Dashboard';
+    btnDashboard.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+    btnDashboard.style.boxShadow = '0 4px 15px rgba(155, 89, 182, 0.3)';
+    btnDashboard.title = 'Ver Dashboard de Orientación Psicosocial';
+    
+    // Actualizar el evento onclick
+    btnDashboard.onclick = () => {
+      window.location.href = 'dashboard.html';
+    };
+    
+    console.log('✅ Botón Dashboard actualizado a Orientación Psicosocial (Morado)');
+  }
+}
+
+// ============================================
+// MODIFICAR EL DOMContentLoaded EXISTENTE
+// Buscar tu DOMContentLoaded en consulta.js y agregar la llamada
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadClientData();
+  
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const fechaHoy = `${year}-${month}-${day}`;
+  
+  document.getElementById("fecha").value = fechaHoy;
+  
+  // ⭐ Inicializar SVE
+  inicializarSVE();
+  
+  // ⭐ NUEVO: Actualizar botón de Dashboard según modalidad
+  actualizarBotonDashboardConsulta();
+  
+  // ⭐ NUEVO: Mostrar/ocultar secciones según modalidad
+  const modalidad = localStorage.getItem('modalidadSeleccionada');
+  const historialSection = document.querySelector('.historial-section');
+  
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    // Ocultar completamente el historial de consultas en SVE
+    if (historialSection) {
+      historialSection.remove(); // ⭐ ELIMINAR del DOM, no solo ocultar
+    }
+  }
+});
+
+// ============================================
+// TAMBIÉN puedes actualizar el botón cuando cambie la modalidad
+// Si tienes alguna función que detecte cambios de modalidad
+// ============================================
+
+// Ejemplo: Si detectas cambio de modalidad desde localStorage
+window.addEventListener('storage', (e) => {
+  if (e.key === 'modalidadSeleccionada') {
+    actualizarBotonDashboardConsulta();
+  }
+});
+
+
 document.addEventListener("DOMContentLoaded", () => {
   loadClientData();
   
@@ -1194,18 +1171,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const fechaHoy = `${year}-${month}-${day}`;
   
   document.getElementById("fecha").value = fechaHoy;
+  
+  // ⭐ Inicializar SVE
+  inicializarSVE();
+  
+  // ⭐ NUEVO: Mostrar/ocultar secciones según modalidad
+  const modalidad = localStorage.getItem('modalidadSeleccionada');
+  const historialSection = document.querySelector('.historial-section');
+  
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    // Ocultar completamente el historial de consultas en SVE
+    if (historialSection) {
+      historialSection.remove(); // ⭐ ELIMINAR del DOM, no solo ocultar
+    }
+  }
 });
 
+
 // ============================================
-// SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA (SVE)
-// Agregar al final de consulta.js
+// FIN DE LA PARTE 1: ORIENTACIÓN PSICOSOCIAL
 // ============================================
+
+// ============================================
+// PARTE 2: SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA (SVE)
+// Integrado completamente con el BACKEND
+// ============================================
+
+// URLs de la API para SVE
+const MESA_TRABAJO_SVE_API_URL = window.API_CONFIG.ENDPOINTS.MESA_TRABAJO_SVE;
+const CONSULTAS_SVE_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS_SVE;
 
 // Variables globales para SVE
 let mesaTrabajoRegistrada = false;
 let mesaTrabajoData = null;
 let consultasSVE = [];
 let editandoMesaTrabajo = false;
+let editandoConsultaSVE = null;
 
 // ============================================
 // INICIALIZACIÓN SVE
@@ -1216,7 +1217,13 @@ function inicializarSVE() {
   if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
     console.log('✅ Inicializando Sistema de Vigilancia Epidemiológica');
     
-    // Cargar datos guardados si existen
+    // ⭐ NUEVO: Eliminar completamente la sección de historial de consultas normales
+    const historialSection = document.querySelector('.historial-section');
+    if (historialSection) {
+      historialSection.remove(); // Eliminar del DOM
+    }
+    
+    // Cargar datos desde el backend
     cargarDatosSVE();
     
     // Eventos del Formulario 1: Mesa de Trabajo
@@ -1237,6 +1244,12 @@ function inicializarSVE() {
       btnEditarMesa.addEventListener('click', habilitarEdicionMesaTrabajo);
     }
     
+    // Botón refrescar historial SVE
+    const btnRefreshSVE = document.getElementById('btnRefreshSVE');
+    if (btnRefreshSVE) {
+      btnRefreshSVE.addEventListener('click', () => cargarDatosSVE());
+    }
+    
     // Fecha por defecto en consulta
     const fechaConsultaSVE = document.getElementById('fecha_consulta_sve');
     if (fechaConsultaSVE) {
@@ -1245,7 +1258,6 @@ function inicializarSVE() {
     }
   }
 }
-
 // ============================================
 // CARGAR DATOS SVE DESDE BACKEND
 // ============================================
@@ -1254,37 +1266,119 @@ async function cargarDatosSVE() {
   if (!clienteId) return;
   
   try {
-    // Aquí deberás crear un endpoint en el backend para SVE
-    // Por ahora usamos localStorage como demo
-    const datosSVE = localStorage.getItem(`sve_${clienteId}`);
+    // 1. Cargar Mesa de Trabajo desde el backend
+    const resMesa = await fetch(`${MESA_TRABAJO_SVE_API_URL}/cliente/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
     
-    if (datosSVE) {
-      const datos = JSON.parse(datosSVE);
+    if (resMesa.ok) {
+      mesaTrabajoData = await resMesa.json();
+      mesaTrabajoRegistrada = true;
       
-      if (datos.mesaTrabajo) {
-        mesaTrabajoData = datos.mesaTrabajo;
-        mesaTrabajoRegistrada = true;
-        mostrarMesaTrabajoRegistrada();
-        desbloquearFormularioConsulta();
+      // Cargar datos en el formulario
+      document.getElementById('criterio_inclusion').value = mesaTrabajoData.criterio_inclusion;
+      document.getElementById('diagnostico').value = mesaTrabajoData.diagnostico;
+      document.getElementById('codigo_diagnostico').value = mesaTrabajoData.codigo_diagnostico;
+      
+      mostrarMesaTrabajoRegistrada();
+      deshabilitarFormularioMesaTrabajo();
+      desbloquearFormularioConsulta();
+    } else if (resMesa.status === 404) {
+      // No hay mesa de trabajo registrada
+      mesaTrabajoRegistrada = false;
+      mesaTrabajoData = null;
+      console.log('ℹ️ No hay Mesa de Trabajo registrada para este cliente');
+    }
+    
+    // 2. Cargar Consultas SVE desde el backend
+    const resConsultas = await fetch(`${CONSULTAS_SVE_API_URL}/cliente/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
       }
+    });
+    
+    if (resConsultas.ok) {
+      let consultasTemp = await resConsultas.json();
       
-      if (datos.consultas && datos.consultas.length > 0) {
-        consultasSVE = datos.consultas;
-        mostrarConsultasSVE();
-      }
+      // ⭐ IMPORTANTE: Ordenar las consultas por fecha (más antigua primero) y luego por ID
+      consultasSVE = consultasTemp.sort((a, b) => {
+        const diffFecha = new Date(a.fecha) - new Date(b.fecha);
+        if (diffFecha !== 0) return diffFecha;
+        return a.id - b.id; // Si tienen la misma fecha, ordenar por ID
+      });
       
-      // Mostrar historial si hay datos
-      if (mesaTrabajoRegistrada || consultasSVE.length > 0) {
-        document.getElementById('historialSVE').style.display = 'block';
+      console.log('✅ Consultas SVE cargadas y ordenadas:', consultasSVE);
+      mostrarConsultasSVE();
+    }
+    
+    // 3. Mostrar historial si hay datos
+    if (mesaTrabajoRegistrada || consultasSVE.length > 0) {
+      document.getElementById('historialSVE').style.display = 'block';
+      
+      // ⭐ NUEVO: Mostrar botón de informe si hay datos completos
+      if (mesaTrabajoRegistrada && consultasSVE.length > 0) {
+        // Esperar a que se cargue informeSVE.js
+        if (typeof window.mostrarBotonInformeSVE === 'function') {
+          window.mostrarBotonInformeSVE();
+        } else {
+          // Si no está cargado, intentar de nuevo después de un momento
+          setTimeout(() => {
+            if (typeof window.mostrarBotonInformeSVE === 'function') {
+              window.mostrarBotonInformeSVE();
+            }
+          }, 500);
+        }
       }
     }
+    
   } catch (err) {
-    console.error('Error cargando datos SVE:', err);
+    console.error('❌ Error cargando datos SVE:', err);
+    alert('⚠️ Error al cargar datos del Sistema de Vigilancia Epidemiológica');
+  }
+}
+
+// ⭐ TAMBIÉN MOSTRAR EL BOTÓN DESPUÉS DE REGISTRAR UNA CONSULTA
+// Agregar al final de la función registrarConsultaSVE():
+
+async function registrarConsultaSVE(e) {
+  e.preventDefault();
+  
+  if (!mesaTrabajoRegistrada) {
+    alert('⚠️ Debe completar primero la Mesa de Trabajo');
+    return;
+  }
+  
+  const clienteId = getClienteIdFromURL();
+  if (!clienteId) {
+    alert('⚠️ Error: No se pudo identificar el cliente');
+    return;
+  }
+  
+  // ... (código existente de registro) ...
+  
+  try {
+    // ... (código de registro existente) ...
+    
+    // ⭐ NUEVO: Al finalizar exitosamente, recargar datos y mostrar botón
+    await cargarDatosSVE();
+    
+    // Mostrar botón de informe si ahora hay datos completos
+    if (mesaTrabajoRegistrada && consultasSVE.length > 0) {
+      if (typeof window.mostrarBotonInformeSVE === 'function') {
+        window.mostrarBotonInformeSVE();
+      }
+    }
+    
+  } catch (err) {
+    console.error('❌ Error registrando consulta SVE:', err);
+    alert('❌ ' + err.message);
   }
 }
 
 // ============================================
-// REGISTRAR MESA DE TRABAJO (Formulario 1) - SOLO 3 CAMPOS
+// REGISTRAR MESA DE TRABAJO (Formulario 1)
 // ============================================
 async function registrarMesaTrabajo(e) {
   e.preventDefault();
@@ -1295,26 +1389,43 @@ async function registrarMesaTrabajo(e) {
     return;
   }
   
-  // Capturar datos del formulario (SOLO 3 campos)
+  // Capturar datos del formulario
   const datos = {
+    cliente_id: parseInt(clienteId),
     criterio_inclusion: document.getElementById('criterio_inclusion').value,
     diagnostico: document.getElementById('diagnostico').value.trim(),
-    codigo_diagnostico: document.getElementById('codigo_diagnostico').value.trim(),
-    fecha_registro: new Date().toISOString(),
-    cliente_id: clienteId
+    codigo_diagnostico: document.getElementById('codigo_diagnostico').value.trim()
   };
   
   try {
-    // Guardar en localStorage (temporal - luego implementar backend)
-    const datosSVE = JSON.parse(localStorage.getItem(`sve_${clienteId}`) || '{}');
-    datosSVE.mesaTrabajo = datos;
-    localStorage.setItem(`sve_${clienteId}`, JSON.stringify(datosSVE));
+    let response;
     
-    mesaTrabajoData = datos;
+    if (editandoMesaTrabajo && mesaTrabajoData) {
+      // Actualizar mesa de trabajo existente
+      response = await fetch(`${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoData.id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(datos)
+      });
+    } else {
+      // Crear nueva mesa de trabajo
+      response = await fetch(MESA_TRABAJO_SVE_API_URL, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(datos)
+      });
+    }
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error al guardar Mesa de Trabajo");
+    }
+    
+    mesaTrabajoData = await response.json();
     mesaTrabajoRegistrada = true;
     editandoMesaTrabajo = false;
     
-    alert('✅ Mesa de Trabajo registrada correctamente');
+    alert(editandoMesaTrabajo ? '✅ Mesa de Trabajo actualizada correctamente' : '✅ Mesa de Trabajo registrada correctamente');
     
     // Deshabilitar formulario 1
     deshabilitarFormularioMesaTrabajo();
@@ -1332,8 +1443,8 @@ async function registrarMesaTrabajo(e) {
     document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
     
   } catch (err) {
-    console.error('Error registrando mesa de trabajo:', err);
-    alert('❌ Error al registrar mesa de trabajo');
+    console.error('❌ Error registrando mesa de trabajo:', err);
+    alert('❌ ' + err.message);
   }
 }
 
@@ -1389,7 +1500,7 @@ function habilitarEdicionMesaTrabajo() {
 }
 
 // ============================================
-// MOSTRAR MESA DE TRABAJO EN HISTORIAL (SOLO 3 CAMPOS)
+// MOSTRAR MESA DE TRABAJO EN HISTORIAL
 // ============================================
 function mostrarMesaTrabajoRegistrada() {
   if (!mesaTrabajoData) return;
@@ -1399,7 +1510,7 @@ function mostrarMesaTrabajoRegistrada() {
   
   contenido.innerHTML = `
     <div class="mesa-trabajo-item">
-      <strong>✓ Criterio de Inclusión:</strong>
+      <strong>✔ Criterio de Inclusión:</strong>
       <p>${escapeHtml(mesaTrabajoData.criterio_inclusion)}</p>
     </div>
     <div class="mesa-trabajo-item">
@@ -1433,7 +1544,7 @@ function desbloquearFormularioConsulta() {
 }
 
 // ============================================
-// REGISTRAR CONSULTA SVE (Formulario 2) - CON TODOS LOS CAMPOS
+// REGISTRAR CONSULTA SVE (Formulario 2)
 // ============================================
 async function registrarConsultaSVE(e) {
   e.preventDefault();
@@ -1449,8 +1560,9 @@ async function registrarConsultaSVE(e) {
     return;
   }
   
-  // Capturar datos de la consulta (TODOS LOS CAMPOS DEL FORM 2)
+  // Capturar datos de la consulta
   const consulta = {
+    cliente_id: parseInt(clienteId),
     fecha: document.getElementById('fecha_consulta_sve').value,
     modalidad: document.getElementById('modalidad_sve').value,
     motivo_evaluacion: document.getElementById('motivo_evaluacion_sve').value.trim(),
@@ -1458,41 +1570,64 @@ async function registrarConsultaSVE(e) {
     recomendaciones_medicas: document.getElementById('recomendaciones_medicas_sve').value.trim(),
     recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim(),
     recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim(),
-    observaciones: document.getElementById('observaciones_consulta_sve').value.trim(),
-    estado: document.getElementById('estado_sve').value,
-    fecha_registro: new Date().toISOString(),
-    cliente_id: clienteId
+    observaciones: document.getElementById('observaciones_consulta_sve').value.trim() || null,
+    estado: document.getElementById('estado_sve').value
   };
   
+  console.log('📤 Enviando consulta SVE:', consulta);
+  
   try {
-    // Guardar en localStorage (temporal)
-    const datosSVE = JSON.parse(localStorage.getItem(`sve_${clienteId}`) || '{}');
-    if (!datosSVE.consultas) {
-      datosSVE.consultas = [];
+    let response;
+    
+    if (editandoConsultaSVE) {
+      // Actualizar consulta existente
+      console.log('🔄 Actualizando consulta SVE ID:', editandoConsultaSVE);
+      response = await fetch(`${CONSULTAS_SVE_API_URL}/${editandoConsultaSVE}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(consulta)
+      });
+    } else {
+      // Crear nueva consulta
+      console.log('➕ Creando nueva consulta SVE');
+      response = await fetch(CONSULTAS_SVE_API_URL, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(consulta)
+      });
     }
-    datosSVE.consultas.push(consulta);
-    localStorage.setItem(`sve_${clienteId}`, JSON.stringify(datosSVE));
     
-    consultasSVE.push(consulta);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error al guardar consulta SVE");
+    }
     
-    alert('✅ Consulta SVE registrada correctamente');
+    const consultaGuardada = await response.json();
+    console.log('✅ Consulta SVE guardada:', consultaGuardada);
+    
+    alert(editandoConsultaSVE ? '✅ Consulta SVE actualizada correctamente' : '✅ Consulta SVE registrada correctamente');
     
     // Limpiar formulario
     document.getElementById('formConsultaVigilancia').reset();
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('fecha_consulta_sve').value = today;
     
-    // Actualizar historial
-    mostrarConsultasSVE();
+    editandoConsultaSVE = null;
+    document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Registrar Consulta';
+    
+    // ⭐ CRÍTICO: Recargar TODOS los datos del backend para asegurar sincronización
+    console.log('🔄 Recargando datos del backend...');
+    await cargarDatosSVE();
+    console.log('✅ Datos recargados correctamente');
     
   } catch (err) {
-    console.error('Error registrando consulta SVE:', err);
-    alert('❌ Error al registrar consulta');
+    console.error('❌ Error registrando consulta SVE:', err);
+    alert('❌ ' + err.message);
   }
 }
 
 // ============================================
-// MOSTRAR CONSULTAS SVE EN HISTORIAL (CON TODOS LOS CAMPOS)
+// MOSTRAR CONSULTAS SVE EN HISTORIAL
 // ============================================
 function mostrarConsultasSVE() {
   const contenedor = document.getElementById('consultasSVERegistradas');
@@ -1502,10 +1637,19 @@ function mostrarConsultasSVE() {
     return;
   }
   
-  const html = consultasSVE.map((consulta, index) => `
+  // ⭐ ASEGURAR que las consultas estén ordenadas correctamente antes de mostrar
+  const consultasOrdenadas = [...consultasSVE].sort((a, b) => {
+    const diffFecha = new Date(a.fecha) - new Date(b.fecha);
+    if (diffFecha !== 0) return diffFecha;
+    return a.id - b.id;
+  });
+  
+  console.log('📋 Mostrando consultas ordenadas:', consultasOrdenadas);
+  
+  const html = consultasOrdenadas.map((consulta, index) => `
     <div class="consulta-sve-card">
       <div class="consulta-sve-header">
-        <div class="consulta-sve-numero">Consulta #${index + 1}</div>
+        <div class="sesion-sve-numero">Sesión #${index + 1}</div>
         <span class="badge badge-modalidad">${consulta.modalidad}</span>
         <span class="badge badge-estado ${consulta.estado.toLowerCase()}">${consulta.estado}</span>
       </div>
@@ -1541,6 +1685,14 @@ function mostrarConsultasSVE() {
           </div>
         ` : ''}
       </div>
+      <div class="consulta-sve-actions">
+        <button class="btn-edit-consulta-sve" onclick="editarConsultaSVE(${consulta.id})">
+          ✏️ Editar
+        </button>
+        <button class="btn-delete-consulta-sve" onclick="eliminarConsultaSVE(${consulta.id})">
+          🗑️ Eliminar
+        </button>
+      </div>
     </div>
   `).join('');
   
@@ -1548,12 +1700,626 @@ function mostrarConsultasSVE() {
 }
 
 // ============================================
-// LLAMAR A INICIALIZACIÓN EN DOMContentLoaded
+// EDITAR CONSULTA SVE
 // ============================================
-// Agregar al final del evento DOMContentLoaded existente:
-document.addEventListener('DOMContentLoaded', () => {
-  // ... código existente ...
+window.editarConsultaSVE = async function(id) {
+  try {
+    const response = await fetch(`${CONSULTAS_SVE_API_URL}/${id}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Consulta SVE no encontrada");
+    }
+    
+    const consulta = await response.json();
+    
+    // Cargar datos en el formulario
+    document.getElementById('fecha_consulta_sve').value = consulta.fecha.split('T')[0];
+    document.getElementById('modalidad_sve').value = consulta.modalidad;
+    document.getElementById('motivo_evaluacion_sve').value = consulta.motivo_evaluacion;
+    document.getElementById('ajuste_funciones_sve').value = consulta.ajuste_funciones;
+    document.getElementById('recomendaciones_medicas_sve').value = consulta.recomendaciones_medicas;
+    document.getElementById('recomendaciones_trabajador_sve').value = consulta.recomendaciones_trabajador;
+    document.getElementById('recomendaciones_empresa_sve').value = consulta.recomendaciones_empresa;
+    document.getElementById('observaciones_consulta_sve').value = consulta.observaciones || '';
+    document.getElementById('estado_sve').value = consulta.estado;
+    
+    editandoConsultaSVE = id;
+    document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Actualizar Consulta';
+    
+    // Scroll al formulario
+    document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
+    
+  } catch (err) {
+    console.error('❌ Error cargando consulta SVE:', err);
+    alert('❌ Error al cargar consulta para editar');
+  }
+};
+
+// ============================================
+// ELIMINAR CONSULTA SVE
+// ============================================
+window.eliminarConsultaSVE = async function(id) {
+  if (!confirm('¿Estás seguro de eliminar esta consulta SVE?')) {
+    return;
+  }
   
-  // Inicializar SVE si corresponde
-  inicializarSVE();
+  try {
+    const response = await fetch(`${CONSULTAS_SVE_API_URL}/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Error al eliminar consulta SVE");
+    }
+    
+    alert('✅ Consulta SVE eliminada correctamente');
+    
+    // Recargar historial
+    await cargarDatosSVE();
+    
+  } catch (err) {
+    console.error('❌ Error eliminando consulta SVE:', err);
+    alert('❌ Error al eliminar consulta SVE');
+  }
+};
+
+// FUNCIONALIDAD DE CIERRE Y REAPERTURA SVE
+// ============================================
+
+// Variable global para controlar si hay caso SVE cerrado
+let casoSVECerrado = false;
+
+// ⭐ Listener para el cambio de estado en formulario SVE
+document.addEventListener('DOMContentLoaded', () => {
+  const estadoSVE = document.getElementById('estado_sve');
+  if (estadoSVE) {
+    estadoSVE.addEventListener('change', toggleFechaCierreSVE);
+  }
 });
+
+// ⭐ Mostrar/Ocultar campo de fecha de cierre SVE según el estado
+function toggleFechaCierreSVE() {
+  const estadoSelect = document.getElementById("estado_sve");
+  const fechaCierreSVEContainer = document.getElementById("fechaCierreSVEContainer");
+  const fechaCierreSVEInput = document.getElementById("fecha_cierre_sve");
+  const recomendacionesSVEInput = document.getElementById("recomendaciones_finales_sve");
+  
+  if (estadoSelect.value === "Cerrado") {
+    fechaCierreSVEContainer.classList.add("show");
+    fechaCierreSVEInput.required = true;
+    recomendacionesSVEInput.required = true;
+    
+    // Si no tiene valor, establecer la fecha de hoy por defecto
+    if (!fechaCierreSVEInput.value) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      fechaCierreSVEInput.value = `${year}-${month}-${day}`;
+    }
+    
+    // Cargar recomendaciones existentes si las hay
+    if (clienteActual && clienteActual.recomendaciones_finales_sve && !recomendacionesSVEInput.value) {
+      recomendacionesSVEInput.value = clienteActual.recomendaciones_finales_sve;
+    }
+  } else {
+    fechaCierreSVEContainer.classList.remove("show");
+    fechaCierreSVEInput.required = false;
+    recomendacionesSVEInput.required = false;
+    fechaCierreSVEInput.value = "";
+  }
+}
+
+// ⭐ MODIFICAR la función registrarConsultaSVE para incluir el cierre de caso
+async function registrarConsultaSVE(e) {
+  e.preventDefault();
+  
+  if (!mesaTrabajoRegistrada) {
+    alert('⚠️ Debe completar primero la Mesa de Trabajo');
+    return;
+  }
+  
+  const clienteId = getClienteIdFromURL();
+  if (!clienteId) {
+    alert('⚠️ Error: No se pudo identificar el cliente');
+    return;
+  }
+  
+  // Capturar datos de la consulta
+  const estado = document.getElementById('estado_sve').value;
+  const fecha_cierre_sve = document.getElementById('fecha_cierre_sve').value;
+  const recomendaciones_finales_sve = document.getElementById('recomendaciones_finales_sve').value.trim();
+  
+  // 🔍 DEBUG
+  console.log('🔍 DEBUG - Estado:', estado);
+  console.log('🔍 DEBUG - Fecha cierre SVE:', fecha_cierre_sve);
+  console.log('🔍 DEBUG - Recomendaciones:', recomendaciones_finales_sve);
+  
+  // ✅ VALIDAR campos de cierre si el estado es "Cerrado"
+  if (estado === "Cerrado") {
+    if (!fecha_cierre_sve) {
+      alert("⚠️ Por favor especifica la fecha de cierre del caso SVE");
+      return;
+    }
+    if (!recomendaciones_finales_sve) {
+      alert("⚠️ Por favor escribe las recomendaciones finales antes de cerrar el caso SVE");
+      return;
+    }
+  }
+  
+  const consulta = {
+    cliente_id: parseInt(clienteId),
+    fecha: document.getElementById('fecha_consulta_sve').value,
+    modalidad: document.getElementById('modalidad_sve').value,
+    motivo_evaluacion: document.getElementById('motivo_evaluacion_sve').value.trim(),
+    ajuste_funciones: document.getElementById('ajuste_funciones_sve').value.trim(),
+    recomendaciones_medicas: document.getElementById('recomendaciones_medicas_sve').value.trim(),
+    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim(),
+    recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim(),
+    observaciones: document.getElementById('observaciones_consulta_sve').value.trim() || null,
+    estado: estado
+  };
+  
+  console.log('📤 Enviando consulta SVE:', consulta);
+  
+  try {
+    let response;
+    
+    if (editandoConsultaSVE) {
+      console.log('🔄 Actualizando consulta SVE ID:', editandoConsultaSVE);
+      response = await fetch(`${CONSULTAS_SVE_API_URL}/${editandoConsultaSVE}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(consulta)
+      });
+    } else {
+      console.log('➕ Creando nueva consulta SVE');
+      response = await fetch(CONSULTAS_SVE_API_URL, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(consulta)
+      });
+    }
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error al guardar consulta SVE");
+    }
+    
+    const consultaGuardada = await response.json();
+    console.log('✅ Consulta SVE guardada:', consultaGuardada);
+    
+    // ✅ CRÍTICO: Si el estado es "Cerrado", ACTUALIZAR el cliente
+    if (estado === 'Cerrado') {
+      console.log('🔒 ENTRANDO A CIERRE DE CASO...');
+      console.log('🔍 Cliente ID:', clienteId);
+      console.log('🔍 Fecha cierre:', fecha_cierre_sve);
+      console.log('🔍 Recomendaciones:', recomendaciones_finales_sve);
+      
+      const exitoCierre = await cerrarCasoSVE(clienteId, fecha_cierre_sve, recomendaciones_finales_sve);
+      
+      if (!exitoCierre) {
+        alert('⚠️ La consulta se guardó pero hubo un error al cerrar el caso');
+        return;
+      }
+      
+      alert('✅ Consulta SVE registrada y caso cerrado correctamente');
+    } else {
+      console.log('ℹ️ Estado no es Cerrado, no se ejecuta cierre');
+      alert(editandoConsultaSVE ? '✅ Consulta SVE actualizada correctamente' : '✅ Consulta SVE registrada correctamente');
+    }
+    
+    // Limpiar formulario
+    document.getElementById('formConsultaVigilancia').reset();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_consulta_sve').value = today;
+    
+    editandoConsultaSVE = null;
+    document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Registrar Consulta';
+    
+    // Recargar datos
+    console.log('🔄 Recargando datos del backend...');
+    await loadClientData();
+    await cargarDatosSVE();
+    console.log('✅ Datos recargados correctamente');
+    
+  } catch (err) {
+    console.error('❌ Error registrando consulta SVE:', err);
+    alert('❌ ' + err.message);
+  }
+}
+
+// ✅ FUNCIÓN: Cerrar caso SVE
+async function cerrarCasoSVE(clienteId, fechaCierre, recomendacionesFinales) {
+  try {
+    console.log('═══════════════════════════════════════');
+    console.log('🔒 INICIANDO CIERRE DE CASO SVE');
+    console.log('═══════════════════════════════════════');
+    console.log('📋 Cliente ID:', clienteId);
+    console.log('📅 Fecha cierre:', fechaCierre);
+    console.log('📝 Recomendaciones:', recomendacionesFinales);
+    
+    // 1. Obtener datos actuales del cliente
+    console.log('🔍 Obteniendo datos del cliente...');
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
+    });
+    
+    if (!resCliente.ok) {
+      throw new Error("Error al obtener datos del cliente");
+    }
+    
+    const clienteData = await resCliente.json();
+    console.log('✅ Datos del cliente obtenidos:', clienteData);
+    
+    // 2. Preparar objeto actualizado
+    const clienteActualizado = {
+      cedula: clienteData.cedula,
+      nombre: clienteData.nombre,
+      vinculo: clienteData.vinculo,
+      sede: clienteData.sede,
+      tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+      entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+      empresa_id: clienteData.empresa_id,
+      subcontratista_id: clienteData.subcontratista_id,
+      email: clienteData.email,
+      telefono: clienteData.telefono,
+      contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+      contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+      contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+      fecha_cierre: clienteData.fecha_cierre,
+      recomendaciones_finales: clienteData.recomendaciones_finales,
+      consultas_sugeridas: clienteData.consultas_sugeridas,
+      fecha_cierre_sve: fechaCierre,
+      recomendaciones_finales_sve: recomendacionesFinales
+    };
+    
+    console.log('📤 Objeto a enviar:', JSON.stringify(clienteActualizado, null, 2));
+    
+    // 3. Actualizar cliente
+    console.log('💾 Guardando actualización del cliente...');
+    const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clienteActualizado)
+    });
+    
+    console.log('📡 Response status:', resUpdate.status);
+    
+    if (!resUpdate.ok) {
+      const errorData = await resUpdate.json();
+      console.error('❌ Error del servidor:', errorData);
+      throw new Error(errorData.message || "Error al actualizar el cliente");
+    }
+    
+    const clienteActualizadoResponse = await resUpdate.json();
+    console.log('✅ Cliente actualizado - Respuesta del servidor:', clienteActualizadoResponse);
+    console.log('🔍 fecha_cierre_sve en respuesta:', clienteActualizadoResponse.fecha_cierre_sve);
+
+    // 4. Cerrar todas las consultas SVE abiertas
+    console.log('🔄 Cerrando todas las consultas SVE abiertas...');
+    const promisesCerrar = consultasSVE.map(consulta => {
+      if (consulta.estado !== 'Cerrado') {
+        console.log('  → Cerrando consulta ID:', consulta.id);
+        return fetch(`${CONSULTAS_SVE_API_URL}/${consulta.id}`, {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            ...consulta,
+            estado: 'Cerrado',
+            cliente_id: parseInt(clienteId)
+          })
+        });
+      }
+      return Promise.resolve();
+    });
+
+    await Promise.all(promisesCerrar);
+    console.log('✅ Todas las consultas cerradas');
+    console.log('═══════════════════════════════════════');
+
+    return true;
+  } catch (err) {
+    console.error("═══════════════════════════════════════");
+    console.error("❌ ERROR CERRANDO CASO SVE");
+    console.error("═══════════════════════════════════════");
+    console.error(err);
+    console.error("═══════════════════════════════════════");
+    alert("❌ Error al cerrar el caso SVE: " + err.message);
+    return false;
+  }
+}
+
+// ⭐ FUNCIÓN: Verificar si hay caso SVE cerrado
+function hayCasoSVECerrado() {
+  return consultasSVE.some(c => c.estado === 'Cerrado');
+}
+
+// ⭐ MODIFICAR la función mostrarConsultasSVE para deshabilitar edición/eliminación si está cerrado
+function mostrarConsultasSVE() {
+  const contenedor = document.getElementById('consultasSVERegistradas');
+  
+  if (consultasSVE.length === 0) {
+    contenedor.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">No hay consultas registradas</p>';
+    return;
+  }
+  
+  // Verificar si hay caso cerrado
+  const casoCerrado = hayCasoSVECerrado();
+  casoSVECerrado = casoCerrado;
+  
+  // Asegurar que las consultas estén ordenadas correctamente
+  const consultasOrdenadas = [...consultasSVE].sort((a, b) => {
+    const diffFecha = new Date(a.fecha) - new Date(b.fecha);
+    if (diffFecha !== 0) return diffFecha;
+    return a.id - b.id;
+  });
+  
+  console.log('📋 Mostrando consultas ordenadas:', consultasOrdenadas);
+  
+  const html = consultasOrdenadas.map((consulta, index) => {
+    const esCerrado = consulta.estado === 'Cerrado' || casoCerrado;
+    const botonesDeshabilitados = esCerrado ? 'disabled' : '';
+    const tituloDeshabilitado = esCerrado ? 'title="No se puede editar/eliminar una consulta cerrada"' : '';
+    
+    return `
+    <div class="consulta-sve-card ${esCerrado ? 'consulta-cerrada' : ''}">
+      <div class="consulta-sve-header">
+        <div class="sesion-sve-numero">Sesión #${index + 1}</div>
+        <span class="badge badge-modalidad">${consulta.modalidad}</span>
+        <span class="badge badge-estado ${consulta.estado.toLowerCase()}">${consulta.estado}</span>
+      </div>
+      <div class="consulta-sve-body">
+        <div class="consulta-sve-item">
+          <strong>📅 Fecha:</strong>
+          <span>${formatDate(consulta.fecha)}</span>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>📝 Motivo de Evaluación:</strong>
+          <p>${escapeHtml(consulta.motivo_evaluacion)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>⚙️ Ajuste a las Funciones:</strong>
+          <p>${escapeHtml(consulta.ajuste_funciones)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>💊 Recomendaciones Médicas:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_medicas)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>👤 Recomendaciones al Trabajador:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_trabajador)}</p>
+        </div>
+        <div class="consulta-sve-item">
+          <strong>🏢 Recomendaciones a la Empresa:</strong>
+          <p>${escapeHtml(consulta.recomendaciones_empresa)}</p>
+        </div>
+        ${consulta.observaciones ? `
+          <div class="consulta-sve-item">
+            <strong>📄 Observaciones:</strong>
+            <p>${escapeHtml(consulta.observaciones)}</p>
+          </div>
+        ` : ''}
+      </div>
+      <div class="consulta-sve-actions">
+        <button 
+          class="btn-edit-consulta-sve" 
+          onclick="editarConsultaSVE(${consulta.id})" 
+          ${botonesDeshabilitados}
+          ${tituloDeshabilitado}
+        >
+          ✏️ Editar
+        </button>
+        <button 
+          class="btn-delete-consulta-sve" 
+          onclick="eliminarConsultaSVE(${consulta.id})"
+          ${botonesDeshabilitados}
+          ${tituloDeshabilitado}
+        >
+          🗑️ Eliminar
+        </button>
+      </div>
+    </div>
+  `;
+  }).join('');
+  
+  // Agregar recomendaciones finales y botones si el caso está cerrado
+  const recomendacionesHTML = (casoCerrado && clienteActual && clienteActual.recomendaciones_finales_sve) ? `
+    <div class="recomendaciones-finales-sve-card">
+      <div class="recomendaciones-sve-header">
+        <span class="recomendaciones-sve-icon">📋</span>
+        <h3 class="recomendaciones-sve-titulo">Recomendaciones Finales SVE</h3>
+      </div>
+      <div class="recomendaciones-sve-contenido-historial">
+        ${escapeHtml(clienteActual.recomendaciones_finales_sve).replace(/\n/g, '<br>')}
+      </div>
+      <div class="recomendaciones-sve-footer">
+        <span class="recomendaciones-sve-fecha">
+          📅 Fecha de cierre: ${clienteActual.fecha_cierre_sve ? formatDate(clienteActual.fecha_cierre_sve) : '-'}
+        </span>
+      </div>
+    </div>
+  ` : '';
+  
+  const botonesAccionHTML = casoCerrado ? `
+    <div class="acciones-caso-sve-container">
+      <button class="btn-imprimir-informe-sve" onclick="generarInformeSVE()">
+        📄 Imprimir Informe SVE
+      </button>
+      <button class="btn-reabrir-caso-sve" onclick="reabrirCasoSVE()">
+        🔓 Reabrir Caso SVE
+      </button>
+    </div>
+    <p class="acciones-caso-sve-info">
+      Al reabrir el caso SVE, todas las consultas estarán disponibles para editar o eliminar
+    </p>
+  ` : '';
+  
+  contenedor.innerHTML = html + recomendacionesHTML + botonesAccionHTML;
+}
+
+// ⭐ NUEVA FUNCIÓN: Reabrir caso SVE
+window.reabrirCasoSVE = async function() {
+  if (!confirm("¿Estás seguro de reabrir el caso SVE? Todas las consultas volverán a estar disponibles para editar.")) {
+    return;
+  }
+
+  const clienteId = getClienteIdFromURL();
+
+  try {
+    // 1. Reabrir todas las consultas SVE
+    const promises = consultasSVE.map(consulta => {
+      if (consulta.estado === 'Cerrado') {
+        return fetch(`${CONSULTAS_SVE_API_URL}/${consulta.id}`, {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            ...consulta,
+            estado: 'Abierto',
+            cliente_id: parseInt(clienteId)
+          })
+        });
+      }
+      return Promise.resolve();
+    });
+
+    await Promise.all(promises);
+
+    // 2. Actualizar el cliente (limpiar fecha de cierre SVE, mantener recomendaciones)
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
+    });
+    
+    if (resCliente.ok) {
+      const clienteData = await resCliente.json();
+      
+      const clienteActualizado = {
+        cedula: clienteData.cedula,
+        nombre: clienteData.nombre,
+        vinculo: clienteData.vinculo,
+        sede: clienteData.sede,
+        tipo_entidad_pagadora: clienteData.tipo_entidad_pagadora,
+        entidad_pagadora_especifica: clienteData.entidad_pagadora_especifica,
+        empresa_id: clienteData.empresa_id,
+        subcontratista_id: clienteData.subcontratista_id,
+        email: clienteData.email,
+        telefono: clienteData.telefono,
+        contacto_emergencia_nombre: clienteData.contacto_emergencia_nombre,
+        contacto_emergencia_parentesco: clienteData.contacto_emergencia_parentesco,
+        contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
+        fecha_cierre: clienteData.fecha_cierre,
+        recomendaciones_finales: clienteData.recomendaciones_finales,
+        consultas_sugeridas: clienteData.consultas_sugeridas,
+        fecha_cierre_sve: null,
+        recomendaciones_finales_sve: clienteData.recomendaciones_finales_sve
+      };
+      
+      await fetch(`${API_URL}/${clienteId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(clienteActualizado)
+      });
+    }
+
+    alert("✅ Caso SVE reabierto correctamente. Todas las consultas están disponibles nuevamente.\n\n💡 Las recomendaciones finales se han conservado y podrás editarlas al cerrar el caso nuevamente.");
+    
+    // Recargar datos
+    await loadClientData();
+    await cargarDatosSVE();
+
+  } catch (err) {
+    console.error("❌ Error reabriendo caso SVE:", err);
+    alert("❌ Error al reabrir el caso SVE");
+  }
+};
+
+// ⭐ MODIFICAR editarConsultaSVE para prevenir edición si está cerrado
+window.editarConsultaSVE = async function(id) {
+  if (hayCasoSVECerrado()) {
+    alert("⚠️ No se puede editar una consulta cuando el caso SVE está cerrado");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${CONSULTAS_SVE_API_URL}/${id}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Consulta SVE no encontrada");
+    }
+    
+    const consulta = await response.json();
+    
+    // Cargar datos en el formulario
+    document.getElementById('fecha_consulta_sve').value = consulta.fecha.split('T')[0];
+    document.getElementById('modalidad_sve').value = consulta.modalidad;
+    document.getElementById('motivo_evaluacion_sve').value = consulta.motivo_evaluacion;
+    document.getElementById('ajuste_funciones_sve').value = consulta.ajuste_funciones;
+    document.getElementById('recomendaciones_medicas_sve').value = consulta.recomendaciones_medicas;
+    document.getElementById('recomendaciones_trabajador_sve').value = consulta.recomendaciones_trabajador;
+    document.getElementById('recomendaciones_empresa_sve').value = consulta.recomendaciones_empresa;
+    document.getElementById('observaciones_consulta_sve').value = consulta.observaciones || '';
+    document.getElementById('estado_sve').value = consulta.estado;
+    
+    toggleFechaCierreSVE();
+    editandoConsultaSVE = id;
+    document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Actualizar Consulta';
+    
+    // Scroll al formulario
+    document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
+    
+  } catch (err) {
+    console.error('❌ Error cargando consulta SVE:', err);
+    alert('❌ Error al cargar consulta para editar');
+  }
+};
+
+// ⭐ MODIFICAR eliminarConsultaSVE para prevenir eliminación si está cerrado
+window.eliminarConsultaSVE = async function(id) {
+  if (hayCasoSVECerrado()) {
+    alert("⚠️ No se puede eliminar una consulta cuando el caso SVE está cerrado");
+    return;
+  }
+
+  if (!confirm('¿Estás seguro de eliminar esta consulta SVE?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${CONSULTAS_SVE_API_URL}/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Error al eliminar consulta SVE");
+    }
+    
+    alert('✅ Consulta SVE eliminada correctamente');
+    
+    // Recargar historial
+    await cargarDatosSVE();
+    
+  } catch (err) {
+    console.error('❌ Error eliminando consulta SVE:', err);
+    alert('❌ Error al eliminar consulta SVE');
+  }
+};
+
+console.log('✅ Lógica de cierre y reapertura SVE cargada');
+
+// ============================================
+// FIN DE LA PARTE 2: SVE CON BACKEND INTEGRADO
+// ============================================

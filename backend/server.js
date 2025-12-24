@@ -13,6 +13,8 @@ const empresasRoutes = require("./routes/empresas");
 const authRoutes = require("./routes/auth");
 const authMiddleware = require("./middleware/authMiddleware");
 const statsRoutes = require("./routes/stats");
+const mesaTrabajoSveRoutes = require("./routes/mesaTrabajoSve");
+const consultasSveRoutes = require("./routes/consultasSve");
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use("/api/clients", authMiddleware.verifyToken, clientsRoutes);
 app.use("/api/consultas", authMiddleware.verifyToken, consultasRoutes);
 app.use("/api/empresas", authMiddleware.verifyToken, empresasRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/mesa-trabajo-sve", authMiddleware.verifyToken, mesaTrabajoSveRoutes);
+app.use("/api/consultas-sve", authMiddleware.verifyToken, consultasSveRoutes);
 
 // Ruta de prueba (pública)
 app.get("/", (req, res) => {

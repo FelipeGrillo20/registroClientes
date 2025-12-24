@@ -200,12 +200,6 @@
     <!-- Barra de usuario -->
     <div id="userInfo" class="user-info-bar" style="display: none;"></div>
     
-    <!-- ⭐ NUEVO: Indicador de Modalidad Seleccionada -->
-    <div id="modalidadIndicadorConsulta" class="modalidad-indicador" style="display: none;">
-      <span class="modalidad-icon">📌</span>
-      <span class="modalidad-text">Modalidad: <strong id="modalidadNombreConsulta">Orientación Psicosocial</strong></span>
-    </div>
-
     <!-- Header con botón volver -->
     <div class="page-header">
       <div class="header-left-section">
@@ -619,149 +613,178 @@
     </div>
 
     <form id="formConsultaVigilancia" class="form-vigilancia">
-      <div class="form-grid-vigilancia">
-        
-        <!-- Fecha de Consulta -->
-        <div class="form-group-vigilancia">
-          <label for="fecha_consulta_sve">
-            <span class="label-icon">📅</span>
-            Fecha de Consulta <span class="required">*</span>
-          </label>
-          <input 
-            type="date" 
-            id="fecha_consulta_sve" 
-            required
-            disabled
-          />
-        </div>
+  <div class="form-grid-vigilancia">
+    
+    <!-- Fecha de Consulta -->
+    <div class="form-group-vigilancia">
+      <label for="fecha_consulta_sve">
+        <span class="label-icon">📅</span>
+        Fecha de Consulta <span class="required">*</span>
+      </label>
+      <input 
+        type="date" 
+        id="fecha_consulta_sve" 
+        required
+        disabled
+      />
+    </div>
 
-        <!-- Modalidad -->
-        <div class="form-group-vigilancia">
-          <label for="modalidad_sve">
-            <span class="label-icon">💻</span>
-            Modalidad <span class="required">*</span>
-          </label>
-          <select id="modalidad_sve" required disabled>
-            <option value="">Seleccione...</option>
-            <option value="Virtual">Virtual</option>
-            <option value="Presencial">Presencial</option>
-          </select>
-        </div>
+    <!-- Modalidad -->
+    <div class="form-group-vigilancia">
+      <label for="modalidad_sve">
+        <span class="label-icon">💻</span>
+        Modalidad <span class="required">*</span>
+      </label>
+      <select id="modalidad_sve" required disabled>
+        <option value="">Seleccione...</option>
+        <option value="Virtual">Virtual</option>
+        <option value="Presencial">Presencial</option>
+      </select>
+    </div>
 
-        <!-- Motivo de Evaluación y Situación Actual -->
-        <div class="form-group-vigilancia full-width">
-          <label for="motivo_evaluacion_sve">
-            <span class="label-icon">📝</span>
-            Motivo de Evaluación y Situación Actual <span class="required">*</span>
-          </label>
-          <textarea 
-            id="motivo_evaluacion_sve" 
-            rows="4"
-            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
-            required
-            disabled
-          ></textarea>
-        </div>
+    <!-- Motivo de Evaluación y Situación Actual -->
+    <div class="form-group-vigilancia full-width">
+      <label for="motivo_evaluacion_sve">
+        <span class="label-icon">📝</span>
+        Motivo de Evaluación y Situación Actual <span class="required">*</span>
+      </label>
+      <textarea 
+        id="motivo_evaluacion_sve" 
+        rows="4"
+        placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
+        required
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Ajuste a las funciones (ocupa 1 columna) -->
-        <div class="form-group-vigilancia">
-          <label for="ajuste_funciones_sve">
-            <span class="label-icon">⚙️</span>
-            Ajuste a las Funciones <span class="required">*</span>
-          </label>
-          <textarea 
-            id="ajuste_funciones_sve" 
-            rows="3"
-            placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
-            required
-            disabled
-          ></textarea>
-        </div>
+    <!-- Ajuste a las funciones (ocupa 1 columna) -->
+    <div class="form-group-vigilancia">
+      <label for="ajuste_funciones_sve">
+        <span class="label-icon">⚙️</span>
+        Ajuste a las Funciones <span class="required">*</span>
+      </label>
+      <textarea 
+        id="ajuste_funciones_sve" 
+        rows="3"
+        placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
+        required
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Implementar las siguientes recomendaciones médicas (ocupa 1 columna) -->
-        <div class="form-group-vigilancia">
-          <label for="recomendaciones_medicas_sve">
-            <span class="label-icon">💊</span>
-            Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_medicas_sve" 
-            rows="3"
-            placeholder="Describa las recomendaciones médicas a implementar..."
-            required
-            disabled
-          ></textarea>
-        </div>
+    <!-- Implementar las siguientes recomendaciones médicas (ocupa 1 columna) -->
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_medicas_sve">
+        <span class="label-icon">💊</span>
+        Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
+      </label>
+      <textarea 
+        id="recomendaciones_medicas_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones médicas a implementar..."
+        required
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Recomendaciones al trabajador (ocupa 1 columna) -->
-        <div class="form-group-vigilancia">
-          <label for="recomendaciones_trabajador_sve">
-            <span class="label-icon">👤</span>
-            Recomendaciones al Trabajador <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_trabajador_sve" 
-            rows="3"
-            placeholder="Describa las recomendaciones dirigidas al trabajador..."
-            required
-            disabled
-          ></textarea>
-        </div>
+    <!-- Recomendaciones al trabajador (ocupa 1 columna) -->
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_trabajador_sve">
+        <span class="label-icon">👤</span>
+        Recomendaciones al Trabajador <span class="required">*</span>
+      </label>
+      <textarea 
+        id="recomendaciones_trabajador_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones dirigidas al trabajador..."
+        required
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Recomendaciones a la Empresa (ocupa 1 columna) -->
-        <div class="form-group-vigilancia">
-          <label for="recomendaciones_empresa_sve">
-            <span class="label-icon">🏢</span>
-            Recomendaciones a la Empresa <span class="required">*</span>
-          </label>
-          <textarea 
-            id="recomendaciones_empresa_sve" 
-            rows="3"
-            placeholder="Describa las recomendaciones dirigidas a la empresa..."
-            required
-            disabled
-          ></textarea>
-        </div>
+    <!-- Recomendaciones a la Empresa (ocupa 1 columna) -->
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_empresa_sve">
+        <span class="label-icon">🏢</span>
+        Recomendaciones a la Empresa <span class="required">*</span>
+      </label>
+      <textarea 
+        id="recomendaciones_empresa_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones dirigidas a la empresa..."
+        required
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Observaciones de la Consulta (ocupa 1 columna, para balance visual) -->
-        <div class="form-group-vigilancia">
-          <label for="observaciones_consulta_sve">
-            <span class="label-icon">📄</span>
-            Observaciones de la Consulta
-          </label>
-          <textarea 
-            id="observaciones_consulta_sve" 
-            rows="3"
-            placeholder="Registre observaciones adicionales de la consulta..."
-            disabled
-          ></textarea>
-        </div>
+    <!-- Observaciones de la Consulta (ocupa 1 columna, para balance visual) -->
+    <div class="form-group-vigilancia">
+      <label for="observaciones_consulta_sve">
+        <span class="label-icon">📄</span>
+        Observaciones de la Consulta
+      </label>
+      <textarea 
+        id="observaciones_consulta_sve" 
+        rows="3"
+        placeholder="Registre observaciones adicionales de la consulta..."
+        disabled
+      ></textarea>
+    </div>
 
-        <!-- Estado del Caso -->
-        <div class="form-group-vigilancia">
-          <label for="estado_sve">
-            <span class="label-icon">✅</span>
-            Estado del Caso <span class="required">*</span>
-          </label>
-          <select id="estado_sve" required disabled>
-            <option value="">Seleccione...</option>
-            <option value="Abierto">Abierto</option>
-            <option value="Cerrado">Cerrado</option>
-          </select>
-        </div>
+    <!-- Estado del Caso -->
+    <div class="form-group-vigilancia">
+      <label for="estado_sve">
+        <span class="label-icon">✅</span>
+        Estado del Caso <span class="required">*</span>
+      </label>
+      <select id="estado_sve" required disabled>
+        <option value="">Seleccione...</option>
+        <option value="Abierto">Abierto</option>
+        <option value="Cerrado">Cerrado</option>
+      </select>
+    </div>
 
-      </div>
-
-      <div class="form-actions-vigilancia">
-        <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarConsultaSVE" disabled>
-          💾 Registrar Consulta
-        </button>
-        <button type="reset" class="btn-reset-vigilancia" disabled>
-          🔄 Limpiar Formulario
-        </button>
-      </div>
-    </form>
   </div>
+
+  <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones Finales SVE -->
+  <div class="form-group-fecha-cierre-sve" id="fechaCierreSVEContainer">
+    <div class="fecha-cierre-label">
+      <span class="fecha-cierre-icon">🔒</span>
+      <span>Fecha de Cierre del Caso SVE <span class="required">*</span></span>
+    </div>
+    <input type="date" id="fecha_cierre_sve" />
+    <p class="fecha-cierre-info">
+      Esta fecha se guardará como la fecha oficial de cierre del caso SVE del trabajador
+    </p>
+    
+    <!-- ⭐ NUEVO: Campo de Recomendaciones Finales SVE -->
+    <div class="recomendaciones-container">
+      <div class="fecha-cierre-label" style="margin-top: 15px;">
+        <span class="fecha-cierre-icon">📋</span>
+        <span>Recomendaciones Finales SVE <span class="required">*</span></span>
+      </div>
+      <textarea 
+        id="recomendaciones_finales_sve" 
+        rows="6" 
+        placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso SVE. Estas recomendaciones aparecerán en el informe final..."
+        style="width: 100%; padding: 12px; border: 2px solid #56ab2f; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
+      ></textarea>
+      <p class="fecha-cierre-info">
+        💡 Estas recomendaciones aparecerán en el informe final del trabajador
+      </p>
+    </div>
+  </div>
+
+  <div class="form-actions-vigilancia">
+    <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarConsultaSVE" disabled>
+      💾 Registrar Consulta
+    </button>
+    <button type="reset" class="btn-reset-vigilancia" disabled>
+      🔄 Limpiar Formulario
+    </button>
+  </div>
+ </form>
+</div>
 
   <!-- ========================================
        HISTORIAL DE FORMULARIOS SVE
@@ -871,9 +894,10 @@
         </form>
       </div>
     </div>
+  </div>
 
-    <!-- Historial de Consultas -->
-    <div class="historial-section">
+   <!-- Historial de Consultas -->
+    <div class="historial-section" style="display: none;">
       <div class="historial-header">
         <h2 class="section-title">📚 Historial de Consultas</h2>
         <button id="btnRefreshHistorial" class="btn-refresh" title="Actualizar historial">
@@ -889,8 +913,6 @@
       </div>
     </div>
 
-  </div>
-
   <!-- jQuery (necesario para Select2) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <!-- Select2 JS -->
@@ -902,6 +924,7 @@
   <script src="js/auth-check.js"></script>
   <script src="js/consulta.js"></script>
   <script src="js/informe.js"></script>
+  <script src="js/informeSVE.js"></script>
   
   <!-- ⭐ NUEVO: Script para manejar modalidades -->
   <script>

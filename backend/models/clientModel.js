@@ -80,7 +80,7 @@ exports.getClientsByProfesional = async (profesionalId) => {
   return result.rows;
 };
 
-// ⭐ NUEVO: Obtener clientes con filtros avanzados (profesional y fechas)
+// Obtener clientes con filtros avanzados (profesional y fechas)
 exports.getClientsWithFilters = async (filters) => {
   const { profesional_id, fecha_inicio, fecha_fin } = filters;
   
@@ -152,7 +152,7 @@ exports.getClientById = async (id) => {
   return result.rows[0];
 };
 
-// Actualizar cliente
+// ✅ FUNCIÓN CORREGIDA: Actualizar cliente (CON CAMPOS SVE)
 exports.updateClient = async (id, data) => {
   const {
     cedula,
@@ -171,6 +171,8 @@ exports.updateClient = async (id, data) => {
     fecha_cierre,
     recomendaciones_finales,
     consultas_sugeridas,
+    fecha_cierre_sve,              // ✅ NUEVO: Campo de cierre SVE
+    recomendaciones_finales_sve    // ✅ NUEVO: Recomendaciones SVE
   } = data;
 
   const result = await pool.query(
@@ -190,13 +192,17 @@ exports.updateClient = async (id, data) => {
       contacto_emergencia_telefono = $13,
       fecha_cierre = $14,
       recomendaciones_finales = $15,
-      consultas_sugeridas = $16
-    WHERE id = $17
+      consultas_sugeridas = $16,
+      fecha_cierre_sve = $17,              -- ✅ NUEVO
+      recomendaciones_finales_sve = $18    -- ✅ NUEVO
+    WHERE id = $19
     RETURNING *`,
     [cedula, nombre, vinculo, sede, tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     fecha_cierre, recomendaciones_finales, consultas_sugeridas, id]
+     fecha_cierre, recomendaciones_finales, consultas_sugeridas,
+     fecha_cierre_sve, recomendaciones_finales_sve,  // ✅ NUEVOS PARÁMETROS
+     id]
   );
 
   return result.rows[0];

@@ -113,6 +113,16 @@ body {
   gap: 40px;
 }
 
+/* ====== CONTENEDOR DESTACADO DE MODALIDADES ====== */
+
+.modalidades-wrapper {
+  background-color: #77a0f1; /* blanco grisáceo institucional */
+  border-radius: 24px;
+  padding: 50px 40px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e3e6eb;
+}
+
 /* ====== ENCABEZADO ====== */
 .header-section {
   text-align: center;
@@ -294,6 +304,14 @@ body {
 /* ====== RESPONSIVE ====== */
 
 /* Tablets */
+
+@media (max-width: 480px) {
+  .modalidades-wrapper {
+    padding: 30px 20px;
+    border-radius: 20px;
+  }
+}
+
 @media (max-width: 1024px) {
   .main-title {
     font-size: 2.5em;
@@ -453,4 +471,8 @@ body {
   .footer-text {
     font-size: 0.85em;
   }
+
+  .modalidades-wrapper {
+  padding: 35px 25px;
+}
 }

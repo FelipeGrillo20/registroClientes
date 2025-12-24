@@ -8,7 +8,33 @@ document.addEventListener('DOMContentLoaded', function() {
   wheelItems.forEach(item => {
     item.addEventListener('click', function() {
       const url = this.getAttribute('data-url');
+      const modalidad = this.getAttribute('data-modalidad');
       
+      // ✅ Si tiene atributo data-modalidad, guardar y redirigir a index.html
+      if (modalidad) {
+        console.log('🔄 Seleccionando modalidad:', modalidad);
+        
+        // Guardar modalidad en localStorage
+        localStorage.setItem('modalidadSeleccionada', modalidad);
+        
+        // Animación de salida
+        this.style.transform = 'scale(0.9)';
+        
+        // Mostrar feedback visual
+        const itemContent = this.querySelector('.wheel-item-content');
+        if (itemContent) {
+          itemContent.style.transform = 'scale(1.1)';
+          itemContent.style.borderWidth = '6px';
+        }
+        
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 300);
+        
+        return;
+      }
+      
+      // ✅ Si tiene URL normal, navegar directamente
       if (url) {
         // Animación de salida antes de navegar
         this.style.transform = 'scale(0.9)';
@@ -19,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // Efecto de sonido visual al hacer hover (opcional)
+    // Efecto de sonido visual al hacer hover
     item.addEventListener('mouseenter', function() {
       this.style.transition = 'all 0.3s ease';
     });
@@ -42,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Efecto parallax suave al mover el mouse (opcional)
+  // Efecto parallax suave al mover el mouse
   const wheelContainer = document.querySelector('.wheel-container');
   
   if (wheelContainer) {
@@ -52,6 +78,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       wheelContainer.style.transform = `translate(${moveX}px, ${moveY}px)`;
     });
+  }
+
+  // ✅ Mostrar en consola la modalidad actual seleccionada
+  const modalidadActual = localStorage.getItem('modalidadSeleccionada');
+  if (modalidadActual) {
+    console.log('✅ Modalidad actual:', modalidadActual);
+  } else {
+    console.log('ℹ️ No hay modalidad seleccionada');
   }
 
   console.log('✅ Mapa de sitio cargado correctamente');

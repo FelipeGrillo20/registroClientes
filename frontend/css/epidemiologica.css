@@ -409,6 +409,272 @@
   text-align: justify;
 }
 
+/* ============================================
+ESTILOS PARA CIERRE DE CASO SVE
+============================================ */
+
+.form-group-fecha-cierre-sve {
+  display: none;
+  background: #e8f5e9;
+  border: 2px solid #56ab2f;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+  animation: slideDown 0.3s ease;
+}
+
+.form-group-fecha-cierre-sve.show {
+  display: block;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fecha-cierre-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+
+.fecha-cierre-icon {
+  font-size: 18px;
+}
+
+.fecha-cierre-info {
+  font-size: 12px;
+  color: #2e7d32;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+#fecha_cierre_sve {
+  border: 2px solid #56ab2f;
+  background: white;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.recomendaciones-container {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #56ab2f;
+}
+
+/* ============================================
+   BOTONES DE ACCIÓN CASO SVE CERRADO
+   ============================================ */
+
+.acciones-caso-sve-container {
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 14px;
+  border: 2px solid #56ab2f;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: slideUp 0.4s ease;
+}
+
+.btn-imprimir-informe-sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-imprimir-informe-sve:hover {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(86, 171, 47, 0.5);
+}
+
+.btn-reabrir-caso-sve {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-reabrir-caso-sve:hover {
+  background: linear-gradient(135deg, #f57c00, #e65100);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+}
+
+.btn-imprimir-informe-sve:active,
+.btn-reabrir-caso-sve:active {
+  transform: translateY(-1px);
+}
+
+.acciones-caso-sve-info {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #2e7d32;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ============================================
+   RECOMENDACIONES FINALES SVE EN HISTORIAL
+   ============================================ */
+
+.recomendaciones-finales-sve-card {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.2);
+  border: 2px solid #56ab2f;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recomendaciones-sve-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(86, 171, 47, 0.3);
+}
+
+.recomendaciones-sve-icon {
+  font-size: 28px;
+  background: rgba(255, 255, 255, 0.5);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.recomendaciones-sve-titulo {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  color: #2e7d32;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recomendaciones-sve-contenido-historial {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #56ab2f;
+  line-height: 1.8;
+  font-size: 15px;
+  color: #2c3e50;
+  text-align: justify;
+  margin-bottom: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.recomendaciones-sve-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid rgba(86, 171, 47, 0.2);
+}
+
+.recomendaciones-sve-fecha {
+  font-size: 14px;
+  color: #2e7d32;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 8px 15px;
+  border-radius: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .recomendaciones-finales-sve-card {
+    padding: 20px;
+  }
+
+  .recomendaciones-sve-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .recomendaciones-sve-titulo {
+    font-size: 18px;
+  }
+
+  .recomendaciones-sve-contenido-historial {
+    font-size: 14px;
+    padding: 15px;
+  }
+
+  .acciones-caso-sve-container {
+    flex-direction: column;
+  }
+
+  .btn-imprimir-informe-sve,
+  .btn-reabrir-caso-sve {
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+    padding: 12px 24px;
+  }
+
+  .acciones-caso-sve-info {
+    font-size: 12px;
+  }
+}
+
 /* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */

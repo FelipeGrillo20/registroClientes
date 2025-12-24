@@ -83,7 +83,7 @@ exports.getClients = async (req, res) => {
   }
 };
 
-// ⭐ NUEVO: Obtener clientes con filtros avanzados (profesional y fechas)
+// Obtener clientes con filtros avanzados (profesional y fechas)
 exports.getClientsWithFilters = async (req, res) => {
   try {
     const userRole = req.user?.rol;
@@ -134,7 +134,7 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-// Actualizar cliente
+// ✅ FUNCIÓN CORREGIDA: Actualizar cliente (CON CAMPOS SVE)
 exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -155,6 +155,8 @@ exports.updateClient = async (req, res) => {
       fecha_cierre,
       recomendaciones_finales,
       consultas_sugeridas,
+      fecha_cierre_sve,              // ✅ NUEVO: Extraer del req.body
+      recomendaciones_finales_sve    // ✅ NUEVO: Extraer del req.body
     } = req.body;
 
     // Verificar que el cliente existe
@@ -193,6 +195,8 @@ exports.updateClient = async (req, res) => {
       fecha_cierre: fecha_cierre || null,
       recomendaciones_finales: recomendaciones_finales || null,
       consultas_sugeridas: consultas_sugeridas || null,
+      fecha_cierre_sve: fecha_cierre_sve || null,                    // ✅ NUEVO: Pasar al modelo
+      recomendaciones_finales_sve: recomendaciones_finales_sve || null // ✅ NUEVO: Pasar al modelo
     });
 
     res.json(updatedClient);

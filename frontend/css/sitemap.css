@@ -7,7 +7,7 @@
   border-radius: 12px;
   box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
   width: 90%;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   min-height: 85vh;
   display: flex;
@@ -27,16 +27,16 @@
   color: #7f8c8d;
   font-size: 1em;
   margin-top: -5px;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   font-weight: 500;
 }
 
-/* ====== CONTENEDOR DE LA RUEDA (MÁS COMPACTO) ====== */
+/* ====== CONTENEDOR DE LA RUEDA (MÁS GRANDE) ====== */
 .wheel-container {
   position: relative;
-  width: 550px;
-  height: 550px;
-  margin: 20px auto;
+  width: 750px;
+  height: 750px;
+  margin: 30px auto;
   animation: fadeIn 0.8s ease-in-out;
 }
 
@@ -51,14 +51,14 @@
   }
 }
 
-/* ====== CENTRO DE LA RUEDA (MÁS GRANDE) ====== */
+/* ====== CENTRO DE LA RUEDA ====== */
 .wheel-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 190px;
-  height: 190px;
+  width: 200px;
+  height: 200px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   display: flex;
@@ -83,25 +83,25 @@
 }
 
 .center-icon {
-  font-size: 52px;
-  margin-bottom: 8px;
+  font-size: 55px;
+  margin-bottom: 10px;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
 }
 
 .center-text {
   color: white;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 18px;
   text-align: center;
   line-height: 1.3;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* ====== ITEMS DE LA RUEDA (MÁS COMPACTOS Y PEGADOS) ====== */
+/* ====== ITEMS DE LA RUEDA (MÁS GRANDES Y SEPARADOS) ====== */
 .wheel-item {
   position: absolute;
-  width: 130px;
-  height: 130px;
+  width: 145px;
+  height: 145px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 5;
@@ -121,6 +121,21 @@
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+}
+
+/* ✅ ESTILOS ESPECIALES PARA MODALIDADES */
+.modalidad-psicosocial .wheel-item-content {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  box-shadow: 0 8px 25px rgba(155, 89, 182, 0.4);
+  border-color: #f1c40f;
+  border-width: 5px;
+}
+
+.modalidad-sve .wheel-item-content {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  box-shadow: 0 8px 25px rgba(86, 171, 47, 0.4);
+  border-color: #27ae60;
+  border-width: 5px;
 }
 
 .wheel-item-content::before {
@@ -149,8 +164,8 @@
 }
 
 .item-icon {
-  font-size: 38px;
-  margin-bottom: 6px;
+  font-size: 42px;
+  margin-bottom: 8px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
   transition: all 0.3s ease;
   position: relative;
@@ -160,47 +175,20 @@
 .item-text {
   color: white;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
-  line-height: 1.2;
-  padding: 0 10px;
+  line-height: 1.3;
+  padding: 0 12px;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 2;
   transition: all 0.3s ease;
 }
 
-/* ====== EFECTOS HOVER MEJORADOS ====== */
+/* ====== EFECTOS HOVER GENERALES ====== */
 .wheel-item:hover {
   z-index: 20;
-}
-
-.wheel-item[data-position="1"]:hover {
-  transform: translate(-50%, 0) scale(1.25) !important;
-}
-
-.wheel-item[data-position="2"]:hover {
-  transform: translate(0, 0) scale(1.25) !important;
-}
-
-.wheel-item[data-position="3"]:hover {
-  transform: translate(0, -50%) scale(1.25) !important;
-}
-
-.wheel-item[data-position="4"]:hover {
-  transform: translate(0, 0) scale(1.25) !important;
-}
-
-.wheel-item[data-position="5"]:hover {
-  transform: translate(-50%, 0) scale(1.25) !important;
-}
-
-.wheel-item[data-position="6"]:hover {
-  transform: translate(0, 0) scale(1.25) !important;
-}
-
-.wheel-item[data-position="7"]:hover {
-  transform: translate(0, -50%) scale(1.25) !important;
+  transform: scale(1.25) !important;
 }
 
 .wheel-item:hover .wheel-item-content {
@@ -208,6 +196,20 @@
   background: linear-gradient(135deg, #2980b9 0%, #1a5490 100%);
   border-color: #ffd700;
   border-width: 5px;
+}
+
+/* ✅ HOVER ESPECIAL PARA MODALIDAD PSICOSOCIAL */
+.modalidad-psicosocial:hover .wheel-item-content {
+  background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
+  box-shadow: 0 15px 45px rgba(155, 89, 182, 0.7);
+  border-color: #f39c12;
+}
+
+/* ✅ HOVER ESPECIAL PARA MODALIDAD SVE */
+.modalidad-sve:hover .wheel-item-content {
+  background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
+  box-shadow: 0 15px 45px rgba(86, 171, 47, 0.7);
+  border-color: #f1c40f;
 }
 
 .wheel-item:hover .wheel-item-content::before {
@@ -232,101 +234,82 @@
 /* ====== ACTIVE EFFECT ====== */
 .wheel-item:active {
   z-index: 25;
-}
-
-.wheel-item[data-position="1"]:active {
-  transform: translate(-50%, 0) scale(1.15) !important;
-}
-
-.wheel-item[data-position="2"]:active {
-  transform: translate(0, 0) scale(1.15) !important;
-}
-
-.wheel-item[data-position="3"]:active {
-  transform: translate(0, -50%) scale(1.15) !important;
-}
-
-.wheel-item[data-position="4"]:active {
-  transform: translate(0, 0) scale(1.15) !important;
-}
-
-.wheel-item[data-position="5"]:active {
-  transform: translate(-50%, 0) scale(1.15) !important;
-}
-
-.wheel-item[data-position="6"]:active {
-  transform: translate(0, 0) scale(1.15) !important;
-}
-
-.wheel-item[data-position="7"]:active {
-  transform: translate(0, -50%) scale(1.15) !important;
+  transform: scale(1.15) !important;
 }
 
 .wheel-item:active .wheel-item-content {
   box-shadow: 0 5px 20px rgba(52, 152, 219, 0.8);
 }
 
-/* ====== POSICIONES CERRADAS EN CÍRCULO PERFECTO ====== */
+/* ====== POSICIONES BIEN DISTRIBUIDAS EN CÍRCULO (9 ITEMS - 40° entre cada uno) ====== */
+/* Radio del círculo: 275px desde el centro */
+
+/* Item 1: Top (0°) */
 .wheel-item[data-position="1"] {
-  top: 2%;
+  top: 0%;
   left: 50%;
   transform: translate(-50%, 0);
 }
 
+/* Item 2: 40° - Modalidad Psicosocial */
 .wheel-item[data-position="2"] {
-  top: 12%;
-  right: 12%;
+  top: 8%;
+  right: 13%;
   transform: translate(0, 0);
 }
 
+/* Item 3: 80° */
 .wheel-item[data-position="3"] {
-  top: 50%;
+  top: 30%;
   right: 2%;
+  transform: translate(0, 0);
+}
+
+/* Item 4: 120° - Modalidad SVE */
+.wheel-item[data-position="4"] {
+  top: 50%;
+  right: 0%;
   transform: translate(0, -50%);
 }
 
-.wheel-item[data-position="4"] {
-  bottom: 12%;
-  right: 12%;
+/* Item 5: 160° */
+.wheel-item[data-position="5"] {
+  bottom: 30%;
+  right: 2%;
   transform: translate(0, 0);
 }
 
-.wheel-item[data-position="5"] {
-  bottom: 2%;
+/* Item 6: 200° */
+.wheel-item[data-position="6"] {
+  bottom: 8%;
+  right: 13%;
+  transform: translate(0, 0);
+}
+
+/* Item 7: 240° */
+.wheel-item[data-position="7"] {
+  bottom: 0%;
   left: 50%;
   transform: translate(-50%, 0);
 }
 
-.wheel-item[data-position="6"] {
-  bottom: 12%;
-  left: 12%;
+/* Item 8: 280° */
+.wheel-item[data-position="8"] {
+  bottom: 8%;
+  left: 13%;
   transform: translate(0, 0);
 }
 
-.wheel-item[data-position="7"] {
-  top: 50%;
+/* Item 9: 320° */
+.wheel-item[data-position="9"] {
+  top: 30%;
   left: 2%;
-  transform: translate(0, -50%);
+  transform: translate(0, 0);
 }
-
-/* ====== LÍNEAS DE CONEXIÓN (OPCIONAL - DESCOMENTARLO SI TE GUSTA) ====== */
-/*
-.wheel-item::before {
-  content: '';
-  position: absolute;
-  width: 2px;
-  height: 60px;
-  background: linear-gradient(to bottom, rgba(102, 126, 234, 0.3), transparent);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: -1;
-}
-*/
 
 /* ====== FOOTER ====== */
 .sitemap-footer {
-  margin-top: 20px;
+  margin-top: 30px;
   text-align: center;
   color: #7f8c8d;
   font-size: 0.95em;
@@ -345,6 +328,8 @@
 .wheel-item[data-position="5"] { animation-delay: 0.5s; }
 .wheel-item[data-position="6"] { animation-delay: 0.6s; }
 .wheel-item[data-position="7"] { animation-delay: 0.7s; }
+.wheel-item[data-position="8"] { animation-delay: 0.8s; }
+.wheel-item[data-position="9"] { animation-delay: 0.9s; }
 
 @keyframes itemEnter {
   from {
@@ -358,37 +343,55 @@
 
 /* ====== RESPONSIVE ====== */
 
-/* Tablets */
-@media (max-width: 1024px) {
+/* Pantallas grandes */
+@media (max-width: 1400px) {
   .wheel-container {
-    width: 420px;
-    height: 420px;
+    width: 650px;
+    height: 650px;
   }
 
   .wheel-center {
-    width: 170px;
-    height: 170px;
-  }
-
-  .center-icon {
-    font-size: 44px;
-  }
-
-  .center-text {
-    font-size: 15px;
+    width: 180px;
+    height: 180px;
   }
 
   .wheel-item {
-    width: 110px;
-    height: 110px;
+    width: 135px;
+    height: 135px;
+  }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .wheel-container {
+    width: 550px;
+    height: 550px;
+  }
+
+  .wheel-center {
+    width: 160px;
+    height: 160px;
+  }
+
+  .center-icon {
+    font-size: 48px;
+  }
+
+  .center-text {
+    font-size: 16px;
+  }
+
+  .wheel-item {
+    width: 120px;
+    height: 120px;
   }
 
   .item-icon {
-    font-size: 32px;
+    font-size: 36px;
   }
 
   .item-text {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 
@@ -405,13 +408,13 @@
 
   .sitemap-subtitle {
     font-size: 0.9em;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
   }
 
   .wheel-container {
-    width: 350px;
-    height: 350px;
-    margin: 15px auto;
+    width: 450px;
+    height: 450px;
+    margin: 20px auto;
   }
 
   .wheel-center {
@@ -420,25 +423,25 @@
   }
 
   .center-icon {
-    font-size: 36px;
+    font-size: 40px;
   }
 
   .center-text {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .wheel-item {
-    width: 95px;
-    height: 95px;
+    width: 105px;
+    height: 105px;
   }
 
   .item-icon {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .item-text {
-    font-size: 11px;
-    padding: 0 6px;
+    font-size: 12px;
+    padding: 0 8px;
   }
 
   .wheel-item-content {
@@ -461,107 +464,80 @@
 
   .sitemap-subtitle {
     font-size: 0.8em;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
 
   .wheel-container {
-    width: 300px;
-    height: 300px;
-    margin: 10px auto;
+    width: 360px;
+    height: 360px;
+    margin: 15px auto;
   }
 
   .wheel-center {
-    width: 120px;
-    height: 120px;
+    width: 110px;
+    height: 110px;
     border: 4px solid white;
   }
 
   .center-icon {
-    font-size: 30px;
-    margin-bottom: 4px;
+    font-size: 32px;
+    margin-bottom: 6px;
   }
 
   .center-text {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.2;
   }
 
   .wheel-item {
-    width: 80px;
-    height: 80px;
+    width: 85px;
+    height: 85px;
   }
 
   .item-icon {
-    font-size: 24px;
-    margin-bottom: 3px;
+    font-size: 26px;
+    margin-bottom: 4px;
   }
 
   .item-text {
-    font-size: 9px;
-    padding: 0 4px;
-    line-height: 1.1;
+    font-size: 10px;
+    padding: 0 6px;
+    line-height: 1.2;
   }
 
   .wheel-item-content {
     border: 3px solid white;
   }
 
+  .modalidad-psicosocial .wheel-item-content,
+  .modalidad-sve .wheel-item-content {
+    border-width: 4px;
+  }
+
   .sitemap-footer {
     margin-top: 15px;
     font-size: 0.8em;
-  }
-
-  /* Ajustar posiciones para móviles pequeños */
-  .wheel-item[data-position="1"] {
-    top: 3%;
-  }
-
-  .wheel-item[data-position="2"] {
-    top: 15%;
-    right: 15%;
-  }
-
-  .wheel-item[data-position="3"] {
-    right: 3%;
-  }
-
-  .wheel-item[data-position="4"] {
-    bottom: 15%;
-    right: 15%;
-  }
-
-  .wheel-item[data-position="5"] {
-    bottom: 3%;
-  }
-
-  .wheel-item[data-position="6"] {
-    bottom: 15%;
-    left: 15%;
-  }
-
-  .wheel-item[data-position="7"] {
-    left: 3%;
   }
 }
 
 /* Móviles muy pequeños */
 @media (max-width: 360px) {
   .wheel-container {
-    width: 260px;
-    height: 260px;
+    width: 300px;
+    height: 300px;
   }
 
   .wheel-center {
-    width: 100px;
-    height: 100px;
+    width: 95px;
+    height: 95px;
   }
 
   .center-icon {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .center-text {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .wheel-item {
@@ -570,10 +546,11 @@
   }
 
   .item-icon {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .item-text {
-    font-size: 8px;
+    font-size: 9px;
+    padding: 0 4px;
   }
 }

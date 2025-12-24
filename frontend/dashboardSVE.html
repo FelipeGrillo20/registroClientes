@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard SVE - Sistema de Vigilancia Epidemiológica</title>
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/dashboardSVE.css" />
+  
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  
+  <div class="dashboard-sve-container">
+    
+    <!-- Barra de usuario -->
+    <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+    
+    <!-- Header del Dashboard -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <button class="btn-back" onclick="window.location.href='clientes.html'">
+          ← Volver
+        </button>
+        <h1 class="dashboard-title">
+          📊 Dashboard Sistema de Vigilancia Epidemiológica
+        </h1>
+      </div>
+      <div class="header-right">
+        <button class="btn-refresh" id="btnRefreshDashboard" title="Actualizar datos">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicador de carga -->
+    <div id="loadingIndicator" class="loading-indicator">
+      <div class="spinner-dashboard"></div>
+      <p>Cargando estadísticas SVE...</p>
+    </div>
+
+    <!-- Contenedor principal de estadísticas -->
+    <div id="dashboardContent" style="display: none;">
+      
+      <!-- Sección 1: Cards de Estadísticas Principales -->
+      <section class="stats-section">
+        <h2 class="section-title">📈 Estadísticas Generales SVE</h2>
+        
+        <div class="stats-grid">
+          
+          <!-- Card: Total Casos SVE -->
+          <div class="stat-card stat-card-green">
+            <div class="stat-icon">🏥</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Total Casos SVE</h3>
+              <p class="stat-value" id="statTotalCasos">0</p>
+              <p class="stat-sublabel">Registrados en el sistema</p>
+            </div>
+          </div>
+
+          <!-- Card: Casos Nuevos Este Mes -->
+          <div class="stat-card stat-card-blue">
+            <div class="stat-icon">📅</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Casos Nuevos Este Mes</h3>
+              <p class="stat-value" id="statCasosNuevosMes">0</p>
+              <p class="stat-sublabel">Ingresados en últimos 30 días</p>
+            </div>
+          </div>
+
+          <!-- Card: Casos Abiertos -->
+          <div class="stat-card stat-card-orange">
+            <div class="stat-icon">📂</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Casos Abiertos</h3>
+              <p class="stat-value" id="statCasosAbiertos">0</p>
+              <p class="stat-sublabel">En seguimiento activo</p>
+            </div>
+          </div>
+
+          <!-- Card: Casos Cerrados -->
+          <div class="stat-card stat-card-purple">
+            <div class="stat-icon">🔒</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Casos Cerrados</h3>
+              <p class="stat-value" id="statCasosCerrados">0</p>
+              <p class="stat-sublabel">Completados exitosamente</p>
+            </div>
+          </div>
+
+          <!-- Card: Total Consultas SVE -->
+          <div class="stat-card stat-card-teal">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Total Sesiones SVE</h3>
+              <p class="stat-value" id="statTotalConsultas">0</p>
+              <p class="stat-sublabel">Sesiones registradas</p>
+            </div>
+          </div>
+
+          <!-- Card: Consultas Este Mes -->
+          <div class="stat-card stat-card-pink">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Casos Atendidos Este Mes</h3>
+              <p class="stat-value" id="statConsultasMes">0</p>
+              <p class="stat-sublabel">Trabajadores únicos</p>
+            </div>
+          </div>
+
+          <!-- Card: Promedio Consultas -->
+          <div class="stat-card stat-card-indigo">
+            <div class="stat-icon">📐</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Promedio por Caso</h3>
+              <p class="stat-value" id="statPromedioConsultas">0</p>
+              <p class="stat-sublabel">Consultas por trabajador</p>
+            </div>
+          </div>
+
+          <!-- Card: Tasa de Cierre -->
+          <div class="stat-card stat-card-success">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Tasa de Cierre</h3>
+              <p class="stat-value" id="statTasaCierre">0%</p>
+              <p class="stat-sublabel">Casos finalizados</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Sección 2: Gráficos de Modalidad -->
+      <section class="charts-section">
+        <h2 class="section-title">💻 Modalidad de Consultas</h2>
+        
+        <div class="charts-grid-two">
+          
+          <!-- Gráfico: Consultas por Modalidad (Pie) -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">🎯 Distribución por Modalidad</h3>
+              <p class="chart-subtitle">Virtual vs Presencial</p>
+            </div>
+            <div class="chart-body">
+              <canvas id="chartModalidad"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico: Estado de Casos (Dona) -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 Estado de Casos</h3>
+              <p class="chart-subtitle">Abiertos vs Cerrados</p>
+            </div>
+            <div class="chart-body">
+              <canvas id="chartEstadoCasos"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Sección 3: Criterios de Inclusión -->
+      <section class="charts-section">
+        <h2 class="section-title">🩺 Criterios de Inclusión al SVE</h2>
+        
+        <div class="chart-card chart-card-full">
+          <div class="chart-header">
+            <h3 class="chart-title">📈 Distribución por Criterio de Inclusión</h3>
+            <p class="chart-subtitle">Principales causas de ingreso al SVE</p>
+          </div>
+          <div class="chart-body">
+            <canvas id="chartCriteriosInclusion"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección 4: Evolución Temporal -->
+      <section class="charts-section">
+        <h2 class="section-title">📅 Evolución Temporal</h2>
+        
+        <div class="chart-card chart-card-full">
+          <div class="chart-header">
+            <h3 class="chart-title">📉 Consultas SVE por Mes</h3>
+            <p class="chart-subtitle">Últimos 12 meses</p>
+          </div>
+          <div class="chart-body">
+            <canvas id="chartEvolucionTemporal"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección 5: Indicadores Adicionales -->
+      <section class="stats-section">
+        <h2 class="section-title">👥 Indicadores de Trabajadores</h2>
+        
+        <div class="stats-grid-three">
+          
+          <!-- Card: Trabajadores en Seguimiento -->
+          <div class="stat-card stat-card-info">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Seguimiento Activo</h3>
+              <p class="stat-value" id="statTrabajadoresSeguimiento">0</p>
+              <p class="stat-sublabel">Trabajadores en proceso</p>
+            </div>
+          </div>
+
+          <!-- Card: Trabajadores con Casos Cerrados -->
+          <div class="stat-card stat-card-success-alt">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Casos Finalizados</h3>
+              <p class="stat-value" id="statTrabajadoresCerrados">0</p>
+              <p class="stat-sublabel">Trabajadores con seguimiento completo</p>
+            </div>
+          </div>
+
+          <!-- Card: Consultas Virtuales -->
+          <div class="stat-card stat-card-virtual">
+            <div class="stat-icon">💻</div>
+            <div class="stat-content">
+              <h3 class="stat-label">Consultas Virtuales</h3>
+              <p class="stat-value" id="statConsultasVirtuales">0</p>
+              <p class="stat-sublabel">Atención remota</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="js/dashboardSVE.js"></script>
+  
+</body>
+</html>

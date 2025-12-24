@@ -146,6 +146,37 @@ body {
   box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
 }
 
+/* ⭐ Estilos específicos para SVE (aplicados con JavaScript) */
+.btn-dashboard.sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+}
+
+.btn-dashboard.sve:hover {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
+}
+
+/* Animación de transición */
+@keyframes dashboardTransition {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.btn-dashboard.animating {
+  animation: dashboardTransition 0.4s ease;
+}
+
 .page-header h1 {
   color: white;
   font-size: 1.8em;
@@ -1475,6 +1506,13 @@ body {
     padding: 20px;
   }
 
+  @media (max-width: 768px) {
+  .btn-dashboard {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
   .recomendaciones-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1600,7 +1638,7 @@ body {
   border-bottom: 1px solid #e9ecef;
 }
 
-.consulta-sve-numero {
+.sesion-sve-numero {
   background: linear-gradient(135deg, #56ab2f, #a8e063);
   color: white;
   padding: 6px 14px;
@@ -1652,7 +1690,7 @@ body {
     flex-wrap: wrap;
   }
   
-  .consulta-sve-numero {
+  .sesion-sve-numero {
     width: 100%;
     text-align: center;
   }
@@ -1663,7 +1701,7 @@ body {
     padding: 15px;
   }
   
-  .consulta-sve-numero {
+  .sesion-sve-numero {
     font-size: 12px;
     padding: 5px 12px;
   }

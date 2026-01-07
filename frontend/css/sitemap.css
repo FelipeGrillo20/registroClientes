@@ -244,67 +244,11 @@
 /* ====== POSICIONES BIEN DISTRIBUIDAS EN CÍRCULO (9 ITEMS - 40° entre cada uno) ====== */
 /* Radio del círculo: 275px desde el centro */
 
-/* Item 1: Top (0°) */
-.wheel-item[data-position="1"] {
-  top: 0%;
-  left: 50%;
-  transform: translate(-50%, 0);
-}
-
-/* Item 2: 40° - Modalidad Psicosocial */
-.wheel-item[data-position="2"] {
-  top: 8%;
-  right: 13%;
-  transform: translate(0, 0);
-}
-
-/* Item 3: 80° */
-.wheel-item[data-position="3"] {
-  top: 30%;
-  right: 2%;
-  transform: translate(0, 0);
-}
-
-/* Item 4: 120° - Modalidad SVE */
-.wheel-item[data-position="4"] {
+.wheel-item {
+  position: absolute;
   top: 50%;
-  right: 0%;
-  transform: translate(0, -50%);
-}
-
-/* Item 5: 160° */
-.wheel-item[data-position="5"] {
-  bottom: 30%;
-  right: 2%;
-  transform: translate(0, 0);
-}
-
-/* Item 6: 200° */
-.wheel-item[data-position="6"] {
-  bottom: 8%;
-  right: 13%;
-  transform: translate(0, 0);
-}
-
-/* Item 7: 240° */
-.wheel-item[data-position="7"] {
-  bottom: 0%;
   left: 50%;
-  transform: translate(-50%, 0);
-}
-
-/* Item 8: 280° */
-.wheel-item[data-position="8"] {
-  bottom: 8%;
-  left: 13%;
-  transform: translate(0, 0);
-}
-
-/* Item 9: 320° */
-.wheel-item[data-position="9"] {
-  top: 30%;
-  left: 2%;
-  transform: translate(0, 0);
+  transform-origin: center;
 }
 
 /* ====== FOOTER ====== */
@@ -320,16 +264,6 @@
 .wheel-item {
   animation: itemEnter 0.6s ease-out backwards;
 }
-
-.wheel-item[data-position="1"] { animation-delay: 0.1s; }
-.wheel-item[data-position="2"] { animation-delay: 0.2s; }
-.wheel-item[data-position="3"] { animation-delay: 0.3s; }
-.wheel-item[data-position="4"] { animation-delay: 0.4s; }
-.wheel-item[data-position="5"] { animation-delay: 0.5s; }
-.wheel-item[data-position="6"] { animation-delay: 0.6s; }
-.wheel-item[data-position="7"] { animation-delay: 0.7s; }
-.wheel-item[data-position="8"] { animation-delay: 0.8s; }
-.wheel-item[data-position="9"] { animation-delay: 0.9s; }
 
 @keyframes itemEnter {
   from {

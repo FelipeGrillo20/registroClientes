@@ -202,7 +202,7 @@ btnCancel.addEventListener("click", () => {
   }
 });
 
-// Botón refrescar captcha
+// Botón refrescar el captcha
 btnRefreshCaptcha.addEventListener("click", () => {
   generateCaptcha();
   captchaAnswerInput.value = "";

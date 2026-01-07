@@ -90,3 +90,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
   console.log('✅ Mapa de sitio cargado correctamente');
 });
+
+// 📐 Distribución automática en círculo
+const wheelContainer = document.querySelector('.wheel-container');
+const items = document.querySelectorAll('.wheel-item');
+
+const totalItems = items.length;
+const radius = 275; // distancia desde el centro (ajustable)
+const centerX = wheelContainer.offsetWidth / 2;
+const centerY = wheelContainer.offsetHeight / 2;
+
+items.forEach((item, index) => {
+  const angle = (2 * Math.PI / totalItems) * index - Math.PI / 2;
+
+  const x = centerX + radius * Math.cos(angle);
+  const y = centerY + radius * Math.sin(angle);
+
+  item.style.left = `${x}px`;
+  item.style.top = `${y}px`;
+  item.style.transform = 'translate(-50%, -50%)';
+});

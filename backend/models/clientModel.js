@@ -141,7 +141,7 @@ exports.getClientsWithFilters = async (filters) => {
     paramIndex++;
   }
   
-  // Filtro por fecha de inicio
+  // Filtro por fecha de inicios
   if (fecha_inicio) {
     query += ` AND c.created_at >= $${paramIndex}::timestamp`;
     params.push(fecha_inicio + ' 00:00:00');

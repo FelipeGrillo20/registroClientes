@@ -176,7 +176,7 @@ class SearchableSelect {
     this.hideDropdown();
     this.input.setAttribute('readonly', 'readonly');
     
-    // Disparar evento change en el campo oculto
+    // Disparar evento change en el campo ocultos 
     const event = new Event('change', { bubbles: true });
     this.hidden.dispatchEvent(event);
   }

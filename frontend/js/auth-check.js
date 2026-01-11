@@ -113,7 +113,7 @@
       return;
     }
     
-    // Mostrar el elemento y actualizar contenido
+    // Mostrar el elemento y actualizar contenidos
     userInfoElement.style.display = "flex";
     userInfoElement.innerHTML = `
       <div class="user-left-section">

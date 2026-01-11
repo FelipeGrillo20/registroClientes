@@ -130,7 +130,7 @@ async function renderClients(list) {
   for (const c of list) {
     const tr = document.createElement("tr");
 
-    // Determinar badge de vínculo
+    // Determinar badge de vínculos
     let vinculoBadge = '';
     if (c.vinculo === 'Trabajador') {
       vinculoBadge = '<span class="badge-vinculo badge-trabajador">Trabajador</span>';

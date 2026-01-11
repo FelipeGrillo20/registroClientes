@@ -585,6 +585,12 @@ textarea {
   }
 }
 
+/* ============================================
+   ESTILOS PARA INDICADOR DE MODALIDAD
+   Agregar estos estilos al archivo css/styles.css
+   ============================================ */
+
+
 .modalidad-indicador {
   display: flex;
   align-items: center;

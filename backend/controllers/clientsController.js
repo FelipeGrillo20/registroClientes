@@ -26,7 +26,7 @@ exports.createClient = async (req, res) => {
       return res.status(400).json({ message: "Cédula y nombre son requeridos" });
     }
 
-    // ✅ NUEVO: Validar que la modalidad sea válida
+    // ✅ NUEVO: Validar que la modalidad sea válidas
     if (!modalidad) {
       return res.status(400).json({ message: "La modalidad es requerida" });
     }

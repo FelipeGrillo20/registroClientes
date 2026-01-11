@@ -23,7 +23,7 @@ const btnTogglePassword = document.getElementById("btnTogglePassword");
 if (btnTogglePassword) {
   btnTogglePassword.addEventListener("click", function() {
     const eyeIcon = this.querySelector(".eye-icon");
-
+    
     if (passwordInput.type === "password") {
       passwordInput.type = "text";
       eyeIcon.textContent = "🙈";
@@ -41,7 +41,7 @@ function generateCaptcha() {
   const num1 = Math.floor(Math.random() * 10) + 1;
   const num2 = Math.floor(Math.random() * 10) + 1;
   captchaAnswer = num1 + num2;
-
+  
   document.getElementById("captchaQuestion").textContent = `${num1} + ${num2} = ?`;
   captchaAnswerInput.value = "";
 }
@@ -53,7 +53,7 @@ function showError(message) {
   errorMessage.style.color = "#c0392b";
   errorMessage.style.borderLeft = "4px solid #e74c3c";
   errorMessage.classList.add("show");
-
+  
   setTimeout(() => {
     errorMessage.classList.remove("show");
   }, 5000);
@@ -81,52 +81,52 @@ function validateCaptcha() {
 // Manejar submit del formulario
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
+  
   console.log("=== INICIO DE LOGIN ===");
-
+  
   // Limpiar errores previos
   errorMessage.classList.remove("show");
-
+  
   // Obtener valores
   const cedula = cedulaInput.value.trim();
   const password = passwordInput.value.trim();
-
+  
   console.log("Cédula ingresada:", cedula);
   console.log("Contraseña ingresada:", password);
-
+  
   // Validaciones básicas
   if (!cedula || !password) {
     showError("Por favor completa todos los campos");
     return;
   }
-
+  
   if (!/^\d+$/.test(cedula)) {
     showError("La cédula debe contener solo números");
     return;
   }
-
+  
   // Validar captcha
   if (!validateCaptcha()) {
     showError("Captcha incorrecto. Por favor intenta de nuevo");
     generateCaptcha();
     return;
   }
-
+  
   console.log("Validaciones pasadas, enviando al servidor...");
-
+  
   // Realizar login
   setLoading(true);
-
+  
   try {
     const requestBody = {
       cedula,
       password,
       captchaToken: "valid"
     };
-
+    
     console.log("Request body:", requestBody);
     console.log("URL:", `${API_URL}/login`);
-
+    
     const response = await fetch(
      window.API_CONFIG.ENDPOINTS.AUTH.LOGIN,
      {
@@ -138,29 +138,29 @@ loginForm.addEventListener("submit", async (e) => {
     }
    );
 
-
+    
     console.log("Response status:", response.status);
-
+    
     const data = await response.json();
     console.log("Response data:", data);
-
+    
     if (!response.ok) {
       throw new Error(data.message || "Error al iniciar sesión");
     }
-
+    
     // Login exitoso
     if (data.success && data.token) {
       console.log("Login exitoso! Token recibido");
-
+      
       // Guardar token y datos del usuario en localStorage
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("userData", JSON.stringify(data.user));
-
+      
       console.log("Token guardado en localStorage");
-
+      
       // Mostrar mensaje de éxito
       showSuccess("¡Bienvenido! Redirigiendo...");
-
+      
       // ⭐ CAMBIO: Redireccionar a modalidad.html en lugar de index.html
       setTimeout(() => {
         console.log("Redirigiendo a modalidad.html");
@@ -169,7 +169,7 @@ loginForm.addEventListener("submit", async (e) => {
     } else {
       throw new Error("Respuesta inválida del servidor");
     }
-
+    
   } catch (err) {
     console.error("Error en login:", err);
     showError(err.message || "Error de conexión. Verifica que el servidor esté activo");
@@ -193,7 +193,7 @@ btnCancel.addEventListener("click", () => {
   loginForm.reset();
   generateCaptcha();
   errorMessage.classList.remove("show");
-
+  
   // Resetear el toggle de contraseña
   if (btnTogglePassword) {
     passwordInput.type = "password";
@@ -213,9 +213,9 @@ btnRefreshCaptcha.addEventListener("click", () => {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Página de login cargada");
   console.log("API URL:", API_URL);
-
+  
   const token = localStorage.getItem("authToken");
-
+  
   if (token) {
     console.log("Token encontrado, verificando...");
     // Verificar si el token es válido

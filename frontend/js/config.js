@@ -25,7 +25,7 @@ window.API_CONFIG = {
       USERS: `/api/auth/users`,
       ADMIN_CHANGE_PASSWORD: `/api/auth/admin/change-user-password`
     },
-    
+
     // Clientes
     CLIENTS: `/api/clients`,
 
@@ -49,3 +49,4 @@ if (!isProduction) {
   console.log('🚀 Modo: PRODUCCIÓN');
   console.log('🔗 API URL: mismo dominio (/api)');
 }
+

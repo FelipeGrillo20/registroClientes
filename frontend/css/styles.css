@@ -74,7 +74,8 @@ body {
   font-size: 15px;
 }
 
-.btn-mi-perfil {
+.btn-mi-perfil,
+.btn-sitemap {
   background: rgba(255, 255, 255, 0.25) !important;
   color: white !important;
   border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
@@ -87,7 +88,8 @@ body {
   white-space: nowrap;
 }
 
-.btn-mi-perfil:hover {
+.btn-mi-perfil:hover,
+.btn-sitemap:hover {
   background: rgba(255, 255, 255, 0.4) !important;
   border-color: white !important;
   transform: translateY(-1px);
@@ -110,6 +112,49 @@ body {
   background: white !important;
   color: #667eea !important;
   transform: translateY(-2px);
+}
+
+/* ============================================ */
+/* INDICADOR DE MODALIDAD SELECCIONADA */
+/* ============================================ */
+.modalidad-indicador {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(86, 171, 47, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: slideInDown 0.5s ease-out;
+}
+
+.modalidad-indicador .modalidad-icon {
+  font-size: 20px;
+}
+
+.modalidad-indicador .modalidad-text {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.modalidad-indicador .modalidad-text strong {
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Animación de entrada */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ============================================ */
@@ -428,79 +473,6 @@ textarea {
 }
 
 /* ============================================ */
-/* BOTÓN MAPA DE SITIO (Agregar al final de styles.css) */
-/* ============================================ */
-
-.btn-sitemap {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: white !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
-  padding: 7px 14px !important;
-  border-radius: 6px !important;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.btn-sitemap:hover {
-  background: rgba(255, 255, 255, 0.4) !important;
-  border-color: white !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ============================================ */
-/* RESPONSIVE PARA BOTÓN MAPA DE SITIO */
-/* ============================================ */
-
-@media (max-width: 768px) {
-  .btn-sitemap {
-    font-size: 12px;
-    padding: 6px 12px !important;
-    width: fit-content;
-  }
-}
-
-@media (max-width: 480px) {
-  .btn-sitemap {
-    font-size: 11px;
-    padding: 5px 10px !important;
-  }
-}
-
-/* ============================================ */
-/* INDICADOR DE MODALIDAD SELECCIONADA */
-/* ============================================ */
-.modalidad-indicador {
-  display: flex !important;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-  padding: 12px 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(86, 171, 47, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.modalidad-icon {
-  font-size: 20px;
-}
-
-.modalidad-text {
-  color: white;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.modalidad-text strong {
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* ============================================ */
 /* BOTÓN SELECCIONAR MODALIDAD */
 /* ============================================ */
 .form-actions-secondary {
@@ -532,131 +504,6 @@ textarea {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
 }
-
-/* ============================================ */
-/* BOTÓN MODALIDAD EN LA BARRA SUPERIOR */
-/* ============================================ */
-.btn-modalidad-bar {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: white !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
-  padding: 7px 14px !important;
-  border-radius: 6px !important;
-  cursor: default;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ============================================ */
-/* RESPONSIVE PARA INDICADOR DE MODALIDAD */
-/* ============================================ */
-@media (max-width: 768px) {
-  .modalidad-indicador {
-    padding: 10px 15px;
-  }
-  
-  .modalidad-icon {
-    font-size: 18px;
-  }
-  
-  .modalidad-text {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .modalidad-indicador {
-    padding: 8px 12px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .modalidad-icon {
-    font-size: 16px;
-  }
-  
-  .modalidad-text {
-    font-size: 12px;
-  }
-}
-
-/* ============================================
-   ESTILOS PARA INDICADOR DE MODALIDAD
-   Agregar estos estilos al archivo css/styles.css
-   ============================================ */
-
-
-.modalidad-indicador {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: slideInDown 0.5s ease-out;
-}
-
-.modalidad-indicador .modalidad-icon {
-  font-size: 1.2rem;
-}
-
-.modalidad-indicador .modalidad-text {
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.modalidad-indicador .modalidad-text strong {
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-/* Animación de entrada */
-@keyframes slideInDown {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Botón para seleccionar modalidad */
-.btn-seleccionar-modalidad {
-  display: inline-block;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  margin-top: 10px;
-  text-align: center;
-}
-
-.btn-seleccionar-modalidad:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-/* Estilos para las acciones secundarias del formulario */
-.form-actions-secondary {
-  margin-top: 15px;
-  text-align: center;
-  padding-top: 15px;
-  border-top: 1px solid #e0e0e0;
-}
-
 
 /* ============================================ */
 /* RESPONSIVE */
@@ -723,7 +570,8 @@ textarea {
     gap: 8px;
   }
   
-  .btn-mi-perfil {
+  .btn-mi-perfil,
+  .btn-sitemap {
     font-size: 12px;
     padding: 6px 12px !important;
     width: fit-content;
@@ -762,6 +610,19 @@ textarea {
   .searchable-dropdown {
     max-height: 200px;
   }
+  
+  /* Indicador de modalidad en móvil */
+  .modalidad-indicador {
+    padding: 10px 15px;
+  }
+  
+  .modalidad-indicador .modalidad-icon {
+    font-size: 18px;
+  }
+  
+  .modalidad-indicador .modalidad-text {
+    font-size: 13px;
+  }
 }
 
 /* Móviles pequeños */
@@ -793,7 +654,8 @@ textarea {
     font-size: 13px;
   }
   
-  .btn-mi-perfil {
+  .btn-mi-perfil,
+  .btn-sitemap {
     font-size: 11px;
     padding: 5px 10px !important;
   }
@@ -849,5 +711,20 @@ textarea {
     padding: 8px 10px;
     font-size: 13px;
   }
+  
+  /* Indicador de modalidad en móviles pequeños */
+  .modalidad-indicador {
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .modalidad-indicador .modalidad-icon {
+    font-size: 16px;
+  }
+  
+  .modalidad-indicador .modalidad-text {
+    font-size: 12px;
+  }
 }
-

@@ -585,6 +585,73 @@ textarea {
   }
 }
 
+.modalidad-indicador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideInDown 0.5s ease-out;
+}
+
+.modalidad-indicador .modalidad-icon {
+  font-size: 1.2rem;
+}
+
+.modalidad-indicador .modalidad-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.modalidad-indicador .modalidad-text strong {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Animación de entrada */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Botón para seleccionar modalidad */
+.btn-seleccionar-modalidad {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.btn-seleccionar-modalidad:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Estilos para las acciones secundarias del formulario */
+.form-actions-secondary {
+  margin-top: 15px;
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+
 /* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
@@ -777,3 +844,4 @@ textarea {
     font-size: 13px;
   }
 }
+

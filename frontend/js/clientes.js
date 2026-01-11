@@ -16,9 +16,36 @@ function getAuthToken() {
   return localStorage.getItem("authToken");
 }
 
+// ✅ NUEVA FUNCIÓN: Verificar y mostrar modalidad seleccionada
+function verificarYMostrarModalidad() {
+  const modalidadSeleccionada = localStorage.getItem('modalidadSeleccionada');
+  
+  if (!modalidadSeleccionada) {
+    alert('⚠️ Debes seleccionar una modalidad antes de ver trabajadores');
+    window.location.href = 'modalidad.html';
+    return null;
+  }
+  
+  // ✅ Actualizar el título de la página según la modalidad
+  const titulo = document.querySelector('.page-header h1');
+  if (titulo) {
+    if (modalidadSeleccionada === 'Orientación Psicosocial') {
+      titulo.innerHTML = '📋 Trabajadores - Orientación Psicosocial';
+    } else if (modalidadSeleccionada === 'Sistema de Vigilancia Epidemiológica') {
+      titulo.innerHTML = '📋 Trabajadores - Sistema de Vigilancia Epidemiológica';
+    }
+  }
+  
+  return modalidadSeleccionada;
+}
+
 // Control de menús de filtros
 document.addEventListener("DOMContentLoaded", () => {
-  loadClients();
+  // ✅ NUEVO: Verificar modalidad al cargar
+  const modalidad = verificarYMostrarModalidad();
+  if (!modalidad) return;
+  
+  loadClients(modalidad);
   loadEmpresas();
   setupFilterEvents();
 });
@@ -55,21 +82,29 @@ function populateEmpresaFilter() {
   });
 }
 
-async function loadClients() {
+// ✅ ACTUALIZADO: Cargar clientes CON filtro de modalidad
+async function loadClients(modalidad) {
   tbody.innerHTML = `<tr><td colspan="8" class="no-data">Cargando clientes...</td></tr>`;
+  
   try {
-    const res = await fetch(API_URL, {
+    // ✅ NUEVO: Agregar parámetro de modalidad a la petición
+    const url = `${API_URL}?modalidad=${encodeURIComponent(modalidad)}`;
+    
+    const res = await fetch(url, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
       }
     });
+    
     if (!res.ok) {
       tbody.innerHTML = `<tr><td colspan="8" class="no-data">Error al cargar clientes</td></tr>`;
       return;
     }
+    
     const clients = await res.json();
+    
     if (!Array.isArray(clients) || clients.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="no-data">No hay clientes registrados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="no-data">No hay clientes registrados en esta modalidad</td></tr>`;
       return;
     }
 
@@ -282,7 +317,10 @@ async function onDelete(id) {
       alert("Error al eliminar cliente");
       return;
     }
-    await loadClients();
+    
+    // ✅ NUEVO: Recargar con modalidad actual
+    const modalidad = localStorage.getItem('modalidadSeleccionada');
+    await loadClients(modalidad);
   } catch (err) {
     console.error("Error deleting client:", err);
     alert("Error de conexión al eliminar");

@@ -2,7 +2,14 @@
 // Script para proteger páginas que requieren autenticación
 
 (function() {
-  const API_URL = window.API_CONFIG.ENDPOINTS.AUTH.VERIFY.replace('/verify', '');
+  // ✅ CORREGIDO: Esperar a que window.API_CONFIG esté disponible
+  function getAuthApiUrl() {
+    if (window.API_CONFIG && window.API_CONFIG.ENDPOINTS && window.API_CONFIG.ENDPOINTS.AUTH) {
+      return window.API_CONFIG.ENDPOINTS.AUTH.VERIFY.replace('/verify', '');
+    }
+    // Fallback en caso de que config.js no esté cargado
+    return 'http://localhost:5000/api/auth';
+  }
   
   // Verificar autenticación al cargar la página
   async function checkAuth() {
@@ -14,6 +21,8 @@
     }
     
     try {
+      const API_URL = getAuthApiUrl();
+      
       const response = await fetch(`${API_URL}/verify`, {
         headers: {
           "Authorization": `Bearer ${token}`
@@ -73,10 +82,11 @@
     // Obtener la modalidad desde localStorage
     let modalidad = localStorage.getItem('modalidadSeleccionada');
     
-    // Si no hay modalidad, usar por defecto "Orientación Psicosocial"
+    // ⚠️ IMPORTANTE: No establecer modalidad por defecto aquí
+    // Dejar que el usuario la seleccione explícitamente
     if (!modalidad) {
-      modalidad = 'Orientación Psicosocial';
-      localStorage.setItem('modalidadSeleccionada', modalidad);
+      console.log("No hay modalidad seleccionada");
+      return;
     }
     
     // Mostrar el indicador con la modalidad
@@ -154,6 +164,7 @@
     }
     
     const token = localStorage.getItem("authToken");
+    const API_URL = getAuthApiUrl();
     
     // Llamar al endpoint de logout (opcional)
     try {
@@ -189,10 +200,16 @@
   // Función de logout global
   window.logout = logout;
   
+  // ✅ CORREGIDO: Esperar a que todo el DOM y scripts estén cargados
+  function iniciarVerificacion() {
+    // Dar un pequeño delay para asegurar que config.js se cargó
+    setTimeout(checkAuth, 100);
+  }
+  
   // Ejecutar verificación cuando el DOM esté listo
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkAuth);
+    document.addEventListener('DOMContentLoaded', iniciarVerificacion);
   } else {
-    checkAuth();
+    iniciarVerificacion();
   }
 })();

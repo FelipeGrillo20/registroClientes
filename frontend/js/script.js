@@ -48,6 +48,30 @@ function getAuthHeaders() {
 }
 
 // ============================================
+// ✅ NUEVA FUNCIÓN: Verificar y mostrar modalidad seleccionada
+// ============================================
+function verificarModalidadSeleccionada() {
+  const modalidadSeleccionada = localStorage.getItem('modalidadSeleccionada');
+  const indicador = document.getElementById('modalidadIndicador');
+  const modalidadNombre = document.getElementById('modalidadNombre');
+  
+  if (!modalidadSeleccionada) {
+    // Si no hay modalidad seleccionada, redirigir a la página de selección
+    alert('⚠️ Debes seleccionar una modalidad antes de registrar trabajadores');
+    window.location.href = 'modalidad.html';
+    return null;
+  }
+  
+  // Mostrar el indicador de modalidad
+  if (indicador && modalidadNombre) {
+    modalidadNombre.textContent = modalidadSeleccionada;
+    indicador.style.display = 'flex';
+  }
+  
+  return modalidadSeleccionada;
+}
+
+// ============================================
 // CLASE PARA SELECT CON BÚSQUEDA
 // ============================================
 class SearchableSelect {
@@ -226,12 +250,15 @@ let subcontratistaSelector;
 
 // Esperar a que el DOM esté listo
 window.addEventListener('DOMContentLoaded', () => {
+  // ✅ NUEVO: Verificar modalidad seleccionada al cargar la página
+  verificarModalidadSeleccionada();
+  
   initializeForm();
   loadClientsForCache();
-  loadEmpresas(); // Cargar empresas desde la BD
-  setupEntidadPagadoraDinamica(); // Configurar campo dinámico
-  setupCancelarEdicion(); // Configurar botón cancelar edición
-  initializeSearchableSelects(); // Inicializar selectores con búsqueda
+  loadEmpresas();
+  setupEntidadPagadoraDinamica();
+  setupCancelarEdicion();
+  initializeSearchableSelects();
 });
 
 function initializeSearchableSelects() {
@@ -242,9 +269,6 @@ function initializeSearchableSelects() {
     'sedeDropdown',
     SEDES
   );
-
-  // El selector de Empresa Usuario y Subcontratista se inicializarán después de cargar las empresas
-  // Ver función loadEmpresas()
 }
 
 function initializeForm() {
@@ -266,12 +290,21 @@ function initializeForm() {
         return;
       }
 
+      // ✅ NUEVO: Obtener modalidad seleccionada
+      const modalidadActual = localStorage.getItem('modalidadSeleccionada');
+      if (!modalidadActual) {
+        alert("⚠️ Debes seleccionar una modalidad primero");
+        window.location.href = 'modalidad.html';
+        return;
+      }
+
       // Deshabilitar botón mientras busca
       btnBuscarCedula.disabled = true;
       btnBuscarCedula.textContent = "⏳";
 
       try {
-        const res = await fetch(API_URL, {
+        // ✅ NUEVO: Agregar parámetro de modalidad a la búsqueda
+        const res = await fetch(`${API_URL}?modalidad=${encodeURIComponent(modalidadActual)}`, {
           headers: {
             "Authorization": `Bearer ${getAuthToken()}`
           }
@@ -289,20 +322,16 @@ function initializeForm() {
           document.getElementById("name").value = clienteEncontrado.nombre || "";
           document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
           
-          // Cargar Sede con el nuevo selector
           if (clienteEncontrado.sede) {
             sedeSelector.setValue(clienteEncontrado.sede, clienteEncontrado.sede);
           }
           
-          // Cargar Entidad Pagadora
           if (clienteEncontrado.tipo_entidad_pagadora) {
             document.getElementById("entidadPagadora").value = clienteEncontrado.tipo_entidad_pagadora;
             
-            // Disparar el evento change para cargar el segundo select si es ARL o CCF
             const event = new Event('change');
             document.getElementById("entidadPagadora").dispatchEvent(event);
             
-            // Después de cargar las opciones, seleccionar la específica
             if (clienteEncontrado.entidad_pagadora_especifica) {
               setTimeout(() => {
                 if (entidadEspecificaSelector) {
@@ -315,7 +344,6 @@ function initializeForm() {
             }
           }
           
-          // Cargar Empresa Usuario
           if (clienteEncontrado.empresa_id && empresaSelector) {
             const empresas = empresaSelector.options;
             const empresaEncontrada = empresas.find(e => e.value === clienteEncontrado.empresa_id);
@@ -324,7 +352,6 @@ function initializeForm() {
             }
           }
           
-          // Cargar Subcontratista
           if (clienteEncontrado.subcontratista_id && subcontratistaSelector) {
             const subcontratistas = subcontratistaSelector.options;
             const subcontratistaEncontrado = subcontratistas.find(s => s.value === clienteEncontrado.subcontratista_id);
@@ -336,25 +363,20 @@ function initializeForm() {
           document.getElementById("email").value = clienteEncontrado.email || "";
           document.getElementById("phone").value = clienteEncontrado.telefono || "";
 
-          // Marcar como edición
           editingId = clienteEncontrado.id;
           form.querySelector("button[type='submit']").textContent = "Guardar cambios";
           
-          // Mostrar botón "Descartar cambios"
           document.getElementById("btnCancelarEdicion").style.display = "inline-block";
 
           alert("✅ Cliente encontrado. Los datos han sido cargados.");
         } else {
-          alert("❌ No se encontró ningún cliente con esa cédula");
-          
-          // Limpiar campos excepto cédula
+          alert("❌ No se encontró ningún cliente con esa cédula en la modalidad actual");
           resetForm();
         }
       } catch (err) {
         console.error("Error buscando cliente:", err);
         alert("Error de conexión al buscar cliente");
       } finally {
-        // Reactivar botón
         btnBuscarCedula.disabled = false;
         btnBuscarCedula.textContent = "🔍";
       }
@@ -387,7 +409,6 @@ function resetForm() {
   document.getElementById("btnCancelarEdicion").style.display = "none";
 }
 
-// === CONFIGURACIÓN DEL CAMPO DINÁMICO "ENTIDAD PAGADORA" ===
 function setupEntidadPagadoraDinamica() {
   const selectTipo = document.getElementById("entidadPagadora");
   const containerEspecifica = document.getElementById("entidadEspecificaContainer");
@@ -396,19 +417,15 @@ function setupEntidadPagadoraDinamica() {
     const tipoSeleccionado = this.value;
 
     if (tipoSeleccionado === "Particular") {
-      // Si es Particular, ocultar el segundo campo
       containerEspecifica.style.display = "none";
       document.getElementById("entidadEspecifica").removeAttribute("required");
       if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
     } else if (tipoSeleccionado === "ARL" || tipoSeleccionado === "CCF") {
-      // Mostrar el segundo campo y cargar opciones
       containerEspecifica.style.display = "block";
       document.getElementById("entidadEspecifica").setAttribute("required", "required");
       
-      // Cambiar el label según el tipo
       document.getElementById("labelEntidadEspecifica").innerHTML = `Seleccione ${tipoSeleccionado}: <span class="required">*</span>`;
       
-      // Inicializar o actualizar el selector con búsqueda
       const opciones = ENTIDADES[tipoSeleccionado];
       
       if (!entidadEspecificaSelector) {
@@ -423,14 +440,12 @@ function setupEntidadPagadoraDinamica() {
         entidadEspecificaSelector.reset();
       }
     } else {
-      // Si no hay selección, ocultar
       containerEspecifica.style.display = "none";
       document.getElementById("entidadEspecifica").removeAttribute("required");
     }
   });
 }
 
-// Cargar empresas desde la BD
 async function loadEmpresas() {
   try {
     const res = await fetch(window.API_CONFIG.ENDPOINTS.EMPRESAS, {
@@ -445,16 +460,12 @@ async function loadEmpresas() {
     }
     
     const empresas = await res.json();
-    console.log("📦 Empresas cargadas:", empresas.length);
-    console.log("📋 Primera empresa:", empresas[0]);
     
-    // Formatear empresas para el selector con búsqueda (Empresa Usuario)
     const empresasFormateadas = empresas.map(empresa => ({
       value: empresa.id,
       text: empresa.cliente_final
     }));
     
-    // Inicializar selector de Empresa Usuario
     empresaSelector = new SearchableSelect(
       'empresaUsuarioSearch',
       'empresaUsuario',
@@ -463,7 +474,6 @@ async function loadEmpresas() {
       (item) => item.text
     );
     
-    // Formatear empresas para Subcontratista (agregando "No Aplica" al inicio)
     const subcontratistasFormateados = [
       { value: null, text: 'No Aplica' },
       ...empresas.map(empresa => ({
@@ -472,11 +482,6 @@ async function loadEmpresas() {
       }))
     ];
     
-    console.log("🏢 Subcontratistas formateados:", subcontratistasFormateados.length);
-    console.log("🏢 Primeros 3 subcontratistas:", subcontratistasFormateados.slice(0, 3));
-    
-    // Inicializar selector de Subcontratista
-    console.log("🔧 Inicializando selector de Subcontratista...");
     subcontratistaSelector = new SearchableSelect(
       'subcontratistaSearch',
       'subcontratista',
@@ -484,21 +489,19 @@ async function loadEmpresas() {
       subcontratistasFormateados,
       (item) => item.text
     );
-    console.log("✅ Selector de Subcontratista inicializado");
-    
-    // NO establecer valor por defecto - dejarlo vacío
-    // El usuario puede seleccionar "No Aplica" si lo necesita
-    console.log("✅ Selector de Subcontratista listo (sin valor por defecto)");
     
   } catch (err) {
     console.error("❌ Error cargando empresas:", err);
   }
 }
 
-// Cargar clientes para cache (validación de duplicados)
+// ✅ ACTUALIZADO: Cargar clientes para cache CON filtro de modalidad
 async function loadClientsForCache() {
   try {
-    const res = await fetch(API_URL, {
+    const modalidadActual = localStorage.getItem('modalidadSeleccionada');
+    if (!modalidadActual) return;
+    
+    const res = await fetch(`${API_URL}?modalidad=${encodeURIComponent(modalidadActual)}`, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
       }
@@ -512,11 +515,18 @@ async function loadClientsForCache() {
   }
 }
 
-// Manejo único del submit (POST o PUT)
+// ✅ ACTUALIZADO: Manejo del submit CON modalidad
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Captura de campos de DATOS PERSONALES
+  // ✅ NUEVO: Obtener modalidad del localStorage
+  const modalidad = localStorage.getItem('modalidadSeleccionada');
+  if (!modalidad) {
+    alert('⚠️ Debes seleccionar una modalidad antes de registrar');
+    window.location.href = 'modalidad.html';
+    return;
+  }
+
   const cedula = document.getElementById("cedula").value.trim();
   const nombre = document.getElementById("name").value.trim();
   const vinculo = document.getElementById("vinculo").value;
@@ -524,7 +534,6 @@ form.addEventListener("submit", async (e) => {
   let email = document.getElementById("email").value.trim();
   const telefono = document.getElementById("phone").value.trim();
 
-  // Captura de Entidad Pagadora
   const tipoEntidadPagadora = document.getElementById("entidadPagadora").value;
   let entidadPagadoraEspecifica = null;
 
@@ -536,14 +545,10 @@ form.addEventListener("submit", async (e) => {
     }
   }
 
-  // Captura de Empresa Usuario (solo el ID)
   const empresaId = document.getElementById("empresaUsuario").value;
-
-  // Captura de Subcontratista (puede ser null si está vacío o es "No Aplica")
   const subcontratistaId = document.getElementById("subcontratista").value;
   const subcontratistaIdFinal = (subcontratistaId && subcontratistaId !== 'null' && subcontratistaId.trim() !== '') ? parseInt(subcontratistaId) : null;
 
-  // Forzamos email a minúsculas
   email = email.toLowerCase();
 
   // === VALIDACIONES ===
@@ -566,36 +571,34 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Verificar duplicados antes de enviar
+  // Verificar duplicados
   if (!editingId) {
-    // MODO CREACIÓN: Validar contra TODOS los clientes
     const duplicadoCedula = cachedClients.some((c) => c.cedula === cedula);
     if (duplicadoCedula) {
-      alert("⚠️ Ya existe un cliente registrado con esa cédula");
+      alert("⚠️ Ya existe un cliente registrado con esa cédula en esta modalidad");
       return;
     }
     
     const duplicadoEmail = cachedClients.some((c) => c.email === email);
     if (duplicadoEmail) {
-      alert("⚠️ Ya existe un cliente registrado con ese email");
+      alert("⚠️ Ya existe un cliente registrado con ese email en esta modalidad");
       return;
     }
   } else {
-    // MODO EDICIÓN: Validar contra todos EXCEPTO el cliente actual
     const duplicadoCedula = cachedClients.some((c) => c.cedula === cedula && c.id !== editingId);
     if (duplicadoCedula) {
-      alert("⚠️ Ya existe otro cliente registrado con esa cédula");
+      alert("⚠️ Ya existe otro cliente registrado con esa cédula en esta modalidad");
       return;
     }
     
     const duplicadoEmail = cachedClients.some((c) => c.email === email && c.id !== editingId);
     if (duplicadoEmail) {
-      alert("⚠️ Ya existe otro cliente registrado con ese email");
+      alert("⚠️ Ya existe otro cliente registrado con ese email en esta modalidad");
       return;
     }
   }
 
-  // Objeto con TODOS los datos
+  // ✅ NUEVO: Incluir modalidad en el objeto
   const nuevoCliente = {
     cedula,
     nombre,
@@ -607,8 +610,8 @@ form.addEventListener("submit", async (e) => {
     subcontratista_id: subcontratistaIdFinal,
     email,
     telefono,
+    modalidad, // ✅ NUEVO: Enviar modalidad al backend
     actividad: null,
-    modalidad: null,
     fecha: null,
     columna1: null,
     estado: null,
@@ -619,7 +622,6 @@ form.addEventListener("submit", async (e) => {
 
   try {
     if (editingId) {
-      // PUT - Actualizar cliente existente
       const res = await fetch(`${API_URL}/${editingId}`, {
         method: "PUT",
         headers: getAuthHeaders(),
@@ -637,7 +639,6 @@ form.addEventListener("submit", async (e) => {
         loadClientsForCache();
       }
     } else {
-      // POST - Crear nuevo cliente
       const res = await fetch(API_URL, {
         method: "POST",
         headers: getAuthHeaders(),
@@ -660,7 +661,6 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Editar cliente
 window.startEdit = async function (id) {
   try {
     const res = await fetch(`${API_URL}/${id}`, {
@@ -674,20 +674,16 @@ window.startEdit = async function (id) {
     }
     const client = await res.json();
 
-    // Actualizar el cache antes de editar
     await loadClientsForCache();
 
-    // Llenar campos
     document.getElementById("cedula").value = client.cedula || "";
     document.getElementById("name").value = client.nombre || "";
     document.getElementById("vinculo").value = client.vinculo || "";
     
-    // Cargar Sede
     if (client.sede) {
       sedeSelector.setValue(client.sede, client.sede);
     }
     
-    // Cargar Entidad Pagadora
     if (client.tipo_entidad_pagadora) {
       document.getElementById("entidadPagadora").value = client.tipo_entidad_pagadora;
       
@@ -706,7 +702,6 @@ window.startEdit = async function (id) {
       }
     }
     
-    // Cargar Empresa Usuario
     if (client.empresa_id && empresaSelector) {
       const empresas = empresaSelector.options;
       const empresaEncontrada = empresas.find(e => e.value === client.empresa_id);
@@ -715,7 +710,6 @@ window.startEdit = async function (id) {
       }
     }
     
-    // Cargar Subcontratista
     if (client.subcontratista_id && subcontratistaSelector) {
       const subcontratistas = subcontratistaSelector.options;
       const subcontratistaEncontrado = subcontratistas.find(s => s.value === client.subcontratista_id);
@@ -723,7 +717,6 @@ window.startEdit = async function (id) {
         subcontratistaSelector.setValue(subcontratistaEncontrado.value, subcontratistaEncontrado.text);
       }
     } else if (subcontratistaSelector) {
-      // Si no hay subcontratista, seleccionar "No Aplica"
       subcontratistaSelector.setValue(null, 'No Aplica');
     }
     
@@ -740,7 +733,6 @@ window.startEdit = async function (id) {
   }
 };
 
-// Configurar botón "Descartar cambios"
 function setupCancelarEdicion() {
   const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
   

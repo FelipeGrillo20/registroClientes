@@ -18,11 +18,22 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_nombre,
       contacto_emergencia_parentesco,
       contacto_emergencia_telefono,
+      modalidad, // ✅ NUEVO: Campo modalidad
     } = req.body;
 
     // Validaciones básicas
     if (!cedula || !nombre) {
       return res.status(400).json({ message: "Cédula y nombre son requeridos" });
+    }
+
+    // ✅ NUEVO: Validar que la modalidad sea válida
+    if (!modalidad) {
+      return res.status(400).json({ message: "La modalidad es requerida" });
+    }
+
+    const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
+    if (!modalidadesValidas.includes(modalidad)) {
+      return res.status(400).json({ message: "Modalidad no válida" });
     }
 
     // Obtener el ID del profesional del token JWT
@@ -47,6 +58,7 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_parentesco: contacto_emergencia_parentesco || null,
       contacto_emergencia_telefono: contacto_emergencia_telefono || null,
       profesional_id,
+      modalidad, // ✅ NUEVO: Guardar modalidad
     });
 
     res.status(201).json(newClient);
@@ -56,21 +68,35 @@ exports.createClient = async (req, res) => {
   }
 };
 
-// Obtener todos los clientes
+// ✅ ACTUALIZADO: Obtener clientes (con filtro de modalidad para profesionales)
 exports.getClients = async (req, res) => {
   try {
     const userRole = req.user?.rol;
     const userId = req.user?.id;
+    const { modalidad } = req.query; // ✅ NUEVO: Recibir modalidad desde query params
 
     let clients;
 
-    // Si es admin, ver todos los clientes
+    // Si es admin, ver todos los clientes (puede filtrar por modalidad opcionalmente)
     if (userRole === 'admin') {
-      clients = await clientModel.getClients();
+      if (modalidad) {
+        // Admin filtrando por modalidad
+        clients = await clientModel.getClientsWithFilters({ modalidad });
+      } else {
+        // Admin viendo todos
+        clients = await clientModel.getClients();
+      }
     } 
-    // Si es profesional, ver solo sus clientes
+    // Si es profesional, ver solo sus clientes (DEBE filtrar por modalidad)
     else if (userRole === 'profesional') {
-      clients = await clientModel.getClientsByProfesional(userId);
+      if (!modalidad) {
+        return res.status(400).json({ 
+          message: "Los profesionales deben especificar una modalidad" 
+        });
+      }
+      
+      // ✅ NUEVO: Filtrar por profesional Y modalidad
+      clients = await clientModel.getClientsByProfesionalAndModalidad(userId, modalidad);
     }
     else {
       return res.status(403).json({ message: "No tienes permisos para ver clientes" });
@@ -83,7 +109,7 @@ exports.getClients = async (req, res) => {
   }
 };
 
-// Obtener clientes con filtros avanzados (profesional y fechas)
+// Obtener clientes con filtros avanzados (profesional, modalidad y fechas)
 exports.getClientsWithFilters = async (req, res) => {
   try {
     const userRole = req.user?.rol;
@@ -94,10 +120,11 @@ exports.getClientsWithFilters = async (req, res) => {
       return res.status(403).json({ message: "No tienes permisos para usar estos filtros" });
     }
 
-    const { profesional_id, fecha_inicio, fecha_fin } = req.query;
+    const { profesional_id, modalidad, fecha_inicio, fecha_fin } = req.query;
 
     const clients = await clientModel.getClientsWithFilters({
       profesional_id: profesional_id || null,
+      modalidad: modalidad || null, // ✅ NUEVO: Filtro de modalidad
       fecha_inicio: fecha_inicio || null,
       fecha_fin: fecha_fin || null
     });
@@ -134,7 +161,7 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-// ✅ FUNCIÓN CORREGIDA: Actualizar cliente (CON CAMPOS SVE)
+// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPO MODALIDAD)
 exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -155,8 +182,9 @@ exports.updateClient = async (req, res) => {
       fecha_cierre,
       recomendaciones_finales,
       consultas_sugeridas,
-      fecha_cierre_sve,              // ✅ NUEVO: Extraer del req.body
-      recomendaciones_finales_sve    // ✅ NUEVO: Extraer del req.body
+      fecha_cierre_sve,
+      recomendaciones_finales_sve,
+      modalidad // ✅ NUEVO: Campo modalidad
     } = req.body;
 
     // Verificar que el cliente existe
@@ -178,6 +206,14 @@ exports.updateClient = async (req, res) => {
       return res.status(400).json({ message: "Cédula y nombre son requeridos" });
     }
 
+    // ✅ NUEVO: Validar modalidad si se proporciona
+    if (modalidad) {
+      const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
+      if (!modalidadesValidas.includes(modalidad)) {
+        return res.status(400).json({ message: "Modalidad no válida" });
+      }
+    }
+
     const updatedClient = await clientModel.updateClient(id, {
       cedula,
       nombre,
@@ -195,8 +231,9 @@ exports.updateClient = async (req, res) => {
       fecha_cierre: fecha_cierre || null,
       recomendaciones_finales: recomendaciones_finales || null,
       consultas_sugeridas: consultas_sugeridas || null,
-      fecha_cierre_sve: fecha_cierre_sve || null,                    // ✅ NUEVO: Pasar al modelo
-      recomendaciones_finales_sve: recomendaciones_finales_sve || null // ✅ NUEVO: Pasar al modelo
+      fecha_cierre_sve: fecha_cierre_sve || null,
+      recomendaciones_finales_sve: recomendaciones_finales_sve || null,
+      modalidad: modalidad || existingClient.modalidad // ✅ NUEVO: Mantener modalidad existente si no se proporciona
     });
 
     res.json(updatedClient);

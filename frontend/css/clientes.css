@@ -564,6 +564,127 @@ body {
   }
 }
 
+/* ============================================ */
+/* FILTRO DE PROFESIONAL (SOLO ADMIN) */
+/* ============================================ */
+
+.profesional-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(142, 68, 173, 0.3);
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+.filter-label {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.filter-profesional-select {
+  padding: 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 250px;
+  outline: none;
+}
+
+.filter-profesional-select:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-profesional-select:focus {
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+/* Animación de entrada */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Ajustar el contenedor de filter-actions para acomodar el nuevo filtro */
+.filter-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+/* ============================================ */
+/* RESPONSIVE PARA FILTRO DE PROFESIONAL */
+/* ============================================ */
+
+@media (max-width: 1024px) {
+  .profesional-filter-container {
+    padding: 8px 14px;
+  }
+  
+  .filter-profesional-select {
+    min-width: 200px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .profesional-filter-container {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .filter-label {
+    text-align: center;
+  }
+  
+  .filter-profesional-select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .profesional-filter-container {
+    padding: 10px 12px;
+  }
+  
+  .filter-label {
+    font-size: 13px;
+  }
+  
+  .filter-profesional-select {
+    font-size: 13px;
+    padding: 7px 10px;
+  }
+}
 
 
 /* ====== RESPONSIVE ====== */

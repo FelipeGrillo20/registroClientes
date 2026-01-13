@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Clientes Registrados</title>
   <link rel="stylesheet" href="css/clientes.css" />
-  <script src="js/auth-check.js"></script>
 </head>
 <body>
   <header class="page-header">
@@ -17,6 +16,15 @@
     <!-- Botones de acción -->
     <div class="filter-actions">
       <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
+      
+      <!-- ✅ NUEVO: Filtro de profesional (solo visible para admin) -->
+      <div id="profesionalFilterContainer" class="profesional-filter-container" style="display: none;">
+        <label for="filterProfesionalSelect" class="filter-label">👤 Profesional:</label>
+        <select id="filterProfesionalSelect" class="filter-profesional-select">
+          <option value="">Todos los Profesionales</option>
+        </select>
+      </div>
+      
       <a href="index.html" class="btn-back-form">← Formulario Registro</a>
     </div>
 
@@ -98,4 +106,3 @@
   <script src="js/clientes.js"></script>
 </body>
 </html>
-

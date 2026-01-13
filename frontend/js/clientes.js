@@ -1,19 +1,29 @@
 // js/clientes.js
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const EMPRESAS_URL = window.API_CONFIG.ENDPOINTS.EMPRESAS;
+const USERS_URL = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
 
 const tbody = document.getElementById("clientList");
 const filterCedula = document.getElementById("filterCedula");
 const filterSede = document.getElementById("filterSede");
 const filterVinculo = document.getElementById("filterVinculo");
 const filterEmpresa = document.getElementById("filterEmpresa");
+const filterProfesionalSelect = document.getElementById("filterProfesionalSelect");
 
 let allClients = [];
 let allEmpresas = [];
+let allProfesionales = [];
+let currentUserRole = null;
 
 // Función para obtener token
 function getAuthToken() {
   return localStorage.getItem("authToken");
+}
+
+// ✅ NUEVA FUNCIÓN: Obtener datos del usuario actual
+function getCurrentUserData() {
+  const userData = localStorage.getItem("userData");
+  return userData ? JSON.parse(userData) : null;
 }
 
 // ✅ NUEVA FUNCIÓN: Verificar y mostrar modalidad seleccionada
@@ -41,14 +51,71 @@ function verificarYMostrarModalidad() {
 
 // Control de menús de filtros
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Obtener rol del usuario actual
+  const userData = getCurrentUserData();
+  currentUserRole = userData?.rol;
+  
+  console.log("👤 Rol del usuario:", currentUserRole);
+  
   // ✅ NUEVO: Verificar modalidad al cargar
   const modalidad = verificarYMostrarModalidad();
   if (!modalidad) return;
+  
+  // ✅ NUEVO: Si es admin, cargar profesionales y mostrar filtro
+  if (currentUserRole === 'admin') {
+    loadProfesionales();
+    document.getElementById("profesionalFilterContainer").style.display = "flex";
+  }
   
   loadClients(modalidad);
   loadEmpresas();
   setupFilterEvents();
 });
+
+// ✅ NUEVA FUNCIÓN: Cargar lista de profesionales (solo para admin)
+async function loadProfesionales() {
+  try {
+    console.log("📥 Cargando lista de profesionales...");
+    
+    const res = await fetch(USERS_URL, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!res.ok) {
+      console.error("❌ Error cargando profesionales - Status:", res.status);
+      return;
+    }
+    
+    const data = await res.json();
+    
+    // Filtrar solo usuarios activos y con rol 'profesional'
+    allProfesionales = data.users.filter(user => 
+      user.activo && user.rol === 'profesional'
+    );
+    
+    console.log("✅ Profesionales cargados:", allProfesionales.length);
+    
+    populateProfesionalFilter();
+  } catch (err) {
+    console.error("❌ Error loading profesionales:", err);
+  }
+}
+
+// ✅ NUEVA FUNCIÓN: Llenar el select de profesionales
+function populateProfesionalFilter() {
+  filterProfesionalSelect.innerHTML = '<option value="">Todos los Profesionales</option>';
+  
+  allProfesionales.forEach(profesional => {
+    const option = document.createElement("option");
+    option.value = profesional.id;
+    option.textContent = `${profesional.nombre} (${profesional.cedula})`;
+    filterProfesionalSelect.appendChild(option);
+  });
+  
+  console.log("✅ Filtro de profesionales poblado");
+}
 
 // Cargar empresas para el filtro
 async function loadEmpresas() {
@@ -82,13 +149,21 @@ function populateEmpresaFilter() {
   });
 }
 
-// ✅ ACTUALIZADO: Cargar clientes CON filtro de modalidad
-async function loadClients(modalidad) {
+// ✅ ACTUALIZADO: Cargar clientes CON filtro de modalidad y profesional
+async function loadClients(modalidad, profesionalId = null) {
   tbody.innerHTML = `<tr><td colspan="8" class="no-data">Cargando clientes...</td></tr>`;
   
   try {
-    // ✅ NUEVO: Agregar parámetro de modalidad a la petición
-    const url = `${API_URL}?modalidad=${encodeURIComponent(modalidad)}`;
+    // ✅ NUEVO: Construir URL con parámetros
+    let url = `${API_URL}?modalidad=${encodeURIComponent(modalidad)}`;
+    
+    // ✅ NUEVO: Si hay profesional seleccionado, agregarlo a la URL
+    if (profesionalId) {
+      url += `&profesional_id=${profesionalId}`;
+      console.log("🔍 Filtrando por profesional ID:", profesionalId);
+    }
+    
+    console.log("📡 Petición a:", url);
     
     const res = await fetch(url, {
       headers: {
@@ -103,8 +178,13 @@ async function loadClients(modalidad) {
     
     const clients = await res.json();
     
+    console.log("📦 Clientes recibidos:", clients.length);
+    
     if (!Array.isArray(clients) || clients.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="no-data">No hay clientes registrados en esta modalidad</td></tr>`;
+      const mensaje = profesionalId 
+        ? "No hay clientes registrados por este profesional en esta modalidad"
+        : "No hay clientes registrados en esta modalidad";
+      tbody.innerHTML = `<tr><td colspan="8" class="no-data">${mensaje}</td></tr>`;
       return;
     }
 
@@ -273,6 +353,19 @@ function setupFilterEvents() {
     });
   });
 
+  // ✅ NUEVO: Event listener para filtro de profesional
+  if (filterProfesionalSelect) {
+    filterProfesionalSelect.addEventListener("change", () => {
+      const profesionalId = filterProfesionalSelect.value;
+      const modalidad = localStorage.getItem('modalidadSeleccionada');
+      
+      console.log("🔄 Cambiando filtro de profesional:", profesionalId || "Todos");
+      
+      // Recargar clientes con el filtro de profesional
+      loadClients(modalidad, profesionalId || null);
+    });
+  }
+
   // Botón para limpiar filtros
   const btnClearFilters = document.getElementById("btnClearFilters");
   if (btnClearFilters) {
@@ -282,9 +375,15 @@ function setupFilterEvents() {
       filterSede.value = "";
       filterVinculo.value = "";
       filterEmpresa.value = "";
+      
+      // ✅ NUEVO: Limpiar filtro de profesional si existe
+      if (filterProfesionalSelect) {
+        filterProfesionalSelect.value = "";
+      }
 
-      // Mostrar todos los clientes
-      renderClients(allClients);
+      // ✅ NUEVO: Recargar clientes sin filtro de profesional
+      const modalidad = localStorage.getItem('modalidadSeleccionada');
+      loadClients(modalidad, null);
 
       // Cerrar todos los menús abiertos
       menus.forEach(m => {
@@ -318,9 +417,10 @@ async function onDelete(id) {
       return;
     }
     
-    // ✅ NUEVO: Recargar con modalidad actual
+    // ✅ ACTUALIZADO: Recargar con modalidad y profesional actual
     const modalidad = localStorage.getItem('modalidadSeleccionada');
-    await loadClients(modalidad);
+    const profesionalId = filterProfesionalSelect?.value || null;
+    await loadClients(modalidad, profesionalId);
   } catch (err) {
     console.error("Error deleting client:", err);
     alert("Error de conexión al eliminar");

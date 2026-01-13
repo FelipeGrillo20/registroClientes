@@ -73,17 +73,36 @@ exports.getClients = async (req, res) => {
   try {
     const userRole = req.user?.rol;
     const userId = req.user?.id;
-    const { modalidad } = req.query; // ✅ NUEVO: Recibir modalidad desde query params
+    const { modalidad, profesional_id } = req.query; // ✅ NUEVO: Recibir profesional_id
 
     let clients;
 
-    // Si es admin, ver todos los clientes (puede filtrar por modalidad opcionalmente)
+    // Si es admin, ver todos los clientes (puede filtrar por modalidad y profesional)
     if (userRole === 'admin') {
-      if (modalidad) {
-        // Admin filtrando por modalidad
+      // ✅ NUEVO: Si hay filtro de profesional específico
+      if (profesional_id) {
+        console.log(`📊 Admin filtrando por profesional ID: ${profesional_id}`);
+        
+        if (!modalidad) {
+          return res.status(400).json({ 
+            message: "Se requiere modalidad cuando se filtra por profesional" 
+          });
+        }
+        
+        // Filtrar por profesional Y modalidad
+        clients = await clientModel.getClientsByProfesionalAndModalidad(
+          parseInt(profesional_id), 
+          modalidad
+        );
+      } 
+      // Si solo hay filtro de modalidad
+      else if (modalidad) {
+        console.log(`📊 Admin filtrando solo por modalidad: ${modalidad}`);
         clients = await clientModel.getClientsWithFilters({ modalidad });
-      } else {
-        // Admin viendo todos
+      } 
+      // Admin viendo todos
+      else {
+        console.log(`📊 Admin viendo TODOS los clientes`);
         clients = await clientModel.getClients();
       }
     } 
@@ -95,14 +114,18 @@ exports.getClients = async (req, res) => {
         });
       }
       
-      // ✅ NUEVO: Filtrar por profesional Y modalidad
+      console.log(`👤 Profesional ${userId} filtrando por modalidad: ${modalidad}`);
+      
+      // ✅ Filtrar por profesional Y modalidad
       clients = await clientModel.getClientsByProfesionalAndModalidad(userId, modalidad);
     }
     else {
       return res.status(403).json({ message: "No tienes permisos para ver clientes" });
     }
 
+    console.log(`✅ Clientes retornados: ${clients.length}`);
     res.json(clients);
+    
   } catch (err) {
     console.error("Error obteniendo clientes:", err);
     res.status(500).json({ message: "Error al obtener clientes" });

@@ -17,7 +17,7 @@
     <div class="filter-actions">
       <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
       
-      <!-- ✅ NUEVO: Filtro de profesional (solo visible para admin) -->
+      <!-- Filtro de profesional (solo visible para admin) -->
       <div id="profesionalFilterContainer" class="profesional-filter-container" style="display: none;">
         <label for="filterProfesionalSelect" class="filter-label">👤 Profesional:</label>
         <select id="filterProfesionalSelect" class="filter-profesional-select">
@@ -32,7 +32,7 @@
       <table class="client-table" id="clientTable" aria-describedby="tabla-clientes">
         <thead>
           <tr>
-            <!-- ====== CÉDULA CON FILTRO ====== -->
+            <!-- CÉDULA CON FILTRO -->
             <th class="filterable" data-type="cedula">
               <span>Cédula</span>
               <span class="filter-icon" aria-label="Filtrar por cédula" title="Filtrar por cédula">⚙️</span>
@@ -44,7 +44,7 @@
 
             <th>Nombre</th>
 
-            <!-- ====== SEDE CON FILTRO ====== -->
+            <!-- SEDE CON FILTRO -->
             <th class="filterable" data-type="sede">
               <span>Sede</span>
               <span class="filter-icon" aria-label="Filtrar por sede" title="Filtrar por sede">⚙️</span>
@@ -59,7 +59,7 @@
             <th>Email</th>
             <th>Teléfono</th>
 
-            <!-- ====== VÍNCULO CON FILTRO ====== -->
+            <!-- VÍNCULO CON FILTRO -->
             <th class="filterable" data-type="vinculo">
               <span>Vínculo</span>
               <span class="filter-icon" aria-label="Filtrar por vínculo" title="Filtrar por vínculo">⚙️</span>
@@ -73,7 +73,7 @@
               </div>
             </th>
 
-            <!-- ====== EMPRESA USUARIO CON FILTRO ====== -->
+            <!-- EMPRESA USUARIO CON FILTRO -->
             <th class="filterable" data-type="empresa">
               <span>Empresa</span>
               <span class="filter-icon" aria-label="Filtrar por empresa" title="Filtrar por empresa">⚙️</span>
@@ -101,8 +101,10 @@
     </p>
   </main>
 
+  <!-- ✅ Scripts en el orden correcto -->
   <script src="js/config.js"></script>
   <script src="js/auth-check.js"></script>
+  <!-- ✅ NUEVO: Scripts de generación de informes (se cargarán dinámicamente cuando se necesiten) -->
   <script src="js/clientes.js"></script>
 </body>
 </html>

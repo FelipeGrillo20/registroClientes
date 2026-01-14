@@ -229,6 +229,7 @@ textarea {
   cursor: pointer;
 }
 
+/* Input principal (solo muestra la selección) */
 .searchable-input {
   width: 100%;
   padding: 10px 35px 10px 10px;
@@ -239,22 +240,13 @@ textarea {
   box-sizing: border-box;
   transition: border-color 0.3s, box-shadow 0.3s;
   cursor: pointer;
-}
-
-.searchable-input[readonly] {
-  cursor: pointer;
-  background-color: #fdfdfd;
-}
-
-.searchable-input:not([readonly]) {
-  cursor: text;
+  user-select: none;
 }
 
 .searchable-input:focus {
   border-color: #2980b9;
   outline: none;
   box-shadow: 0px 0px 6px rgba(41, 128, 185, 0.3);
-  cursor: text;
 }
 
 .searchable-arrow {
@@ -265,21 +257,20 @@ textarea {
   color: #7f8c8d;
   font-size: 12px;
   pointer-events: none;
-  transition: transform 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 .searchable-select-trigger:hover .searchable-arrow {
   color: #2980b9;
 }
 
+/* Contenedor del dropdown */
 .searchable-dropdown {
   display: none;
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  max-height: 250px;
-  overflow-y: auto;
   background: white;
   border: 1px solid #dcdde1;
   border-top: none;
@@ -289,6 +280,74 @@ textarea {
   margin-top: -8px;
 }
 
+/* Contenedor del input de búsqueda (dentro del dropdown) */
+.searchable-search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  border-bottom: 2px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Input de búsqueda dentro del dropdown */
+.searchable-search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #dcdde1;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.searchable-search-input::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.searchable-search-input:focus {
+  border-color: #2980b9;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1);
+}
+
+/* Botón para limpiar búsqueda */
+.searchable-clear-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchable-clear-btn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+.searchable-clear-btn:active {
+  transform: scale(0.95);
+}
+
+/* Contenedor de la lista de opciones */
+.searchable-options-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Cada opción en la lista */
 .searchable-option {
   padding: 10px 12px;
   cursor: pointer;
@@ -315,25 +374,23 @@ textarea {
   color: #95a5a6;
 }
 
-/* Scrollbar personalizado para el dropdown */
-.searchable-dropdown::-webkit-scrollbar {
+/* Scrollbar personalizado para la lista de opciones */
+.searchable-options-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.searchable-dropdown::-webkit-scrollbar-track {
+.searchable-options-list::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 0 0 8px 0;
 }
 
-.searchable-dropdown::-webkit-scrollbar-thumb {
+.searchable-options-list::-webkit-scrollbar-thumb {
   background: #bdc3c7;
   border-radius: 4px;
 }
 
-.searchable-dropdown::-webkit-scrollbar-thumb:hover {
+.searchable-options-list::-webkit-scrollbar-thumb:hover {
   background: #95a5a6;
 }
-
 /* ============================================ */
 /* ESTILOS PARA EL CAMPO CÉDULA CON BOTÓN */
 /* ============================================ */

@@ -687,6 +687,82 @@ body {
 }
 
 
+/* ============================================ */
+/* BOTÓN INFORME */
+/* ============================================ */
+
+.btn-informe {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.btn-informe:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+}
+
+.btn-informe::before {
+  content: "📄";
+  font-size: 12px;
+}
+
+/* Botón Informe Deshabilitado */
+.btn-informe-disabled {
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.btn-informe-disabled:hover {
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6) !important;
+  transform: none !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+.btn-informe-disabled::before {
+  content: "🔒";
+  font-size: 12px;
+}
+
+/* Ajustar espaciado de botones en la columna Acciones */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+/* ============================================ */
+/* RESPONSIVE PARA BOTÓN INFORME */
+/* ============================================ */
+
+@media (max-width: 1200px) {
+  .action-buttons {
+    gap: 6px;
+  }
+  
+  .btn-action {
+    font-size: 10px;
+    padding: 6px 10px;
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    gap: 5px;
+  }
+  
+  .btn-action {
+    font-size: 9px;
+    padding: 5px 8px;
+    min-width: 65px;
+  }
+}
+
+
 /* ====== RESPONSIVE ====== */
 @media (max-width: 1400px) {
   .table-container {

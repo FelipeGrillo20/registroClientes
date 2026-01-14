@@ -84,54 +84,89 @@ class SearchableSelect {
     this.valueFn = (item) => typeof item === 'object' ? item.value : item;
     this.filteredOptions = [...options];
     this.selectedIndex = -1;
+    this.searchInput = null;
     
     this.init();
   }
 
   init() {
-    // Evento al escribir en el input
-    this.input.addEventListener('input', () => this.filterOptions());
+    // Crear el input de búsqueda dentro del dropdown
+    this.createSearchInput();
+    
+    // El input principal ahora es solo readonly y abre el dropdown
+    this.input.setAttribute('readonly', 'readonly');
+    this.input.style.cursor = 'pointer';
     
     // Evento al hacer clic en el input o en la flecha (abrir dropdown)
     const wrapper = this.input.closest('.searchable-select-wrapper');
     const trigger = wrapper.querySelector('.searchable-select-trigger');
     
-    trigger.addEventListener('mousedown', (e) => {
+    trigger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
 
       if (this.dropdown.style.display === 'block') {
         this.hideDropdown();
-        this.input.setAttribute('readonly', 'readonly');
       } else {
-        this.input.removeAttribute('readonly');
-        this.input.focus();
-        this.filterOptions();
         this.showDropdown();
+        // Enfocar el input de búsqueda
+        setTimeout(() => {
+          if (this.searchInput) {
+            this.searchInput.focus();
+          }
+        }, 50);
       }
-    });
-    
-    // Evento al hacer focus en el input (habilitar escritura)
-    this.input.addEventListener('focus', () => {
-      this.input.removeAttribute('readonly');
-      this.filterOptions();
-      this.showDropdown();
     });
     
     // Cerrar dropdown al hacer clic fuera
     document.addEventListener('click', (e) => {
       if (!wrapper.contains(e.target)) {
         this.hideDropdown();
-        this.input.setAttribute('readonly', 'readonly');
       }
     });
     
-    // Navegación con teclado
-    this.input.addEventListener('keydown', (e) => this.handleKeyboard(e));
+    // Navegación con teclado en el input de búsqueda
+    this.searchInput.addEventListener('keydown', (e) => this.handleKeyboard(e));
+  }
+
+  createSearchInput() {
+    // Crear contenedor del input de búsqueda
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'searchable-search-container';
+    
+    // Crear el input de búsqueda
+    this.searchInput = document.createElement('input');
+    this.searchInput.type = 'text';
+    this.searchInput.className = 'searchable-search-input';
+    this.searchInput.placeholder = '🔍 Buscar...';
+    this.searchInput.autocomplete = 'off';
+    
+    // Evento al escribir en el input de búsqueda
+    this.searchInput.addEventListener('input', () => this.filterOptions());
+    
+    // Botón para limpiar búsqueda
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'searchable-clear-btn';
+    clearBtn.innerHTML = '✕';
+    clearBtn.title = 'Limpiar búsqueda';
+    
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.searchInput.value = '';
+      this.filterOptions();
+      this.searchInput.focus();
+    });
+    
+    searchContainer.appendChild(this.searchInput);
+    searchContainer.appendChild(clearBtn);
+    
+    // Insertar al inicio del dropdown
+    this.dropdown.insertBefore(searchContainer, this.dropdown.firstChild);
   }
 
   filterOptions() {
-    const searchTerm = this.input.value.toLowerCase().trim();
+    const searchTerm = this.searchInput.value.toLowerCase().trim();
     
     this.filteredOptions = this.options.filter(option => {
       const text = this.displayFn(option).toLowerCase();
@@ -143,28 +178,33 @@ class SearchableSelect {
   }
 
   renderDropdown() {
-    this.dropdown.innerHTML = '';
-    
-    if (this.filteredOptions.length === 0) {
-      this.dropdown.innerHTML = '<div class="searchable-option no-results">No se encontraron resultados</div>';
-      this.showDropdown();
-      return;
+    // Limpiar solo las opciones, no el input de búsqueda
+    const optionsContainer = this.dropdown.querySelector('.searchable-options-list');
+    if (optionsContainer) {
+      optionsContainer.remove();
     }
     
-    this.filteredOptions.forEach((option, index) => {
-      const div = document.createElement('div');
-      div.className = 'searchable-option';
-      div.textContent = this.displayFn(option);
-      div.dataset.index = index;
-      
-      div.addEventListener('click', () => {
-        this.selectOption(option);
-      });
-      
-      this.dropdown.appendChild(div);
-    });
+    const newOptionsContainer = document.createElement('div');
+    newOptionsContainer.className = 'searchable-options-list';
     
-    this.showDropdown();
+    if (this.filteredOptions.length === 0) {
+      newOptionsContainer.innerHTML = '<div class="searchable-option no-results">No se encontraron resultados</div>';
+    } else {
+      this.filteredOptions.forEach((option, index) => {
+        const div = document.createElement('div');
+        div.className = 'searchable-option';
+        div.textContent = this.displayFn(option);
+        div.dataset.index = index;
+        
+        div.addEventListener('click', () => {
+          this.selectOption(option);
+        });
+        
+        newOptionsContainer.appendChild(div);
+      });
+    }
+    
+    this.dropdown.appendChild(newOptionsContainer);
   }
 
   selectOption(option) {
@@ -173,16 +213,19 @@ class SearchableSelect {
     
     this.input.value = displayText;
     this.hidden.value = value;
+    this.searchInput.value = ''; // Limpiar búsqueda
     this.hideDropdown();
-    this.input.setAttribute('readonly', 'readonly');
     
-    // Disparar evento change en el campo ocultos 
+    // Disparar evento change en el campo oculto
     const event = new Event('change', { bubbles: true });
     this.hidden.dispatchEvent(event);
   }
 
   handleKeyboard(e) {
-    const options = this.dropdown.querySelectorAll('.searchable-option:not(.no-results)');
+    const optionsList = this.dropdown.querySelector('.searchable-options-list');
+    if (!optionsList) return;
+    
+    const options = optionsList.querySelectorAll('.searchable-option:not(.no-results)');
     
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -215,18 +258,22 @@ class SearchableSelect {
 
   showDropdown() {
     this.dropdown.style.display = 'block';
+    this.filteredOptions = [...this.options];
+    this.renderDropdown();
   }
 
   hideDropdown() {
     this.dropdown.style.display = 'none';
     this.selectedIndex = -1;
-    this.input.setAttribute('readonly', 'readonly');
+    this.searchInput.value = ''; // Limpiar búsqueda al cerrar
   }
 
   setOptions(newOptions) {
     this.options = newOptions;
     this.filteredOptions = [...newOptions];
-    this.renderDropdown();
+    if (this.dropdown.style.display === 'block') {
+      this.renderDropdown();
+    }
   }
 
   setValue(value, displayText) {
@@ -237,7 +284,7 @@ class SearchableSelect {
   reset() {
     this.input.value = '';
     this.hidden.value = '';
-    this.input.setAttribute('readonly', 'readonly');
+    this.searchInput.value = '';
     this.hideDropdown();
   }
 }

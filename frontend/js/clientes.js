@@ -2,6 +2,8 @@
 const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const EMPRESAS_URL = window.API_CONFIG.ENDPOINTS.EMPRESAS;
 const USERS_URL = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
+const CONSULTAS_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
+const CONSULTAS_SVE_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS_SVE;
 
 const tbody = document.getElementById("clientList");
 const filterCedula = document.getElementById("filterCedula");
@@ -14,19 +16,122 @@ let allClients = [];
 let allEmpresas = [];
 let allProfesionales = [];
 let currentUserRole = null;
+let consultasDisponibles = {}; // ✅ NUEVO: Cache de consultas por cliente
 
 // Función para obtener token
 function getAuthToken() {
   return localStorage.getItem("authToken");
 }
 
-// ✅ NUEVA FUNCIÓN: Obtener datos del usuario actual
+// Función para obtener datos del usuario actual
 function getCurrentUserData() {
   const userData = localStorage.getItem("userData");
   return userData ? JSON.parse(userData) : null;
 }
 
-// ✅ NUEVA FUNCIÓN: Verificar y mostrar modalidad seleccionada
+// ✅ NUEVA FUNCIÓN: Verificar si un cliente tiene informe disponible
+async function verificarInformeDisponible(clienteId, modalidad) {
+  try {
+    // Verificar en cache primero
+    if (consultasDisponibles[clienteId] !== undefined) {
+      return consultasDisponibles[clienteId];
+    }
+
+    console.log(`🔍 Verificando informe para cliente ${clienteId} en modalidad: ${modalidad}`);
+
+    // Para Orientación Psicosocial: Verificar que el caso esté cerrado
+    if (modalidad === 'Orientación Psicosocial') {
+      // Obtener datos del cliente para verificar fecha_cierre
+      const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`
+        }
+      });
+
+      if (!resCliente.ok) {
+        console.log(`❌ No se pudo cargar cliente ${clienteId}`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      const cliente = await resCliente.json();
+      
+      console.log(`📋 Cliente ${clienteId} - fecha_cierre:`, cliente.fecha_cierre);
+
+      // ✅ CRÍTICO: Verificar que tenga fecha_cierre (caso cerrado)
+      if (!cliente.fecha_cierre) {
+        console.log(`❌ Cliente ${clienteId} NO tiene fecha_cierre (caso NO cerrado)`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      // Verificar que tenga consultas
+      const resConsultas = await fetch(`${CONSULTAS_URL}/cliente/${clienteId}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`
+        }
+      });
+
+      if (!resConsultas.ok) {
+        console.log(`❌ Cliente ${clienteId} NO tiene consultas`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      const consultas = await resConsultas.json();
+      const tieneConsultas = Array.isArray(consultas) && consultas.length > 0;
+
+      if (!tieneConsultas) {
+        console.log(`❌ Cliente ${clienteId} tiene 0 consultas`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      console.log(`✅ Cliente ${clienteId} TIENE informe disponible (caso cerrado + ${consultas.length} consultas)`);
+      consultasDisponibles[clienteId] = true;
+      return true;
+    }
+
+    // Para SVE: Solo verificar que tenga consultas
+    if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+      const resConsultas = await fetch(`${CONSULTAS_SVE_URL}/cliente/${clienteId}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`
+        }
+      });
+
+      if (!resConsultas.ok) {
+        console.log(`❌ Cliente ${clienteId} NO tiene consultas SVE`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      const consultas = await resConsultas.json();
+      const tieneConsultas = Array.isArray(consultas) && consultas.length > 0;
+
+      if (!tieneConsultas) {
+        console.log(`❌ Cliente ${clienteId} tiene 0 consultas SVE`);
+        consultasDisponibles[clienteId] = false;
+        return false;
+      }
+
+      console.log(`✅ Cliente ${clienteId} TIENE informe SVE disponible (${consultas.length} consultas)`);
+      consultasDisponibles[clienteId] = true;
+      return true;
+    }
+
+    // Si la modalidad no coincide con ninguna
+    consultasDisponibles[clienteId] = false;
+    return false;
+
+  } catch (err) {
+    console.error(`❌ Error verificando informe para cliente ${clienteId}:`, err);
+    consultasDisponibles[clienteId] = false;
+    return false;
+  }
+}
+
+// Verificar y mostrar modalidad seleccionada
 function verificarYMostrarModalidad() {
   const modalidadSeleccionada = localStorage.getItem('modalidadSeleccionada');
   
@@ -36,7 +141,7 @@ function verificarYMostrarModalidad() {
     return null;
   }
   
-  // ✅ Actualizar el título de la página según la modalidad
+  // Actualizar el título de la página según la modalidad
   const titulo = document.querySelector('.page-header h1');
   if (titulo) {
     if (modalidadSeleccionada === 'Orientación Psicosocial') {
@@ -51,17 +156,17 @@ function verificarYMostrarModalidad() {
 
 // Control de menús de filtros
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ Obtener rol del usuario actual
+  // Obtener rol del usuario actual
   const userData = getCurrentUserData();
   currentUserRole = userData?.rol;
   
   console.log("👤 Rol del usuario:", currentUserRole);
   
-  // ✅ NUEVO: Verificar modalidad al cargar
+  // Verificar modalidad al cargar
   const modalidad = verificarYMostrarModalidad();
   if (!modalidad) return;
   
-  // ✅ NUEVO: Si es admin, cargar profesionales y mostrar filtro
+  // Si es admin, cargar profesionales y mostrar filtro
   if (currentUserRole === 'admin') {
     loadProfesionales();
     document.getElementById("profesionalFilterContainer").style.display = "flex";
@@ -72,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFilterEvents();
 });
 
-// ✅ NUEVA FUNCIÓN: Cargar lista de profesionales (solo para admin)
+// Cargar lista de profesionales (solo para admin)
 async function loadProfesionales() {
   try {
     console.log("📥 Cargando lista de profesionales...");
@@ -103,7 +208,7 @@ async function loadProfesionales() {
   }
 }
 
-// ✅ NUEVA FUNCIÓN: Llenar el select de profesionales
+// Llenar el select de profesionales
 function populateProfesionalFilter() {
   filterProfesionalSelect.innerHTML = '<option value="">Todos los Profesionales</option>';
   
@@ -149,21 +254,25 @@ function populateEmpresaFilter() {
   });
 }
 
-// ✅ ACTUALIZADO: Cargar clientes CON filtro de modalidad y profesional
+// Cargar clientes CON filtro de modalidad y profesional
 async function loadClients(modalidad, profesionalId = null) {
   tbody.innerHTML = `<tr><td colspan="8" class="no-data">Cargando clientes...</td></tr>`;
   
+  // ✅ Limpiar cache de consultas al recargar
+  consultasDisponibles = {};
+  
   try {
-    // ✅ NUEVO: Construir URL con parámetros
+    // Construir URL con parámetros
     let url = `${API_URL}?modalidad=${encodeURIComponent(modalidad)}`;
     
-    // ✅ NUEVO: Si hay profesional seleccionado, agregarlo a la URL
+    // Si hay profesional seleccionado, agregarlo a la URL
     if (profesionalId) {
       url += `&profesional_id=${profesionalId}`;
       console.log("🔍 Filtrando por profesional ID:", profesionalId);
     }
     
     console.log("📡 Petición a:", url);
+    console.log("🔧 CONSULTAS_URL:", CONSULTAS_URL);
     
     const res = await fetch(url, {
       headers: {
@@ -179,6 +288,9 @@ async function loadClients(modalidad, profesionalId = null) {
     const clients = await res.json();
     
     console.log("📦 Clientes recibidos:", clients.length);
+    if (clients.length > 0) {
+      console.log("📋 Primer cliente de ejemplo:", clients[0]);
+    }
     
     if (!Array.isArray(clients) || clients.length === 0) {
       const mensaje = profesionalId 
@@ -192,6 +304,10 @@ async function loadClients(modalidad, profesionalId = null) {
     const sortedClients = clients.sort((a, b) => b.id - a.id);
     
     allClients = sortedClients;
+    
+    // ✅ Guardar modalidad actual para usar en renderClients
+    window.currentModalidad = modalidad;
+    
     renderClients(allClients);
     populateFilterOptions(allClients);
   } catch (err) {
@@ -200,12 +316,16 @@ async function loadClients(modalidad, profesionalId = null) {
   }
 }
 
+// ✅ ACTUALIZADO: Renderizar clientes con botón de informe
 async function renderClients(list) {
   tbody.innerHTML = "";
   if (!list || list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" class="no-data">No se encontraron clientes con esos filtros</td></tr>`;
     return;
   }
+
+  const modalidad = window.currentModalidad || localStorage.getItem('modalidadSeleccionada');
+  console.log(`🎨 Renderizando ${list.length} clientes en modalidad: ${modalidad}`);
 
   for (const c of list) {
     const tr = document.createElement("tr");
@@ -228,6 +348,14 @@ async function renderClients(list) {
       empresaBadge = '<span style="color: #95a5a6;">-</span>';
     }
 
+    // ✅ NUEVO: Verificar si tiene informe disponible
+    console.log(`🔍 Verificando informe para cliente ID: ${c.id}, Nombre: ${c.nombre}, Cédula: ${c.cedula}`);
+    const tieneInforme = await verificarInformeDisponible(c.id, modalidad);
+    console.log(`${tieneInforme ? '✅' : '❌'} Cliente ${c.id} (${c.nombre}): Informe ${tieneInforme ? 'DISPONIBLE' : 'NO DISPONIBLE'}`);
+    
+    const informeDisabled = tieneInforme ? '' : 'disabled';
+    const informeClass = tieneInforme ? 'btn-informe' : 'btn-informe btn-informe-disabled';
+
     tr.innerHTML = `
       <td>${c.cedula ?? ""}</td>
       <td>${escapeHtml(c.nombre ?? "")}</td>
@@ -241,11 +369,14 @@ async function renderClients(list) {
           <button class="btn-action btn-edit" data-id="${c.id}" onclick="onEdit(${c.id})">Editar</button>
           <button class="btn-action btn-delete" data-id="${c.id}" onclick="onDelete(${c.id})">Eliminar</button>
           <button class="btn-action btn-consulta" data-id="${c.id}" onclick="onConsulta(${c.id})">Consulta</button>
+          <button class="btn-action ${informeClass}" data-id="${c.id}" onclick="onInforme(${c.id}, '${modalidad}')" ${informeDisabled}>Informe</button>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
   }
+  
+  console.log(`✅ Renderizado completo de ${list.length} clientes`);
 }
 
 function populateFilterOptions(clients) {
@@ -262,7 +393,6 @@ function fillSelect(selectElem, items, label) {
     opt.textContent = i;
     selectElem.appendChild(opt);
   });
-  // Restaurar valor seleccionado si existía
   if (currentValue) {
     selectElem.value = currentValue;
   }
@@ -285,7 +415,6 @@ function applyFilters() {
 }
 
 function setupFilterEvents() {
-  // Asegurar que todos los menús estén ocultos al inicio
   document.querySelectorAll(".filter-menu").forEach(menu => {
     menu.classList.remove("show");
     menu.style.display = "none";
@@ -301,7 +430,6 @@ function setupFilterEvents() {
       const type = th.dataset.type;
       const menu = document.getElementById(`filterMenu-${type}`);
 
-      // Cerrar todos los demás menús
       menus.forEach(m => {
         if (m !== menu) {
           m.classList.remove("show");
@@ -309,7 +437,6 @@ function setupFilterEvents() {
         }
       });
 
-      // Alternar visibilidad del menú actual
       if (menu.classList.contains("show")) {
         menu.classList.remove("show");
         menu.style.display = "none";
@@ -320,7 +447,6 @@ function setupFilterEvents() {
     });
   });
 
-  // Cerrar menús al hacer clic fuera
   document.addEventListener("click", e => {
     if (!e.target.closest(".filterable")) {
       menus.forEach(m => {
@@ -330,20 +456,17 @@ function setupFilterEvents() {
     }
   });
 
-  // Prevenir que clicks dentro del menú lo cierren
   menus.forEach(menu => {
     menu.addEventListener("click", e => {
       e.stopPropagation();
     });
   });
 
-  // Aplicar filtros
   filterCedula.addEventListener("input", applyFilters);
   
   [filterSede, filterVinculo, filterEmpresa].forEach(select => {
     select.addEventListener("change", () => {
       applyFilters();
-      // Cerrar el menú correspondiente
       const filterType = select.id.replace('filter', '').toLowerCase();
       const menu = document.getElementById(`filterMenu-${filterType}`);
       if (menu) {
@@ -353,7 +476,6 @@ function setupFilterEvents() {
     });
   });
 
-  // ✅ NUEVO: Event listener para filtro de profesional
   if (filterProfesionalSelect) {
     filterProfesionalSelect.addEventListener("change", () => {
       const profesionalId = filterProfesionalSelect.value;
@@ -361,31 +483,25 @@ function setupFilterEvents() {
       
       console.log("🔄 Cambiando filtro de profesional:", profesionalId || "Todos");
       
-      // Recargar clientes con el filtro de profesional
       loadClients(modalidad, profesionalId || null);
     });
   }
 
-  // Botón para limpiar filtros
   const btnClearFilters = document.getElementById("btnClearFilters");
   if (btnClearFilters) {
     btnClearFilters.addEventListener("click", () => {
-      // Limpiar todos los selectores y inputs
       filterCedula.value = "";
       filterSede.value = "";
       filterVinculo.value = "";
       filterEmpresa.value = "";
       
-      // ✅ NUEVO: Limpiar filtro de profesional si existe
       if (filterProfesionalSelect) {
         filterProfesionalSelect.value = "";
       }
 
-      // ✅ NUEVO: Recargar clientes sin filtro de profesional
       const modalidad = localStorage.getItem('modalidadSeleccionada');
       loadClients(modalidad, null);
 
-      // Cerrar todos los menús abiertos
       menus.forEach(m => {
         m.classList.remove("show");
         m.style.display = "none";
@@ -417,7 +533,6 @@ async function onDelete(id) {
       return;
     }
     
-    // ✅ ACTUALIZADO: Recargar con modalidad y profesional actual
     const modalidad = localStorage.getItem('modalidadSeleccionada');
     const profesionalId = filterProfesionalSelect?.value || null;
     await loadClients(modalidad, profesionalId);
@@ -434,4 +549,123 @@ function onEdit(id) {
 // Función para ir a Consulta/Seguimiento
 window.onConsulta = function(id) {
   window.location.href = `consulta.html?cliente=${id}`;
+};
+
+// ✅ NUEVA FUNCIÓN: Abrir informe según modalidad (replicando comportamiento de consulta.html)
+window.onInforme = async function(clienteId, modalidad) {
+  console.log(`📄 Generando informe para cliente ${clienteId} en modalidad: ${modalidad}`);
+  
+  try {
+    // Cargar datos del cliente
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: {
+        "Authorization": `Bearer ${getAuthToken()}`
+      }
+    });
+    
+    if (!resCliente.ok) {
+      alert("❌ Error al cargar datos del cliente");
+      return;
+    }
+    
+    const cliente = await resCliente.json();
+    console.log("✅ Cliente cargado:", cliente.nombre);
+    
+    // Cargar consultas según modalidad
+    if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+      // Cargar consultas SVE
+      const resConsultas = await fetch(`${CONSULTAS_SVE_URL}/cliente/${clienteId}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`
+        }
+      });
+      
+      if (!resConsultas.ok) {
+        alert("❌ No se encontraron consultas SVE");
+        return;
+      }
+      
+      const consultas = await resConsultas.json();
+      console.log(`✅ Consultas SVE cargadas: ${consultas.length}`);
+      
+      if (!consultas || consultas.length === 0) {
+        alert("ℹ️ No hay consultas SVE registradas para generar el informe");
+        return;
+      }
+      
+      // Asignar datos globales
+      window.clienteActual = cliente;
+      window.consultasDelCliente = consultas;
+      
+      // Cargar script SVE si no está disponible
+      if (typeof window.generarInformeSVE !== 'function') {
+        const script = document.createElement('script');
+        script.src = 'js/informeSVE.js';
+        script.onload = () => {
+          console.log("✅ Script informeSVE.js cargado");
+          window.generarInformeSVE();
+        };
+        script.onerror = () => {
+          console.error("❌ Error cargando informeSVE.js");
+          alert("❌ Error al cargar el generador de informes SVE");
+        };
+        document.head.appendChild(script);
+      } else {
+        window.generarInformeSVE();
+      }
+    } else {
+      // Orientación Psicosocial
+      const resConsultas = await fetch(`${CONSULTAS_URL}/cliente/${clienteId}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`
+        }
+      });
+      
+      if (!resConsultas.ok) {
+        alert("❌ No se encontraron consultas");
+        return;
+      }
+      
+      const consultas = await resConsultas.json();
+      console.log(`✅ Consultas cargadas: ${consultas.length}`);
+      
+      if (!consultas || consultas.length === 0) {
+        alert("ℹ️ No hay consultas registradas para generar el informe");
+        return;
+      }
+      
+      // Verificar que el caso esté cerrado
+      if (!cliente.fecha_cierre) {
+        alert("⚠️ El caso debe estar cerrado para generar el informe.\n\nPor favor, cierra el caso desde el formulario de consulta seleccionando estado 'Cerrado' y estableciendo una fecha de cierre.");
+        return;
+      }
+      
+      console.log("✅ Caso cerrado, generando informe...");
+      
+      // Asignar datos globales (tal como lo hace consulta.html)
+      window.clienteActual = cliente;
+      window.consultasDelCliente = consultas;
+      
+      // Cargar script de informe si no está disponible
+      if (typeof window.generarInformePaciente !== 'function') {
+        const script = document.createElement('script');
+        script.src = 'js/informe.js';
+        script.onload = () => {
+          console.log("✅ Script informe.js cargado");
+          window.generarInformePaciente();
+        };
+        script.onerror = () => {
+          console.error("❌ Error cargando informe.js");
+          alert("❌ Error al cargar el generador de informes");
+        };
+        document.head.appendChild(script);
+      } else {
+        window.generarInformePaciente();
+      }
+    }
+    
+  } catch (err) {
+    console.error("❌ Error generando informe:", err);
+    alert("❌ Error al generar el informe: " + err.message);
+  }
 };

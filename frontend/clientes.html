@@ -15,6 +15,9 @@
   <main class="page-main">
     <!-- Botones de acción -->
     <div class="filter-actions">
+      <!-- ✅ MOVIDO AL INICIO: Botón Formulario Registro -->
+      <a href="index.html" class="btn-back-form">← Formulario Registro</a>
+      
       <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
       
       <!-- Filtro de profesional (solo visible para admin) -->
@@ -25,7 +28,21 @@
         </select>
       </div>
       
-      <a href="index.html" class="btn-back-form">← Formulario Registro</a>
+      <!-- ✅ NUEVO: Filtro de año (solo visible para admin) -->
+      <div id="yearFilterContainer" class="year-filter-container" style="display: none;">
+        <label for="filterAño" class="filter-label">📅 Año:</label>
+        <select id="filterAño" class="filter-year-select">
+          <option value="">Todos los Años</option>
+        </select>
+      </div>
+      
+      <!-- ✅ NUEVO: Filtro de mes (solo visible para admin) -->
+      <div id="mesFilterContainer" class="mes-filter-container" style="display: none;">
+        <label for="filterMes" class="filter-label">📆 Mes:</label>
+        <select id="filterMes" class="filter-mes-select">
+          <option value="">Todos los Meses</option>
+        </select>
+      </div>
     </div>
 
     <div class="table-container">

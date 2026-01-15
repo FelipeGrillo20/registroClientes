@@ -73,13 +73,17 @@ exports.getClients = async (req, res) => {
   try {
     const userRole = req.user?.rol;
     const userId = req.user?.id;
-    const { modalidad, profesional_id } = req.query; // ✅ NUEVO: Recibir profesional_id
+    
+    // ✅ Obtener TODOS los filtros de la query
+    const { modalidad, profesional_id, año, mes } = req.query;
+    
+    console.log('🔍 Filtros recibidos:', { modalidad, profesional_id, año, mes, userRole });
 
     let clients;
 
     // Si es admin, ver todos los clientes (puede filtrar por modalidad y profesional)
     if (userRole === 'admin') {
-      // ✅ NUEVO: Si hay filtro de profesional específico
+      // ✅ Si hay filtro de profesional específico
       if (profesional_id) {
         console.log(`📊 Admin filtrando por profesional ID: ${profesional_id}`);
         
@@ -123,11 +127,37 @@ exports.getClients = async (req, res) => {
       return res.status(403).json({ message: "No tienes permisos para ver clientes" });
     }
 
-    console.log(`✅ Clientes retornados: ${clients.length}`);
+    // ✅ NUEVO: FILTRO ADICIONAL POR AÑO (si se especifica)
+    if (año) {
+      clients = clients.filter(client => {
+        if (!client.created_at) return false;
+        
+        const fechaCreacion = new Date(client.created_at);
+        const añoCreacion = fechaCreacion.getFullYear();
+        
+        return añoCreacion === parseInt(año);
+      });
+      console.log(`📅 Después de filtrar por año ${año}:`, clients.length);
+    }
+    
+    // ✅ NUEVO: FILTRO ADICIONAL POR MES (si se especifica)
+    if (mes) {
+      clients = clients.filter(client => {
+        if (!client.created_at) return false;
+        
+        const fechaCreacion = new Date(client.created_at);
+        const mesCreacion = fechaCreacion.getMonth() + 1; // getMonth() devuelve 0-11
+        
+        return mesCreacion === parseInt(mes);
+      });
+      console.log(`📆 Después de filtrar por mes ${mes}:`, clients.length);
+    }
+
+    console.log(`✅ Total de clientes retornados: ${clients.length}`);
     res.json(clients);
     
   } catch (err) {
-    console.error("Error obteniendo clientes:", err);
+    console.error("❌ Error obteniendo clientes:", err);
     res.status(500).json({ message: "Error al obtener clientes" });
   }
 };

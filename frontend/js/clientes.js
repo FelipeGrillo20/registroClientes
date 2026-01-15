@@ -16,7 +16,12 @@ let allClients = [];
 let allEmpresas = [];
 let allProfesionales = [];
 let currentUserRole = null;
-let consultasDisponibles = {}; // ✅ NUEVO: Cache de consultas por cliente
+let consultasDisponibles = {};
+let filtrosActivos = { // ✅ NUEVO: Objeto para mantener filtros activos
+  profesional: null,
+  año: null,
+  mes: null
+};
 
 // Función para obtener token
 function getAuthToken() {
@@ -166,10 +171,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalidad = verificarYMostrarModalidad();
   if (!modalidad) return;
   
-  // Si es admin, cargar profesionales y mostrar filtro
+  // Si es admin, cargar profesionales y mostrar filtros
   if (currentUserRole === 'admin') {
     loadProfesionales();
     document.getElementById("profesionalFilterContainer").style.display = "flex";
+    
+    // ✅ NUEVO: Mostrar y poblar filtros de año y mes
+    const yearFilterContainer = document.getElementById("yearFilterContainer");
+    const mesFilterContainer = document.getElementById("mesFilterContainer");
+    
+    if (yearFilterContainer) {
+      yearFilterContainer.style.display = "flex";
+      populateYearFilter();
+    }
+    
+    if (mesFilterContainer) {
+      mesFilterContainer.style.display = "flex";
+      populateMesFilter();
+    }
   }
   
   loadClients(modalidad);
@@ -266,7 +285,7 @@ function populateEmpresaFilter() {
 }
 
 // Cargar clientes CON filtro de modalidad y profesional
-async function loadClients(modalidad, profesionalId = null) {
+async function loadClients(modalidad, profesionalId = null, año = null, mes = null) {
   tbody.innerHTML = `<tr><td colspan="8" class="no-data">Cargando clientes...</td></tr>`;
   
   // ✅ Limpiar cache de consultas al recargar
@@ -282,8 +301,18 @@ async function loadClients(modalidad, profesionalId = null) {
       console.log("🔍 Filtrando por profesional ID:", profesionalId);
     }
     
+    // ✅ NUEVO: Agregar filtros de año y mes si existen
+    if (año) {
+      url += `&año=${año}`;
+      console.log("📅 Filtrando por año:", año);
+    }
+    
+    if (mes) {
+      url += `&mes=${mes}`;
+      console.log("📆 Filtrando por mes:", mes);
+    }
+    
     console.log("📡 Petición a:", url);
-    console.log("🔧 CONSULTAS_URL:", CONSULTAS_URL);
     
     const res = await fetch(url, {
       headers: {
@@ -304,9 +333,23 @@ async function loadClients(modalidad, profesionalId = null) {
     }
     
     if (!Array.isArray(clients) || clients.length === 0) {
-      const mensaje = profesionalId 
-        ? "No hay clientes registrados por este profesional en esta modalidad"
-        : "No hay clientes registrados en esta modalidad";
+      let mensaje = "No hay clientes registrados";
+      
+      // Personalizar mensaje según filtros activos
+      if (profesionalId && año && mes) {
+        mensaje = `No hay clientes registrados por este profesional en ${getMesNombre(mes)} de ${año}`;
+      } else if (profesionalId && año) {
+        mensaje = `No hay clientes registrados por este profesional en ${año}`;
+      } else if (profesionalId) {
+        mensaje = "No hay clientes registrados por este profesional en esta modalidad";
+      } else if (año && mes) {
+        mensaje = `No hay clientes registrados en ${getMesNombre(mes)} de ${año}`;
+      } else if (año) {
+        mensaje = `No hay clientes registrados en ${año}`;
+      } else {
+        mensaje = "No hay clientes registrados en esta modalidad";
+      }
+      
       tbody.innerHTML = `<tr><td colspan="8" class="no-data">${mensaje}</td></tr>`;
       return;
     }
@@ -326,6 +369,84 @@ async function loadClients(modalidad, profesionalId = null) {
     tbody.innerHTML = `<tr><td colspan="9" class="no-data">Error de conexión al cargar clientes</td></tr>`;
   }
 }
+
+// ============================================
+// NUEVA FUNCIÓN: Obtener nombre del mes
+// ============================================
+function getMesNombre(mesNumero) {
+  const meses = {
+    '1': 'Enero',
+    '2': 'Febrero',
+    '3': 'Marzo',
+    '4': 'Abril',
+    '5': 'Mayo',
+    '6': 'Junio',
+    '7': 'Julio',
+    '8': 'Agosto',
+    '9': 'Septiembre',
+    '10': 'Octubre',
+    '11': 'Noviembre',
+    '12': 'Diciembre'
+  };
+  return meses[String(mesNumero)] || 'Mes desconocido';
+}
+
+// ============================================
+// NUEVA FUNCIÓN: Poblar select de años
+// ============================================
+function populateYearFilter() {
+  const filterAño = document.getElementById('filterAño');
+  if (!filterAño) return;
+  
+  filterAño.innerHTML = '<option value="">Todos los Años</option>';
+  
+  // Generar años desde 2026 hasta 2030
+  for (let año = 2026; año <= 2030; año++) {
+    const option = document.createElement("option");
+    option.value = año;
+    option.textContent = año;
+    filterAño.appendChild(option);
+  }
+  
+  console.log("✅ Filtro de años poblado (2026-2030)");
+}
+
+// ============================================
+// NUEVA FUNCIÓN: Poblar select de meses
+// ============================================
+function populateMesFilter() {
+  const filterMes = document.getElementById('filterMes');
+  if (!filterMes) return;
+  
+  const meses = [
+    { valor: '', nombre: 'Todos los Meses' },
+    { valor: '1', nombre: 'Enero' },
+    { valor: '2', nombre: 'Febrero' },
+    { valor: '3', nombre: 'Marzo' },
+    { valor: '4', nombre: 'Abril' },
+    { valor: '5', nombre: 'Mayo' },
+    { valor: '6', nombre: 'Junio' },
+    { valor: '7', nombre: 'Julio' },
+    { valor: '8', nombre: 'Agosto' },
+    { valor: '9', nombre: 'Septiembre' },
+    { valor: '10', nombre: 'Octubre' },
+    { valor: '11', nombre: 'Noviembre' },
+    { valor: '12', nombre: 'Diciembre' }
+  ];
+  
+  filterMes.innerHTML = '';
+  
+  meses.forEach(mes => {
+    const option = document.createElement("option");
+    option.value = mes.valor;
+    option.textContent = mes.nombre;
+    filterMes.appendChild(option);
+  });
+  
+  console.log("✅ Filtro de meses poblado");
+}
+
+
 
 // ✅ ACTUALIZADO: Renderizar clientes con botón de informe
 async function renderClients(list) {
@@ -487,17 +608,66 @@ function setupFilterEvents() {
     });
   });
 
+  // ✅ Event listener para filtro de profesional
   if (filterProfesionalSelect) {
     filterProfesionalSelect.addEventListener("change", () => {
       const profesionalId = filterProfesionalSelect.value;
+      filtrosActivos.profesional = profesionalId || null;
+      
       const modalidad = localStorage.getItem('modalidadSeleccionada');
       
       console.log("🔄 Cambiando filtro de profesional:", profesionalId || "Todos");
       
-      loadClients(modalidad, profesionalId || null);
+      loadClients(
+        modalidad, 
+        filtrosActivos.profesional, 
+        filtrosActivos.año, 
+        filtrosActivos.mes
+      );
     });
   }
 
+  // ✅ NUEVO: Event listener para filtro de año
+  const filterAño = document.getElementById('filterAño');
+  if (filterAño) {
+    filterAño.addEventListener("change", () => {
+      const año = filterAño.value;
+      filtrosActivos.año = año || null;
+      
+      const modalidad = localStorage.getItem('modalidadSeleccionada');
+      
+      console.log("📅 Cambiando filtro de año:", año || "Todos");
+      
+      loadClients(
+        modalidad, 
+        filtrosActivos.profesional, 
+        filtrosActivos.año, 
+        filtrosActivos.mes
+      );
+    });
+  }
+
+  // ✅ NUEVO: Event listener para filtro de mes
+  const filterMes = document.getElementById('filterMes');
+  if (filterMes) {
+    filterMes.addEventListener("change", () => {
+      const mes = filterMes.value;
+      filtrosActivos.mes = mes || null;
+      
+      const modalidad = localStorage.getItem('modalidadSeleccionada');
+      
+      console.log("📆 Cambiando filtro de mes:", mes ? getMesNombre(mes) : "Todos");
+      
+      loadClients(
+        modalidad, 
+        filtrosActivos.profesional, 
+        filtrosActivos.año, 
+        filtrosActivos.mes
+      );
+    });
+  }
+
+  // ✅ MODIFICAR: Botón limpiar filtros
   const btnClearFilters = document.getElementById("btnClearFilters");
   if (btnClearFilters) {
     btnClearFilters.addEventListener("click", () => {
@@ -509,9 +679,25 @@ function setupFilterEvents() {
       if (filterProfesionalSelect) {
         filterProfesionalSelect.value = "";
       }
+      
+      // ✅ NUEVO: Limpiar filtros de año y mes
+      if (filterAño) {
+        filterAño.value = "";
+      }
+      
+      if (filterMes) {
+        filterMes.value = "";
+      }
+      
+      // Resetear filtros activos
+      filtrosActivos = {
+        profesional: null,
+        año: null,
+        mes: null
+      };
 
       const modalidad = localStorage.getItem('modalidadSeleccionada');
-      loadClients(modalidad, null);
+      loadClients(modalidad, null, null, null);
 
       menus.forEach(m => {
         m.classList.remove("show");

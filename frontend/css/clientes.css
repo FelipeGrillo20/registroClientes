@@ -734,6 +734,149 @@ body {
   min-width: 100px;
 }
 
+/* ============================================
+   ESTILOS PARA FILTROS DE AÑO Y MES
+   Agregar al final de clientes.css
+   ============================================ */
+
+/* Contenedores de filtros de fecha */
+.year-filter-container,
+.mes-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.year-filter-container:hover,
+.mes-filter-container:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+}
+
+/* Labels de los filtros */
+.year-filter-container .filter-label,
+.mes-filter-container .filter-label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Selects de año y mes */
+.filter-year-select,
+.filter-mes-select {
+  padding: 8px 32px 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233498db' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.filter-year-select:hover,
+.filter-mes-select:hover {
+  border-color: #3498db;
+  background-color: #f8f9fa;
+}
+
+.filter-year-select:focus,
+.filter-mes-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Ajustar el ancho del select de mes (más largo por los nombres) */
+.filter-mes-select {
+  min-width: 160px;
+}
+
+/* Responsive: Stack filtros en pantallas pequeñas */
+@media (max-width: 1200px) {
+  .filter-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .profesional-filter-container,
+  .year-filter-container,
+  .mes-filter-container {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profesional-filter-container,
+  .year-filter-container,
+  .mes-filter-container {
+    flex: 1 1 100%;
+  }
+  
+  .filter-year-select,
+  .filter-mes-select {
+    width: 100%;
+  }
+}
+
+/* Animación cuando se aplican filtros */
+@keyframes filterApplied {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.filter-year-select:active,
+.filter-mes-select:active {
+  animation: filterApplied 0.3s ease;
+}
+
+/* Indicador visual cuando hay filtros activos */
+.filter-year-select:not([value=""]),
+.filter-mes-select:not([value=""]) {
+  border-color: #27ae60;
+  background-color: #e8f8f5;
+}
+
+/* Estilo para opciones del select */
+.filter-year-select option,
+.filter-mes-select option {
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* Badge de filtro activo */
+.filter-year-select:not([value=""]):after,
+.filter-mes-select:not([value=""]):after {
+  content: "✓";
+  position: absolute;
+  right: 30px;
+  color: #27ae60;
+  font-weight: bold;
+}
+
 /* ============================================ */
 /* RESPONSIVE PARA BOTÓN INFORME */
 /* ============================================ */

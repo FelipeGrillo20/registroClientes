@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Cargar lista de profesionales (solo para admin)
 async function loadProfesionales() {
   try {
-    console.log("📥 Cargando lista de profesionales...");
+    console.log("📥 Cargando lista de profesionales y administradores...");
     
     const res = await fetch(USERS_URL, {
       headers: {
@@ -195,12 +195,19 @@ async function loadProfesionales() {
     
     const data = await res.json();
     
-    // Filtrar solo usuarios activos y con rol 'profesional'
+    // ✅ MODIFICADO: Filtrar usuarios activos con rol 'profesional' O 'admin'
     allProfesionales = data.users.filter(user => 
-      user.activo && user.rol === 'profesional'
+      user.activo && (user.rol === 'profesional' || user.rol === 'admin')
     );
     
-    console.log("✅ Profesionales cargados:", allProfesionales.length);
+    // ✅ Ordenar alfabéticamente por nombre
+    allProfesionales.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    
+    console.log("✅ Profesionales y administradores cargados:", allProfesionales.length);
+    console.log("📋 Desglose:", {
+      profesionales: allProfesionales.filter(u => u.rol === 'profesional').length,
+      administradores: allProfesionales.filter(u => u.rol === 'admin').length
+    });
     
     populateProfesionalFilter();
   } catch (err) {
@@ -208,14 +215,18 @@ async function loadProfesionales() {
   }
 }
 
-// Llenar el select de profesionales
+// Llenar el select de profesionales (con badge de rol)
 function populateProfesionalFilter() {
   filterProfesionalSelect.innerHTML = '<option value="">Todos los Profesionales</option>';
   
   allProfesionales.forEach(profesional => {
     const option = document.createElement("option");
     option.value = profesional.id;
-    option.textContent = `${profesional.nombre} (${profesional.cedula})`;
+    
+    // ✅ NUEVO: Agregar indicador de rol
+    const rolBadge = profesional.rol === 'admin' ? ' 👑' : '';
+    option.textContent = `${profesional.nombre} (${profesional.cedula})${rolBadge}`;
+    
     filterProfesionalSelect.appendChild(option);
   });
   

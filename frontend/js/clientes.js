@@ -593,9 +593,14 @@ window.onInforme = async function(clienteId, modalidad) {
         return;
       }
       
-      // Asignar datos globales
+      // ✅ CRÍTICO: Asignar datos globales para que informeSVE.js pueda accederlos
       window.clienteActual = cliente;
       window.consultasDelCliente = consultas;
+      
+      // ✅ NUEVO: Crear función auxiliar para obtener clienteId
+      window.getClienteIdFromContext = function() {
+        return clienteId; // Retornar el ID que ya tenemos
+      };
       
       // Cargar script SVE si no está disponible
       if (typeof window.generarInformeSVE !== 'function') {
@@ -603,7 +608,8 @@ window.onInforme = async function(clienteId, modalidad) {
         script.src = 'js/informeSVE.js';
         script.onload = () => {
           console.log("✅ Script informeSVE.js cargado");
-          window.generarInformeSVE();
+          // ✅ Pasar clienteId como parámetro
+          window.generarInformeSVE(clienteId);
         };
         script.onerror = () => {
           console.error("❌ Error cargando informeSVE.js");
@@ -611,10 +617,11 @@ window.onInforme = async function(clienteId, modalidad) {
         };
         document.head.appendChild(script);
       } else {
-        window.generarInformeSVE();
+        // ✅ Pasar clienteId como parámetro
+        window.generarInformeSVE(clienteId);
       }
     } else {
-      // Orientación Psicosocial
+      // Orientación Psicosocial (código existente sin cambios)
       const resConsultas = await fetch(`${CONSULTAS_URL}/cliente/${clienteId}`, {
         headers: {
           "Authorization": `Bearer ${getAuthToken()}`

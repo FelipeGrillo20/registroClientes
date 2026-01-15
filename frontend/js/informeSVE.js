@@ -3,12 +3,44 @@
 const MESA_TRABAJO_API = window.API_CONFIG.ENDPOINTS.MESA_TRABAJO_SVE;
 const CONSULTAS_SVE_API = window.API_CONFIG.ENDPOINTS.CONSULTAS_SVE;
 
+// Función para obtener el token de autenticación
+function getAuthToken() {
+  return localStorage.getItem("authToken");
+}
+
 // ============================================
 // GENERAR INFORME SVE COMPLETO
 // ============================================
-window.generarInformeSVE = async function() {
-  if (!clienteActual) {
+window.generarInformeSVE = async function(clienteId) {
+  // ✅ Si no se pasa clienteId, intentar obtenerlo del contexto
+  if (!clienteId) {
+    // Intentar desde la URL (cuando se llama desde consulta.html)
+    if (typeof getClienteIdFromURL === 'function') {
+      clienteId = getClienteIdFromURL();
+    }
+    // Intentar desde el contexto (cuando se llama desde clientes.html)
+    else if (typeof getClienteIdFromContext === 'function') {
+      clienteId = getClienteIdFromContext();
+    }
+    // Intentar desde window.clienteActual
+    else if (window.clienteActual && window.clienteActual.id) {
+      clienteId = window.clienteActual.id;
+    }
+  }
+  
+  // Validar que tenemos un clienteId
+  if (!clienteId) {
+    alert('⚠️ No se pudo identificar el cliente');
+    console.error('❌ clienteId no disponible');
+    return;
+  }
+  
+  console.log('🔍 Generando informe para cliente ID:', clienteId);
+
+  // ✅ Validar que tenemos datos del cliente
+  if (!window.clienteActual) {
     alert('⚠️ No hay datos del cliente cargados');
+    console.error('❌ window.clienteActual no está definido');
     return;
   }
 
@@ -26,9 +58,7 @@ window.generarInformeSVE = async function() {
     `;
     document.body.appendChild(loadingDiv);
 
-    const clienteId = getClienteIdFromURL();
-
-    // Cargar Consultas SVE
+    // Cargar Consultas SVE desde el endpoint correcto
     const resConsultas = await fetch(`${CONSULTAS_SVE_API}/cliente/${clienteId}`, {
       headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
@@ -57,7 +87,7 @@ window.generarInformeSVE = async function() {
 
     // Generar el HTML del informe
     const informeHTML = generarHTMLInformeSVE(
-      clienteActual, 
+      window.clienteActual, 
       consultasOrdenadas, // ✅ Pasar TODAS las consultas ordenadas
       usuarioLogueado
     );

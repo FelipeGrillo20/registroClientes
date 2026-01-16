@@ -23,6 +23,28 @@ let filtrosActivos = { // ✅ NUEVO: Objeto para mantener filtros activos
   mes: null
 };
 
+// ============================================
+// NUEVA FUNCIÓN: Actualizar contador de trabajadores
+// ============================================
+function actualizarContadorTrabajadores(cantidad) {
+  const contadorNumero = document.getElementById('cantidadTrabajadores');
+  
+  if (!contadorNumero) return;
+  
+  // Agregar animación de actualización
+  contadorNumero.classList.add('updated');
+  
+  // Actualizar el número
+  contadorNumero.textContent = cantidad;
+  
+  // Remover la animación después de que termine
+  setTimeout(() => {
+    contadorNumero.classList.remove('updated');
+  }, 500);
+  
+  console.log(`📊 Contador actualizado: ${cantidad} trabajadores`);
+}
+
 // Función para obtener token
 function getAuthToken() {
   return localStorage.getItem("authToken");
@@ -189,6 +211,12 @@ document.addEventListener("DOMContentLoaded", () => {
       mesFilterContainer.style.display = "flex";
       populateMesFilter();
     }
+    
+    // ✅ NUEVO: Mostrar contador de trabajadores
+    const contadorTrabajadores = document.getElementById("contadorTrabajadores");
+    if (contadorTrabajadores) {
+      contadorTrabajadores.style.display = "flex";
+    }
   }
   
   loadClients(modalidad);
@@ -322,6 +350,8 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
     
     if (!res.ok) {
       tbody.innerHTML = `<tr><td colspan="8" class="no-data">Error al cargar clientes</td></tr>`;
+      // ✅ Actualizar contador a 0 en caso de error
+      actualizarContadorTrabajadores(0);
       return;
     }
     
@@ -331,6 +361,9 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
     if (clients.length > 0) {
       console.log("📋 Primer cliente de ejemplo:", clients[0]);
     }
+    
+    // ✅ NUEVO: Actualizar contador con la cantidad de clientes
+    actualizarContadorTrabajadores(clients.length);
     
     if (!Array.isArray(clients) || clients.length === 0) {
       let mensaje = "No hay clientes registrados";
@@ -367,8 +400,11 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
   } catch (err) {
     console.error("Error loading clients:", err);
     tbody.innerHTML = `<tr><td colspan="9" class="no-data">Error de conexión al cargar clientes</td></tr>`;
+    // ✅ Actualizar contador a 0 en caso de error
+    actualizarContadorTrabajadores(0);
   }
 }
+
 
 // ============================================
 // NUEVA FUNCIÓN: Obtener nombre del mes

@@ -9,7 +9,15 @@
 <body>
   <header class="page-header">
     <div id="userInfo" class="user-info-bar"></div>
-    <h1>📋 Trabajadores Registrados</h1>
+    <div class="header-title-container">
+      <h1>📋 Trabajadores Registrados</h1>
+      <!-- ✅ NUEVO: Contador de trabajadores al lado del título -->
+      <div id="contadorTrabajadores" class="contador-trabajadores" style="display: none;">
+        <span class="contador-icon">👥</span>
+        <span class="contador-label">Cantidad Trabajadores:</span>
+        <span class="contador-numero" id="cantidadTrabajadores">0</span>
+      </div>
+    </div>
   </header>
 
   <main class="page-main">

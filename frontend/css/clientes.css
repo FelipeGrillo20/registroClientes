@@ -877,6 +877,128 @@ body {
   font-weight: bold;
 }
 
+/* ============================================
+   ESTILOS PARA CONTADOR DE TRABAJADORES
+   ============================================ */
+
+/* Contenedor del header con título y contador */
+.header-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.header-title-container h1 {
+  margin: 0;
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.contador-trabajadores {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 2px solid #5a67d8;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease;
+  flex-shrink: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.contador-trabajadores:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.contador-icon {
+  font-size: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.contador-label {
+  font-weight: 600;
+  color: white;
+  font-size: 14px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.contador-numero {
+  font-weight: 800;
+  color: #fff;
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 16px;
+  border-radius: 20px;
+  min-width: 50px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.contador-numero:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Animación cuando cambia el número */
+@keyframes countUpdate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.contador-numero.updated {
+  animation: countUpdate 0.5s ease;
+}
+
+/* Responsive: Stack en pantallas pequeñas */
+@media (max-width: 768px) {
+  .header-title-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .contador-trabajadores {
+    width: 100%;
+    justify-content: center;
+  }
+}
 /* ============================================ */
 /* RESPONSIVE PARA BOTÓN INFORME */
 /* ============================================ */

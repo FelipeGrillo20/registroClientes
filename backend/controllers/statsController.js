@@ -13,402 +13,366 @@ exports.getDashboardStats = async (req, res) => {
       });
     }
     
-    const { period, profesionalId, startDate, endDate } = req.query;
+    console.log('📊 Iniciando carga de estadísticas...');
+    console.log('Usuario:', req.user.nombre, '(', req.user.rol, ')');
     
-    // DEBUG: Ver qué llega del frontend
-    console.log('=== PARAMETROS RECIBIDOS ===');
-    console.log('req.query completo:', req.query);
-    console.log('period:', period);
-    console.log('profesionalId:', profesionalId);
-    console.log('startDate:', startDate);
-    console.log('endDate:', endDate);
+    const { period = 'current', profesionalId = 'all', startDate, endDate } = req.query;
     
-    // Construir filtro de fechas según el periodo
-    let dateFilter = '';
-    let dateParams = [];
+    console.log('Parámetros recibidos:', { period, profesionalId, startDate, endDate });
     
-    if (period === 'custom' && startDate && endDate) {
-      dateFilter = 'AND fecha BETWEEN $1 AND $2';
-      dateParams = [startDate, endDate];
-    } else {
-      const now = new Date();
-      let start = new Date();
-      
-      switch(period) {
-        case 'current':
-          start = new Date(now.getFullYear(), now.getMonth(), 1);
-          break;
-        case 'last':
-          start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-          dateFilter = 'AND fecha BETWEEN $1 AND $2';
-          dateParams = [start.toISOString().split('T')[0], lastMonthEnd.toISOString().split('T')[0]];
-          break;
-        case 'last3':
-          start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-          break;
-        case 'last6':
-          start = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-          break;
-        case 'year':
-          start = new Date(now.getFullYear(), 0, 1);
-          break;
-      }
-      
-      if (dateFilter === '') {
-        dateFilter = 'AND fecha >= $1';
-        dateParams = [start.toISOString().split('T')[0]];
-      }
+    // ==========================================
+    // OBTENER TODOS LOS DATOS
+    // ==========================================
+    
+    // 1. Obtener todos los clientes
+    const clientesQuery = profesionalId && profesionalId !== 'all'
+      ? `SELECT * FROM clients WHERE profesional_id = ${profesionalId}`
+      : `SELECT * FROM clients`;
+    
+    const clientesResult = await pool.query(clientesQuery);
+    const todosLosClientes = clientesResult.rows;
+    
+    console.log('✅ Clientes obtenidos:', todosLosClientes.length);
+    
+    // 2. Obtener todas las consultas
+    const consultasQuery = profesionalId && profesionalId !== 'all'
+      ? `SELECT c.*, cl.cedula, cl.nombre, cl.sede, cl.profesional_id, cl.empresa_id, cl.contacto_emergencia_telefono
+         FROM consultas c
+         INNER JOIN clients cl ON c.cliente_id = cl.id
+         WHERE cl.profesional_id = ${profesionalId}`
+      : `SELECT c.*, cl.cedula, cl.nombre, cl.sede, cl.profesional_id, cl.empresa_id, cl.contacto_emergencia_telefono
+         FROM consultas c
+         INNER JOIN clients cl ON c.cliente_id = cl.id`;
+    
+    const consultasResult = await pool.query(consultasQuery);
+    const todasLasConsultas = consultasResult.rows;
+    
+    console.log('✅ Consultas obtenidas:', todasLasConsultas.length);
+    
+    // 3. Obtener profesionales y administradores
+    const profesionalesQuery = profesionalId && profesionalId !== 'all'
+      ? `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true AND id = ${profesionalId}`
+      : `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true ORDER BY rol DESC, nombre ASC`;
+    
+    const profesionalesResult = await pool.query(profesionalesQuery);
+    const profesionales = profesionalesResult.rows;
+    
+    console.log('✅ Profesionales y admins obtenidos:', profesionales.length);
+    
+    // 4. Obtener empresas
+    const empresasResult = await pool.query('SELECT id, nombre_cliente FROM empresas');
+    const empresas = empresasResult.rows;
+    
+    // ==========================================
+    // FILTRAR POR FECHAS
+    // ==========================================
+    
+    const now = new Date();
+    let fechaInicio;
+    let fechaFin;
+    
+    switch(period) {
+      case 'current':
+        fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'last':
+        fechaInicio = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        fechaFin = new Date(now.getFullYear(), now.getMonth(), 0);
+        break;
+      case 'last3':
+        fechaInicio = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        break;
+      case 'last6':
+        fechaInicio = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        break;
+      case 'year':
+        fechaInicio = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'custom':
+        if (startDate && endDate) {
+          fechaInicio = new Date(startDate);
+          fechaFin = new Date(endDate);
+        } else {
+          fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+        break;
+      default:
+        fechaInicio = new Date(now.getFullYear(), now.getMonth(), 1);
     }
     
-    // Filtro de profesional
-    let profesionalFilter = '';
-    if (profesionalId && profesionalId !== 'all') {
-      profesionalFilter = `AND cl.profesional_id = ${profesionalId}`;
-    }
+    console.log('Fecha inicio:', fechaInicio);
+    console.log('Fecha fin:', fechaFin || 'Sin límite');
+    
+    // Filtrar consultas por fecha
+    const consultasFiltradas = todasLasConsultas.filter(c => {
+      const fechaConsulta = new Date(c.fecha);
+      if (fechaFin) {
+        return fechaConsulta >= fechaInicio && fechaConsulta <= fechaFin;
+      }
+      return fechaConsulta >= fechaInicio;
+    });
+    
+    console.log('✅ Consultas filtradas:', consultasFiltradas.length);
+    
+    // ==========================================
+    // CALCULAR ESTADÍSTICAS
+    // ==========================================
     
     // 1. RESUMEN GENERAL
-    // ✅ CORREGIDO: Contar total de trabajadores desde la tabla clients
-    let totalTrabajadoresQuery;
-    let totalTrabajadoresParams = [];
-    
-    if (profesionalFilter) {
-      // Si hay filtro de profesional, contar solo sus trabajadores
-      const profesionalIdMatch = profesionalFilter.match(/profesional_id = (\d+)/);
-      if (profesionalIdMatch) {
-        totalTrabajadoresQuery = `
-          SELECT COUNT(DISTINCT id) as total_trabajadores
-          FROM clients
-          WHERE profesional_id = $1
-        `;
-        totalTrabajadoresParams = [profesionalIdMatch[1]];
+    const consultasPorCliente = {};
+    consultasFiltradas.forEach(c => {
+      const key = `${c.cliente_id}-${c.motivo_consulta}`;
+      if (!consultasPorCliente[key]) {
+        consultasPorCliente[key] = {
+          cliente_id: c.cliente_id,
+          motivo: c.motivo_consulta,
+          sesiones: [],
+          estados: new Set()
+        };
       }
-    } else {
-      // Admin: contar todos los trabajadores
-      totalTrabajadoresQuery = `
-        SELECT COUNT(DISTINCT id) as total_trabajadores
-        FROM clients
-      `;
-    }
+      consultasPorCliente[key].sesiones.push(c);
+      consultasPorCliente[key].estados.add(c.estado);
+    });
     
-    const totalTrabajadoresResult = await pool.query(totalTrabajadoresQuery, totalTrabajadoresParams);
-    const totalTrabajadores = parseInt(totalTrabajadoresResult.rows[0].total_trabajadores) || 0;
-    
-    // Consultas y sesiones
-    const summaryQuery = `
-      SELECT 
-        COUNT(DISTINCT CONCAT(cl.id, '-', motivo_consulta)) as total_consultas,
-        COUNT(c.id) as total_sesiones,
-        COUNT(c.id) as total_horas,
-        COUNT(DISTINCT CASE WHEN estado = 'Cerrado' THEN CONCAT(cl.id, '-', motivo_consulta) END) as casos_cerrados,
-        COUNT(DISTINCT CASE WHEN estado = 'Abierto' THEN CONCAT(cl.id, '-', motivo_consulta) END) as casos_abiertos
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-    `;
-    
-    const summaryResult = await pool.query(summaryQuery, dateParams);
-    const summary = summaryResult.rows[0];
-    
-    const totalConsultasReales = parseInt(summary.casos_cerrados) + parseInt(summary.casos_abiertos);
-    const casosCerradosPercent = totalConsultasReales > 0 
-      ? Math.round((summary.casos_cerrados / totalConsultasReales) * 100)
+    const totalConsultas = Object.keys(consultasPorCliente).length;
+    const casosCerrados = Object.values(consultasPorCliente).filter(caso => 
+      caso.estados.has('Cerrado')
+    ).length;
+    const casosAbiertos = totalConsultas - casosCerrados;
+    const totalSesiones = consultasFiltradas.length;
+    const casosCerradosPercent = totalConsultas > 0 
+      ? Math.round((casosCerrados / totalConsultas) * 100) 
       : 0;
     
-    // 2. CONSULTAS POR PROFESIONAL
-    const profesionalQuery = `
-      SELECT 
-        u.id as profesional_id,
-        u.nombre,
-        (
-          SELECT COUNT(DISTINCT id) 
-          FROM clients 
-          WHERE profesional_id = u.id
-        ) as trabajadores,
-        COALESCE(COUNT(DISTINCT CASE WHEN c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as consultas,
-        COALESCE(COUNT(c.id), 0) as sesiones,
-        COALESCE(COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END), 0) as virtual,
-        COALESCE(COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END), 0) as presencial,
-        COALESCE(COUNT(DISTINCT CASE WHEN c.estado = 'Abierto' AND c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as abiertos,
-        COALESCE(COUNT(DISTINCT CASE WHEN c.estado = 'Cerrado' AND c.id IS NOT NULL THEN CONCAT(cl.id, '-', c.motivo_consulta) END), 0) as cerrados
-      FROM users u
-      LEFT JOIN clients cl ON cl.profesional_id = u.id
-      LEFT JOIN consultas c ON c.cliente_id = cl.id 
-        ${dateFilter ? 'AND ' + dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '') : ''}
-      WHERE u.rol = 'profesional' AND u.activo = true 
-        ${profesionalFilter ? 'AND ' + profesionalFilter.replace('AND cl.profesional_id', 'u.id') : ''}
-      GROUP BY u.id, u.nombre
-      HAVING COALESCE(COUNT(c.id), 0) > 0 OR (SELECT COUNT(*) FROM clients WHERE profesional_id = u.id) > 0
-      ORDER BY consultas DESC
-    `;
+    // 2. MODALIDAD
+    const virtual = consultasFiltradas.filter(c => c.modalidad === 'Virtual').length;
+    const presencial = consultasFiltradas.filter(c => c.modalidad === 'Presencial').length;
     
-    const profesionalResult = await pool.query(profesionalQuery, dateParams);
+    // 3. TOP MOTIVOS
+    const motivosCount = {};
+    Object.values(consultasPorCliente).forEach(caso => {
+      const motivo = caso.motivo || 'Sin especificar';
+      motivosCount[motivo] = (motivosCount[motivo] || 0) + 1;
+    });
     
-    // 3. MODALIDAD DE ATENCIÓN
-    const modalidadQuery = `
-      SELECT 
-        COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as virtual,
-        COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as presencial
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-    `;
+    const topMotivos = Object.entries(motivosCount)
+      .map(([motivo, count]) => ({ motivo, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
     
-    const modalidadResult = await pool.query(modalidadQuery, dateParams);
+    // 4. EVOLUCIÓN MENSUAL (últimos 6 meses)
+    const evolucionPorMes = {};
+    const fechaLimite = new Date();
+    fechaLimite.setMonth(fechaLimite.getMonth() - 6);
     
-    // 4. TOP MOTIVOS DE CONSULTA
-    // ✅ CORREGIDO: Contar consultas únicas por motivo, no sesiones
-    const motivosQuery = `
-      SELECT 
-        motivo_consulta,
-        COUNT(DISTINCT CONCAT(cl.id, '-', motivo_consulta)) as cantidad
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-      GROUP BY motivo_consulta
-      ORDER BY cantidad DESC
-      LIMIT 5
-    `;
+    todasLasConsultas.forEach(c => {
+      const fecha = new Date(c.fecha);
+      if (fecha >= fechaLimite) {
+        const mes = fecha.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+        evolucionPorMes[mes] = (evolucionPorMes[mes] || 0) + 1;
+      }
+    });
     
-    const motivosResult = await pool.query(motivosQuery, dateParams);
+    const evolucionArray = Object.entries(evolucionPorMes)
+      .map(([mes, count]) => ({ mes, count }));
     
-    // 5. ESTADO DE CASOS
-    const estadosQuery = `
-      SELECT 
-        COUNT(DISTINCT CASE WHEN estado = 'Abierto' THEN CONCAT(cl.id, '-', motivo_consulta) END) as abiertos,
-        COUNT(DISTINCT CASE WHEN estado = 'Cerrado' THEN CONCAT(cl.id, '-', motivo_consulta) END) as cerrados
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-    `;
+    // 5. DISTRIBUCIÓN POR SEDE
+    const sedesCount = {};
+    const clientesConConsultas = new Set(consultasFiltradas.map(c => c.cliente_id));
     
-    const estadosResult = await pool.query(estadosQuery, dateParams);
+    todosLosClientes.forEach(cl => {
+      if (clientesConConsultas.has(cl.id)) {
+        const sede = cl.sede || 'Sin sede';
+        sedesCount[sede] = (sedesCount[sede] || 0) + 1;
+      }
+    });
     
-    // 6. EVOLUCIÓN MENSUAL (últimos 6 meses)
-    const evolucionQuery = `
-      SELECT 
-        TO_CHAR(fecha, 'Mon YYYY') as mes,
-        COUNT(*) as consultas
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE fecha >= NOW() - INTERVAL '6 months' ${profesionalFilter}
-      GROUP BY TO_CHAR(fecha, 'Mon YYYY'), DATE_TRUNC('month', fecha)
-      ORDER BY DATE_TRUNC('month', fecha)
-    `;
+    const sedesArray = Object.entries(sedesCount)
+      .map(([sede, count]) => ({ sede, count }))
+      .sort((a, b) => b.count - a.count);
     
-    const evolucionResult = await pool.query(evolucionQuery);
+    // 6. DISTRIBUCIÓN POR EMPRESA
+    const empresasCount = {};
+    const empresasMap = {};
+    empresas.forEach(e => {
+      empresasMap[e.id] = e.nombre_cliente;
+    });
     
-    // 7. DISTRIBUCIÓN POR SEDE
-    const sedesQuery = `
-      SELECT 
-        cl.sede,
-        COUNT(DISTINCT cl.id) as cantidad
-      FROM clients cl
-      INNER JOIN consultas c ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-      GROUP BY cl.sede
-      ORDER BY cantidad DESC
-    `;
+    todosLosClientes.forEach(cl => {
+      if (clientesConConsultas.has(cl.id)) {
+        const empresaNombre = empresasMap[cl.empresa_id] || 'Sin empresa';
+        empresasCount[empresaNombre] = (empresasCount[empresaNombre] || 0) + 1;
+      }
+    });
     
-    const sedesResult = await pool.query(sedesQuery, dateParams);
+    const empresasArray = Object.entries(empresasCount)
+      .map(([empresa, count]) => ({ empresa, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
     
-    // 8. DISTRIBUCIÓN POR EMPRESA
-    const empresasQuery = `
-      SELECT 
-        e.nombre_cliente,
-        COUNT(DISTINCT cl.id) as cantidad
-      FROM clients cl
-      INNER JOIN empresas e ON cl.empresa_id = e.id
-      INNER JOIN consultas c ON c.cliente_id = cl.id
-      WHERE 1=1 ${dateFilter} ${profesionalFilter}
-      GROUP BY e.nombre_cliente
-      ORDER BY cantidad DESC
-      LIMIT 10
-    `;
+    // 7. DETALLE POR PROFESIONAL
+    const detallePorProfesional = {};
     
-    const empresasResult = await pool.query(empresasQuery, dateParams);
-    
-    // 9. DETALLE POR PROFESIONAL
-    const detalleProfesionales = profesionalResult.rows.map(prof => {
-      const totalConsultas = parseInt(prof.consultas) || 0;
-      const totalSesiones = parseInt(prof.sesiones) || 0;
-      const virtualPercent = totalSesiones > 0 ? Math.round((prof.virtual / totalSesiones) * 100) : 0;
-      const presencialPercent = totalSesiones > 0 ? Math.round((prof.presencial / totalSesiones) * 100) : 0;
-      const promedioSesiones = totalConsultas > 0 
-        ? (totalSesiones / totalConsultas).toFixed(1) 
-        : 0;
-      
-      return {
+    profesionales.forEach(prof => {
+      detallePorProfesional[prof.id] = {
         nombre: prof.nombre,
-        trabajadores: parseInt(prof.trabajadores) || 0,
-        consultas: totalConsultas,
-        sesiones: totalSesiones,
-        virtual: parseInt(prof.virtual) || 0,
-        virtualPercent,
-        presencial: parseInt(prof.presencial) || 0,
-        presencialPercent,
-        abiertos: parseInt(prof.abiertos) || 0,
-        cerrados: parseInt(prof.cerrados) || 0,
-        horas: totalSesiones, // 1 hora por sesión
-        promedioSesiones
+        rol: prof.rol, // Guardar el rol para identificar admins
+        trabajadores: todosLosClientes.filter(cl => cl.profesional_id === prof.id).length,
+        consultas: new Set(),
+        sesiones: 0,
+        virtual: 0,
+        presencial: 0,
+        abiertos: new Set(),
+        cerrados: new Set()
       };
     });
     
-    // 10. INDICADORES DE CALIDAD - ✅ CORREGIDO
-    // Preparar filtros limpios para la subquery
-    const cleanDateFilter = dateFilter.replace('WHERE 1=1 AND ', '').replace('AND ', '');
-    const dateFilterForJoin = cleanDateFilter ? `AND ${cleanDateFilter}` : '';
-    const dateFilterForSubquery = cleanDateFilter ? `AND ${cleanDateFilter}` : '';
-    
-    // Extraer el ID del profesional si existe el filtro
-    let profesionalIdForCalidad = '';
-    if (profesionalFilter) {
-      const profesionalIdMatch = profesionalFilter.match(/profesional_id = (\d+)/);
-      if (profesionalIdMatch) {
-        profesionalIdForCalidad = `AND cl.profesional_id = ${profesionalIdMatch[1]}`;
+    consultasFiltradas.forEach(c => {
+      const profId = c.profesional_id;
+      if (detallePorProfesional[profId]) {
+        const key = `${c.cliente_id}-${c.motivo_consulta}`;
+        detallePorProfesional[profId].consultas.add(key);
+        detallePorProfesional[profId].sesiones++;
+        
+        if (c.modalidad === 'Virtual') detallePorProfesional[profId].virtual++;
+        if (c.modalidad === 'Presencial') detallePorProfesional[profId].presencial++;
+        
+        if (c.estado === 'Abierto') detallePorProfesional[profId].abiertos.add(key);
+        if (c.estado === 'Cerrado') detallePorProfesional[profId].cerrados.add(key);
       }
-    }
+    });
     
-    // DEBUG: Ver qué filtros se están aplicando
-    console.log('=== DEBUG CALIDAD ===');
-    console.log('profesionalFilter:', profesionalFilter);
-    console.log('profesionalIdForCalidad:', profesionalIdForCalidad);
-    console.log('profesionalId del query:', profesionalId);
-    
-    const calidadQuery = `
-      WITH consultas_unicas AS (
-        SELECT DISTINCT
-          cl.id as cliente_id,
-          cl.profesional_id,
-          cl.contacto_emergencia_telefono,
-          cl.fecha_cierre,
-          c.motivo_consulta,
-          (
-            SELECT MIN(c_min.fecha)::date 
-            FROM consultas c_min 
-            WHERE c_min.cliente_id = cl.id 
-            AND c_min.motivo_consulta = c.motivo_consulta
-          ) as primera_sesion
-        FROM clients cl
-        INNER JOIN consultas c ON c.cliente_id = cl.id ${dateFilterForJoin}
-        WHERE 1=1 ${profesionalIdForCalidad}
-      ),
-      duraciones AS (
-        SELECT 
-          cliente_id,
-          motivo_consulta,
-          CASE 
-            WHEN fecha_cierre IS NOT NULL 
-            THEN fecha_cierre::date - primera_sesion
-            ELSE NULL 
-          END as dias_duracion
-        FROM consultas_unicas
-      )
-      SELECT 
-        -- Contacto de emergencia
-        COUNT(DISTINCT CASE 
-          WHEN cu.contacto_emergencia_telefono IS NOT NULL 
-          AND cu.contacto_emergencia_telefono != '' 
-          THEN cu.cliente_id 
-        END) as con_contacto,
-        COUNT(DISTINCT cu.cliente_id) as total_clientes,
+    const detalleProfesionales = Object.values(detallePorProfesional)
+      .filter(prof => prof.sesiones > 0 || prof.trabajadores > 0)
+      .map(prof => {
+        const totalConsultas = prof.consultas.size;
+        const totalSesiones = prof.sesiones;
+        const virtualPercent = totalSesiones > 0 ? Math.round((prof.virtual / totalSesiones) * 100) : 0;
+        const presencialPercent = totalSesiones > 0 ? Math.round((prof.presencial / totalSesiones) * 100) : 0;
+        const promedioSesiones = totalConsultas > 0 ? (totalSesiones / totalConsultas).toFixed(1) : 0;
         
-        -- Tiempo promedio (ahora sobre consultas únicas, no sesiones)
-        CEIL(AVG(d.dias_duracion)) as tiempo_promedio_dias,
-        
-        -- Sesiones promedio por caso
-        ROUND(
-          (SELECT COUNT(*) FROM consultas c3 
-           INNER JOIN clients cl3 ON c3.cliente_id = cl3.id
-           WHERE 1=1 ${profesionalIdForCalidad.replace('cl.', 'cl3.')} ${dateFilterForJoin.replace('c.', 'c3.')})::numeric / 
-          NULLIF(COUNT(DISTINCT CONCAT(cu.cliente_id, '-', cu.motivo_consulta)), 0),
-          1
-        ) as sesiones_promedio
-        
-      FROM consultas_unicas cu
-      LEFT JOIN duraciones d ON d.cliente_id = cu.cliente_id 
-        AND d.motivo_consulta = cu.motivo_consulta
-    `;
+        return {
+          nombre: prof.nombre,
+          rol: prof.rol, // Incluir rol en la respuesta
+          trabajadores: prof.trabajadores,
+          consultas: totalConsultas,
+          sesiones: totalSesiones,
+          virtual: prof.virtual,
+          virtualPercent,
+          presencial: prof.presencial,
+          presencialPercent,
+          abiertos: prof.abiertos.size,
+          cerrados: prof.cerrados.size,
+          horas: totalSesiones,
+          promedioSesiones: parseFloat(promedioSesiones)
+        };
+      })
+      .sort((a, b) => b.consultas - a.consultas);
     
-    const calidadResult = await pool.query(calidadQuery, dateParams);
+    // 8. INDICADORES DE CALIDAD
+    const clientesUnicos = new Set(consultasFiltradas.map(c => c.cliente_id));
+    const clientesConContacto = todosLosClientes.filter(cl => 
+      clientesUnicos.has(cl.id) && 
+      cl.contacto_emergencia_telefono && 
+      cl.contacto_emergencia_telefono !== ''
+    ).length;
     
-    // DEBUG: Ver resultado de la query de calidad
-    console.log('=== RESULTADO CALIDAD ===');
-    console.log('Resultado completo:', calidadResult.rows[0]);
-    console.log('tiempo_promedio_dias:', calidadResult.rows[0].tiempo_promedio_dias);
-    
-    // Sin seguimiento reciente: consultas abiertas sin sesiones en últimos 30 días
-    const sinSeguimientoQuery = `
-      SELECT COUNT(DISTINCT CONCAT(cl.id, '-', c.motivo_consulta)) as sin_seguimiento
-      FROM consultas c
-      INNER JOIN clients cl ON c.cliente_id = cl.id
-      WHERE c.estado = 'Abierto'
-        AND NOT EXISTS (
-          SELECT 1 FROM consultas c2
-          WHERE c2.cliente_id = c.cliente_id 
-            AND c2.motivo_consulta = c.motivo_consulta
-            AND c2.fecha >= NOW() - INTERVAL '30 days'
-        )
-        ${profesionalIdForCalidad}
-    `;
-    
-    const sinSeguimientoResult = await pool.query(sinSeguimientoQuery);
-    
-    // Calcular porcentaje de contacto de emergencia
-    const contactoPercent = calidadResult.rows[0].total_clientes > 0
-      ? Math.round((calidadResult.rows[0].con_contacto / calidadResult.rows[0].total_clientes) * 100)
+    const contactoPercent = clientesUnicos.size > 0 
+      ? Math.round((clientesConContacto / clientesUnicos.size) * 100) 
       : 0;
     
-    // Construir respuesta
+    // Tiempo promedio de casos cerrados
+    let duraciones = [];
+    Object.values(consultasPorCliente).forEach(caso => {
+      if (caso.estados.has('Cerrado')) {
+        const fechas = caso.sesiones.map(s => new Date(s.fecha)).sort((a, b) => a - b);
+        if (fechas.length > 0) {
+          const primera = fechas[0];
+          const ultima = fechas[fechas.length - 1];
+          const dias = Math.ceil((ultima - primera) / (1000 * 60 * 60 * 24));
+          duraciones.push(dias);
+        }
+      }
+    });
+    
+    const tiempoPromedio = duraciones.length > 0
+      ? Math.ceil(duraciones.reduce((a, b) => a + b, 0) / duraciones.length)
+      : 0;
+    
+    const sesionesPromedio = totalConsultas > 0 
+      ? (totalSesiones / totalConsultas).toFixed(1) 
+      : 0;
+    
+    // Sin seguimiento (casos abiertos sin sesiones en últimos 30 días)
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hace30Dias.getDate() - 30);
+    
+    const casosAbiertosArray = Object.values(consultasPorCliente).filter(caso => 
+      !caso.estados.has('Cerrado')
+    );
+    
+    const sinSeguimiento = casosAbiertosArray.filter(caso => {
+      const ultimaSesion = caso.sesiones
+        .map(s => new Date(s.fecha))
+        .sort((a, b) => b - a)[0];
+      return ultimaSesion < hace30Dias;
+    }).length;
+    
+    // ==========================================
+    // CONSTRUIR RESPUESTA
+    // ==========================================
+    
     const stats = {
       summary: {
-        totalTrabajadores: totalTrabajadores,
-        trabajadoresMes: totalTrabajadores,
-        totalConsultas: parseInt(summary.total_consultas) || 0,
-        consultasMes: parseInt(summary.total_consultas) || 0,
-        totalSesiones: parseInt(summary.total_sesiones) || 0,
-        sesionesMes: parseInt(summary.total_sesiones) || 0,
-        totalHoras: parseInt(summary.total_horas) || 0,
-        horasMes: parseInt(summary.total_horas) || 0,
+        totalTrabajadores: todosLosClientes.length,
+        trabajadoresMes: todosLosClientes.length,
+        totalConsultas,
+        consultasMes: totalConsultas,
+        totalSesiones,
+        sesionesMes: totalSesiones,
+        totalHoras: totalSesiones,
+        horasMes: totalSesiones,
         casosCerradosPercent,
         casosCerradosChange: 0
       },
       byProfesional: {
-        labels: profesionalResult.rows.map(p => p.nombre),
-        values: profesionalResult.rows.map(p => parseInt(p.consultas))
+        labels: detalleProfesionales.map(p => p.rol === 'admin' ? `👑 ${p.nombre}` : p.nombre),
+        values: detalleProfesionales.map(p => p.consultas)
       },
       modalidad: {
-        virtual: parseInt(modalidadResult.rows[0].virtual) || 0,
-        presencial: parseInt(modalidadResult.rows[0].presencial) || 0
+        virtual,
+        presencial
       },
       topMotivos: {
-        labels: motivosResult.rows.map(m => m.motivo_consulta),
-        values: motivosResult.rows.map(m => parseInt(m.cantidad))
+        labels: topMotivos.map(m => m.motivo),
+        values: topMotivos.map(m => m.count)
       },
       estados: {
-        abiertos: parseInt(estadosResult.rows[0].abiertos) || 0,
-        cerrados: parseInt(estadosResult.rows[0].cerrados) || 0
+        abiertos: casosAbiertos,
+        cerrados: casosCerrados
       },
       evolucion: {
-        labels: evolucionResult.rows.map(e => e.mes),
-        values: evolucionResult.rows.map(e => parseInt(e.consultas))
+        labels: evolucionArray.map(e => e.mes),
+        values: evolucionArray.map(e => e.count)
       },
       bySede: {
-        labels: sedesResult.rows.map(s => s.sede || 'Sin sede'),
-        values: sedesResult.rows.map(s => parseInt(s.cantidad))
+        labels: sedesArray.map(s => s.sede),
+        values: sedesArray.map(s => s.count)
       },
       byEmpresa: {
-        labels: empresasResult.rows.map(e => e.nombre_cliente || 'Sin empresa'),
-        values: empresasResult.rows.map(e => parseInt(e.cantidad))
+        labels: empresasArray.map(e => e.empresa),
+        values: empresasArray.map(e => e.count)
       },
       detalleProfesionales,
       calidad: {
-        tiempoPromedio: parseInt(calidadResult.rows[0].tiempo_promedio_dias) || 0,
-        sesionesPromedio: parseFloat(calidadResult.rows[0].sesiones_promedio) || 0,
+        tiempoPromedio,
+        sesionesPromedio: parseFloat(sesionesPromedio),
         contactoEmergencia: contactoPercent,
-        sinSeguimiento: parseInt(sinSeguimientoResult.rows[0].sin_seguimiento) || 0
+        sinSeguimiento
       }
     };
+    
+    console.log('✅ Estadísticas generadas exitosamente');
     
     res.json({
       success: true,
@@ -416,11 +380,14 @@ exports.getDashboardStats = async (req, res) => {
     });
     
   } catch (err) {
-    console.error("Error obteniendo estadísticas:", err);
+    console.error("❌ Error obteniendo estadísticas:");
+    console.error("Mensaje:", err.message);
+    console.error("Stack:", err.stack);
+    
     res.status(500).json({ 
       success: false,
       message: "Error al obtener estadísticas",
-      error: err.message
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor'
     });
   }
 };

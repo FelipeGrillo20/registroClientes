@@ -106,38 +106,42 @@
   // CARGAR PROFESIONALES
   // ============================================
   
-  async function cargarProfesionales() {
-    try {
-      const token = getAuthToken();
-      const response = await fetch(`${API_URL}/auth/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Error al cargar profesionales');
-      
-      const data = await response.json();
-      
-      if (data.success && data.users) {
-        const profesionales = data.users.filter(u => u.rol === 'profesional' && u.activo);
-        
-        // Llenar select de profesionales
-        const select = filterProfesional;
-        select.innerHTML = '<option value="all">Todos los Profesionales</option>';
-        
-        profesionales.forEach(prof => {
-          const option = document.createElement('option');
-          option.value = prof.id;
-          option.textContent = prof.nombre;
-          select.appendChild(option);
-        });
+ async function cargarProfesionales() {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_URL}/auth/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
+    });
+    
+    if (!response.ok) throw new Error('Error al cargar profesionales');
+    
+    const data = await response.json();
+    
+    if (data.success && data.users) {
+      // Incluir tanto profesionales como admins
+      const profesionales = data.users.filter(u => 
+        (u.rol === 'profesional' || u.rol === 'admin') && u.activo
+      );
       
-    } catch (error) {
-      console.error('Error cargando profesionales:', error);
+      // Llenar select de profesionales
+      const select = filterProfesional;
+      select.innerHTML = '<option value="all">Todos los Profesionales</option>';
+      
+      profesionales.forEach(prof => {
+        const option = document.createElement('option');
+        option.value = prof.id;
+        // Agregar corona si es admin
+        option.textContent = prof.rol === 'admin' ? `👑 ${prof.nombre}` : prof.nombre;
+        select.appendChild(option);
+      });
     }
+    
+  } catch (error) {
+    console.error('Error cargando profesionales:', error);
   }
+}
   
   // ============================================
   // CARGAR ESTADÍSTICAS
@@ -704,45 +708,51 @@
   // ============================================
   
   function renderizarTablaProfesionales(profesionales) {
-    const tbody = document.getElementById('tableProfesionalesBody');
-    const tfoot = document.getElementById('tableProfesionalesFooter');
+  const tbody = document.getElementById('tableProfesionalesBody');
+  const tfoot = document.getElementById('tableProfesionalesFooter');
+  
+  if (!profesionales || profesionales.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">No hay datos disponibles</td></tr>';
+    tfoot.innerHTML = '';
+    return;
+  }
+  
+  // Calcular totales
+  const totales = profesionales.reduce((acc, prof) => {
+    acc.trabajadores += prof.trabajadores || 0;
+    acc.consultas += prof.consultas || 0;
+    acc.sesiones += prof.sesiones || 0;
+    acc.virtual += prof.virtual || 0;
+    acc.presencial += prof.presencial || 0;
+    acc.abiertos += prof.abiertos || 0;
+    acc.cerrados += prof.cerrados || 0;
+    acc.horas += prof.horas || 0;
+    return acc;
+  }, {
+    trabajadores: 0,
+    consultas: 0,
+    sesiones: 0,
+    virtual: 0,
+    presencial: 0,
+    abiertos: 0,
+    cerrados: 0,
+    horas: 0
+  });
+  
+  const promedioSesiones = totales.consultas > 0 
+    ? (totales.sesiones / totales.consultas).toFixed(1) 
+    : 0;
+  
+  // Renderizar filas
+  tbody.innerHTML = profesionales.map(prof => {
+    // Agregar corona si es admin
+    const nombreDisplay = prof.rol === 'admin' 
+      ? `<strong>👑 ${prof.nombre}</strong>` 
+      : `<strong>${prof.nombre}</strong>`;
     
-    if (!profesionales || profesionales.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">No hay datos disponibles</td></tr>';
-      tfoot.innerHTML = '';
-      return;
-    }
-    
-    // Calcular totales
-    const totales = profesionales.reduce((acc, prof) => {
-      acc.trabajadores += prof.trabajadores || 0;
-      acc.consultas += prof.consultas || 0;
-      acc.sesiones += prof.sesiones || 0;
-      acc.virtual += prof.virtual || 0;
-      acc.presencial += prof.presencial || 0;
-      acc.abiertos += prof.abiertos || 0;
-      acc.cerrados += prof.cerrados || 0;
-      acc.horas += prof.horas || 0;
-      return acc;
-    }, {
-      trabajadores: 0,
-      consultas: 0,
-      sesiones: 0,
-      virtual: 0,
-      presencial: 0,
-      abiertos: 0,
-      cerrados: 0,
-      horas: 0
-    });
-    
-    const promedioSesiones = totales.consultas > 0 
-      ? (totales.sesiones / totales.consultas).toFixed(1) 
-      : 0;
-    
-    // Renderizar filas
-    tbody.innerHTML = profesionales.map(prof => `
+    return `
       <tr>
-        <td><strong>${prof.nombre}</strong></td>
+        <td>${nombreDisplay}</td>
         <td>${prof.trabajadores || 0}</td>
         <td>${prof.consultas || 0}</td>
         <td>${prof.sesiones || 0}</td>
@@ -753,24 +763,25 @@
         <td>${prof.horas || 0}h</td>
         <td>${prof.promedioSesiones || 0}</td>
       </tr>
-    `).join('');
-    
-    // Renderizar totales
-    tfoot.innerHTML = `
-      <tr>
-        <td><strong>TOTAL</strong></td>
-        <td><strong>${totales.trabajadores}</strong></td>
-        <td><strong>${totales.consultas}</strong></td>
-        <td><strong>${totales.sesiones}</strong></td>
-        <td><strong>${totales.virtual}</strong></td>
-        <td><strong>${totales.presencial}</strong></td>
-        <td><strong>${totales.abiertos}</strong></td>
-        <td><strong>${totales.cerrados}</strong></td>
-        <td><strong>${totales.horas}h</strong></td>
-        <td><strong>${promedioSesiones}</strong></td>
-      </tr>
     `;
-  }
+  }).join('');
+  
+  // Renderizar totales
+  tfoot.innerHTML = `
+    <tr>
+      <td><strong>TOTAL</strong></td>
+      <td><strong>${totales.trabajadores}</strong></td>
+      <td><strong>${totales.consultas}</strong></td>
+      <td><strong>${totales.sesiones}</strong></td>
+      <td><strong>${totales.virtual}</strong></td>
+      <td><strong>${totales.presencial}</strong></td>
+      <td><strong>${totales.abiertos}</strong></td>
+      <td><strong>${totales.cerrados}</strong></td>
+      <td><strong>${totales.horas}h</strong></td>
+      <td><strong>${promedioSesiones}</strong></td>
+    </tr>
+  `;
+}
   
   // ============================================
   // INDICADORES DE CALIDAD

@@ -1,0 +1,764 @@
+/* css/informeSVE.css */
+/* ============================================ */
+/* ESTILOS EXCLUSIVOS PARA EL MÓDULO DE INFORMES SVE */
+/* Este archivo contiene todos los estilos relacionados */
+/* con la generación, visualización e impresión de informes SVE */
+/* ============================================ */
+
+/* ============================================ */
+/* ESTILOS DEL INFORME SVE */
+/* ============================================ */
+.informe-container-sve {
+  max-width: 100%;
+  border: 3px solid #2c3e50;
+  padding: 40px;
+  background: white;
+  box-shadow: 0 0 0 1px #e0e0e0 inset;
+  position: relative;
+}
+
+/* Marco decorativo interno */
+.informe-container-sve::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid #95a5a6;
+  pointer-events: none;
+}
+
+.informe-header-sve {
+  text-align: center;
+  border-bottom: 3px solid #56ab2f;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.informe-logo-sve {
+  margin-bottom: 15px;
+}
+
+.logo-circle-sve {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+  margin-bottom: 15px;
+}
+
+.informe-header-sve h1 {
+  color: #56ab2f;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.informe-fecha-generacion-sve {
+  color: #7f8c8d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.informe-section-sve {
+  margin-bottom: 30px;
+  animation: slideUpInformeSVE 0.3s ease;
+}
+
+@keyframes slideUpInformeSVE {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.informe-section-title-sve {
+  background: transparent;
+  color: #2c3e50;
+  padding: 0 0 12px 0;
+  border-bottom: 2px solid #e0e0e0;
+  border-radius: 0;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-icon-sve {
+  font-size: 20px;
+  color: #56ab2f;
+}
+
+/* Sección de Empresa */
+.seccion-empresa-sve {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #56ab2f;
+  margin-bottom: 30px;
+}
+
+.empresa-nombre-sve {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Datos Personales */
+.informe-datos-personales-sve {
+  background: white;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+}
+
+.informe-grid-sve {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.informe-data-item-sve {
+  padding: 12px 16px;
+  background: white;
+  border-radius: 0;
+  border-left: none;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Eliminar borde derecho de la última columna */
+.informe-data-item-sve:nth-child(3n) {
+  border-right: none;
+}
+
+/* Eliminar borde inferior de la última fila */
+.informe-data-item-sve:nth-last-child(-n+3) {
+  border-bottom: none;
+}
+
+.informe-data-item-sve.full-width {
+  grid-column: span 3;
+}
+
+.data-label-sve {
+  display: block;
+  font-size: 10px;
+  color: #6c757d;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.data-value-sve {
+  display: block;
+  font-size: 13px;
+  color: #212529;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Checkbox de sexo */
+.checkbox-sexo-sve {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #2c3e50;
+  margin: 0 5px;
+  vertical-align: middle;
+  position: relative;
+  border-radius: 3px;
+}
+
+.checkbox-sexo-sve.checked::after {
+  content: '✓';
+  position: absolute;
+  top: -3px;
+  left: 2px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #56ab2f;
+}
+
+/* Sección de texto completo (Motivo de Evaluación) */
+.texto-completo-sve {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #56ab2f;
+  margin-bottom: 15px;
+  line-height: 1.8;
+}
+
+.texto-label-sve {
+  font-weight: 700;
+  color: #56ab2f;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.texto-contenido-sve {
+  color: #2c3e50;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Metodología */
+.metodologia-box-sve {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8f4);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #56ab2f;
+  text-align: justify;
+  line-height: 1.8;
+  font-size: 14px;
+  color: #2c3e50;
+  box-shadow: 0 2px 6px rgba(86, 171, 47, 0.1);
+}
+
+/* Historial de Sesiones */
+.informe-sesiones-sve {
+  background: linear-gradient(to bottom, #f8f9fa, white);
+  padding: 25px;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+}
+
+.sesion-card-sve {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sesion-card-sve:hover {
+  border-color: #56ab2f;
+  box-shadow: 0 4px 12px rgba(86, 171, 47, 0.15);
+  transform: translateY(-2px);
+}
+
+.sesion-header-sve {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.sesion-numero-sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
+}
+
+.sesion-fecha-sve {
+  font-size: 13px;
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+.sesion-modalidad-sve {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sesion-contenido-sve {
+  margin-top: 15px;
+}
+
+.sesion-bloque-sve {
+  margin-bottom: 18px;
+}
+
+.sesion-bloque-sve:last-child {
+  margin-bottom: 0;
+}
+
+/* Tabla de Consultas */
+.tabla-consultas-sve {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tabla-consultas-sve th {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabla-consultas-sve td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.tabla-consultas-sve tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.tabla-consultas-sve tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-consultas-sve tr:hover {
+  background: #e8f5e9;
+}
+
+/* Footer del Informe */
+.informe-footer-sve {
+  margin-top: 40px;
+  border-top: 2px solid #e9ecef;
+  padding-top: 30px;
+}
+
+.firma-seccion-sve {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.firma-imagen-container-sve {
+  width: 100%;
+  max-width: 300px;
+  margin: 30px auto 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
+.firma-imagen-sve {
+  max-width: 100%;
+  height: auto;
+  max-height: 120px;
+  object-fit: contain;
+  filter: contrast(1.2);
+}
+
+.firma-linea-sve {
+  width: 300px;
+  height: 2px;
+  background: #2c3e50;
+  margin: 10px auto;
+}
+
+.firma-texto-sve {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.firma-nombre-sve {
+  font-size: 13px;
+  color: #2c3e50;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+.firma-datos-sve {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-weight: 600;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.informe-nota-sve {
+  background: #fff3e0;
+  padding: 18px;
+  border-left: 4px solid #ff9800;
+  font-size: 13px;
+  color: #2c3e50;
+  line-height: 1.6;
+  border-radius: 8px;
+}
+
+.informe-nota-sve strong {
+  color: #e65100;
+  font-weight: 700;
+}
+
+/* Estilos para el botón de generar informe */
+.btn-informe-sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-informe-sve:hover {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(86, 171, 47, 0.5);
+}
+
+.btn-informe-sve:active {
+  transform: translateY(-1px);
+}
+
+/* ============================================ */
+/* ESTILOS PARA IMPRESIÓN */
+/* ============================================ */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .informe-container-sve {
+    border: 3px solid #2c3e50 !important;
+    padding: 40px !important;
+    box-shadow: none !important;
+    background: white !important;
+    page-break-after: auto;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .informe-container-sve::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    border: 1px solid #95a5a6 !important;
+    pointer-events: none !important;
+  }
+
+  .informe-header-sve {
+    text-align: center !important;
+    border-bottom: 3px solid #56ab2f !important;
+    padding-bottom: 20px !important;
+    margin-bottom: 30px !important;
+  }
+
+  .logo-circle-sve {
+    background: linear-gradient(135deg, #56ab2f, #a8e063) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 40px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .informe-header-sve h1 {
+    color: #56ab2f !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .informe-section-title-sve {
+    background: transparent !important;
+    color: #2c3e50 !important;
+    padding: 0 0 12px 0 !important;
+    border-bottom: 2px solid #e0e0e0 !important;
+    margin-bottom: 20px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-transform: uppercase !important;
+  }
+
+  .seccion-empresa-sve {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9) !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+    border: 2px solid #56ab2f !important;
+    margin-bottom: 30px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .informe-grid-sve {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0 !important;
+    border: 2px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .informe-data-item-sve {
+    padding: 12px 16px !important;
+    background: white !important;
+    border-right: 1px solid #e0e0e0 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .informe-data-item-sve:nth-child(3n) {
+    border-right: none !important;
+  }
+
+  .informe-data-item-sve:nth-last-child(-n+3) {
+    border-bottom: none !important;
+  }
+
+  .data-label-sve {
+    font-size: 10px !important;
+    color: #6c757d !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+  }
+
+  .data-value-sve {
+    font-size: 13px !important;
+    color: #212529 !important;
+    font-weight: 500 !important;
+  }
+
+  .metodologia-box-sve {
+    background: linear-gradient(135deg, #e8f5e9, #f1f8f4) !important;
+    padding: 20px !important;
+    border-radius: 10px !important;
+    border: 2px solid #56ab2f !important;
+    page-break-inside: avoid !important;
+  }
+
+  .informe-sesiones-sve {
+    background: linear-gradient(to bottom, #f8f9fa, white) !important;
+    padding: 25px !important;
+    border-radius: 12px !important;
+    border: 2px solid #e9ecef !important;
+    margin-bottom: 30px !important;
+  }
+
+  .sesion-card-sve {
+    background: white !important;
+    border: 2px solid #e9ecef !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .sesion-numero-sve {
+    background: linear-gradient(135deg, #56ab2f, #a8e063) !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .sesion-modalidad-sve {
+    background: #e3f2fd !important;
+    color: #1976d2 !important;
+    padding: 6px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .tabla-consultas-sve {
+    page-break-inside: avoid !important;
+  }
+
+  .tabla-consultas-sve th {
+    background: linear-gradient(135deg, #56ab2f, #a8e063) !important;
+    color: white !important;
+  }
+
+  .tabla-consultas-sve tr:nth-child(even) {
+    background: #f8f9fa !important;
+  }
+
+  .informe-footer-sve {
+    margin-top: 40px !important;
+    border-top: 2px solid #e9ecef !important;
+    padding-top: 30px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .firma-linea-sve {
+    width: 300px !important;
+    height: 2px !important;
+    background: #2c3e50 !important;
+    margin: 10px auto !important;
+  }
+
+  .informe-nota-sve {
+    background: #fff3e0 !important;
+    padding: 18px !important;
+    border-left: 4px solid #ff9800 !important;
+    border-radius: 8px !important;
+  }
+
+  .informe-section-sve {
+    page-break-inside: avoid !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE PARA INFORME SVE */
+/* ============================================ */
+@media (max-width: 768px) {
+  .informe-container-sve {
+    padding: 25px;
+  }
+
+  .informe-container-sve::before {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .informe-grid-sve {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .informe-data-item-sve {
+    border-right: none;
+  }
+
+  .informe-data-item-sve {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .informe-data-item-sve:last-child {
+    border-bottom: none;
+  }
+
+  .informe-data-item-sve.full-width {
+    grid-column: span 1;
+  }
+
+  .sesion-header-sve {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tabla-consultas-sve {
+    font-size: 11px;
+  }
+
+  .tabla-consultas-sve th,
+  .tabla-consultas-sve td {
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-circle-sve {
+    width: 60px;
+    height: 60px;
+    font-size: 32px;
+  }
+
+  .informe-header-sve h1 {
+    font-size: 22px;
+  }
+
+  .informe-section-title-sve {
+    font-size: 14px;
+    padding: 0 0 10px 0;
+  }
+
+  .informe-container-sve {
+    padding: 20px;
+    border-width: 2px;
+  }
+
+  .informe-container-sve::before {
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+  }
+
+  .btn-informe-sve {
+    width: 100%;
+    justify-content: center;
+  }
+}

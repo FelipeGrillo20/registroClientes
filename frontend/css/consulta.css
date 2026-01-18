@@ -1708,6 +1708,95 @@ body {
 }
 
 /* ============================================ */
+/* ESTILOS PARA BOTÓN DE INFORME SVE */
+/* ============================================ */
+
+/* Contenedor del botón de informe SVE */
+#contenedorBotonInformeSVE {
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 14px;
+  border: 2px solid #56ab2f;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Botón principal de informe SVE */
+.btn-informe-sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-informe-sve:hover {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(86, 171, 47, 0.5);
+}
+
+.btn-informe-sve:active {
+  transform: translateY(-1px);
+}
+
+.btn-informe-sve:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(86, 171, 47, 0.3);
+}
+
+/* Texto informativo del botón */
+#contenedorBotonInformeSVE p {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #56ab2f;
+  font-weight: 600;
+}
+
+/* Responsive para botón SVE */
+@media (max-width: 768px) {
+  .btn-informe-sve {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 30px;
+    font-size: 15px;
+  }
+
+  #contenedorBotonInformeSVE {
+    padding: 20px;
+  }
+
+  #contenedorBotonInformeSVE p {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-informe-sve {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  #contenedorBotonInformeSVE {
+    padding: 15px;
+    border-radius: 10px;
+  }
+}
+
+
+
+/* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
 @media (max-width: 768px) {

@@ -12,7 +12,14 @@
   min-height: 85vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch; /* Cambiado de 'center' a 'stretch' */
+}
+
+/* ====== BARRA DE USUARIO ====== */
+.user-info-bar {
+  width: 100%; /* Asegura que ocupe todo el ancho */
+  align-self: stretch; /* Estira al ancho del contenedor padre */
+  margin-bottom: 20px;
 }
 
 .sitemap-container h1 {
@@ -20,6 +27,7 @@
   margin-bottom: 8px;
   color: #2c3e50;
   font-size: 1.8em;
+  align-self: center; /* Centra solo el título */
 }
 
 .sitemap-subtitle {
@@ -29,6 +37,7 @@
   margin-top: -5px;
   margin-bottom: 40px;
   font-weight: 500;
+  align-self: center; /* Centra solo el subtítulo */
 }
 
 /* ====== CONTENEDOR DE LA RUEDA (MÁS GRANDE) ====== */
@@ -38,6 +47,7 @@
   height: 750px;
   margin: 30px auto;
   animation: fadeIn 0.8s ease-in-out;
+  align-self: center; /* Centra la rueda */
 }
 
 @keyframes fadeIn {
@@ -258,6 +268,7 @@
   color: #7f8c8d;
   font-size: 0.95em;
   font-style: italic;
+  align-self: center; /* Centra el footer */
 }
 
 /* ====== ANIMACIÓN DE ENTRADA PARA CADA ITEM ====== */

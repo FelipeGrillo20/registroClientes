@@ -1,4 +1,4 @@
-/* css/perfil.css - ACTUALIZADO CON TARJETA MÁS ANGOSTA Y CENTRADA */
+/* css/perfil.css - ACTUALIZADO CON BARRA SUPERIOR DE ANCHO COMPLETO */
 
 * {
   margin: 0;
@@ -29,6 +29,8 @@ body {
   border-radius: 10px;
   margin-bottom: 20px;
   box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+  width: 100%; /* Asegura que ocupe todo el ancho */
+  align-self: stretch; /* Estira al ancho del contenedor padre */
 }
 
 .user-left-section {
@@ -90,7 +92,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch; /* Cambiado de 'center' a 'stretch' para que los hijos ocupen todo el ancho */
 }
 
 /* Botón de regreso */
@@ -110,6 +112,7 @@ body {
   align-items: center;
   gap: 8px;
   align-self: flex-start;
+  width: fit-content; /* Solo ocupa el espacio necesario */
 }
 
 .btn-back:hover {
@@ -128,7 +131,8 @@ body {
   animation: slideUp 0.5s ease;
   margin-bottom: 30px;
   width: 100%;
-  max-width: 500px; /* Ancho máximo reducido de 1200px a 500px */
+  max-width: 500px;
+  align-self: center; /* Centra la tarjeta de perfil */
 }
 
 @keyframes slideUp {
@@ -351,7 +355,8 @@ body {
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.6s ease;
   width: 100%;
-  max-width: 1200px; /* Gestión de usuarios mantiene el ancho completo */
+  max-width: 1200px;
+  align-self: stretch; /* Ocupa todo el ancho disponible */
 }
 
 .management-header {
@@ -855,29 +860,7 @@ body {
   box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
 
-/* Responsive para botones en management header */
-@media (max-width: 768px) {
-  .management-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-  }
-  
-  .management-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .btn-stats,
-  .btn-add-user {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* BOTÓN MAPA DE SITIO (Agregar al final de dashboard.css) */
-/* ============================================ */
-
+/* BOTÓN MAPA DE SITIO */
 .btn-sitemap {
   background: rgba(255, 255, 255, 0.25) !important;
   color: white !important;
@@ -899,26 +882,6 @@ body {
 }
 
 /* ============================================ */
-/* RESPONSIVE PARA BOTÓN MAPA DE SITIO */
-/* ============================================ */
-
-@media (max-width: 768px) {
-  .btn-sitemap {
-    font-size: 12px;
-    padding: 6px 12px !important;
-    width: fit-content;
-  }
-}
-
-@media (max-width: 480px) {
-  .btn-sitemap {
-    font-size: 11px;
-    padding: 5px 10px !important;
-  }
-}
-
-
-/* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
 
@@ -931,8 +894,24 @@ body {
     max-width: 100%;
   }
 
+  .user-info-bar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .user-left-section {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-logout {
+    width: 100%;
+  }
+
   .profile-card {
-    max-width: 100%; /* En móvil ocupa todo el ancho disponible */
+    max-width: 100%;
   }
 
   .management-header {
@@ -941,6 +920,12 @@ body {
     align-items: flex-start;
   }
 
+  .management-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-stats,
   .btn-add-user {
     width: 100%;
     justify-content: center;
@@ -972,6 +957,12 @@ body {
   .btn-cancel-modal {
     width: 100%;
   }
+  
+  .btn-sitemap,
+  .btn-mi-perfil {
+    font-size: 12px;
+    padding: 6px 12px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -997,5 +988,11 @@ body {
   .users-table {
     display: block;
     overflow-x: auto;
+  }
+  
+  .btn-sitemap,
+  .btn-mi-perfil {
+    font-size: 11px;
+    padding: 5px 10px !important;
   }
 }

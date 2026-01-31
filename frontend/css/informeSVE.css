@@ -468,6 +468,16 @@
     print-color-adjust: exact !important;
   }
 
+  .sesion-grid-sve {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+   gap: 16px !important;
+  }
+
+  .sesion-bloque-sve {
+  page-break-inside: avoid !important;
+  }
+
   body {
     background: white !important;
     margin: 0 !important;
@@ -678,6 +688,37 @@
   }
 }
 
+/* Grid de dos columnas para historial SVE */
+.sesion-grid-sve {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Cada bloque se comporta como tarjeta */
+.sesion-bloque-sve {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 4px solid #56ab2f;
+}
+
+/* Si algún bloque debe ocupar todo el ancho */
+.sesion-bloque-sve.full-width {
+  grid-column: span 2;
+}
+
+/* Eliminar línea verde interna en bloques SVE */
+.sesion-bloque-sve::before {
+  content: none !important;
+  display: none !important;
+}
+
+.sesion-bloque-sve > div {
+  border-left: none !important;
+}
+
+
 /* ============================================ */
 /* RESPONSIVE PARA INFORME SVE */
 /* ============================================ */
@@ -761,4 +802,11 @@
     width: 100%;
     justify-content: center;
   }
+
+  @media (max-width: 768px) {
+  .sesion-grid-sve {
+    grid-template-columns: 1fr;
+  }
+}
+
 }

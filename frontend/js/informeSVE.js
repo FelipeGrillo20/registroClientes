@@ -295,50 +295,52 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
             </div>
 
             <div class="sesion-contenido-sve">
-              ${consulta.motivo_evaluacion ? `
-                <div class="sesion-bloque-sve">
-                  <div class="texto-completo-sve">
-                    <span class="texto-label-sve">📝 Motivo de Evaluación:</span>
-                    <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.motivo_evaluacion)}</div>
-                  </div>
-                </div>
-              ` : ''}
+              <div class="sesion-grid-sve">
+                    ${consulta.motivo_evaluacion ? `
+                      <div class="sesion-bloque-sve">
+                        <div class="texto-completo-sve">
+                          <span class="texto-label-sve">📝 Motivo de Evaluación:</span>
+                          <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.motivo_evaluacion)}</div>
+                        </div>
+                      </div>
+                    ` : ''}
 
-              ${consulta.observaciones ? `
-                <div class="sesion-bloque-sve">
-                  <div class="texto-completo-sve">
-                    <span class="texto-label-sve">📄 Observaciones:</span>
-                    <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.observaciones)}</div>
-                  </div>
-                </div>
-              ` : ''}
+                    ${consulta.observaciones ? `
+                      <div class="sesion-bloque-sve">
+                        <div class="texto-completo-sve">
+                          <span class="texto-label-sve">📄 Observaciones:</span>
+                          <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.observaciones)}</div>
+                        </div>
+                      </div>
+                    ` : ''}
 
-              <div class="sesion-bloque-sve">
-                <div class="texto-completo-sve">
-                  <span class="texto-label-sve">⚙️ Ajustes a las Funciones:</span>
-                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.ajuste_funciones)}</div>
-                </div>
-              </div>
+                    <div class="sesion-bloque-sve">
+                      <div class="texto-completo-sve">
+                        <span class="texto-label-sve">⚙️ Ajustes a las Funciones:</span>
+                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.ajuste_funciones)}</div>
+                      </div>
+                    </div>
 
-              <div class="sesion-bloque-sve">
-                <div class="texto-completo-sve">
-                  <span class="texto-label-sve">💊 Recomendaciones Médicas:</span>
-                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_medicas)}</div>
-                </div>
-              </div>
+                    <div class="sesion-bloque-sve">
+                      <div class="texto-completo-sve">
+                        <span class="texto-label-sve">💊 Recomendaciones Médicas:</span>
+                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_medicas)}</div>
+                      </div>
+                    </div>
 
-              <div class="sesion-bloque-sve">
-                <div class="texto-completo-sve">
-                  <span class="texto-label-sve">🏢 Recomendaciones para la Empresa:</span>
-                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_empresa)}</div>
-                </div>
-              </div>
+                    <div class="sesion-bloque-sve">
+                      <div class="texto-completo-sve">
+                        <span class="texto-label-sve">🏢 Recomendaciones para la Empresa:</span>
+                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_empresa)}</div>
+                      </div>
+                    </div>
 
-              <div class="sesion-bloque-sve">
-                <div class="texto-completo-sve">
-                  <span class="texto-label-sve">👤 Recomendaciones para el Trabajador:</span>
-                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_trabajador)}</div>
-                </div>
+                    <div class="sesion-bloque-sve">
+                      <div class="texto-completo-sve">
+                        <span class="texto-label-sve">👤 Recomendaciones para el Trabajador:</span>
+                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_trabajador)}</div>
+                      </div>
+                    </div>
               </div>
             </div>
           </div>

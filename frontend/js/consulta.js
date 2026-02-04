@@ -2323,3 +2323,287 @@ console.log('✅ Lógica de cierre y reapertura SVE cargada');
 // ============================================
 // FIN DE LA PARTE 2: SVE CON BACKEND INTEGRADO
 // ============================================
+
+// ============================================
+// FUNCIONALIDAD DE ADJUNTAR DOCUMENTOS
+// ============================================
+
+// Variables globales para control de documentos
+let documentosCliente = {
+  consentimiento_informado: null,
+  historia_clinica: null,
+  documentos_adicionales: null
+};
+
+// Función para mostrar/ocultar la sección de documentos según modalidad
+function toggleDocumentosSection() {
+  const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
+  const documentosSection = document.getElementById('documentosSection');
+  
+  if (modalidad === 'Orientación Psicosocial' && documentosSection) {
+    documentosSection.style.display = 'block';
+  } else if (documentosSection) {
+    documentosSection.style.display = 'none';
+  }
+}
+
+// Llamar la función cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+  toggleDocumentosSection();
+  cargarDocumentosExistentes();
+});
+
+// Función para manejar la selección de archivos
+window.handleFileSelect = async function(tipo, input) {
+  const file = input.files[0];
+  
+  if (!file) {
+    return;
+  }
+  
+  // Validar tipo de archivo
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  
+  if (!allowedTypes.includes(file.type)) {
+    alert('⚠️ Solo se permiten archivos PDF o Word (.pdf, .doc, .docx)');
+    input.value = '';
+    return;
+  }
+  
+  // Validar tamaño (10MB máximo)
+  const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+  if (file.size > maxSize) {
+    alert('⚠️ El archivo es demasiado grande. Tamaño máximo: 10MB');
+    input.value = '';
+    return;
+  }
+  
+  // Confirmar antes de subir
+  const confirmar = confirm(`¿Desea adjuntar el archivo "${file.name}"?`);
+  if (!confirmar) {
+    input.value = '';
+    return;
+  }
+  
+  // Mostrar indicador de carga
+  const btn = document.querySelector(`button[onclick="document.getElementById('${tipo}File').click()"]`);
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Subiendo...';
+  btn.disabled = true;
+  
+  try {
+    await subirDocumento(tipo, file);
+    mostrarDocumentoAdjuntado(tipo, file.name);
+    alert(`✅ Documento "${file.name}" adjuntado correctamente`);
+  } catch (err) {
+    console.error('Error subiendo documento:', err);
+    alert('❌ Error al adjuntar el documento. Por favor intente nuevamente.');
+    input.value = '';
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+};
+
+// Función para subir documento al servidor
+async function subirDocumento(tipo, file) {
+  const clienteId = getClienteIdFromURL();
+  
+  if (!clienteId) {
+    throw new Error('No se encontró el ID del cliente');
+  }
+  
+  const formData = new FormData();
+  formData.append('documento', file);
+  formData.append('tipo', tipo);
+  formData.append('cliente_id', clienteId);
+  
+  const response = await fetch(`${API_URL}/${clienteId}/documentos`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${getAuthToken()}`
+    },
+    body: formData
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al subir documento');
+  }
+  
+  const result = await response.json();
+  
+  // Actualizar la variable global con la ruta del documento
+  const campoDocumento = getCampoDocumento(tipo);
+  documentosCliente[campoDocumento] = result[campoDocumento];
+  
+  return result;
+}
+
+// Función para obtener el nombre del campo según el tipo
+function getCampoDocumento(tipo) {
+  const campos = {
+    'consentimiento': 'consentimiento_informado',
+    'historia': 'historia_clinica',
+    'adicionales': 'documentos_adicionales'
+  };
+  return campos[tipo];
+}
+
+// Función para mostrar documento adjuntado en la interfaz
+function mostrarDocumentoAdjuntado(tipo, nombreArchivo) {
+  // Mostrar info del documento
+  const infoDiv = document.getElementById(`${tipo}Info`);
+  const nombreSpan = document.getElementById(`${tipo}Nombre`);
+  
+  if (infoDiv && nombreSpan) {
+    nombreSpan.textContent = nombreArchivo;
+    infoDiv.style.display = 'flex';
+  }
+  
+  // Mostrar botones de ver y eliminar
+  const btnVer = document.getElementById(`btnVer${capitalizar(tipo)}`);
+  const btnEliminar = document.getElementById(`btnEliminar${capitalizar(tipo)}`);
+  
+  if (btnVer) btnVer.style.display = 'flex';
+  if (btnEliminar) btnEliminar.style.display = 'flex';
+  
+  // Cambiar la card para indicar que hay documento
+  const card = document.querySelector(`#${tipo}File`).closest('.documento-card');
+  if (card) {
+    card.classList.add(tipo);
+  }
+}
+
+// Función para ver documento
+window.verDocumento = async function(tipo) {
+  const campoDocumento = getCampoDocumento(tipo);
+  const rutaDocumento = documentosCliente[campoDocumento];
+  
+  if (!rutaDocumento) {
+    alert('⚠️ No se encontró el documento');
+    return;
+  }
+  
+  // ⭐ CORRECCIÓN: Construir URL sin el /api
+  // La ruta ya viene como "uploads/consultas/archivo.pdf"
+  // Solo necesitamos el dominio base sin /api
+  const baseUrl = window.API_CONFIG.BASE_URL.replace('/api', '');
+  const urlDocumento = `${baseUrl}/${rutaDocumento}`;
+  
+  console.log('📄 Abriendo documento:', urlDocumento);
+  
+  // Abrir en nueva pestaña
+  window.open(urlDocumento, '_blank');
+};
+
+// Función para eliminar documento
+window.eliminarDocumento = async function(tipo) {
+  const confirmar = confirm('¿Está seguro de eliminar este documento?');
+  
+  if (!confirmar) {
+    return;
+  }
+  
+  const clienteId = getClienteIdFromURL();
+  const campoDocumento = getCampoDocumento(tipo);
+  
+  if (!clienteId) {
+    alert('⚠️ No se encontró el ID del cliente');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/${clienteId}/documentos/${tipo}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al eliminar documento');
+    }
+    
+    // Limpiar la interfaz
+    const infoDiv = document.getElementById(`${tipo}Info`);
+    const btnVer = document.getElementById(`btnVer${capitalizar(tipo)}`);
+    const btnEliminar = document.getElementById(`btnEliminar${capitalizar(tipo)}`);
+    const fileInput = document.getElementById(`${tipo}File`);
+    
+    if (infoDiv) infoDiv.style.display = 'none';
+    if (btnVer) btnVer.style.display = 'none';
+    if (btnEliminar) btnEliminar.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    
+    // Actualizar variable global
+    documentosCliente[campoDocumento] = null;
+    
+    alert('✅ Documento eliminado correctamente');
+    
+  } catch (err) {
+    console.error('Error eliminando documento:', err);
+    alert('❌ Error al eliminar el documento');
+  }
+};
+
+// Función para cargar documentos existentes
+async function cargarDocumentosExistentes() {
+  const clienteId = getClienteIdFromURL();
+  
+  if (!clienteId) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/${clienteId}/documentos`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar documentos');
+    }
+    
+    const data = await response.json();
+    
+    // Actualizar variables globales
+    documentosCliente.consentimiento_informado = data.consentimiento_informado;
+    documentosCliente.historia_clinica = data.historia_clinica;
+    documentosCliente.documentos_adicionales = data.documentos_adicionales;
+    
+    // Mostrar documentos en la interfaz
+    if (data.consentimiento_informado) {
+      const nombreArchivo = extraerNombreArchivo(data.consentimiento_informado);
+      mostrarDocumentoAdjuntado('consentimiento', nombreArchivo);
+    }
+    
+    if (data.historia_clinica) {
+      const nombreArchivo = extraerNombreArchivo(data.historia_clinica);
+      mostrarDocumentoAdjuntado('historia', nombreArchivo);
+    }
+    
+    if (data.documentos_adicionales) {
+      const nombreArchivo = extraerNombreArchivo(data.documentos_adicionales);
+      mostrarDocumentoAdjuntado('adicionales', nombreArchivo);
+    }
+    
+  } catch (err) {
+    console.error('Error cargando documentos existentes:', err);
+  }
+}
+
+// Función para extraer nombre de archivo de la ruta
+function extraerNombreArchivo(ruta) {
+  if (!ruta) return '';
+  const partes = ruta.split('/');
+  return partes[partes.length - 1];
+}
+
+// Función auxiliar para capitalizar
+function capitalizar(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+console.log('✅ Funcionalidad de documentos adjuntos cargada');

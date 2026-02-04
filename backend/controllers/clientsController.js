@@ -8,6 +8,8 @@ exports.createClient = async (req, res) => {
       cedula,
       nombre,
       vinculo,
+      cedula_trabajador, // ✅ NUEVO: Cédula del trabajador
+      nombre_trabajador, // ✅ NUEVO: Nombre del trabajador
       sede,
       tipo_entidad_pagadora,
       entidad_pagadora_especifica,
@@ -26,7 +28,7 @@ exports.createClient = async (req, res) => {
       return res.status(400).json({ message: "Cédula y nombre son requeridos" });
     }
 
-    // ✅ NUEVO: Validar que la modalidad sea válidas
+    // ✅ NUEVO: Validar que la modalidad sea válida
     if (!modalidad) {
       return res.status(400).json({ message: "La modalidad es requerida" });
     }
@@ -34,6 +36,29 @@ exports.createClient = async (req, res) => {
     const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
     if (!modalidadesValidas.includes(modalidad)) {
       return res.status(400).json({ message: "Modalidad no válida" });
+    }
+
+    // ✅ NUEVA VALIDACIÓN: Si es Familiar Trabajador, validar campos adicionales
+    if (vinculo === 'Familiar Trabajador') {
+      if (!cedula_trabajador || !nombre_trabajador) {
+        return res.status(400).json({ 
+          message: 'Para Familiar Trabajador debe proporcionar cédula y nombre del trabajador' 
+        });
+      }
+
+      // Validar formato de cédula del trabajador
+      if (!/^\d+$/.test(cedula_trabajador)) {
+        return res.status(400).json({ 
+          message: 'La cédula del trabajador debe contener solo números' 
+        });
+      }
+
+      // Validar formato de nombre del trabajador
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ'\s]+$/.test(nombre_trabajador)) {
+        return res.status(400).json({ 
+          message: 'El nombre del trabajador solo debe contener letras' 
+        });
+      }
     }
 
     // Obtener el ID del profesional del token JWT
@@ -47,6 +72,8 @@ exports.createClient = async (req, res) => {
       cedula,
       nombre,
       vinculo: vinculo || null,
+      cedula_trabajador: vinculo === 'Familiar Trabajador' ? cedula_trabajador : null, // ✅ NUEVO
+      nombre_trabajador: vinculo === 'Familiar Trabajador' ? nombre_trabajador : null, // ✅ NUEVO
       sede: sede || null,
       tipo_entidad_pagadora: tipo_entidad_pagadora || null,
       entidad_pagadora_especifica: entidad_pagadora_especifica || null,
@@ -214,7 +241,7 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPO MODALIDAD)
+// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR)
 exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -222,6 +249,8 @@ exports.updateClient = async (req, res) => {
       cedula,
       nombre,
       vinculo,
+      cedula_trabajador, // ✅ NUEVO: Cédula del trabajador
+      nombre_trabajador, // ✅ NUEVO: Nombre del trabajador
       sede,
       tipo_entidad_pagadora,
       entidad_pagadora_especifica,
@@ -267,10 +296,35 @@ exports.updateClient = async (req, res) => {
       }
     }
 
+    // ✅ NUEVA VALIDACIÓN: Si es Familiar Trabajador, validar campos adicionales
+    if (vinculo === 'Familiar Trabajador') {
+      if (!cedula_trabajador || !nombre_trabajador) {
+        return res.status(400).json({ 
+          message: 'Para Familiar Trabajador debe proporcionar cédula y nombre del trabajador' 
+        });
+      }
+
+      // Validar formato de cédula del trabajador
+      if (!/^\d+$/.test(cedula_trabajador)) {
+        return res.status(400).json({ 
+          message: 'La cédula del trabajador debe contener solo números' 
+        });
+      }
+
+      // Validar formato de nombre del trabajador
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ'\s]+$/.test(nombre_trabajador)) {
+        return res.status(400).json({ 
+          message: 'El nombre del trabajador solo debe contener letras' 
+        });
+      }
+    }
+
     const updatedClient = await clientModel.updateClient(id, {
       cedula,
       nombre,
       vinculo: vinculo || null,
+      cedula_trabajador: vinculo === 'Familiar Trabajador' ? cedula_trabajador : null, // ✅ NUEVO
+      nombre_trabajador: vinculo === 'Familiar Trabajador' ? nombre_trabajador : null, // ✅ NUEVO
       sede: sede || null,
       tipo_entidad_pagadora: tipo_entidad_pagadora || null,
       entidad_pagadora_especifica: entidad_pagadora_especifica || null,
@@ -323,5 +377,196 @@ exports.deleteClient = async (req, res) => {
   } catch (err) {
     console.error("Error eliminando cliente:", err);
     res.status(500).json({ message: "Error al eliminar cliente" });
+  }
+};
+// ============================================
+// ⭐ NUEVAS FUNCIONES PARA DOCUMENTOS
+// ============================================
+
+// Subir documento del cliente
+exports.uploadDocumento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipo } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: "No se proporcionó ningún archivo" });
+    }
+    
+    // Validar tipo de documento
+    const tiposValidos = ['consentimiento', 'historia', 'adicionales'];
+    if (!tiposValidos.includes(tipo)) {
+      // Eliminar archivo subido si el tipo no es válido
+      const fs = require('fs');
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ message: "Tipo de documento inválido" });
+    }
+    
+    // Construir ruta del archivo relativa
+    const rutaArchivo = `uploads/consultas/${req.file.filename}`;
+    
+    // Mapear tipo a campo de base de datos
+    const campoDocumento = {
+      'consentimiento': 'consentimiento_informado',
+      'historia': 'historia_clinica',
+      'adicionales': 'documentos_adicionales'
+    }[tipo];
+    
+    // Obtener el cliente para verificar si ya tiene un documento anterior
+    const clientModel = require("../models/clientModel");
+    const clienteAnterior = await clientModel.getClientById(id);
+    
+    if (!clienteAnterior) {
+      // Eliminar archivo subido si el cliente no existe
+      const fs = require('fs');
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+    
+    // Verificar permisos
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+
+    if (userRole !== 'admin' && clienteAnterior.profesional_id !== userId) {
+      const fs = require('fs');
+      fs.unlinkSync(req.file.path);
+      return res.status(403).json({ message: "No tienes permiso para modificar este cliente" });
+    }
+    
+    // Si ya tenía un documento anterior, eliminarlo
+    const documentoAnterior = clienteAnterior[campoDocumento];
+    if (documentoAnterior) {
+      const fs = require('fs');
+      const path = require('path');
+      const rutaAnteriorCompleta = path.join(__dirname, '..', documentoAnterior);
+      if (fs.existsSync(rutaAnteriorCompleta)) {
+        try {
+          fs.unlinkSync(rutaAnteriorCompleta);
+          console.log(`✅ Documento anterior eliminado: ${documentoAnterior}`);
+        } catch (err) {
+          console.error(`⚠️ Error al eliminar documento anterior: ${err.message}`);
+        }
+      }
+    }
+    
+    // Actualizar en la base de datos
+    const clienteActualizado = await clientModel.updateDocumento(id, campoDocumento, rutaArchivo);
+    
+    res.json({
+      message: "Documento subido correctamente",
+      [campoDocumento]: rutaArchivo,
+      filename: req.file.filename
+    });
+    
+  } catch (err) {
+    console.error("Error subiendo documento:", err);
+    
+    // Eliminar archivo subido en caso de error
+    if (req.file) {
+      const fs = require('fs');
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    }
+    
+    res.status(500).json({ message: "Error al subir documento" });
+  }
+};
+
+// Obtener documentos del cliente
+exports.getDocumentos = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const clientModel = require("../models/clientModel");
+    const cliente = await clientModel.getClientById(id);
+    
+    if (!cliente) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+    
+    // Verificar permisos
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "No tienes permiso para ver los documentos de este cliente" });
+    }
+    
+    res.json({
+      consentimiento_informado: cliente.consentimiento_informado,
+      historia_clinica: cliente.historia_clinica,
+      documentos_adicionales: cliente.documentos_adicionales
+    });
+    
+  } catch (err) {
+    console.error("Error obteniendo documentos:", err);
+    res.status(500).json({ message: "Error al obtener documentos" });
+  }
+};
+
+// Eliminar documento del cliente
+exports.deleteDocumento = async (req, res) => {
+  try {
+    const { id, tipo } = req.params;
+    
+    // Validar tipo de documento
+    const tiposValidos = ['consentimiento', 'historia', 'adicionales'];
+    if (!tiposValidos.includes(tipo)) {
+      return res.status(400).json({ message: "Tipo de documento inválido" });
+    }
+    
+    // Mapear tipo a campo de base de datos
+    const campoDocumento = {
+      'consentimiento': 'consentimiento_informado',
+      'historia': 'historia_clinica',
+      'adicionales': 'documentos_adicionales'
+    }[tipo];
+    
+    // Obtener la ruta del documento antes de eliminarlo
+    const clientModel = require("../models/clientModel");
+    const cliente = await clientModel.getClientById(id);
+    
+    if (!cliente) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+    
+    // Verificar permisos
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "No tienes permiso para modificar este cliente" });
+    }
+    
+    const rutaDocumento = cliente[campoDocumento];
+    
+    // Eliminar archivo físico si existe
+    if (rutaDocumento) {
+      const fs = require('fs');
+      const path = require('path');
+      const rutaCompleta = path.join(__dirname, '..', rutaDocumento);
+      
+      if (fs.existsSync(rutaCompleta)) {
+        try {
+          fs.unlinkSync(rutaCompleta);
+          console.log(`✅ Archivo eliminado: ${rutaDocumento}`);
+        } catch (err) {
+          console.error(`⚠️ Error al eliminar archivo: ${err.message}`);
+        }
+      }
+    }
+    
+    // Actualizar en la base de datos (establecer a NULL)
+    await clientModel.updateDocumento(id, campoDocumento, null);
+    
+    res.json({ 
+      message: "Documento eliminado correctamente",
+      tipo: tipo 
+    });
+    
+  } catch (err) {
+    console.error("Error eliminando documento:", err);
+    res.status(500).json({ message: "Error al eliminar documento" });
   }
 };

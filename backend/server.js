@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path"); // ⭐ NUEVO: Para servir archivos estáticos
 
 // ⭐ ACTIVAR DOTENV PRIMERO (antes de importar rutas/modelos)
 dotenv.config();
@@ -26,6 +27,10 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// ⭐ NUEVO: Servir archivos estáticos (documentos adjuntos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+console.log('📁 Sirviendo archivos estáticos desde:', path.join(__dirname, 'uploads'));
 
 // Rutas públicas (sin autenticación)
 app.use("/api/auth", authRoutes);
@@ -83,4 +88,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - GET  /api/clients (Clientes) 🔒`);
   console.log(`   - GET  /api/consultas (Consultas) 🔒`);
   console.log(`   - GET  /api/empresas (Empresas) 🔒`);
+  console.log(`   - GET  /uploads/* (Archivos adjuntos) 📎`); // ⭐ NUEVO
 });

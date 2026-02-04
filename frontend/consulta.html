@@ -516,6 +516,178 @@
         </form>
       </div>
 
+   <!-- ========================================
+       SECCIÓN DE ADJUNTAR DOCUMENTOS (Orientación Psicosocial)
+       ======================================== -->
+  <div id="documentosSection" class="documentos-section" style="display: none;">
+    <div class="documentos-header">
+      <h2 class="section-title">
+        <span class="section-icon">📎</span>
+        Documentos Adjuntos
+      </h2>
+      <p class="documentos-descripcion">
+        Adjunte los documentos en formato PDF o Word (.pdf, .doc, .docx)
+      </p>
+    </div>
+
+    <div class="documentos-grid">
+      <!-- Consentimiento Informado -->
+      <div class="documento-card">
+        <div class="documento-icon-wrapper consentimiento">
+          <span class="documento-icon">📄</span>
+        </div>
+        <h3 class="documento-titulo">Consentimiento Informado</h3>
+        <p class="documento-descripcion">Documento de autorización del trabajador</p>
+        
+        <div class="documento-actions">
+          <input 
+            type="file" 
+            id="consentimientoFile" 
+            accept=".pdf,.doc,.docx" 
+            style="display: none;"
+            onchange="handleFileSelect('consentimiento', this)"
+          />
+          <button 
+            type="button" 
+            class="btn-adjuntar" 
+            onclick="document.getElementById('consentimientoFile').click()"
+          >
+            📎 Adjuntar
+          </button>
+          <button 
+            type="button" 
+            class="btn-ver-documento" 
+            id="btnVerConsentimiento"
+            style="display: none;"
+            onclick="verDocumento('consentimiento')"
+          >
+            👁️ Ver
+          </button>
+          <button 
+            type="button" 
+            class="btn-eliminar-documento" 
+            id="btnEliminarConsentimiento"
+            style="display: none;"
+            onclick="eliminarDocumento('consentimiento')"
+          >
+            🗑️
+          </button>
+        </div>
+        
+        <div class="documento-info" id="consentimientoInfo" style="display: none;">
+          <span class="documento-nombre" id="consentimientoNombre"></span>
+          <span class="documento-estado">✅ Adjuntado</span>
+        </div>
+      </div>
+
+      <!-- Historia Clínica -->
+      <div class="documento-card">
+        <div class="documento-icon-wrapper historia">
+          <span class="documento-icon">📋</span>
+        </div>
+        <h3 class="documento-titulo">Historia Clínica</h3>
+        <p class="documento-descripcion">Historial médico del trabajador</p>
+        
+        <div class="documento-actions">
+          <input 
+            type="file" 
+            id="historiaFile" 
+            accept=".pdf,.doc,.docx" 
+            style="display: none;"
+            onchange="handleFileSelect('historia', this)"
+          />
+          <button 
+            type="button" 
+            class="btn-adjuntar" 
+            onclick="document.getElementById('historiaFile').click()"
+          >
+            📎 Adjuntar
+          </button>
+          <button 
+            type="button" 
+            class="btn-ver-documento" 
+            id="btnVerHistoria"
+            style="display: none;"
+            onclick="verDocumento('historia')"
+          >
+            👁️ Ver
+          </button>
+          <button 
+            type="button" 
+            class="btn-eliminar-documento" 
+            id="btnEliminarHistoria"
+            style="display: none;"
+            onclick="eliminarDocumento('historia')"
+          >
+            🗑️
+          </button>
+        </div>
+        
+        <div class="documento-info" id="historiaInfo" style="display: none;">
+          <span class="documento-nombre" id="historiaNombre"></span>
+          <span class="documento-estado">✅ Adjuntado</span>
+        </div>
+      </div>
+
+      <!-- Documentos Adicionales -->
+      <div class="documento-card">
+        <div class="documento-icon-wrapper adicionales">
+          <span class="documento-icon">📁</span>
+        </div>
+        <h3 class="documento-titulo">Documentos Adicionales</h3>
+        <p class="documento-descripcion">Otros documentos relevantes</p>
+        
+        <div class="documento-actions">
+          <input 
+            type="file" 
+            id="adicionalesFile" 
+            accept=".pdf,.doc,.docx" 
+            style="display: none;"
+            onchange="handleFileSelect('adicionales', this)"
+          />
+          <button 
+            type="button" 
+            class="btn-adjuntar" 
+            onclick="document.getElementById('adicionalesFile').click()"
+          >
+            📎 Adjuntar
+          </button>
+          <button 
+            type="button" 
+            class="btn-ver-documento" 
+            id="btnVerAdicionales"
+            style="display: none;"
+            onclick="verDocumento('adicionales')"
+          >
+            👁️ Ver
+          </button>
+          <button 
+            type="button" 
+            class="btn-eliminar-documento" 
+            id="btnEliminarAdicionales"
+            style="display: none;"
+            onclick="eliminarDocumento('adicionales')"
+          >
+            🗑️
+          </button>
+        </div>
+        
+        <div class="documento-info" id="adicionalesInfo" style="display: none;">
+          <span class="documento-nombre" id="adicionalesNombre"></span>
+          <span class="documento-estado">✅ Adjuntado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="documentos-nota">
+      <span class="nota-icon">💡</span>
+      <span class="nota-texto">
+        Los documentos se guardan automáticamente al adjuntarlos. Tamaño máximo por archivo: 10MB
+      </span>
+    </div>
+  </div>
+
+
 <!-- ⭐ REEMPLAZO COMPLETO DEL DIV #formVigilanciaEpidemiologica EN consulta.html -->
 <!-- IMPORTANTE: Los estilos están en css/epidemiologica.css -->
 

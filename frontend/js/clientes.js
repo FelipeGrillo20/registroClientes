@@ -24,6 +24,75 @@ let filtrosActivos = { // ✅ NUEVO: Objeto para mantener filtros activos
 };
 
 // ============================================
+// ✅ FUNCIONES DEL MODAL DE TRABAJADOR RELACIONADO
+// ============================================
+function mostrarModalTrabajadorRelacionado(cedulaTrabajador, nombreTrabajador) {
+  let modal = document.getElementById('modalTrabajadorRelacionado');
+  
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalTrabajadorRelacionado';
+    modal.className = 'modal-trabajador-overlay';
+    modal.innerHTML = `
+      <div class="modal-trabajador-container">
+        <div class="modal-trabajador-header">
+          <h3>👤 Trabajador Relacionado</h3>
+          <button class="modal-trabajador-close" onclick="cerrarModalTrabajadorRelacionado()">
+            <span>✕</span>
+          </button>
+        </div>
+        <div class="modal-trabajador-body">
+          <div class="modal-trabajador-info">
+            <div class="info-row">
+              <div class="info-icon">🆔</div>
+              <div class="info-content">
+                <label>Cédula del Trabajador</label>
+                <p id="modalCedulaTrabajador"></p>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-icon">👨‍💼</div>
+              <div class="info-content">
+                <label>Nombre del Trabajador</label>
+                <p id="modalNombreTrabajador"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-trabajador-footer">
+          <button class="btn-modal-cerrar" onclick="cerrarModalTrabajadorRelacionado()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        cerrarModalTrabajadorRelacionado();
+      }
+    });
+  }
+  
+  document.getElementById('modalCedulaTrabajador').textContent = cedulaTrabajador || 'No especificado';
+  document.getElementById('modalNombreTrabajador').textContent = nombreTrabajador || 'No especificado';
+  
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function cerrarModalTrabajadorRelacionado() {
+  const modal = document.getElementById('modalTrabajadorRelacionado');
+  if (modal) {
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+  }
+}
+
+window.mostrarModalTrabajadorRelacionado = mostrarModalTrabajadorRelacionado;
+window.cerrarModalTrabajadorRelacionado = cerrarModalTrabajadorRelacionado;
+
+// ============================================
 // NUEVA FUNCIÓN: Actualizar contador de trabajadores
 // ============================================
 function actualizarContadorTrabajadores(cantidad) {
@@ -516,6 +585,20 @@ async function renderClients(list) {
       empresaBadge = '<span style="color: #95a5a6;">-</span>';
     }
 
+
+    // ✅ NUEVO: Crear icono de información si es Familiar Trabajador
+    let iconoTrabajador = '';
+    if (c.vinculo === 'Familiar Trabajador' && (c.cedula_trabajador || c.nombre_trabajador)) {
+      iconoTrabajador = `
+        <button 
+          class="btn-trabajador-relacionado" 
+          onclick="mostrarModalTrabajadorRelacionado('${c.cedula_trabajador || ''}', '${c.nombre_trabajador || ''}')"
+          title="Ver información del trabajador relacionado"
+        >
+          <span class="icon-info">👤</span>
+        </button>
+      `;
+    }
     // ✅ NUEVO: Verificar si tiene informe disponible
     console.log(`🔍 Verificando informe para cliente ID: ${c.id}, Nombre: ${c.nombre}, Cédula: ${c.cedula}`);
     const tieneInforme = await verificarInformeDisponible(c.id, modalidad);
@@ -526,7 +609,12 @@ async function renderClients(list) {
 
     tr.innerHTML = `
       <td>${c.cedula ?? ""}</td>
-      <td>${escapeHtml(c.nombre ?? "")}</td>
+      <td>
+        <div class="nombre-con-icono">
+          <span>${escapeHtml(c.nombre ?? "")}</span>
+          ${iconoTrabajador}
+        </div>
+      </td>
       <td>${escapeHtml(c.sede ?? "")}</td>
       <td>${escapeHtml(c.email ?? "")}</td>
       <td>${escapeHtml(c.telefono ?? "")}</td>

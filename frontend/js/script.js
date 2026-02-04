@@ -72,6 +72,32 @@ function verificarModalidadSeleccionada() {
 }
 
 // ============================================
+// ✅ NUEVA FUNCIÓN: Manejo de campos condicionales para Familiar Trabajador
+// ============================================
+function setupCamposFamiliarTrabajador() {
+  const vinculoSelect = document.getElementById('vinculo');
+  const camposFamiliar = document.getElementById('camposFamiliarTrabajador');
+  const cedulaTrabajador = document.getElementById('cedulaTrabajador');
+  const nombreTrabajador = document.getElementById('nombreTrabajador');
+  
+  vinculoSelect.addEventListener('change', function() {
+    if (this.value === 'Familiar Trabajador') {
+      // Mostrar campos y hacerlos requeridos
+      camposFamiliar.style.display = 'block';
+      cedulaTrabajador.setAttribute('required', 'required');
+      nombreTrabajador.setAttribute('required', 'required');
+    } else {
+      // Ocultar campos y quitar validación
+      camposFamiliar.style.display = 'none';
+      cedulaTrabajador.removeAttribute('required');
+      nombreTrabajador.removeAttribute('required');
+      cedulaTrabajador.value = '';
+      nombreTrabajador.value = '';
+    }
+  });
+}
+
+// ============================================
 // CLASE PARA SELECT CON BÚSQUEDA
 // ============================================
 class SearchableSelect {
@@ -237,9 +263,8 @@ class SearchableSelect {
       this.highlightOption(options);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (this.selectedIndex >= 0 && options[this.selectedIndex]) {
-        const index = parseInt(options[this.selectedIndex].dataset.index);
-        this.selectOption(this.filteredOptions[index]);
+      if (this.selectedIndex >= 0 && this.filteredOptions[this.selectedIndex]) {
+        this.selectOption(this.filteredOptions[this.selectedIndex]);
       }
     } else if (e.key === 'Escape') {
       this.hideDropdown();
@@ -306,6 +331,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupEntidadPagadoraDinamica();
   setupCancelarEdicion();
   initializeSearchableSelects();
+  setupCamposFamiliarTrabajador(); // ✅ NUEVO: Inicializar campos condicionales
 });
 
 function initializeSearchableSelects() {
@@ -368,6 +394,19 @@ function initializeForm() {
           // Pre-llenar el formulario con los datos encontrados
           document.getElementById("name").value = clienteEncontrado.nombre || "";
           document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
+          
+          // ✅ NUEVO: Cargar datos de familiar trabajador si existen
+          if (clienteEncontrado.vinculo === 'Familiar Trabajador') {
+            const event = new Event('change');
+            document.getElementById("vinculo").dispatchEvent(event);
+            
+            if (clienteEncontrado.cedula_trabajador) {
+              document.getElementById("cedulaTrabajador").value = clienteEncontrado.cedula_trabajador;
+            }
+            if (clienteEncontrado.nombre_trabajador) {
+              document.getElementById("nombreTrabajador").value = clienteEncontrado.nombre_trabajador;
+            }
+          }
           
           if (clienteEncontrado.sede) {
             sedeSelector.setValue(clienteEncontrado.sede, clienteEncontrado.sede);
@@ -442,6 +481,14 @@ function initializeForm() {
 function resetForm() {
   document.getElementById("name").value = "";
   document.getElementById("vinculo").value = "";
+  
+  // ✅ NUEVO: Limpiar campos de familiar trabajador
+  document.getElementById("cedulaTrabajador").value = "";
+  document.getElementById("nombreTrabajador").value = "";
+  document.getElementById("camposFamiliarTrabajador").style.display = "none";
+  document.getElementById("cedulaTrabajador").removeAttribute("required");
+  document.getElementById("nombreTrabajador").removeAttribute("required");
+  
   sedeSelector.reset();
   document.getElementById("entidadPagadora").value = "";
   if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
@@ -562,7 +609,7 @@ async function loadClientsForCache() {
   }
 }
 
-// ✅ ACTUALIZADO: Manejo del submit CON modalidad
+// ✅ ACTUALIZADO: Manejo del submit CON modalidad y campos de familiar trabajador
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -580,6 +627,33 @@ form.addEventListener("submit", async (e) => {
   const sede = document.getElementById("sede").value.trim();
   let email = document.getElementById("email").value.trim();
   const telefono = document.getElementById("phone").value.trim();
+
+  // ✅ NUEVO: Obtener datos de familiar trabajador si aplica
+  let cedulaTrabajador = null;
+  let nombreTrabajador = null;
+  
+  if (vinculo === 'Familiar Trabajador') {
+    cedulaTrabajador = document.getElementById("cedulaTrabajador").value.trim();
+    nombreTrabajador = document.getElementById("nombreTrabajador").value.trim();
+    
+    // Validar que estos campos estén llenos
+    if (!cedulaTrabajador || !nombreTrabajador) {
+      alert("Debes completar los datos del trabajador al que está vinculado el familiar");
+      return;
+    }
+    
+    // Validar formato de cédula del trabajador
+    if (!/^\d+$/.test(cedulaTrabajador)) {
+      alert("La cédula del trabajador debe contener solo números.");
+      return;
+    }
+    
+    // Validar formato de nombre del trabajador
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ'\s]+$/.test(nombreTrabajador)) {
+      alert("El nombre del trabajador solo debe contener letras.");
+      return;
+    }
+  }
 
   const tipoEntidadPagadora = document.getElementById("entidadPagadora").value;
   let entidadPagadoraEspecifica = null;
@@ -645,11 +719,13 @@ form.addEventListener("submit", async (e) => {
     }
   }
 
-  // ✅ NUEVO: Incluir modalidad en el objeto
+  // ✅ NUEVO: Incluir modalidad y datos de familiar trabajador en el objeto
   const nuevoCliente = {
     cedula,
     nombre,
     vinculo,
+    cedula_trabajador: cedulaTrabajador, // ✅ NUEVO
+    nombre_trabajador: nombreTrabajador, // ✅ NUEVO
     sede,
     tipo_entidad_pagadora: tipoEntidadPagadora,
     entidad_pagadora_especifica: entidadPagadoraEspecifica,
@@ -726,6 +802,19 @@ window.startEdit = async function (id) {
     document.getElementById("cedula").value = client.cedula || "";
     document.getElementById("name").value = client.nombre || "";
     document.getElementById("vinculo").value = client.vinculo || "";
+    
+    // ✅ NUEVO: Cargar datos de familiar trabajador en modo edición
+    if (client.vinculo === 'Familiar Trabajador') {
+      const event = new Event('change');
+      document.getElementById("vinculo").dispatchEvent(event);
+      
+      if (client.cedula_trabajador) {
+        document.getElementById("cedulaTrabajador").value = client.cedula_trabajador;
+      }
+      if (client.nombre_trabajador) {
+        document.getElementById("nombreTrabajador").value = client.nombre_trabajador;
+      }
+    }
     
     if (client.sede) {
       sedeSelector.setValue(client.sede, client.sede);

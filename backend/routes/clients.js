@@ -13,21 +13,24 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configurar almacenamiento de multer
+// ⭐ SOLUCIÓN DEFINITIVA: No usar req.body ni req.params en filename
+// Multer procesa archivos ANTES de parsear el body
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Generar nombre único: clienteID_tipoDoc_timestamp_nombreOriginal
-    const clienteId = req.params.id;
-    const tipo = req.body.tipo;
+    // Generar nombre único y seguro
     const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 9);
     const extension = path.extname(file.originalname);
     const nombreBase = path.basename(file.originalname, extension);
-    const nombreSanitizado = nombreBase.replace(/[^a-zA-Z0-9]/g, '_');
+    const nombreSanitizado = nombreBase.replace(/[^a-zA-Z0-9_-]/g, '_');
     
-    const nombreFinal = `${clienteId}_${tipo}_${timestamp}_${nombreSanitizado}${extension}`;
+    // Formato final: timestamp_random_nombreOriginal.ext
+    const nombreFinal = `${timestamp}_${randomStr}_${nombreSanitizado}${extension}`;
+    
+    console.log(`📎 Multer guardando archivo: ${nombreFinal}`);
     cb(null, nombreFinal);
   }
 });
@@ -41,8 +44,10 @@ const fileFilter = (req, file, cb) => {
   ];
   
   if (allowedTypes.includes(file.mimetype)) {
+    console.log(`✅ Archivo aceptado: ${file.originalname} (${file.mimetype})`);
     cb(null, true);
   } else {
+    console.log(`❌ Archivo rechazado: ${file.originalname} (${file.mimetype})`);
     cb(new Error('Tipo de archivo no permitido. Solo se aceptan PDF y Word'), false);
   }
 };

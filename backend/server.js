@@ -2,7 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const path = require("path"); // ⭐ NUEVO: Para servir archivos estáticos
+const path = require("path");
 
 // ⭐ ACTIVAR DOTENV PRIMERO (antes de importar rutas/modelos)
 dotenv.config();
@@ -28,9 +28,35 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ⭐ NUEVO: Servir archivos estáticos (documentos adjuntos)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-console.log('📁 Sirviendo archivos estáticos desde:', path.join(__dirname, 'uploads'));
+// ⭐ CONFIGURACIÓN MEJORADA PARA HOSTINGER VPS
+// Servir archivos estáticos con headers específicos para PDFs
+const uploadsPath = path.join(__dirname, 'uploads');
+console.log('📁 Sirviendo archivos estáticos desde:', uploadsPath);
+
+app.use('/uploads', (req, res, next) => {
+  // ⭐ Headers especiales para archivos PDF y Word
+  const ext = path.extname(req.path).toLowerCase();
+  
+  if (ext === '.pdf') {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline'); // Para mostrar en navegador
+  } else if (ext === '.doc') {
+    res.setHeader('Content-Type', 'application/msword');
+  } else if (ext === '.docx') {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  }
+  
+  // Headers CORS para archivos
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  
+  next();
+}, express.static(uploadsPath, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true
+}));
 
 // Rutas públicas (sin autenticación)
 app.use("/api/auth", authRoutes);
@@ -60,7 +86,7 @@ app.get("/api/protected", authMiddleware.verifyToken, (req, res) => {
   });
 });
 
-// Health check para Render
+// Health check para monitoreo
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
@@ -79,6 +105,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor corriendo en puerto ${PORT}`);
   console.log(`🌍 Ambiente: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🏢 Servidor VPS: Hostinger`);
   console.log(`🔒 Rutas protegidas con JWT`);
   console.log(`📋 Rutas disponibles:`);
   console.log(`   - GET  / (Info de la API)`);
@@ -88,5 +115,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - GET  /api/clients (Clientes) 🔒`);
   console.log(`   - GET  /api/consultas (Consultas) 🔒`);
   console.log(`   - GET  /api/empresas (Empresas) 🔒`);
-  console.log(`   - GET  /uploads/* (Archivos adjuntos) 📎`); // ⭐ NUEVO
+  console.log(`   - GET  /uploads/* (Archivos adjuntos) 📎`);
 });

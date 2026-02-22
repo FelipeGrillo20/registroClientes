@@ -650,11 +650,22 @@ function renderHistorial(consultas) {
 }
 
 function formatDate(dateString) {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+  // ⭐ CORRECCIÓN ZONA HORARIA: Parsear la fecha como local, no como UTC
+  // "2026-02-27" o "2026-02-27T00:00:00.000Z" → extraer partes directamente
+  const partes = dateString.substring(0, 10).split('-');
+  const year = partes[0];
+  const month = partes[1];
+  const day = partes[2];
   return `${day}/${month}/${year}`;
+}
+
+// ⭐ FUNCIÓN HELPER: Obtener fecha local en formato YYYY-MM-DD (evita bug de zona horaria UTC)
+function getFechaLocalHoy() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function escapeHtml(str) {
@@ -1253,8 +1264,7 @@ function inicializarSVE() {
     // Fecha por defecto en consulta
     const fechaConsultaSVE = document.getElementById('fecha_consulta_sve');
     if (fechaConsultaSVE) {
-      const today = new Date().toISOString().split('T')[0];
-      fechaConsultaSVE.value = today;
+      fechaConsultaSVE.value = getFechaLocalHoy(); // ⭐ Usa hora local, no UTC
     }
   }
 }
@@ -1609,7 +1619,7 @@ async function registrarConsultaSVE(e) {
     
     // Limpiar formulario
     document.getElementById('formConsultaVigilancia').reset();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getFechaLocalHoy(); // ⭐ Usa hora local, no UTC
     document.getElementById('fecha_consulta_sve').value = today;
     
     editandoConsultaSVE = null;
@@ -1918,7 +1928,7 @@ async function registrarConsultaSVE(e) {
     
     // Limpiar formulario
     document.getElementById('formConsultaVigilancia').reset();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getFechaLocalHoy(); // ⭐ Usa hora local, no UTC
     document.getElementById('fecha_consulta_sve').value = today;
     
     editandoConsultaSVE = null;

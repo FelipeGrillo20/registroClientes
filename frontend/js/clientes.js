@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadProfesionales();
     document.getElementById("profesionalFilterContainer").style.display = "flex";
     
-    // ✅ NUEVO: Mostrar y poblar filtros de año y mes
+    // Mostrar y poblar filtros de año y mes
     const yearFilterContainer = document.getElementById("yearFilterContainer");
     const mesFilterContainer = document.getElementById("mesFilterContainer");
     
@@ -281,7 +281,50 @@ document.addEventListener("DOMContentLoaded", () => {
       populateMesFilter();
     }
     
-    // ✅ NUEVO: Mostrar contador de trabajadores
+    // Mostrar contador de trabajadores
+    const contadorTrabajadores = document.getElementById("contadorTrabajadores");
+    if (contadorTrabajadores) {
+      contadorTrabajadores.style.display = "flex";
+    }
+  }
+  
+  // ✅ NUEVO: Si es profesional, mostrar badge con su nombre y filtros de año/mes
+  if (currentUserRole === 'profesional') {
+    // Mostrar badge del profesional
+    const badgeContainer = document.getElementById("profesionalBadgeContainer");
+    if (badgeContainer) {
+      badgeContainer.style.display = "flex";
+      // Rellenar nombre desde userData
+      const nombreBadge = document.getElementById("profesionalBadgeNombre");
+      if (nombreBadge && userData?.nombre) {
+        nombreBadge.textContent = userData.nombre;
+      }
+      // Iniciales para el avatar
+      const avatarEl = document.getElementById("profesionalBadgeAvatar");
+      if (avatarEl && userData?.nombre) {
+        const partes = userData.nombre.trim().split(' ');
+        const iniciales = partes.length >= 2
+          ? (partes[0][0] + partes[1][0]).toUpperCase()
+          : partes[0].substring(0, 2).toUpperCase();
+        avatarEl.textContent = iniciales;
+      }
+    }
+    
+    // Mostrar filtros de año y mes también para el profesional
+    const yearFilterContainer = document.getElementById("yearFilterContainer");
+    const mesFilterContainer = document.getElementById("mesFilterContainer");
+    
+    if (yearFilterContainer) {
+      yearFilterContainer.style.display = "flex";
+      populateYearFilter();
+    }
+    
+    if (mesFilterContainer) {
+      mesFilterContainer.style.display = "flex";
+      populateMesFilter();
+    }
+    
+    // Mostrar contador de trabajadores
     const contadorTrabajadores = document.getElementById("contadorTrabajadores");
     if (contadorTrabajadores) {
       contadorTrabajadores.style.display = "flex";
@@ -804,7 +847,7 @@ function setupFilterEvents() {
         filterProfesionalSelect.value = "";
       }
       
-      // ✅ NUEVO: Limpiar filtros de año y mes
+      // Limpiar filtros de año y mes
       if (filterAño) {
         filterAño.value = "";
       }
@@ -821,7 +864,12 @@ function setupFilterEvents() {
       };
 
       const modalidad = localStorage.getItem('modalidadSeleccionada');
-      loadClients(modalidad, null, null, null);
+      
+      // Para profesional, no resetear el profesional_id (siempre filtra por el suyo)
+      const userData = getCurrentUserData();
+      const profesionalIdParaLimpiar = userData?.rol === 'profesional' ? null : null;
+      
+      loadClients(modalidad, profesionalIdParaLimpiar, null, null);
 
       menus.forEach(m => {
         m.classList.remove("show");

@@ -35,8 +35,20 @@
           <option value="">Todos los Profesionales</option>
         </select>
       </div>
+
+      <!-- ✅ NUEVO: Badge de nombre para perfil profesional (en lugar del select) -->
+      <div id="profesionalBadgeContainer" class="profesional-badge-container" style="display: none;">
+        <div class="profesional-badge-card">
+          <div class="profesional-badge-avatar" id="profesionalBadgeAvatar">👤</div>
+          <div class="profesional-badge-info">
+            <span class="profesional-badge-label">Profesional</span>
+            <span class="profesional-badge-nombre" id="profesionalBadgeNombre">-</span>
+          </div>
+          <div class="profesional-badge-dot"></div>
+        </div>
+      </div>
       
-      <!-- ✅ NUEVO: Filtro de año (solo visible para admin) -->
+      <!-- Filtro de año (visible para admin Y profesional) -->
       <div id="yearFilterContainer" class="year-filter-container" style="display: none;">
         <label for="filterAño" class="filter-label">📅 Año:</label>
         <select id="filterAño" class="filter-year-select">
@@ -44,7 +56,7 @@
         </select>
       </div>
       
-      <!-- ✅ NUEVO: Filtro de mes (solo visible para admin) -->
+      <!-- Filtro de mes (visible para admin Y profesional) -->
       <div id="mesFilterContainer" class="mes-filter-container" style="display: none;">
         <label for="filterMes" class="filter-label">📆 Mes:</label>
         <select id="filterMes" class="filter-mes-select">

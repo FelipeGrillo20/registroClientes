@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <!-- ⭐ NUEVO: Estadísticas del Profesional Seleccionado -->
+    <!-- ⭐ ESTADÍSTICAS DEL PROFESIONAL - COMENTADO TEMPORALMENTE (descomentar cuando se necesite)
     <div id="statsProfesionalContainer" class="stats-profesional-container" style="display: none;">
       <h3 class="stats-profesional-title">
         📊 Estadísticas del Profesional: <span id="statsProfesionalNombre"></span>
@@ -212,6 +212,7 @@
         </div>
       </div>
     </div>
+    -->
 
     <!-- Tabla de resultados -->
     <div class="table-container">
@@ -238,6 +239,13 @@
       </table>
     </div>
 
+    <!-- Botón Exportar Excel -->
+    <div class="export-actions-container">
+      <button id="btnExportarExcel" class="btn-exportar-excel" onclick="exportarExcel()">
+        📊 Exportar Registros
+      </button>
+    </div>
+
     <!-- Mensaje inicial -->
     <div id="noDataMessage" class="no-data-message" style="display: none;">
       <div class="no-data-icon">📊</div>
@@ -245,6 +253,8 @@
     </div>
   </main>
 
+  <!-- SheetJS para exportar Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth-check.js"></script>
   <script src="js/trazabilidad.js"></script>

@@ -735,3 +735,52 @@ body {
     font-size: 28px;
   }
 }
+/* ============================================ */
+/* BOTÓN EXPORTAR EXCEL                         */
+/* ============================================ */
+
+.export-actions-container {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 1400px;
+  margin: 16px auto 0 auto;
+  padding: 0 12px;
+}
+
+.btn-exportar-excel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #1a7a4a, #27ae60);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.35);
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-exportar-excel:hover {
+  background: linear-gradient(135deg, #155f3a, #1e8449);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(39, 174, 96, 0.45);
+}
+
+.btn-exportar-excel:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+@media (max-width: 768px) {
+  .export-actions-container {
+    justify-content: center;
+  }
+  .btn-exportar-excel {
+    width: 100%;
+    justify-content: center;
+  }
+}

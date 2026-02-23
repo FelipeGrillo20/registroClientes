@@ -27,14 +27,16 @@ const btnApplyAdvancedFilters = document.getElementById("btnApplyAdvancedFilters
 const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters");
 
 // ⭐ NUEVO: Elementos de estadísticas del profesional
-const statsProfesionalContainer = document.getElementById("statsProfesionalContainer");
-const statsProfesionalNombre = document.getElementById("statsProfesionalNombre");
-const statPacientesAtendidos = document.getElementById("statPacientesAtendidos");
-const statSesionesRealizadas = document.getElementById("statSesionesRealizadas");
-const statHorasAtendidas = document.getElementById("statHorasAtendidas");
-const statCasosCerrados = document.getElementById("statCasosCerrados");
+// ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
+// const statsProfesionalContainer = document.getElementById("statsProfesionalContainer");
+// const statsProfesionalNombre = document.getElementById("statsProfesionalNombre");
+// const statPacientesAtendidos = document.getElementById("statPacientesAtendidos");
+// const statSesionesRealizadas = document.getElementById("statSesionesRealizadas");
+// const statHorasAtendidas = document.getElementById("statHorasAtendidas");
+// const statCasosCerrados = document.getElementById("statCasosCerrados");
 
 let allClients = [];
+let currentFilteredClients = []; // ✅ Rastrea los datos visibles para exportar
 let currentUserRole = null;
 
 // Catálogo de entidades según tipo
@@ -189,7 +191,7 @@ async function applyAdvancedFilters() {
     if (!Array.isArray(clients) || clients.length === 0) {
       showNoData();
       updateStats(0, 0, 0, 0);
-      hideStatsProfesional();
+      // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
       return;
     }
     
@@ -205,17 +207,17 @@ async function applyAdvancedFilters() {
     // Actualizar estadísticas
     updateStatistics(allClients);
     
-    // ⭐ NUEVO: Cargar estadísticas del profesional si se seleccionó uno
-    if (profesionalId) {
-      await loadStatsProfesional(profesionalId);
-    } else {
-      hideStatsProfesional();
-    }
+    // ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
+    // if (profesionalId) {
+    //   await loadStatsProfesional(profesionalId);
+    // } else {
+    //   hideStatsProfesional();
+    // }
     
   } catch (err) {
     console.error("Error aplicando filtros avanzados:", err);
     tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al filtrar datos</td></tr>`;
-    hideStatsProfesional();
+    // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
   }
 }
 
@@ -276,7 +278,7 @@ function clearAdvancedFilters() {
   filterFechaFin.value = "";
   
   // Ocultar estadísticas del profesional
-  hideStatsProfesional();
+  // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
   
   // Recargar todos los clientes
   loadClients();
@@ -325,6 +327,8 @@ function fillSelect(selectElem, items, placeholder) {
 
 // Renderizar clientes en la tabla
 function renderClients(clients) {
+  // ✅ Actualizar lista de datos visibles para exportación
+  currentFilteredClients = clients || [];
   tbody.innerHTML = "";
   
   if (!clients || clients.length === 0) {
@@ -578,6 +582,87 @@ function clearAllFilters() {
   updateStatistics(allClients);
 }
 
+// ✅ FUNCIÓN: Exportar datos visibles a Excel
+function exportarExcel() {
+  const datos = currentFilteredClients;
+
+  if (!datos || datos.length === 0) {
+    alert('⚠️ No hay datos para exportar. Aplica los filtros primero o espera a que carguen los registros.');
+    return;
+  }
+
+  // Mapear cada cliente a una fila con las 8 columnas de la tabla
+  const filas = datos.map(client => {
+    // Tipo Cliente
+    const tipoCliente = client.tipo_entidad_pagadora || '-';
+
+    // Nombre Cliente (empresa o entidad pagadora según tipo)
+    let nombreCliente = '-';
+    if (client.tipo_entidad_pagadora === 'Particular') {
+      nombreCliente = client.cliente_final || '-';
+    } else {
+      nombreCliente = client.entidad_pagadora_especifica || '-';
+    }
+
+    // Empresa Usuario
+    const empresaUsuario = client.cliente_final || '-';
+
+    // Cliente Final (subcontratista, N/A si no aplica)
+    const subcontratistaName = client.subcontratista_definitivo || client.subcontratista_nombre;
+    const clienteFinal = subcontratistaName || 'N/A';
+
+    // Vínculo
+    const vinculo = client.vinculo || '-';
+
+    // Sede
+    const sede = client.sede || '-';
+
+    // Nombre trabajador
+    const nombre = client.nombre || '-';
+
+    // Cédula
+    const cedula = client.cedula || '-';
+
+    return {
+      'Tipo Cliente':    tipoCliente,
+      'Nombre Cliente':  nombreCliente,
+      'Empresa Usuario': empresaUsuario,
+      'Cliente Final':   clienteFinal,
+      'Vínculo':         vinculo,
+      'Sede':            sede,
+      'Nombre':          nombre,
+      'Cédula':          String(cedula)  // Forzar texto para no perder ceros a la izquierda
+    };
+  });
+
+  // Crear libro y hoja de Excel
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(filas);
+
+  // Ajustar ancho de columnas automáticamente
+  const colWidths = [
+    { wch: 14 }, // Tipo Cliente
+    { wch: 30 }, // Nombre Cliente
+    { wch: 30 }, // Empresa Usuario
+    { wch: 30 }, // Cliente Final
+    { wch: 18 }, // Vínculo
+    { wch: 16 }, // Sede
+    { wch: 28 }, // Nombre
+    { wch: 14 }, // Cédula
+  ];
+  ws['!cols'] = colWidths;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Trazabilidad');
+
+  // Nombre del archivo con fecha
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  const nombreArchivo = `Trazabilidad_Pagos_${fecha}.xlsx`;
+
+  XLSX.writeFile(wb, nombreArchivo);
+  console.log(`✅ Exportado: ${nombreArchivo} con ${filas.length} registros`);
+}
+
 // Escape HTML para seguridad
 function escapeHtml(str) {
   if (!str) return '';
@@ -589,8 +674,8 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// ⭐ NUEVO: Cargar estadísticas del profesional seleccionado
-async function loadStatsProfesional(profesionalId) {
+// ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
+/* async function loadStatsProfesional(profesionalId) {
   try {
     console.log("📊 Cargando estadísticas del profesional:", profesionalId);
     console.log("📡 URL:", `${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`);
@@ -650,3 +735,4 @@ function hideStatsProfesional() {
     statsProfesionalContainer.style.display = "none";
   }
 }
+*/ // FIN BLOQUE COMENTADO - Estadísticas del Profesional

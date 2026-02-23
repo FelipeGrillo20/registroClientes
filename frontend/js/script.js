@@ -18,6 +18,19 @@ let contactoEmergencia = {
   telefono: null
 };
 
+// ✅ FUNCIÓN: Convertir nombre a formato Title Case
+// "ANDRES CASAS" → "Andres Casas" | "andres casas" → "Andres Casas"
+function toTitleCase(str) {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)         // Eliminar espacios dobles
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .trim();
+}
+
 // Catálogo de entidades según tipo
 const ENTIDADES = {
   ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
@@ -325,11 +338,24 @@ window.addEventListener('DOMContentLoaded', () => {
   // ✅ NUEVO: Verificar modalidad seleccionada al cargar la página
   verificarModalidadSeleccionada();
   
+  // ✅ NUEVO: Corregir formato de nombre en tiempo real al salir del campo
+  document.getElementById("name")?.addEventListener("blur", function() {
+    if (this.value.trim()) {
+      this.value = toTitleCase(this.value);
+    }
+  });
+  document.getElementById("nombreTrabajador")?.addEventListener("blur", function() {
+    if (this.value.trim()) {
+      this.value = toTitleCase(this.value);
+    }
+  });
+  
   initializeForm();
   loadClientsForCache();
   loadEmpresas();
   setupEntidadPagadoraDinamica();
   setupCancelarEdicion();
+  setupBotonAgendarCita(); // ✅ NUEVO: Inicializar botón Agendar Cita
   initializeSearchableSelects();
   setupCamposFamiliarTrabajador(); // ✅ NUEVO: Inicializar campos condicionales
 });
@@ -392,7 +418,7 @@ function initializeForm() {
 
         if (clienteEncontrado) {
           // Pre-llenar el formulario con los datos encontrados
-          document.getElementById("name").value = clienteEncontrado.nombre || "";
+          document.getElementById("name").value = toTitleCase(clienteEncontrado.nombre || ""); // ✅ Title Case
           document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
           
           // ✅ NUEVO: Cargar datos de familiar trabajador si existen
@@ -622,7 +648,7 @@ form.addEventListener("submit", async (e) => {
   }
 
   const cedula = document.getElementById("cedula").value.trim();
-  const nombre = document.getElementById("name").value.trim();
+  const nombre = toTitleCase(document.getElementById("name").value.trim()); // ✅ Title Case
   const vinculo = document.getElementById("vinculo").value;
   const sede = document.getElementById("sede").value.trim();
   let email = document.getElementById("email").value.trim();
@@ -634,7 +660,7 @@ form.addEventListener("submit", async (e) => {
   
   if (vinculo === 'Familiar Trabajador') {
     cedulaTrabajador = document.getElementById("cedulaTrabajador").value.trim();
-    nombreTrabajador = document.getElementById("nombreTrabajador").value.trim();
+    nombreTrabajador = toTitleCase(document.getElementById("nombreTrabajador").value.trim()); // ✅ Title Case
     
     // Validar que estos campos estén llenos
     if (!cedulaTrabajador || !nombreTrabajador) {
@@ -687,8 +713,13 @@ form.addEventListener("submit", async (e) => {
     return;
   }
  
-  if (telefono && !/^\d+$/.test(telefono)) {
-    alert("El teléfono solo debe contener números.");
+  if (telefono && !/^\d+(-\d+)*$/.test(telefono)) {
+    alert("El teléfono solo debe contener números, y puede usar un guion (-) para separar dos números.");
+    return;
+  }
+  
+  if (telefono && telefono.length > 30) {
+    alert("El teléfono no puede superar los 30 caracteres.");
     return;
   }
 
@@ -752,8 +783,16 @@ form.addEventListener("submit", async (e) => {
       });
       
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Error desconocido" }));
-        alert(`⚠️ ${errorData.message || "Error al actualizar cliente"}`);
+        // ✅ CORREGIDO: Leer el cuerpo como texto primero para no perder el mensaje
+        const rawText = await res.text();
+        let mensajeError = "Error al actualizar cliente";
+        try {
+          const errorData = JSON.parse(rawText);
+          mensajeError = errorData.message || errorData.error || errorData.detail || mensajeError;
+        } catch {
+          if (rawText && rawText.length < 300) mensajeError = rawText;
+        }
+        alert(`⚠️ ${mensajeError}`);
       } else {
         alert("✅ Cliente actualizado exitosamente");
         editingId = null;
@@ -769,8 +808,16 @@ form.addEventListener("submit", async (e) => {
       });
       
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Error desconocido" }));
-        alert(`⚠️ ${errorData.message || "Error al crear cliente"}`);
+        // ✅ CORREGIDO: Leer el cuerpo como texto primero para no perder el mensaje
+        const rawText = await res.text();
+        let mensajeError = "Ya existe un cliente registrado con esa cédula en esta modalidad";
+        try {
+          const errorData = JSON.parse(rawText);
+          mensajeError = errorData.message || errorData.error || errorData.detail || mensajeError;
+        } catch {
+          // Usar mensaje amigable por defecto
+        }
+        alert(`⚠️ ${mensajeError}`);
       } else {
         alert("✅ Cliente registrado exitosamente");
         form.reset();
@@ -800,7 +847,7 @@ window.startEdit = async function (id) {
     await loadClientsForCache();
 
     document.getElementById("cedula").value = client.cedula || "";
-    document.getElementById("name").value = client.nombre || "";
+    document.getElementById("name").value = toTitleCase(client.nombre || ""); // ✅ Title Case
     document.getElementById("vinculo").value = client.vinculo || "";
     
     // ✅ NUEVO: Cargar datos de familiar trabajador en modo edición
@@ -879,6 +926,29 @@ function setupCancelarEdicion() {
         resetForm();
         alert("✅ Cambios descartados. Formulario listo para nuevo registro.");
       }
+    });
+  }
+}
+
+// ============================================
+// ✅ NUEVO: Botón Agendar Cita
+// ============================================
+function setupBotonAgendarCita() {
+  const btnAgendarCita = document.getElementById('btnAgendarCita');
+  
+  if (btnAgendarCita) {
+    btnAgendarCita.addEventListener('click', function() {
+      // Verificar que haya una modalidad seleccionada antes de ir a agendamiento
+      const modalidadSeleccionada = localStorage.getItem('modalidadSeleccionada');
+      
+      if (!modalidadSeleccionada) {
+        alert('⚠️ Debes seleccionar una modalidad antes de agendar citas');
+        window.location.href = 'modalidad.html';
+        return;
+      }
+      
+      // Redirigir a la página de agendamiento
+      window.location.href = 'agendamiento.html';
     });
   }
 }

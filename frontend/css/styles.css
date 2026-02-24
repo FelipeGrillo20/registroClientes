@@ -668,6 +668,37 @@ textarea {
   }
 }
 
+/* Botón Agendar Cita */
+.btn-agendar-cita {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-agendar-cita:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-agendar-cita:active {
+  transform: translateY(0);
+}
+
+.btn-agendar-cita i {
+  font-size: 1.1rem;
+}
+
 
 
 /* ============================================ */

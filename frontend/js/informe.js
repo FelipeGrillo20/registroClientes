@@ -259,37 +259,39 @@ window.generarInformePaciente = function() {
           `).join('')}
         </div>
 
-        <!-- ⭐ NUEVA SECCIÓN: Recomendaciones Finales -->
-        ${clienteActual.recomendaciones_finales ? `
-        <div class="informe-section informe-recomendaciones">
-          <h2 class="informe-section-title">
-            <span class="section-icon">📝</span>
-            Recomendaciones Finales
-          </h2>
-          <div class="recomendaciones-contenido">
-            <p>${escapeHtmlInforme(clienteActual.recomendaciones_finales).replace(/\n/g, '<br>')}</p>
+        <!-- ⭐ BLOQUE FINAL INDIVISIBLE: Recomendaciones + Firma + Nota -->
+        <div class="informe-bloque-final">
+          ${clienteActual.recomendaciones_finales ? `
+          <div class="informe-section informe-recomendaciones">
+            <h2 class="informe-section-title">
+              <span class="section-icon">📝</span>
+              Recomendaciones Finales
+            </h2>
+            <div class="recomendaciones-contenido">
+              <p>${escapeHtmlInforme(clienteActual.recomendaciones_finales).replace(/\n/g, '<br>')}</p>
+            </div>
           </div>
-        </div>
-        ` : ''}
+          ` : ''}
 
-        <!-- Firma -->
-        <div class="informe-footer">
-          <div class="firma-seccion">
-            ${rutaFirma ? `
-              <div class="firma-imagen-container">
-                <img src="${rutaFirma}" 
-                     alt="Firma del Profesional" 
-                     class="firma-imagen" 
-                     onerror="this.style.display='none'">
-              </div>
-            ` : ''}
-            <div class="firma-linea"></div>
-            <p class="firma-texto">Firma del Profesional</p>
-            <p class="firma-nombre">${profesionalNombre}</p>
-            ${profesionalCedula ? `<p class="firma-cedula">C.C. ${profesionalCedula}</p>` : ''}
-          </div>
-          <div class="informe-nota">
-            <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos y terapéuticos.
+          <!-- Firma -->
+          <div class="informe-footer">
+            <div class="firma-seccion">
+              ${rutaFirma ? `
+                <div class="firma-imagen-container">
+                  <img src="${rutaFirma}" 
+                       alt="Firma del Profesional" 
+                       class="firma-imagen" 
+                       onerror="this.style.display='none'">
+                </div>
+              ` : ''}
+              <div class="firma-linea"></div>
+              <p class="firma-texto">Firma del Profesional</p>
+              <p class="firma-nombre">${profesionalNombre}</p>
+              ${profesionalCedula ? `<p class="firma-cedula">C.C. ${profesionalCedula}</p>` : ''}
+            </div>
+            <div class="informe-nota">
+              <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos y terapéuticos.
+            </div>
           </div>
         </div>
       </div>

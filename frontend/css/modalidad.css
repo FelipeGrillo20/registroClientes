@@ -63,6 +63,11 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Ocultar botón Mi Perfil solo en esta página */
+.btn-mi-perfil {
+  display: none !important;
+}
+
 /* Ocultar botón Mapa de Sitio solo en esta página */
 .btn-sitemap {
   display: none !important;

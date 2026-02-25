@@ -716,6 +716,46 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     }
   }
 
+  // ✅ VALIDACIÓN 1: La fecha de la sesión no puede ser anterior a las sesiones previas
+  if (consultasDelCliente.length > 0) {
+    // Ordenar sesiones existentes por fecha para obtener la más reciente (excluyendo la que se edita)
+    const sesionesOrdenadas = [...consultasDelCliente]
+      .filter(c => !editandoConsultaId || c.id !== editandoConsultaId)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    if (sesionesOrdenadas.length > 0) {
+      const ultimaFecha = sesionesOrdenadas[sesionesOrdenadas.length - 1].fecha.substring(0, 10);
+      const ultimoNumero = sesionesOrdenadas[sesionesOrdenadas.length - 1].numeroSesion || sesionesOrdenadas.length;
+
+      if (fecha < ultimaFecha) {
+        alert(
+          `⚠️ La fecha seleccionada (${formatDate(fecha)}) es anterior a la Sesión ${ultimoNumero} (${formatDate(ultimaFecha)}).\n\n` +
+          `Debes elegir una fecha igual o posterior a la sesión anterior.`
+        );
+        return;
+      }
+    }
+  }
+
+  // ✅ VALIDACIÓN 1B: La fecha de cierre debe ser >= a todas las sesiones
+  if (estado === "Cerrado" && fecha_cierre && consultasDelCliente.length > 0) {
+    const sesionesExistentes = editandoConsultaId
+      ? consultasDelCliente.filter(c => c.id !== editandoConsultaId)
+      : consultasDelCliente;
+
+    // También incluimos la sesión actual que se está registrando
+    const todasFechas = [...sesionesExistentes.map(c => c.fecha.substring(0, 10)), fecha];
+    const fechaMaxSesion = todasFechas.sort().pop();
+
+    if (fecha_cierre < fechaMaxSesion) {
+      alert(
+        `⚠️ La fecha de cierre (${formatDate(fecha_cierre)}) no puede ser anterior a la última sesión registrada (${formatDate(fechaMaxSesion)}).\n\n` +
+        `La fecha de cierre debe ser igual o posterior a todas las sesiones.`
+      );
+      return;
+    }
+  }
+
   const clienteId = getClienteIdFromURL();
 
   const consultaData = {
@@ -917,6 +957,22 @@ window.editarConsulta = async function(id) {
 window.eliminarConsulta = async function(id) {
   if (hayCasoCerrado()) {
     alert("⚠️ No se puede eliminar una sesión cuando el caso está cerrado");
+    return;
+  }
+
+  // ✅ VALIDACIÓN 2: Solo se puede eliminar la última sesión
+  const consultasOrdenadas = [...consultasDelCliente].sort((a, b) =>
+    new Date(a.fecha) - new Date(b.fecha) || a.id - b.id
+  );
+  const ultimaSesion = consultasOrdenadas[consultasOrdenadas.length - 1];
+
+  if (ultimaSesion && ultimaSesion.id !== id) {
+    const consultaAEliminar = consultasDelCliente.find(c => c.id === id);
+    const numSesion = consultaAEliminar ? consultaAEliminar.numeroSesion : '?';
+    alert(
+      `⚠️ No puedes eliminar la Sesión ${numSesion} porque tiene sesiones posteriores.\n\n` +
+      `Para eliminar esta sesión primero debes eliminar desde la última sesión hacia atrás.`
+    );
     return;
   }
 

@@ -1026,14 +1026,13 @@ form.addEventListener("submit", async (e) => {
       });
       
       if (!res.ok) {
-        // ✅ CORREGIDO: Leer el cuerpo como texto primero para no perder el mensaje
         const rawText = await res.text();
-        let mensajeError = "Ya existe un cliente registrado con esa cédula en esta modalidad";
+        let mensajeError = "Error al crear cliente";
         try {
           const errorData = JSON.parse(rawText);
           mensajeError = errorData.message || errorData.error || errorData.detail || mensajeError;
         } catch {
-          // Usar mensaje amigable por defecto
+          // Mantener mensaje por defecto
         }
         alert(`⚠️ ${mensajeError}`);
       } else {

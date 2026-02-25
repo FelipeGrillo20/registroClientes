@@ -457,7 +457,12 @@ async function cerrarTodasLasConsultas(clienteId, fechaCierre, recomendacionesFi
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
       fecha_cierre: fechaCierre,
       recomendaciones_finales: recomendacionesFinales,
-      consultas_sugeridas: clienteData.consultas_sugeridas
+      consultas_sugeridas: clienteData.consultas_sugeridas,
+      // ✅ FIX: campos requeridos por el backend para Familiar Trabajador / SVE
+      cedula_trabajador: clienteData.cedula_trabajador || null,
+      nombre_trabajador: clienteData.nombre_trabajador || null,
+      sexo: clienteData.sexo || null,
+      cargo: clienteData.cargo || null
     };
     
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
@@ -811,7 +816,12 @@ async function guardarConsultasSugeridas(clienteId, consultas_sugeridas) {
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
       fecha_cierre: clienteData.fecha_cierre,
       recomendaciones_finales: clienteData.recomendaciones_finales,
-      consultas_sugeridas: consultas_sugeridas
+      consultas_sugeridas: consultas_sugeridas,
+      // ✅ FIX: campos requeridos por el backend para Familiar Trabajador / SVE
+      cedula_trabajador: clienteData.cedula_trabajador || null,
+      nombre_trabajador: clienteData.nombre_trabajador || null,
+      sexo: clienteData.sexo || null,
+      cargo: clienteData.cargo || null
     };
     
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
@@ -965,7 +975,12 @@ async function limpiarConsultasSugeridas(clienteId) {
       contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
       fecha_cierre: clienteData.fecha_cierre,
       recomendaciones_finales: clienteData.recomendaciones_finales,
-      consultas_sugeridas: null
+      consultas_sugeridas: null,
+      // ✅ FIX: campos requeridos por el backend para Familiar Trabajador / SVE
+      cedula_trabajador: clienteData.cedula_trabajador || null,
+      nombre_trabajador: clienteData.nombre_trabajador || null,
+      sexo: clienteData.sexo || null,
+      cargo: clienteData.cargo || null
     };
     
     const resUpdate = await fetch(`${API_URL}/${clienteId}`, {
@@ -1029,7 +1044,12 @@ window.reabrirCaso = async function() {
         contacto_emergencia_telefono: clienteData.contacto_emergencia_telefono,
         fecha_cierre: null,
         recomendaciones_finales: clienteData.recomendaciones_finales,
-        consultas_sugeridas: clienteData.consultas_sugeridas
+        consultas_sugeridas: clienteData.consultas_sugeridas,
+        // ✅ FIX: campos requeridos por el backend para Familiar Trabajador / SVE
+        cedula_trabajador: clienteData.cedula_trabajador || null,
+        nombre_trabajador: clienteData.nombre_trabajador || null,
+        sexo: clienteData.sexo || null,
+        cargo: clienteData.cargo || null
       };
       
       await fetch(`${API_URL}/${clienteId}`, {

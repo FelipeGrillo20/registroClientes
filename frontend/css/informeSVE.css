@@ -163,6 +163,11 @@
   grid-column: span 3;
 }
 
+/* Celda vacía de relleno — no muestra contenido pero mantiene el grid */
+.informe-data-item-empty-sve {
+  background: #fafafa;
+}
+
 .data-label-sve {
   display: block;
   font-size: 10px;
@@ -580,6 +585,10 @@
 
   .informe-data-item-sve:nth-last-child(-n+3) {
     border-bottom: none !important;
+  }
+
+  .informe-data-item-empty-sve {
+    background: #fafafa !important;
   }
 
   .data-label-sve {

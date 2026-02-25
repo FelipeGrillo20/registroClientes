@@ -1988,7 +1988,10 @@ async function cerrarCasoSVE(clienteId, fechaCierre, recomendacionesFinales) {
       recomendaciones_finales: clienteData.recomendaciones_finales,
       consultas_sugeridas: clienteData.consultas_sugeridas,
       fecha_cierre_sve: fechaCierre,
-      recomendaciones_finales_sve: recomendacionesFinales
+      recomendaciones_finales_sve: recomendacionesFinales,
+      // ✅ FIX: incluir sexo y cargo para que el backend no los rechace en modalidad SVE
+      sexo: clienteData.sexo || null,
+      cargo: clienteData.cargo || null
     };
     
     console.log('📤 Objeto a enviar:', JSON.stringify(clienteActualizado, null, 2));
@@ -2228,7 +2231,10 @@ window.reabrirCasoSVE = async function() {
         recomendaciones_finales: clienteData.recomendaciones_finales,
         consultas_sugeridas: clienteData.consultas_sugeridas,
         fecha_cierre_sve: null,
-        recomendaciones_finales_sve: clienteData.recomendaciones_finales_sve
+        recomendaciones_finales_sve: clienteData.recomendaciones_finales_sve,
+        // ✅ FIX: incluir sexo y cargo para que el backend no los rechace en modalidad SVE
+        sexo: clienteData.sexo || null,
+        cargo: clienteData.cargo || null
       };
       
       await fetch(`${API_URL}/${clienteId}`, {

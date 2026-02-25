@@ -7,8 +7,8 @@ exports.createClient = async (data) => {
     cedula,
     nombre,
     vinculo,
-    cedula_trabajador, // ✅ NUEVO: Cédula del trabajador (para Familiar Trabajador)
-    nombre_trabajador, // ✅ NUEVO: Nombre del trabajador (para Familiar Trabajador)
+    cedula_trabajador,
+    nombre_trabajador,
     sede,
     tipo_entidad_pagadora,
     entidad_pagadora_especifica,
@@ -20,7 +20,9 @@ exports.createClient = async (data) => {
     contacto_emergencia_parentesco,
     contacto_emergencia_telefono,
     profesional_id,
-    modalidad, // ✅ NUEVO: Campo modalidad
+    modalidad,
+    sexo,   // ✅ NUEVO: Solo para SVE
+    cargo,  // ✅ NUEVO: Solo para SVE
   } = data;
 
   const result = await pool.query(
@@ -29,14 +31,14 @@ exports.createClient = async (data) => {
      tipo_entidad_pagadora, entidad_pagadora_especifica, 
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     profesional_id, modalidad, created_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,CURRENT_TIMESTAMP)
+     profesional_id, modalidad, sexo, cargo, created_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,CURRENT_TIMESTAMP)
     RETURNING *`,
     [cedula, nombre, vinculo, cedula_trabajador, nombre_trabajador, sede, 
      tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     profesional_id, modalidad]
+     profesional_id, modalidad, sexo || null, cargo || null]
   );
 
   return result.rows[0];
@@ -186,14 +188,14 @@ exports.getClientById = async (id) => {
   return result.rows[0];
 };
 
-// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR)
+// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR Y SVE)
 exports.updateClient = async (id, data) => {
   const {
     cedula,
     nombre,
     vinculo,
-    cedula_trabajador, // ✅ NUEVO: Cédula del trabajador
-    nombre_trabajador, // ✅ NUEVO: Nombre del trabajador
+    cedula_trabajador,
+    nombre_trabajador,
     sede,
     tipo_entidad_pagadora,
     entidad_pagadora_especifica,
@@ -209,7 +211,9 @@ exports.updateClient = async (id, data) => {
     consultas_sugeridas,
     fecha_cierre_sve,
     recomendaciones_finales_sve,
-    modalidad // ✅ NUEVO: Campo modalidad
+    modalidad,
+    sexo,   // ✅ NUEVO: Solo para SVE
+    cargo,  // ✅ NUEVO: Solo para SVE
   } = data;
 
   const result = await pool.query(
@@ -234,8 +238,10 @@ exports.updateClient = async (id, data) => {
       consultas_sugeridas = $18,
       fecha_cierre_sve = $19,
       recomendaciones_finales_sve = $20,
-      modalidad = $21
-    WHERE id = $22
+      modalidad = $21,
+      sexo = $22,
+      cargo = $23
+    WHERE id = $24
     RETURNING *`,
     [cedula, nombre, vinculo, cedula_trabajador, nombre_trabajador, sede, 
      tipo_entidad_pagadora, entidad_pagadora_especifica,
@@ -244,6 +250,7 @@ exports.updateClient = async (id, data) => {
      fecha_cierre, recomendaciones_finales, consultas_sugeridas,
      fecha_cierre_sve, recomendaciones_finales_sve,
      modalidad,
+     sexo || null, cargo || null,
      id]
   );
 

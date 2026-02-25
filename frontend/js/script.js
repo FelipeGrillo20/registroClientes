@@ -85,29 +85,173 @@ function verificarModalidadSeleccionada() {
 }
 
 // ============================================
-// ✅ NUEVA FUNCIÓN: Manejo de campos condicionales para Familiar Trabajador
+// ✅ NUEVA FUNCIÓN: Mostrar/ocultar campos exclusivos de SVE (Sexo y Cargo)
+// En SVE: muestra Sexo y Cargo, agrega clase al form para ajustar el grid.
+// En OP:  oculta todo con display:none — ningún elemento fantasma en el grid.
 // ============================================
+function setupCamposSVE() {
+  const modalidad = localStorage.getItem('modalidadSeleccionada');
+  const esSVE = modalidad === 'Sistema de Vigilancia Epidemiológica';
+
+  const form       = document.getElementById('clientForm');
+  const campSexo   = document.getElementById('campSexo');
+  const campCargo  = document.getElementById('campCargo');
+  const sexoInput  = document.getElementById('sexo');
+  const cargoInput = document.getElementById('cargo');
+  const placeholderSexo  = document.getElementById('placeholderSexo');
+  const placeholderCargo = document.getElementById('placeholderCargo');
+
+  if (!campSexo || !campCargo) return;
+
+  if (esSVE) {
+    // SVE: activar campos reales, ocultar placeholders, marcar el form
+    campSexo.style.display  = 'flex';
+    campCargo.style.display = 'flex';
+    if (placeholderSexo)  placeholderSexo.style.display  = 'none';
+    if (placeholderCargo) placeholderCargo.style.display = 'none';
+    form.classList.add('modalidad-sve');
+    form.classList.remove('modalidad-op');
+    if (sexoInput)  sexoInput.setAttribute('required', 'required');
+    if (cargoInput) cargoInput.setAttribute('required', 'required');
+
+  } else {
+    // OP: TODO con display:none — no ocupan ninguna celda del grid
+    campSexo.style.display  = 'none';
+    campCargo.style.display = 'none';
+    if (placeholderSexo)  placeholderSexo.style.display  = 'none';
+    if (placeholderCargo) placeholderCargo.style.display = 'none';
+    form.classList.add('modalidad-op');
+    form.classList.remove('modalidad-sve');
+    if (sexoInput)  { sexoInput.removeAttribute('required');  sexoInput.value  = ''; }
+    if (cargoInput) { cargoInput.removeAttribute('required'); cargoInput.value = ''; }
+  }
+}
+
+// ============================================
+// ✅ MODAL: Datos de Familiar Trabajador
+// Se abre automáticamente al seleccionar "Familiar Trabajador" en Vínculo
+// ============================================
+
+// Estado del modal — guarda si el usuario ya confirmó los datos
+let familiarConfirmado = false;
+
 function setupCamposFamiliarTrabajador() {
-  const vinculoSelect = document.getElementById('vinculo');
-  const camposFamiliar = document.getElementById('camposFamiliarTrabajador');
-  const cedulaTrabajador = document.getElementById('cedulaTrabajador');
-  const nombreTrabajador = document.getElementById('nombreTrabajador');
-  
-  vinculoSelect.addEventListener('change', function() {
+  const vinculoSelect  = document.getElementById('vinculo');
+  const modalOverlay   = document.getElementById('modalFamiliarTrabajador');
+  const modalCedula    = document.getElementById('modalCedulaTrabajador');
+  const modalNombre    = document.getElementById('modalNombreTrabajador');
+  const btnConfirmar   = document.getElementById('btnModalConfirmarFamiliar');
+  const btnCancelar    = document.getElementById('btnModalCancelarFamiliar');
+
+  // Campos hidden del form principal (los lee el submit)
+  const hiddenCedula   = document.getElementById('cedulaTrabajador');
+  const hiddenNombre   = document.getElementById('nombreTrabajador');
+
+  if (!vinculoSelect || !modalOverlay) return;
+
+  // ── Abrir modal al seleccionar "Familiar Trabajador" ──────────────────
+  vinculoSelect.addEventListener('change', function () {
     if (this.value === 'Familiar Trabajador') {
-      // Mostrar campos y hacerlos requeridos
-      camposFamiliar.style.display = 'block';
-      cedulaTrabajador.setAttribute('required', 'required');
-      nombreTrabajador.setAttribute('required', 'required');
+      abrirModalFamiliar();
     } else {
-      // Ocultar campos y quitar validación
-      camposFamiliar.style.display = 'none';
-      cedulaTrabajador.removeAttribute('required');
-      nombreTrabajador.removeAttribute('required');
-      cedulaTrabajador.value = '';
-      nombreTrabajador.value = '';
+      // Al cambiar a otra opción, limpiar los datos guardados
+      familiarConfirmado = false;
+      if (hiddenCedula) hiddenCedula.value = '';
+      if (hiddenNombre) hiddenNombre.value = '';
+      vinculoSelect.classList.remove('vinculo-con-familiar');
     }
   });
+
+  // ── Confirmar datos en el modal ────────────────────────────────────────
+  btnConfirmar.addEventListener('click', function () {
+    const cedula = modalCedula.value.trim();
+    const nombre = toTitleCase(modalNombre.value.trim());
+
+    // Validaciones
+    let hayError = false;
+
+    if (!cedula || !/^\d+$/.test(cedula)) {
+      modalCedula.classList.add('input-error');
+      hayError = true;
+    } else {
+      modalCedula.classList.remove('input-error');
+    }
+
+    if (!nombre || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ'\s]+$/.test(nombre)) {
+      modalNombre.classList.add('input-error');
+      hayError = true;
+    } else {
+      modalNombre.classList.remove('input-error');
+    }
+
+    if (hayError) return;
+
+    // Guardar en los campos hidden del formulario principal
+    hiddenCedula.value = cedula;
+    hiddenNombre.value = nombre;
+    modalNombre.value  = nombre; // Actualizar con Title Case
+
+    familiarConfirmado = true;
+    vinculoSelect.classList.add('vinculo-con-familiar');
+    cerrarModalFamiliar();
+  });
+
+  // ── Cancelar en el modal ───────────────────────────────────────────────
+  btnCancelar.addEventListener('click', function () {
+    // Volver vínculo a vacío si no había datos previos confirmados
+    if (!familiarConfirmado) {
+      vinculoSelect.value = '';
+      vinculoSelect.classList.remove('vinculo-con-familiar');
+    }
+    cerrarModalFamiliar();
+  });
+
+  // ── Cerrar al hacer clic en el overlay (fondo oscuro) ─────────────────
+  modalOverlay.addEventListener('click', function (e) {
+    if (e.target === modalOverlay) {
+      if (!familiarConfirmado) {
+        vinculoSelect.value = '';
+        vinculoSelect.classList.remove('vinculo-con-familiar');
+      }
+      cerrarModalFamiliar();
+    }
+  });
+
+  // ── Cerrar con Escape ──────────────────────────────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modalOverlay.style.display !== 'none') {
+      if (!familiarConfirmado) {
+        vinculoSelect.value = '';
+        vinculoSelect.classList.remove('vinculo-con-familiar');
+      }
+      cerrarModalFamiliar();
+    }
+  });
+}
+
+function abrirModalFamiliar() {
+  const modalOverlay = document.getElementById('modalFamiliarTrabajador');
+  const modalCedula  = document.getElementById('modalCedulaTrabajador');
+  const modalNombre  = document.getElementById('modalNombreTrabajador');
+  const hiddenCedula = document.getElementById('cedulaTrabajador');
+  const hiddenNombre = document.getElementById('nombreTrabajador');
+
+  // Pre-rellenar si ya había datos confirmados anteriormente
+  if (hiddenCedula && hiddenCedula.value) modalCedula.value = hiddenCedula.value;
+  if (hiddenNombre && hiddenNombre.value) modalNombre.value = hiddenNombre.value;
+
+  // Limpiar errores visuales
+  modalCedula.classList.remove('input-error');
+  modalNombre.classList.remove('input-error');
+
+  modalOverlay.style.display = 'flex';
+  // Foco automático al primer campo
+  setTimeout(() => modalCedula.focus(), 80);
+}
+
+function cerrarModalFamiliar() {
+  const modalOverlay = document.getElementById('modalFamiliarTrabajador');
+  modalOverlay.style.display = 'none';
 }
 
 // ============================================
@@ -358,6 +502,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupBotonAgendarCita(); // ✅ NUEVO: Inicializar botón Agendar Cita
   initializeSearchableSelects();
   setupCamposFamiliarTrabajador(); // ✅ NUEVO: Inicializar campos condicionales
+  setupCamposSVE(); // ✅ NUEVO: Mostrar/ocultar campos SVE según modalidad
 });
 
 function initializeSearchableSelects() {
@@ -421,17 +566,14 @@ function initializeForm() {
           document.getElementById("name").value = toTitleCase(clienteEncontrado.nombre || ""); // ✅ Title Case
           document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
           
-          // ✅ NUEVO: Cargar datos de familiar trabajador si existen
+          // ✅ Cargar datos de familiar trabajador si existen (sin abrir modal)
           if (clienteEncontrado.vinculo === 'Familiar Trabajador') {
-            const event = new Event('change');
-            document.getElementById("vinculo").dispatchEvent(event);
-            
-            if (clienteEncontrado.cedula_trabajador) {
-              document.getElementById("cedulaTrabajador").value = clienteEncontrado.cedula_trabajador;
-            }
-            if (clienteEncontrado.nombre_trabajador) {
-              document.getElementById("nombreTrabajador").value = clienteEncontrado.nombre_trabajador;
-            }
+            const hCedula = document.getElementById("cedulaTrabajador");
+            const hNombre = document.getElementById("nombreTrabajador");
+            if (hCedula && clienteEncontrado.cedula_trabajador) hCedula.value = clienteEncontrado.cedula_trabajador;
+            if (hNombre && clienteEncontrado.nombre_trabajador) hNombre.value = clienteEncontrado.nombre_trabajador;
+            document.getElementById("vinculo").classList.add("vinculo-con-familiar");
+            familiarConfirmado = true;
           }
           
           if (clienteEncontrado.sede) {
@@ -475,6 +617,15 @@ function initializeForm() {
           document.getElementById("email").value = clienteEncontrado.email || "";
           document.getElementById("phone").value = clienteEncontrado.telefono || "";
 
+          // ✅ NUEVO: Cargar campos SVE si existen
+          const modalidadActualSVE = localStorage.getItem('modalidadSeleccionada');
+          if (modalidadActualSVE === 'Sistema de Vigilancia Epidemiológica') {
+            const sexoInput = document.getElementById("sexo");
+            const cargoInput = document.getElementById("cargo");
+            if (sexoInput && clienteEncontrado.sexo) sexoInput.value = clienteEncontrado.sexo;
+            if (cargoInput && clienteEncontrado.cargo) cargoInput.value = clienteEncontrado.cargo;
+          }
+
           editingId = clienteEncontrado.id;
           form.querySelector("button[type='submit']").textContent = "Guardar cambios";
           
@@ -508,13 +659,25 @@ function resetForm() {
   document.getElementById("name").value = "";
   document.getElementById("vinculo").value = "";
   
-  // ✅ NUEVO: Limpiar campos de familiar trabajador
-  document.getElementById("cedulaTrabajador").value = "";
-  document.getElementById("nombreTrabajador").value = "";
-  document.getElementById("camposFamiliarTrabajador").style.display = "none";
-  document.getElementById("cedulaTrabajador").removeAttribute("required");
-  document.getElementById("nombreTrabajador").removeAttribute("required");
-  
+  // ✅ Limpiar datos del modal Familiar Trabajador
+  const hCedula = document.getElementById("cedulaTrabajador");
+  const hNombre = document.getElementById("nombreTrabajador");
+  if (hCedula) hCedula.value = "";
+  if (hNombre) hNombre.value = "";
+  familiarConfirmado = false;
+  const vinculoSel = document.getElementById("vinculo");
+  if (vinculoSel) vinculoSel.classList.remove("vinculo-con-familiar");
+  // Limpiar también los inputs del modal por si quedaron abiertos
+  const mCedula = document.getElementById("modalCedulaTrabajador");
+  const mNombre = document.getElementById("modalNombreTrabajador");
+  if (mCedula) { mCedula.value = ""; mCedula.classList.remove("input-error"); }
+  if (mNombre) { mNombre.value = ""; mNombre.classList.remove("input-error"); }
+
+  // ✅ NUEVO: Limpiar campos SVE (no se ocultan, sólo se limpian)
+  const sexoInput = document.getElementById("sexo");
+  const cargoInput = document.getElementById("cargo");
+  if (sexoInput) sexoInput.value = "";
+  if (cargoInput) cargoInput.value = "";  
   sedeSelector.reset();
   document.getElementById("entidadPagadora").value = "";
   if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
@@ -654,6 +817,23 @@ form.addEventListener("submit", async (e) => {
   let email = document.getElementById("email").value.trim();
   const telefono = document.getElementById("phone").value.trim();
 
+  // ✅ NUEVO: Capturar campos SVE si corresponde
+  let sexo = null;
+  let cargo = null;
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    sexo = document.getElementById("sexo")?.value || null;
+    cargo = document.getElementById("cargo")?.value.trim() || null;
+
+    if (!sexo) {
+      alert("El campo Sexo es obligatorio para la modalidad SVE.");
+      return;
+    }
+    if (!cargo) {
+      alert("El campo Cargo es obligatorio para la modalidad SVE.");
+      return;
+    }
+  }
+
   // ✅ NUEVO: Obtener datos de familiar trabajador si aplica
   let cedulaTrabajador = null;
   let nombreTrabajador = null;
@@ -764,6 +944,8 @@ form.addEventListener("submit", async (e) => {
     subcontratista_id: subcontratistaIdFinal,
     email,
     telefono,
+    sexo,   // ✅ NUEVO: Solo aplica para SVE
+    cargo,  // ✅ NUEVO: Solo aplica para SVE
     modalidad, // ✅ NUEVO: Enviar modalidad al backend
     actividad: null,
     fecha: null,
@@ -850,17 +1032,15 @@ window.startEdit = async function (id) {
     document.getElementById("name").value = toTitleCase(client.nombre || ""); // ✅ Title Case
     document.getElementById("vinculo").value = client.vinculo || "";
     
-    // ✅ NUEVO: Cargar datos de familiar trabajador en modo edición
+    // ✅ Cargar datos de familiar trabajador en modo edición (sin abrir modal)
     if (client.vinculo === 'Familiar Trabajador') {
-      const event = new Event('change');
-      document.getElementById("vinculo").dispatchEvent(event);
-      
-      if (client.cedula_trabajador) {
-        document.getElementById("cedulaTrabajador").value = client.cedula_trabajador;
-      }
-      if (client.nombre_trabajador) {
-        document.getElementById("nombreTrabajador").value = client.nombre_trabajador;
-      }
+      const hCedula = document.getElementById("cedulaTrabajador");
+      const hNombre = document.getElementById("nombreTrabajador");
+      if (hCedula && client.cedula_trabajador) hCedula.value = client.cedula_trabajador;
+      if (hNombre && client.nombre_trabajador) hNombre.value = client.nombre_trabajador;
+      // Marcar vínculo con el check verde y marcar como confirmado
+      document.getElementById("vinculo").classList.add("vinculo-con-familiar");
+      familiarConfirmado = true;
     }
     
     if (client.sede) {
@@ -905,6 +1085,15 @@ window.startEdit = async function (id) {
     
     document.getElementById("email").value = client.email || "";
     document.getElementById("phone").value = client.telefono || "";
+
+    // ✅ NUEVO: Cargar campos SVE si la modalidad corresponde
+    const modalidadEditSVE = localStorage.getItem('modalidadSeleccionada');
+    if (modalidadEditSVE === 'Sistema de Vigilancia Epidemiológica') {
+      const sexoInput = document.getElementById("sexo");
+      const cargoInput = document.getElementById("cargo");
+      if (sexoInput && client.sexo) sexoInput.value = client.sexo;
+      if (cargoInput && client.cargo) cargoInput.value = client.cargo;
+    }
 
     editingId = id;
     form.querySelector("button[type='submit']").textContent = "Guardar cambios";

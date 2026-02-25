@@ -668,6 +668,35 @@ textarea {
   }
 }
 
+/* ============================================ */
+/* ESTILOS PARA CAMPOS EXCLUSIVOS SVE           */
+/* ============================================ */
+
+/*
+ * Estrategia de grid por modalidad:
+ *
+ * — Orientación Psicosocial (.modalidad-op):
+ *     Fila 1: Cédula (col 1) | Nombre (col 2) | [vacío col 3 → Nombre se expande a 2 cols]
+ *     Fila 2: Vínculo (col 1) | Sede (col 2) | [col 3 vacía]
+ *
+ * — SVE (.modalidad-sve):
+ *     Fila 1: Cédula (col 1) | Nombre (col 2) | Sexo (col 3)
+ *     Fila 2: Cargo (col 1)  | Vínculo (col 2)| Sede (col 3)
+ *
+ * Los placeholders #placeholderSexo / #placeholderCargo siempre
+ * tienen display:none en OP, así no generan celdas fantasma.
+ */
+
+/* En OP, Nombre y Vínculo se expanden para ocupar las 2 columnas restantes */
+form#clientForm.modalidad-op #name {
+  /* el form-row padre ya está en col 2; solo necesitamos que se vea bien */
+}
+
+/* Entidad específica ARL/CCF: ocupa solo 1 columna */
+.entidad-especifica-row {
+  grid-column: span 1;
+}
+
 /* Botón Agendar Cita */
 .btn-agendar-cita {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -700,6 +729,198 @@ textarea {
 }
 
 
+
+
+/* ============================================ */
+/* MODAL: FAMILIAR TRABAJADOR                   */
+/* ============================================ */
+
+/* Fondo oscuro que cubre toda la pantalla */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOverlay 0.25s ease;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Caja central del modal */
+.modal-box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 480px;
+  overflow: hidden;
+  animation: slideUpModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(40px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* Cabecera con gradiente */
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: white;
+}
+
+.modal-header-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: white;
+  text-align: left;
+  border: none;
+  padding: 0;
+}
+
+.modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.85);
+  font-weight: 400;
+}
+
+/* Cuerpo */
+.modal-body {
+  padding: 24px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-field label {
+  font-weight: 600;
+  color: #34495e;
+  font-size: 0.9rem;
+}
+
+.modal-field input {
+  padding: 11px 13px;
+  border: 1.5px solid #dcdde1;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  background: #fdfdfd;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modal-field input:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.18);
+}
+
+.modal-field input.input-error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12);
+}
+
+.modal-field-hint {
+  font-size: 0.76rem;
+  color: #95a5a6;
+  margin-top: 1px;
+}
+
+/* Pie */
+.modal-footer {
+  padding: 14px 24px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.modal-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-btn-cancel {
+  background: #ecf0f1;
+  color: #7f8c8d;
+}
+
+.modal-btn-cancel:hover {
+  background: #dfe6e9;
+  color: #2c3e50;
+}
+
+.modal-btn-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.35);
+}
+
+.modal-btn-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(102, 126, 234, 0.45);
+}
+
+.modal-btn-confirm:active {
+  transform: translateY(0);
+}
+
+/* Indicador en el campo Vínculo cuando tiene datos de familiar confirmados */
+.vinculo-con-familiar {
+  border-color: #27ae60 !important;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12) !important;
+}
+
+/* Responsive modal */
+@media (max-width: 540px) {
+  .modal-box {
+    width: 95%;
+    border-radius: 12px;
+  }
+  .modal-header {
+    padding: 16px 18px;
+  }
+  .modal-body {
+    padding: 18px 18px 12px;
+  }
+  .modal-footer {
+    padding: 12px 18px 18px;
+    flex-direction: column-reverse;
+  }
+  .modal-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
 
 /* ============================================ */
 /* RESPONSIVE */

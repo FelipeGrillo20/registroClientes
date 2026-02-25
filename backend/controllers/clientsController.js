@@ -21,6 +21,8 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_parentesco,
       contacto_emergencia_telefono,
       modalidad, // ✅ NUEVO: Campo modalidad
+      sexo,      // ✅ NUEVO: Solo para SVE
+      cargo,     // ✅ NUEVO: Solo para SVE
     } = req.body;
 
     // Validaciones básicas
@@ -61,6 +63,16 @@ exports.createClient = async (req, res) => {
       }
     }
 
+    // ✅ NUEVO: Validar campos SVE si la modalidad es SVE
+    if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+      if (!sexo || !['Femenino', 'Masculino'].includes(sexo)) {
+        return res.status(400).json({ message: "El campo Sexo es requerido para la modalidad SVE (Femenino o Masculino)" });
+      }
+      if (!cargo || cargo.trim() === '') {
+        return res.status(400).json({ message: "El campo Cargo es requerido para la modalidad SVE" });
+      }
+    }
+
     // Obtener el ID del profesional del token JWT
     const profesional_id = req.user?.id;
 
@@ -86,6 +98,8 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_telefono: contacto_emergencia_telefono || null,
       profesional_id,
       modalidad, // ✅ NUEVO: Guardar modalidad
+      sexo: modalidad === 'Sistema de Vigilancia Epidemiológica' ? (sexo || null) : null,   // ✅ NUEVO
+      cargo: modalidad === 'Sistema de Vigilancia Epidemiológica' ? (cargo || null) : null, // ✅ NUEVO
     });
 
     res.status(201).json(newClient);
@@ -241,7 +255,7 @@ exports.getClientById = async (req, res) => {
   }
 };
 
-// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR)
+// ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR Y SVE)
 exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -249,8 +263,8 @@ exports.updateClient = async (req, res) => {
       cedula,
       nombre,
       vinculo,
-      cedula_trabajador, // ✅ NUEVO: Cédula del trabajador
-      nombre_trabajador, // ✅ NUEVO: Nombre del trabajador
+      cedula_trabajador,
+      nombre_trabajador,
       sede,
       tipo_entidad_pagadora,
       entidad_pagadora_especifica,
@@ -266,7 +280,9 @@ exports.updateClient = async (req, res) => {
       consultas_sugeridas,
       fecha_cierre_sve,
       recomendaciones_finales_sve,
-      modalidad // ✅ NUEVO: Campo modalidad
+      modalidad,
+      sexo,   // ✅ NUEVO: Solo para SVE
+      cargo,  // ✅ NUEVO: Solo para SVE
     } = req.body;
 
     // Verificar que el cliente existe
@@ -289,10 +305,21 @@ exports.updateClient = async (req, res) => {
     }
 
     // ✅ NUEVO: Validar modalidad si se proporciona
-    if (modalidad) {
+    const modalidadFinal = modalidad || existingClient.modalidad;
+    if (modalidadFinal) {
       const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
-      if (!modalidadesValidas.includes(modalidad)) {
+      if (!modalidadesValidas.includes(modalidadFinal)) {
         return res.status(400).json({ message: "Modalidad no válida" });
+      }
+    }
+
+    // ✅ NUEVO: Validar campos SVE si corresponde
+    if (modalidadFinal === 'Sistema de Vigilancia Epidemiológica') {
+      if (!sexo || !['Femenino', 'Masculino'].includes(sexo)) {
+        return res.status(400).json({ message: "El campo Sexo es requerido para la modalidad SVE" });
+      }
+      if (!cargo || cargo.trim() === '') {
+        return res.status(400).json({ message: "El campo Cargo es requerido para la modalidad SVE" });
       }
     }
 
@@ -323,8 +350,8 @@ exports.updateClient = async (req, res) => {
       cedula,
       nombre,
       vinculo: vinculo || null,
-      cedula_trabajador: vinculo === 'Familiar Trabajador' ? cedula_trabajador : null, // ✅ NUEVO
-      nombre_trabajador: vinculo === 'Familiar Trabajador' ? nombre_trabajador : null, // ✅ NUEVO
+      cedula_trabajador: vinculo === 'Familiar Trabajador' ? cedula_trabajador : null,
+      nombre_trabajador: vinculo === 'Familiar Trabajador' ? nombre_trabajador : null,
       sede: sede || null,
       tipo_entidad_pagadora: tipo_entidad_pagadora || null,
       entidad_pagadora_especifica: entidad_pagadora_especifica || null,
@@ -340,7 +367,9 @@ exports.updateClient = async (req, res) => {
       consultas_sugeridas: consultas_sugeridas || null,
       fecha_cierre_sve: fecha_cierre_sve || null,
       recomendaciones_finales_sve: recomendaciones_finales_sve || null,
-      modalidad: modalidad || existingClient.modalidad // ✅ NUEVO: Mantener modalidad existente si no se proporciona
+      modalidad: modalidadFinal,
+      sexo: modalidadFinal === 'Sistema de Vigilancia Epidemiológica' ? (sexo || null) : null,   // ✅ NUEVO
+      cargo: modalidadFinal === 'Sistema de Vigilancia Epidemiológica' ? (cargo || null) : null, // ✅ NUEVO
     });
 
     res.json(updatedClient);

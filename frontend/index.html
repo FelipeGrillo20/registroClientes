@@ -9,27 +9,27 @@
 <body>
 
   <div class="form-container">
-    <!-- Barra de usuario DESPUÉS del título -->
     <div id="userInfo" class="user-info-bar" style="display: none;"></div>
     
     <!-- Indicador de Modalidad Seleccionada -->
     <div id="modalidadIndicador" class="modalidad-indicador" style="display: none;">
       <span class="modalidad-icon">📌</span>
       <span class="modalidad-text">Modalidad: <strong id="modalidadNombre">Orientación Psicosocial</strong></span>
-
-    <!-- ⭐ AGREGAR ESTE BOTÓN -->
       <button type="button" id="btnAgendarCita" class="btn-agendar-cita">
-      <i class="fas fa-calendar-plus"></i>
-      Agendar Cita
+        <i class="fas fa-calendar-plus"></i>
+        Agendar Cita
       </button>
-
     </div>
     
     <h1>📋 Registro de Trabajadores</h1>
-    
 
     <form id="clientForm">
-      <!-- Campo Cédula con botón de búsqueda -->
+
+      <!-- ═══════════════════════════════════════════
+           FILA 1: Cédula | Nombre Completo | Sexo(SVE)
+           ═══════════════════════════════════════════ -->
+
+      <!-- Cédula -->
       <div class="form-row cedula-row">
         <label for="cedula">Cédula: <span class="required">*</span></label>
         <div class="cedula-input-group">
@@ -40,12 +40,40 @@
         </div>
       </div>
 
+      <!-- Nombre Completo -->
       <div class="form-row">
         <label for="name">Nombre Completo: <span class="required">*</span></label>
         <input type="text" id="name" required placeholder="Ingrese nombre completo" />
       </div>
 
-      <!-- Campo Vínculo -->
+      <!-- Sexo — SOLO SVE. Oculto en Orientación Psicosocial -->
+      <div class="form-row campo-sve" id="campSexo" style="display: none;">
+        <label for="sexo">Sexo: <span class="required">*</span></label>
+        <select id="sexo">
+          <option value="">Seleccione...</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Masculino">Masculino</option>
+        </select>
+      </div>
+
+      <!-- Placeholder invisible col 3, fila 1 — se muestra en Orientación Psicosocial para mantener el grid -->
+      <div class="form-row campo-no-sve" id="placeholderSexo"></div>
+
+
+      <!-- ═══════════════════════════════════════════
+           FILA 2: Cargo(SVE) | Vínculo | Sede
+           ═══════════════════════════════════════════ -->
+
+      <!-- Cargo — SOLO SVE. Oculto en Orientación Psicosocial -->
+      <div class="form-row campo-sve" id="campCargo" style="display: none;">
+        <label for="cargo">Cargo: <span class="required">*</span></label>
+        <input type="text" id="cargo" placeholder="Ingrese el cargo del trabajador" />
+      </div>
+
+      <!-- Placeholder invisible col 1, fila 2 — se muestra en Orientación Psicosocial -->
+      <div class="form-row campo-no-sve" id="placeholderCargo"></div>
+
+      <!-- Vínculo -->
       <div class="form-row">
         <label for="vinculo">Vínculo: <span class="required">*</span></label>
         <select id="vinculo" required>
@@ -55,43 +83,12 @@
         </select>
       </div>
 
-      <!-- ============================================ -->
-      <!-- NUEVOS CAMPOS CONDICIONALES PARA FAMILIAR -->
-      <!-- ============================================ -->
-      <div id="camposFamiliarTrabajador" class="campos-familiar-trabajador" style="display: none;">
-        <div class="form-row">
-          <label for="cedulaTrabajador">Cédula Trabajador: <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="cedulaTrabajador" 
-            placeholder="Ingrese número de cédula del trabajador" 
-          />
-        </div>
-
-        <div class="form-row">
-          <label for="nombreTrabajador">Nombre Trabajador: <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="nombreTrabajador" 
-            placeholder="Ingrese nombre completo del trabajador" 
-          />
-        </div>
-      </div>
-      <!-- ============================================ -->
-
-      <!-- Campo Sede con BUSCADOR -->
+      <!-- Sede -->
       <div class="form-row">
         <label for="sede">Sede: <span class="required">*</span></label>
         <div class="searchable-select-wrapper">
           <div class="searchable-select-trigger">
-            <input 
-              type="text" 
-              id="sedeSearch" 
-              class="searchable-input" 
-              placeholder="Buscar sede..."
-              autocomplete="off"
-              readonly
-            />
+            <input type="text" id="sedeSearch" class="searchable-input" placeholder="Buscar sede..." autocomplete="off" readonly />
             <span class="searchable-arrow">▼</span>
           </div>
           <input type="hidden" id="sede" required />
@@ -99,7 +96,18 @@
         </div>
       </div>
 
-      <!-- NUEVO: Campo Entidad Pagadora (Dinámico en Cascada) -->
+
+      <!-- Los campos Cédula/Nombre Trabajador se gestionan desde el MODAL -->
+      <!-- Los inputs existen en el DOM para que el JS los pueda leer/escribir -->
+      <input type="hidden" id="cedulaTrabajador" />
+      <input type="hidden" id="nombreTrabajador" />
+
+
+      <!-- ═══════════════════════════════════════════
+           FILA 3: Entidad Pagadora | Empresa Usuario | Cliente Final
+           ═══════════════════════════════════════════ -->
+
+      <!-- Entidad Pagadora -->
       <div class="form-row">
         <label for="entidadPagadora">Entidad Pagadora: <span class="required">*</span></label>
         <select id="entidadPagadora" required>
@@ -110,39 +118,12 @@
         </select>
       </div>
 
-      <!-- Campo que se muestra dinámicamente cuando se elige ARL o CCF con BUSCADOR -->
-      <div class="form-row" id="entidadEspecificaContainer" style="display: none;">
-        <label for="entidadEspecifica" id="labelEntidadEspecifica">Seleccione:</label>
-        <div class="searchable-select-wrapper">
-          <div class="searchable-select-trigger">
-            <input 
-              type="text" 
-              id="entidadEspecificaSearch" 
-              class="searchable-input" 
-              placeholder="Buscar..."
-              autocomplete="off"
-              readonly
-            />
-            <span class="searchable-arrow">▼</span>
-          </div>
-          <input type="hidden" id="entidadEspecifica" />
-          <div id="entidadEspecificaDropdown" class="searchable-dropdown"></div>
-        </div>
-      </div>
-
-      <!-- Campo Empresa Usuario (Cliente Final) con BUSCADOR -->
+      <!-- Empresa Usuario -->
       <div class="form-row">
         <label for="empresaUsuario">Empresa Usuario: <span class="required">*</span></label>
         <div class="searchable-select-wrapper">
           <div class="searchable-select-trigger">
-            <input 
-              type="text" 
-              id="empresaUsuarioSearch" 
-              class="searchable-input" 
-              placeholder="Buscar empresa..."
-              autocomplete="off"
-              readonly
-            />
+            <input type="text" id="empresaUsuarioSearch" class="searchable-input" placeholder="Buscar empresa..." autocomplete="off" readonly />
             <span class="searchable-arrow">▼</span>
           </div>
           <input type="hidden" id="empresaUsuario" required />
@@ -150,25 +131,36 @@
         </div>
       </div>
 
-      <!-- NUEVO: Campo Subcontratista con BUSCADOR -->
+      <!-- Cliente Final (Subcontratista) -->
       <div class="form-row">
         <label for="subcontratista">Cliente Final:</label>
         <div class="searchable-select-wrapper">
           <div class="searchable-select-trigger">
-            <input 
-              type="text" 
-              id="subcontratistaSearch" 
-              class="searchable-input" 
-              placeholder="Buscar subcontratista..."
-              autocomplete="off"
-              readonly
-            />
+            <input type="text" id="subcontratistaSearch" class="searchable-input" placeholder="Buscar subcontratista..." autocomplete="off" readonly />
             <span class="searchable-arrow">▼</span>
           </div>
           <input type="hidden" id="subcontratista" />
           <div id="subcontratistaDropdown" class="searchable-dropdown"></div>
         </div>
       </div>
+
+      <!-- Entidad Específica (ARL/CCF) — solo visible al seleccionar ARL o CCF -->
+      <div class="form-row entidad-especifica-row" id="entidadEspecificaContainer" style="display: none;">
+        <label for="entidadEspecifica" id="labelEntidadEspecifica">Seleccione:</label>
+        <div class="searchable-select-wrapper">
+          <div class="searchable-select-trigger">
+            <input type="text" id="entidadEspecificaSearch" class="searchable-input" placeholder="Buscar..." autocomplete="off" readonly />
+            <span class="searchable-arrow">▼</span>
+          </div>
+          <input type="hidden" id="entidadEspecifica" />
+          <div id="entidadEspecificaDropdown" class="searchable-dropdown"></div>
+        </div>
+      </div>
+
+
+      <!-- ═══════════════════════════════════════════
+           FILA 4: Email | Teléfono
+           ═══════════════════════════════════════════ -->
 
       <div class="form-row">
         <label for="email">Email: <span class="required">*</span></label>
@@ -180,6 +172,10 @@
         <input type="text" id="phone" required placeholder="Ingrese número de teléfono" />
       </div>
 
+
+      <!-- ═══════════════════════════════════════════
+           BOTONES
+           ═══════════════════════════════════════════ -->
       <div class="form-actions">
         <button type="submit" class="btn-submit">Registrar Trabajador</button>
         <button type="button" id="btnCancelarEdicion" class="btn-cancel-edit" style="display: none;">
@@ -191,9 +187,67 @@
       <div class="form-actions-secondary">
         <a href="modalidad.html" class="btn-seleccionar-modalidad">🔄 Seleccionar Modalidad</a>
       </div>
+
     </form>
   </div>
   
+
+  <!-- ============================================ -->
+  <!-- MODAL: Datos de Familiar Trabajador          -->
+  <!-- ============================================ -->
+  <div id="modalFamiliarTrabajador" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalFamiliarTitle">
+    <div class="modal-box">
+
+      <!-- Cabecera -->
+      <div class="modal-header">
+        <div class="modal-header-icon">👨‍👩‍👧</div>
+        <div>
+          <h2 id="modalFamiliarTitle">Datos del Trabajador Titular</h2>
+          <p class="modal-subtitle">Ingresa los datos del trabajador al que pertenece este familiar</p>
+        </div>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="modal-body">
+        <div class="modal-field">
+          <label for="modalCedulaTrabajador">
+            Cédula del Trabajador <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="modalCedulaTrabajador"
+            placeholder="Ingrese número de cédula del trabajador"
+            inputmode="numeric"
+          />
+          <span class="modal-field-hint">Solo números</span>
+        </div>
+
+        <div class="modal-field">
+          <label for="modalNombreTrabajador">
+            Nombre Completo del Trabajador <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="modalNombreTrabajador"
+            placeholder="Ingrese nombre completo del trabajador"
+          />
+          <span class="modal-field-hint">Tal como aparece en el documento</span>
+        </div>
+      </div>
+
+      <!-- Pie del modal -->
+      <div class="modal-footer">
+        <button type="button" id="btnModalCancelarFamiliar" class="modal-btn modal-btn-cancel">
+          Cancelar
+        </button>
+        <button type="button" id="btnModalConfirmarFamiliar" class="modal-btn modal-btn-confirm">
+          ✅ Confirmar datos
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="js/auth-check.js"></script>
   <script src="js/script.js"></script>

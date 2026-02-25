@@ -146,11 +146,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
   // ✅ La primera consulta (cronológicamente) para obtener datos generales
   const primeraConsulta = todasConsultas[0];
   
-  // Deducir sexo del nombre (simplificado)
-  const primerNombre = cliente.nombre.split(' ')[0].toLowerCase();
-  const nombresFemeninos = ['maria', 'ana', 'carmen', 'laura', 'andrea', 'paula', 'diana', 'claudia', 'luz', 'rosa', 'martha', 'sandra'];
-  const esFemenino = nombresFemeninos.some(n => primerNombre.includes(n));
-  const sexo = esFemenino ? 'Femenino' : 'Masculino';
+  // ✅ Usar el sexo real guardado en la BD (campo cliente.sexo)
+  const sexo = cliente.sexo || '';
 
   // Formatear fechas
   const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
@@ -211,6 +208,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
         Datos del Trabajador
       </h2>
       <div class="informe-grid-sve">
+
+        <!-- Fila 1: Nombre | Identificación | Sexo -->
         <div class="informe-data-item-sve">
           <span class="data-label-sve">Nombre y Apellidos:</span>
           <span class="data-value-sve">${escapeHtmlSVE(cliente.nombre)}</span>
@@ -222,11 +221,17 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
         <div class="informe-data-item-sve">
           <span class="data-label-sve">Sexo:</span>
           <span class="data-value-sve">
-            Femenino 
+            Femenino
             <span class="checkbox-sexo-sve ${sexo === 'Femenino' ? 'checked' : ''}"></span>
-            Masculino 
+            Masculino
             <span class="checkbox-sexo-sve ${sexo === 'Masculino' ? 'checked' : ''}"></span>
           </span>
+        </div>
+
+        <!-- Fila 2: Cargo | Vínculo | Sede -->
+        <div class="informe-data-item-sve">
+          <span class="data-label-sve">Cargo:</span>
+          <span class="data-value-sve">${escapeHtmlSVE(cliente.cargo || '-')}</span>
         </div>
         <div class="informe-data-item-sve">
           <span class="data-label-sve">Vínculo:</span>
@@ -236,6 +241,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
           <span class="data-label-sve">Sede:</span>
           <span class="data-value-sve">${escapeHtmlSVE(cliente.sede || '-')}</span>
         </div>
+
+        <!-- Fila 3: Email | Teléfono | (celda vacía para completar la fila) -->
         <div class="informe-data-item-sve">
           <span class="data-label-sve">Email:</span>
           <span class="data-value-sve">${escapeHtmlSVE(cliente.email || '-')}</span>
@@ -244,12 +251,16 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
           <span class="data-label-sve">Teléfono:</span>
           <span class="data-value-sve">${escapeHtmlSVE(cliente.telefono || '-')}</span>
         </div>
+        <div class="informe-data-item-sve informe-data-item-empty-sve"></div>
+
+        <!-- Fila 4: Contacto de Emergencia (ancho completo) -->
         <div class="informe-data-item-sve full-width">
           <span class="data-label-sve">Contacto de Emergencia:</span>
           <span class="data-value-sve">${cliente.contacto_emergencia_nombre ? 
             `${escapeHtmlSVE(cliente.contacto_emergencia_nombre)} (${escapeHtmlSVE(cliente.contacto_emergencia_parentesco)}) - ${escapeHtmlSVE(cliente.contacto_emergencia_telefono)}` 
             : '-'}</span>
         </div>
+
       </div>
     </div>
 

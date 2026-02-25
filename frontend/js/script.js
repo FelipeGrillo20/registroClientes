@@ -149,7 +149,18 @@ function setupCamposFamiliarTrabajador() {
 
   if (!vinculoSelect || !modalOverlay) return;
 
+  // ── Guardar el valor antes de que el usuario interactúe ───────────────
+  // Esto permite detectar si ya estaba en "Familiar Trabajador" al hacer clic
+  let valorAntesDeCambio = vinculoSelect.value;
+
+  vinculoSelect.addEventListener('mousedown', function () {
+    valorAntesDeCambio = this.value;
+  });
+
   // ── Abrir modal al seleccionar "Familiar Trabajador" ──────────────────
+  // El evento 'change' cubre el caso en que se cambia desde otra opción.
+  // El evento 'click' cubre el caso en que ya estaba en "Familiar Trabajador"
+  // y el usuario vuelve a hacer clic (change no se dispara en ese caso).
   vinculoSelect.addEventListener('change', function () {
     if (this.value === 'Familiar Trabajador') {
       abrirModalFamiliar();
@@ -159,6 +170,15 @@ function setupCamposFamiliarTrabajador() {
       if (hiddenCedula) hiddenCedula.value = '';
       if (hiddenNombre) hiddenNombre.value = '';
       vinculoSelect.classList.remove('vinculo-con-familiar');
+    }
+  });
+
+  // ── Re-abrir modal si el usuario hace clic sobre la opción ya activa ──
+  // 'change' no se dispara cuando el valor no cambia, así que usamos 'click'
+  // junto con la comparación del valor previo para detectar ese caso.
+  vinculoSelect.addEventListener('click', function () {
+    if (this.value === 'Familiar Trabajador' && valorAntesDeCambio === 'Familiar Trabajador') {
+      abrirModalFamiliar();
     }
   });
 
@@ -230,13 +250,29 @@ function setupCamposFamiliarTrabajador() {
 }
 
 function abrirModalFamiliar() {
-  const modalOverlay = document.getElementById('modalFamiliarTrabajador');
-  const modalCedula  = document.getElementById('modalCedulaTrabajador');
-  const modalNombre  = document.getElementById('modalNombreTrabajador');
-  const hiddenCedula = document.getElementById('cedulaTrabajador');
-  const hiddenNombre = document.getElementById('nombreTrabajador');
+  const modalOverlay  = document.getElementById('modalFamiliarTrabajador');
+  const modalCedula   = document.getElementById('modalCedulaTrabajador');
+  const modalNombre   = document.getElementById('modalNombreTrabajador');
+  const hiddenCedula  = document.getElementById('cedulaTrabajador');
+  const hiddenNombre  = document.getElementById('nombreTrabajador');
+  const modalTitle    = document.getElementById('modalFamiliarTitle');
+  const modalSubtitle = modalOverlay.querySelector('.modal-subtitle');
+  const btnConfirmar  = document.getElementById('btnModalConfirmarFamiliar');
 
-  // Pre-rellenar si ya había datos confirmados anteriormente
+  const hayDatosPrevios = hiddenCedula && hiddenCedula.value;
+
+  // ── Adaptar textos según si es primera vez o edición ──────────────────
+  if (hayDatosPrevios) {
+    if (modalTitle)    modalTitle.textContent    = 'Editar Datos del Trabajador Titular';
+    if (modalSubtitle) modalSubtitle.textContent = 'Puedes modificar los datos del trabajador antes de guardar';
+    if (btnConfirmar)  btnConfirmar.innerHTML    = '✅ Actualizar datos';
+  } else {
+    if (modalTitle)    modalTitle.textContent    = 'Datos del Trabajador Titular';
+    if (modalSubtitle) modalSubtitle.textContent = 'Ingresa los datos del trabajador al que pertenece este familiar';
+    if (btnConfirmar)  btnConfirmar.innerHTML    = '✅ Confirmar datos';
+  }
+
+  // ── Pre-rellenar con los datos ya guardados ────────────────────────────
   if (hiddenCedula && hiddenCedula.value) modalCedula.value = hiddenCedula.value;
   if (hiddenNombre && hiddenNombre.value) modalNombre.value = hiddenNombre.value;
 

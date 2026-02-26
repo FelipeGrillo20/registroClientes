@@ -21,12 +21,11 @@
       <a href="index.html" class="btn-nav">📝 Registro de Clientes</a>
     </div>
 
-    <!-- ⭐ NUEVO: Filtros Avanzados para Administrador -->
+    <!-- Filtros Avanzados para Administrador -->
     <div id="adminFiltersContainer" class="admin-filters-container" style="display: none;">
       <h2 class="filters-title">👤 Filtros de Administrador</h2>
       
       <div class="admin-filters-grid">
-        <!-- Filtro por Profesional -->
         <div class="filter-group">
           <label for="filterProfesional">Profesional:</label>
           <select id="filterProfesional">
@@ -34,7 +33,6 @@
           </select>
         </div>
 
-        <!-- Filtro por Mes Predefinido -->
         <div class="filter-group">
           <label for="filterMes">Filtrar por Mes:</label>
           <select id="filterMes">
@@ -47,7 +45,6 @@
           </select>
         </div>
 
-        <!-- Rango de Fechas Personalizado -->
         <div class="filter-group">
           <label for="filterFechaInicio">Fecha Inicio:</label>
           <input type="date" id="filterFechaInicio" />
@@ -58,14 +55,12 @@
           <input type="date" id="filterFechaFin" />
         </div>
 
-        <!-- Botón Aplicar Filtros Avanzados -->
         <div class="filter-group filter-actions-group">
           <button id="btnApplyAdvancedFilters" class="btn-apply-advanced">
             🔍 Aplicar Filtros
           </button>
         </div>
 
-        <!-- Botón Limpiar Filtros Avanzados -->
         <div class="filter-group filter-actions-group">
           <button id="btnClearAdvancedFilters" class="btn-clear-advanced">
             🔄 Limpiar Avanzados
@@ -79,7 +74,6 @@
       <h2 class="filters-title">🔍 Filtros de Búsqueda</h2>
       
       <div class="filters-grid">
-        <!-- Filtro Nivel 1: Tipo de Cliente -->
         <div class="filter-group">
           <label for="filterTipoCliente">Tipo de Cliente:</label>
           <select id="filterTipoCliente">
@@ -90,7 +84,6 @@
           </select>
         </div>
 
-        <!-- Filtro Nivel 2: Nombre Cliente (dinámico) -->
         <div class="filter-group" id="filterNombreClienteContainer" style="display: none;">
           <label for="filterNombreCliente" id="labelNombreCliente">Seleccione:</label>
           <select id="filterNombreCliente">
@@ -98,7 +91,6 @@
           </select>
         </div>
 
-        <!-- Filtro adicional: Vínculo -->
         <div class="filter-group">
           <label for="filterVinculo">Vínculo:</label>
           <select id="filterVinculo">
@@ -108,7 +100,6 @@
           </select>
         </div>
 
-        <!-- Filtro adicional: Sede -->
         <div class="filter-group">
           <label for="filterSede">Sede:</label>
           <select id="filterSede">
@@ -116,7 +107,6 @@
           </select>
         </div>
 
-        <!-- Filtro adicional: Empresa -->
         <div class="filter-group">
           <label for="filterEmpresa">Empresa Usuario:</label>
           <select id="filterEmpresa">
@@ -124,7 +114,6 @@
           </select>
         </div>
 
-        <!-- Filtro adicional: Subcontratista -->
         <div class="filter-group">
           <label for="filterSubcontratista">Cliente Final:</label>
           <select id="filterSubcontratista">
@@ -133,7 +122,6 @@
           </select>
         </div>
 
-        <!-- Botón limpiar filtros -->
         <div class="filter-group filter-actions-group">
           <button id="btnClearFilters" class="btn-clear-filters">🔄 Limpiar Filtros</button>
         </div>
@@ -146,7 +134,7 @@
         <div class="stat-icon">👥</div>
         <div class="stat-info">
           <div class="stat-value" id="statTotal">0</div>
-          <div class="stat-label">Total Clientes</div>
+          <div class="stat-label">Total Registros</div>
         </div>
       </div>
       <div class="stat-card">
@@ -170,55 +158,30 @@
           <div class="stat-label">CCF</div>
         </div>
       </div>
-    </div>
-
-    <!-- ⭐ ESTADÍSTICAS DEL PROFESIONAL - COMENTADO TEMPORALMENTE (descomentar cuando se necesite)
-    <div id="statsProfesionalContainer" class="stats-profesional-container" style="display: none;">
-      <h3 class="stats-profesional-title">
-        📊 Estadísticas del Profesional: <span id="statsProfesionalNombre"></span>
-      </h3>
-      
-      <div class="stats-profesional-grid">
-        <div class="stat-card stat-card-profesional">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <div class="stat-value" id="statPacientesAtendidos">0</div>
-            <div class="stat-label">Pacientes Atendidos</div>
-          </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statSesiones">0</div>
+          <div class="stat-label">Total Sesiones</div>
         </div>
-        
-        <div class="stat-card stat-card-profesional">
-          <div class="stat-icon">📋</div>
-          <div class="stat-info">
-            <div class="stat-value" id="statSesionesRealizadas">0</div>
-            <div class="stat-label">Sesiones Realizadas</div>
-          </div>
-        </div>
-        
-        <div class="stat-card stat-card-profesional">
-          <div class="stat-icon">⏱️</div>
-          <div class="stat-info">
-            <div class="stat-value" id="statHorasAtendidas">0</div>
-            <div class="stat-label">Horas Atendidas</div>
-          </div>
-        </div>
-        
-        <div class="stat-card stat-card-profesional">
-          <div class="stat-icon">✅</div>
-          <div class="stat-info">
-            <div class="stat-value" id="statCasosCerrados">0</div>
-            <div class="stat-label">Casos Cerrados</div>
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statHoras">0</div>
+          <div class="stat-label">Horas Atendidas</div>
         </div>
       </div>
     </div>
-    -->
 
     <!-- Tabla de resultados -->
     <div class="table-container">
       <table class="trazabilidad-table" id="trazabilidadTable">
         <thead>
           <tr>
+            <!-- Columnas de la sesión (vienen de la tabla consultas) -->
+            <th>Fecha Consulta</th>
+            <!-- Columnas del cliente (existentes) -->
             <th>Tipo Cliente</th>
             <th>Nombre Cliente</th>
             <th>Empresa Usuario</th>
@@ -227,12 +190,15 @@
             <th>Sede</th>
             <th>Nombre</th>
             <th>Cédula</th>
-            <!-- ⭐ COLUMNAS COMENTADAS: Descomentar si se necesitan en el futuro -->
-            <!-- <th>Profesional</th> -->
-            <!-- <th>Fecha Registro</th> -->
+            <!-- Columnas nuevas de la sesión -->
+            <th>Motivo Consulta</th>
+            <th>Sesión #</th>
+            <th>Horas Sesión</th>
+            <th>Sesiones Sugeridas</th>
+            <th>Observaciones</th>
+            <th>Profesional</th>
           </tr>
         </thead>
-
         <tbody id="trazabilidadList">
           <!-- Filas generadas dinámicamente -->
         </tbody>
@@ -246,10 +212,10 @@
       </button>
     </div>
 
-    <!-- Mensaje inicial -->
+    <!-- Mensaje sin datos -->
     <div id="noDataMessage" class="no-data-message" style="display: none;">
       <div class="no-data-icon">📊</div>
-      <p>No se encontraron clientes con los filtros seleccionados</p>
+      <p>No se encontraron registros con los filtros seleccionados</p>
     </div>
   </main>
 

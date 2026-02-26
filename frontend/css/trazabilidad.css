@@ -784,3 +784,65 @@ body {
     justify-content: center;
   }
 }
+
+/* ====== NUEVAS COLUMNAS - MATRIZ COMPLETA ====== */
+
+/* Texto del trabajador relacionado en columna Nombre */
+.familiar-relacionado-titulo {
+  display: block;
+  font-size: 0.78em;
+  color: #7f8c8d;
+  font-style: italic;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.familiar-relacionado-detalle {
+  display: block;
+  font-size: 0.78em;
+  color: #7f8c8d;
+  font-style: italic;
+  line-height: 1.3;
+  padding-left: 2px;
+}
+.badge-sesion {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 0.78em;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  min-width: 28px;
+  text-align: center;
+}
+
+/* Ajuste de anchos de columnas nuevas */
+.trazabilidad-table .col-fecha      { white-space: nowrap; min-width: 100px; }
+.trazabilidad-table .col-nombre     { min-width: 150px; }
+.trazabilidad-table .col-cedula     { white-space: nowrap; min-width: 90px; }
+.trazabilidad-table .col-motivo     { min-width: 160px; max-width: 220px; }
+.trazabilidad-table .col-sesion-num { text-align: center; min-width: 70px; }
+.trazabilidad-table .col-horas      { text-align: center; min-width: 80px; font-weight: 600; }
+.trazabilidad-table .col-sugeridas  { text-align: center; min-width: 90px; }
+.trazabilidad-table .col-obs        { min-width: 220px; max-width: 340px;
+                                      white-space: normal; word-wrap: break-word;
+                                      line-height: 1.4; text-align: justify;
+                                      vertical-align: top; padding: 10px 12px; }
+.trazabilidad-table .col-profesional{ min-width: 130px; font-style: italic; color: #555; }
+
+/* Stat cards nuevas */
+#statSesiones, #statHoras {
+  /* hereda estilos del .stat-value existente */
+}
+
+/* Tabla más compacta con 15 columnas */
+.trazabilidad-table th,
+.trazabilidad-table td {
+  font-size: 0.82em;
+  padding: 8px 10px;
+}
+
+.trazabilidad-table thead th {
+  font-size: 0.78em;
+  white-space: nowrap;
+}

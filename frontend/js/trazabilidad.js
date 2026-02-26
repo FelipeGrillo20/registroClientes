@@ -1,307 +1,329 @@
 // js/trazabilidad.js
 
-const API_URL = window.API_CONFIG.ENDPOINTS.CLIENTS;
-const API_USERS = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
-const API_CONSULTAS = window.API_CONFIG.ENDPOINTS.CONSULTAS;
+const API_URL        = window.API_CONFIG.ENDPOINTS.CLIENTS;
+const API_USERS      = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
+const API_CONSULTAS  = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 
-const tbody = document.getElementById("trazabilidadList");
-const filterTipoCliente = document.getElementById("filterTipoCliente");
-const filterNombreCliente = document.getElementById("filterNombreCliente");
+// ─── Referencias DOM ────────────────────────────────────────────────────────
+const tbody                        = document.getElementById("trazabilidadList");
+const filterTipoCliente            = document.getElementById("filterTipoCliente");
+const filterNombreCliente          = document.getElementById("filterNombreCliente");
 const filterNombreClienteContainer = document.getElementById("filterNombreClienteContainer");
-const labelNombreCliente = document.getElementById("labelNombreCliente");
-const filterVinculo = document.getElementById("filterVinculo");
-const filterSede = document.getElementById("filterSede");
-const filterEmpresa = document.getElementById("filterEmpresa");
-const filterSubcontratista = document.getElementById("filterSubcontratista");
-const btnClearFilters = document.getElementById("btnClearFilters");
-const noDataMessage = document.getElementById("noDataMessage");
-const tableContainer = document.querySelector(".table-container");
+const labelNombreCliente           = document.getElementById("labelNombreCliente");
+const filterVinculo                = document.getElementById("filterVinculo");
+const filterSede                   = document.getElementById("filterSede");
+const filterEmpresa                = document.getElementById("filterEmpresa");
+const filterSubcontratista         = document.getElementById("filterSubcontratista");
+const btnClearFilters              = document.getElementById("btnClearFilters");
+const noDataMessage                = document.getElementById("noDataMessage");
+const tableContainer               = document.querySelector(".table-container");
 
-// ⭐ NUEVOS: Elementos de filtros avanzados
-const adminFiltersContainer = document.getElementById("adminFiltersContainer");
-const filterProfesional = document.getElementById("filterProfesional");
-const filterMes = document.getElementById("filterMes");
-const filterFechaInicio = document.getElementById("filterFechaInicio");
-const filterFechaFin = document.getElementById("filterFechaFin");
+// Filtros avanzados (admin)
+const adminFiltersContainer  = document.getElementById("adminFiltersContainer");
+const filterProfesional      = document.getElementById("filterProfesional");
+const filterMes              = document.getElementById("filterMes");
+const filterFechaInicio      = document.getElementById("filterFechaInicio");
+const filterFechaFin         = document.getElementById("filterFechaFin");
 const btnApplyAdvancedFilters = document.getElementById("btnApplyAdvancedFilters");
 const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters");
 
-// ⭐ NUEVO: Elementos de estadísticas del profesional
-// ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
-// const statsProfesionalContainer = document.getElementById("statsProfesionalContainer");
-// const statsProfesionalNombre = document.getElementById("statsProfesionalNombre");
-// const statPacientesAtendidos = document.getElementById("statPacientesAtendidos");
-// const statSesionesRealizadas = document.getElementById("statSesionesRealizadas");
-// const statHorasAtendidas = document.getElementById("statHorasAtendidas");
-// const statCasosCerrados = document.getElementById("statCasosCerrados");
+// ─── Estado global ───────────────────────────────────────────────────────────
+let allClients          = [];   // Lista base de clientes cargados
+let allConsultas        = [];   // Todas las consultas cargadas
+let allProfesionales    = [];   // Lista de profesionales (para cruzar nombre)
+let matrizRows          = [];   // Filas combinadas (1 fila por sesión)
+let currentFilteredRows = [];   // Filas visibles (para exportar)
+let currentUserRole     = null;
 
-let allClients = [];
-let currentFilteredClients = []; // ✅ Rastrea los datos visibles para exportar
-let currentUserRole = null;
-
-// Catálogo de entidades según tipo
 const ENTIDADES = {
   ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
 };
 
-// Función para obtener token
+// ─── Helpers de autenticación ────────────────────────────────────────────────
 function getAuthToken() {
   return localStorage.getItem("authToken");
 }
 
-// Función para obtener datos del usuario
 function getUserData() {
   const userData = localStorage.getItem("userData");
   return userData ? JSON.parse(userData) : null;
 }
 
-// Cargar clientes al iniciar
+// ─── Init ────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-  // Verificar rol del usuario
-  const userData = getUserData();
-  currentUserRole = userData?.rol;
-  
-  // Si es admin, mostrar filtros avanzados
+  const userData    = getUserData();
+  currentUserRole   = userData?.rol;
+
   if (currentUserRole === 'admin') {
     adminFiltersContainer.style.display = "block";
     await loadProfesionales();
   }
-  
-  await loadClients();
+
+  await loadData();
   setupFilterEvents();
 });
 
-// ⭐ NUEVO: Cargar lista de profesionales (solo para admin)
+// ─── Cargar lista de profesionales ──────────────────────────────────────────
 async function loadProfesionales() {
   try {
     const res = await fetch(API_USERS, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
-    
-    if (!res.ok) {
-      throw new Error("Error al cargar profesionales");
-    }
-    
+
+    if (!res.ok) throw new Error("Error al cargar profesionales");
+
     const data = await res.json();
-    
-    // El backend devuelve { success: true, users: [...] }
     const users = data.users || data;
-    
-    // Filtrar solo profesionales
-    const profesionales = users.filter(u => u.rol === 'profesional');
-    
-    // Llenar el select
+    // Incluir profesionales y administradores (ambos pueden registrar consultas)
+    allProfesionales = users.filter(u => u.rol === 'profesional' || u.rol === 'admin');
+
     filterProfesional.innerHTML = '<option value="">Todos los Profesionales</option>';
-    profesionales.forEach(prof => {
+    allProfesionales.forEach(prof => {
       const option = document.createElement("option");
       option.value = prof.id;
-      option.textContent = prof.nombre;
+      option.textContent = prof.rol === 'admin' ? `${prof.nombre} 👑` : prof.nombre;
       filterProfesional.appendChild(option);
     });
-    
+
   } catch (err) {
     console.error("Error cargando profesionales:", err);
   }
 }
 
-// Cargar todos los clientes
-async function loadClients() {
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">Cargando datos...</td></tr>`;
-  console.log("🔄 Cargando clientes para trazabilidad...");
-  
+// ─── Cargar datos principales (clientes + consultas) ─────────────────────────
+async function loadData() {
+  tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;">Cargando datos...</td></tr>`;
+
   try {
-    const res = await fetch(API_URL, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
-    });
-    
-    if (!res.ok) {
-      throw new Error("Error al cargar clientes");
-    }
-    
-    const clients = await res.json();
-    
+    // Petición de clientes y consultas en paralelo
+    const [resClients, resConsultas] = await Promise.all([
+      fetch(API_URL, {
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
+      }),
+      fetch(API_CONSULTAS, {
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
+      })
+    ]);
+
+    if (!resClients.ok)   throw new Error("Error al cargar clientes");
+    if (!resConsultas.ok) throw new Error("Error al cargar consultas");
+
+    const clients  = await resClients.json();
+    const consultas = await resConsultas.json();
+
     if (!Array.isArray(clients) || clients.length === 0) {
       showNoData();
-      updateStats(0, 0, 0, 0);
+      updateStats([]);
       return;
     }
 
-    // Ordenar por ID descendente
-    allClients = clients.sort((a, b) => b.id - a.id);
-    
-    // Poblar filtros dinámicos
+    allClients   = clients.sort((a, b) => b.id - a.id);
+    allConsultas = Array.isArray(consultas) ? consultas : [];
+
+    // Construir matriz combinada
+    matrizRows = buildMatrizRows(allClients, allConsultas);
+
     populateFilterOptions();
-    
-    // Renderizar todos los clientes inicialmente
-    renderClients(allClients);
-    
-    // Actualizar estadísticas
-    updateStatistics(allClients);
-    
+    renderRows(matrizRows);
+    updateStats(matrizRows);
+
   } catch (err) {
-    console.error("Error loading clients:", err);
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al cargar datos</td></tr>`;
+    console.error("Error cargando datos:", err);
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;color:#e74c3c;">Error al cargar datos</td></tr>`;
   }
 }
 
-// ⭐ NUEVO: Aplicar filtros avanzados (profesional y fechas)
-async function applyAdvancedFilters() {
-  const profesionalId = filterProfesional.value;
-  const mesSeleccionado = filterMes.value;
-  let fechaInicio = filterFechaInicio.value;
-  let fechaFin = filterFechaFin.value;
-  
-  // Si se seleccionó un mes predefinido, calcular las fechas
-  if (mesSeleccionado) {
-    const fechas = calcularRangoFechas(mesSeleccionado);
-    fechaInicio = fechas.inicio;
-    fechaFin = fechas.fin;
-    
-    // Actualizar los inputs de fecha
-    filterFechaInicio.value = fechaInicio;
-    filterFechaFin.value = fechaFin;
+// ─── Construir filas de la matriz (1 fila por sesión) ────────────────────────
+/**
+ * Por cada cliente calcula el número de sesión de cada consulta
+ * (ordenadas por fecha) y genera una fila combinada.
+ * Si el cliente no tiene consultas, genera 1 fila sin datos de sesión.
+ */
+function buildMatrizRows(clients, consultas) {
+  const rows = [];
+
+  // Agrupar consultas por cliente_id
+  const consultasPorCliente = {};
+  consultas.forEach(c => {
+    if (!consultasPorCliente[c.cliente_id]) {
+      consultasPorCliente[c.cliente_id] = [];
+    }
+    consultasPorCliente[c.cliente_id].push(c);
+  });
+
+  clients.forEach(client => {
+    const consultasCliente = consultasPorCliente[client.id] || [];
+
+    if (consultasCliente.length === 0) {
+      // Cliente sin sesiones → se omite
+    } else {
+      // Ordenar por fecha ascendente para numerar sesiones 1, 2, 3…
+      const ordenadas = [...consultasCliente].sort((a, b) =>
+        new Date(a.fecha) - new Date(b.fecha)
+      );
+      ordenadas.forEach((consulta, index) => {
+        rows.push({ client, consulta, sesionNum: index + 1 });
+      });
+    }
+  });
+
+  return rows;
+}
+
+// ─── Nombre del profesional por ID ───────────────────────────────────────────
+function getNombreProfesional(profesionalId) {
+  if (!profesionalId) return '-';
+  const prof = allProfesionales.find(p => p.id === profesionalId);
+  return prof ? prof.nombre : `Prof. #${profesionalId}`;
+}
+
+// ─── Construir celda Nombre (con info del trabajador si es Familiar) ─────────
+function buildNombreCell(client) {
+  const nombre = escapeHtml(client.nombre || '-');
+
+  if (client.vinculo === 'Familiar Trabajador' && client.nombre_trabajador) {
+    const nombreTrabajador  = escapeHtml(client.nombre_trabajador);
+    const cedulaTrabajador  = escapeHtml(client.cedula_trabajador || '');
+    const relacionado = cedulaTrabajador
+      ? `<span class="familiar-relacionado-titulo">- Relacionado al trabajador:</span><span class="familiar-relacionado-detalle">${nombreTrabajador} c.c. ${cedulaTrabajador}</span>`
+      : `<span class="familiar-relacionado-titulo">- Relacionado al trabajador:</span><span class="familiar-relacionado-detalle">${nombreTrabajador}</span>`;
+    return `${nombre} ${relacionado}`;
   }
-  
-  // Construir query string
-  const params = new URLSearchParams();
-  if (profesionalId) params.append('profesional_id', profesionalId);
-  if (fechaInicio) params.append('fecha_inicio', fechaInicio);
-  if (fechaFin) params.append('fecha_fin', fechaFin);
-  
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">Filtrando datos...</td></tr>`;
-  
-  try {
-    const res = await fetch(`${API_URL}/filters?${params.toString()}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
+
+  return nombre;
+}
+
+// ─── Renderizar filas en la tabla ────────────────────────────────────────────
+function renderRows(rows) {
+  currentFilteredRows = rows || [];
+  tbody.innerHTML = "";
+
+  if (!rows || rows.length === 0) {
+    showNoData();
+    return;
+  }
+
+  hideNoData();
+
+  rows.forEach(({ client, consulta, sesionNum }) => {
+
+    // ── Campos del cliente ───────────────────────────────────────────────────
+    let tipoBadge = '-';
+    if (client.tipo_entidad_pagadora === 'Particular') {
+      tipoBadge = '<span class="badge badge-tipo-particular">Particular</span>';
+    } else if (client.tipo_entidad_pagadora === 'ARL') {
+      tipoBadge = '<span class="badge badge-tipo-arl">ARL</span>';
+    } else if (client.tipo_entidad_pagadora === 'CCF') {
+      tipoBadge = '<span class="badge badge-tipo-ccf">CCF</span>';
+    }
+
+    let nombreClienteBadge = '-';
+    if (client.tipo_entidad_pagadora === 'Particular') {
+      nombreClienteBadge = client.cliente_final
+        ? `<span class="badge badge-nombre-cliente">${escapeHtml(client.cliente_final)}</span>`
+        : '-';
+    } else {
+      nombreClienteBadge = client.entidad_pagadora_especifica
+        ? `<span class="badge badge-nombre-cliente">${escapeHtml(client.entidad_pagadora_especifica)}</span>`
+        : '-';
+    }
+
+    const empresaBadge = client.cliente_final
+      ? `<span class="badge badge-empresa">${escapeHtml(client.cliente_final)}</span>`
+      : '-';
+
+    const subcontratistaName = client.subcontratista_definitivo || client.subcontratista_nombre;
+    const subcontratistaBadge = subcontratistaName
+      ? `<span class="badge badge-subcontratista">${escapeHtml(subcontratistaName)}</span>`
+      : '<span class="badge badge-no-subcontratista">N/A</span>';
+
+    let vinculoBadge = '-';
+    if (client.vinculo === 'Trabajador') {
+      vinculoBadge = '<span class="badge badge-vinculo-trabajador">Trabajador</span>';
+    } else if (client.vinculo === 'Familiar Trabajador') {
+      vinculoBadge = '<span class="badge badge-vinculo-familiar">Familiar</span>';
+    }
+
+    // ── Campos de la sesión ──────────────────────────────────────────────────
+    let fechaConsulta = '-';
+    let motivoConsulta = '-';
+    let sesionNumCell = '-';
+    let horasSesion = '-';
+    let sesionessugeridas = '-';
+    let observaciones = '-';
+    let profesionalNombre = '-';
+
+    if (consulta) {
+      // Fecha consulta formateada
+      if (consulta.fecha) {
+        const d = new Date(consulta.fecha);
+        fechaConsulta = d.toLocaleDateString('es-CO', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        });
       }
-    });
-    
-    if (!res.ok) {
-      throw new Error("Error al filtrar clientes");
+
+      motivoConsulta = consulta.motivo_consulta
+        ? escapeHtml(consulta.motivo_consulta)
+        : '-';
+
+      sesionNumCell = sesionNum !== null
+        ? `<span class="badge badge-sesion">${sesionNum}</span>`
+        : '-';
+
+      // Cada sesión = 1 hora
+      horasSesion = '1';
+
+      // Sesiones sugeridas del cliente
+      sesionessugeridas = client.consultas_sugeridas
+        ? String(client.consultas_sugeridas)
+        : '-';
+
+      // Observaciones → columna1 en la tabla consultas
+      observaciones = consulta.columna1
+        ? escapeHtml(consulta.columna1)
+        : '-';
+
+      // Profesional que registró la consulta (viene del cliente si no hay en consulta)
+      const profId = consulta.profesional_id || client.profesional_id;
+      profesionalNombre = escapeHtml(getNombreProfesional(profId));
     }
-    
-    const clients = await res.json();
-    
-    if (!Array.isArray(clients) || clients.length === 0) {
-      showNoData();
-      updateStats(0, 0, 0, 0);
-      // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
-      return;
-    }
-    
-    // Ordenar por ID descendente
-    allClients = clients.sort((a, b) => b.id - a.id);
-    
-    // Poblar filtros dinámicos
-    populateFilterOptions();
-    
-    // Renderizar clientes filtrados
-    renderClients(allClients);
-    
-    // Actualizar estadísticas
-    updateStatistics(allClients);
-    
-    // ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
-    // if (profesionalId) {
-    //   await loadStatsProfesional(profesionalId);
-    // } else {
-    //   hideStatsProfesional();
-    // }
-    
-  } catch (err) {
-    console.error("Error aplicando filtros avanzados:", err);
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #e74c3c;">Error al filtrar datos</td></tr>`;
-    // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
-  }
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="col-fecha">${fechaConsulta}</td>
+      <td>${tipoBadge}</td>
+      <td>${nombreClienteBadge}</td>
+      <td>${empresaBadge}</td>
+      <td>${subcontratistaBadge}</td>
+      <td>${vinculoBadge}</td>
+      <td>${escapeHtml(client.sede || '-')}</td>
+      <td class="col-nombre">${buildNombreCell(client)}</td>
+      <td class="col-cedula">${escapeHtml(client.cedula || '-')}</td>
+      <td class="col-motivo">${motivoConsulta}</td>
+      <td class="col-sesion-num">${sesionNumCell}</td>
+      <td class="col-horas">${horasSesion}</td>
+      <td class="col-sugeridas">${sesionessugeridas}</td>
+      <td class="col-obs">${observaciones}</td>
+      <td class="col-profesional">${profesionalNombre}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
-// ⭐ NUEVO: Calcular rango de fechas según opción seleccionada
-function calcularRangoFechas(opcion) {
-  const hoy = new Date();
-  let inicio, fin;
-  
-  switch(opcion) {
-    case 'mes_actual':
-      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-      break;
-      
-    case 'mes_anterior':
-      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
-      fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
-      break;
-      
-    case 'ultimos_3_meses':
-      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
-      fin = hoy;
-      break;
-      
-    case 'ultimos_6_meses':
-      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
-      fin = hoy;
-      break;
-      
-    case 'este_año':
-      inicio = new Date(hoy.getFullYear(), 0, 1);
-      fin = hoy;
-      break;
-      
-    default:
-      return { inicio: '', fin: '' };
-  }
-  
-  return {
-    inicio: formatearFecha(inicio),
-    fin: formatearFecha(fin)
-  };
-}
-
-// Formatear fecha a YYYY-MM-DD
-function formatearFecha(fecha) {
-  const year = fecha.getFullYear();
-  const month = String(fecha.getMonth() + 1).padStart(2, '0');
-  const day = String(fecha.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// ⭐ NUEVO: Limpiar filtros avanzados
-function clearAdvancedFilters() {
-  filterProfesional.value = "";
-  filterMes.value = "";
-  filterFechaInicio.value = "";
-  filterFechaFin.value = "";
-  
-  // Ocultar estadísticas del profesional
-  // hideStatsProfesional(); // ⭐ COMENTADO TEMPORALMENTE
-  
-  // Recargar todos los clientes
-  loadClients();
-}
-
-// Poblar filtros de Sede, Empresa y Subcontratista
+// ─── Poblar selects dinámicos ─────────────────────────────────────────────────
 function populateFilterOptions() {
-  // Sedes únicas
   const sedes = [...new Set(allClients.map(c => c.sede).filter(Boolean))];
   fillSelect(filterSede, sedes, "Sede");
-  
-  // Empresas únicas (cliente_final)
+
   const empresas = [...new Set(allClients.map(c => c.cliente_final).filter(Boolean))];
   fillSelect(filterEmpresa, empresas, "Empresa");
-  
-  // Subcontratistas únicos
+
   const subcontratistas = [...new Set(
-    allClients
-      .map(c => c.subcontratista_definitivo || c.subcontratista_nombre)
-      .filter(Boolean)
+    allClients.map(c => c.subcontratista_definitivo || c.subcontratista_nombre).filter(Boolean)
   )].sort();
-  
-  // Llenar select de subcontratistas
+
   filterSubcontratista.innerHTML = `
     <option value="">Todos los Subcontratistas</option>
     <option value="NO_APLICA">Sin Subcontratista</option>
@@ -314,7 +336,6 @@ function populateFilterOptions() {
   });
 }
 
-// Llenar select con opciones
 function fillSelect(selectElem, items, placeholder) {
   selectElem.innerHTML = `<option value="">Todas las ${placeholder}s</option>`;
   items.forEach(item => {
@@ -325,250 +346,55 @@ function fillSelect(selectElem, items, placeholder) {
   });
 }
 
-// Renderizar clientes en la tabla
-function renderClients(clients) {
-  // ✅ Actualizar lista de datos visibles para exportación
-  currentFilteredClients = clients || [];
-  tbody.innerHTML = "";
-  
-  if (!clients || clients.length === 0) {
-    showNoData();
-    return;
-  }
-  
-  hideNoData();
-  
-  clients.forEach(client => {
-    const tr = document.createElement("tr");
-    
-    // Badge de vínculo
-    let vinculoBadge = '-';
-    if (client.vinculo === 'Trabajador') {
-      vinculoBadge = '<span class="badge badge-vinculo-trabajador">Trabajador</span>';
-    } else if (client.vinculo === 'Familiar Trabajador') {
-      vinculoBadge = '<span class="badge badge-vinculo-familiar">Familiar</span>';
-    }
-    
-    // Badge de empresa
-    let empresaBadge = client.cliente_final ? 
-      `<span class="badge badge-empresa">${escapeHtml(client.cliente_final)}</span>` : 
-      '-';
-    
-    // Badge de subcontratista
-    let subcontratistaBadge = '-';
-    const subcontratistaName = client.subcontratista_definitivo || client.subcontratista_nombre;
-    if (subcontratistaName) {
-      subcontratistaBadge = `<span class="badge badge-subcontratista">${escapeHtml(subcontratistaName)}</span>`;
-    } else {
-      subcontratistaBadge = '<span class="badge badge-no-subcontratista">N/A</span>';
-    }
-    
-    // Badge de tipo cliente
-    let tipoBadge = '-';
-    if (client.tipo_entidad_pagadora === 'Particular') {
-      tipoBadge = '<span class="badge badge-tipo-particular">Particular</span>';
-    } else if (client.tipo_entidad_pagadora === 'ARL') {
-      tipoBadge = '<span class="badge badge-tipo-arl">ARL</span>';
-    } else if (client.tipo_entidad_pagadora === 'CCF') {
-      tipoBadge = '<span class="badge badge-tipo-ccf">CCF</span>';
-    }
-    
-    // Badge de nombre cliente
-    let nombreClienteBadge = '-';
-    if (client.tipo_entidad_pagadora === 'Particular') {
-      nombreClienteBadge = client.cliente_final ? 
-        `<span class="badge badge-nombre-cliente">${escapeHtml(client.cliente_final)}</span>` : 
-        '-';
-    } else {
-      nombreClienteBadge = client.entidad_pagadora_especifica ? 
-        `<span class="badge badge-nombre-cliente">${escapeHtml(client.entidad_pagadora_especifica)}</span>` : 
-        '-';
-    }
-    
-    // ⭐ NUEVO: Badge de profesional (COMENTADO - no se muestra en la tabla)
-    /*
-    let profesionalBadge = client.profesional_nombre ? 
-      `<span class="badge badge-profesional">${escapeHtml(client.profesional_nombre)}</span>` : 
-      '-';
-    */
-    
-    // ⭐ NUEVO: Fecha de registro (COMENTADO - no se muestra en la tabla)
-    /*
-    let fechaRegistro = '-';
-    if (client.created_at) {
-      const fecha = new Date(client.created_at);
-      fechaRegistro = fecha.toLocaleDateString('es-CO', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
-      });
-    }
-    */
-    
-    tr.innerHTML = `
-      <td>${tipoBadge}</td>
-      <td>${nombreClienteBadge}</td>
-      <td>${empresaBadge}</td>
-      <td>${subcontratistaBadge}</td>
-      <td>${vinculoBadge}</td>
-      <td>${escapeHtml(client.sede || '-')}</td>
-      <td>${escapeHtml(client.nombre || '-')}</td>
-      <td>${escapeHtml(client.cedula || '-')}</td>
-    `;
-    
-    tbody.appendChild(tr);
-  });
-}
-
-// Mostrar mensaje sin datos
-function showNoData() {
-  tableContainer.style.display = "none";
-  noDataMessage.style.display = "block";
-}
-
-// Ocultar mensaje sin datos
-function hideNoData() {
-  tableContainer.style.display = "block";
-  noDataMessage.style.display = "none";
-}
-
-// Actualizar estadísticas
-function updateStatistics(clients) {
-  const total = clients.length;
-  const particular = clients.filter(c => c.tipo_entidad_pagadora === 'Particular').length;
-  const arl = clients.filter(c => c.tipo_entidad_pagadora === 'ARL').length;
-  const ccf = clients.filter(c => c.tipo_entidad_pagadora === 'CCF').length;
-  
-  updateStats(total, particular, arl, ccf);
-}
-
-// Actualizar valores de estadísticas
-function updateStats(total, particular, arl, ccf) {
-  document.getElementById("statTotal").textContent = total;
-  document.getElementById("statParticular").textContent = particular;
-  document.getElementById("statARL").textContent = arl;
-  document.getElementById("statCCF").textContent = ccf;
-}
-
-// Configurar eventos de filtros
-function setupFilterEvents() {
-  // ⭐ NUEVO: Eventos para filtros avanzados
-  if (btnApplyAdvancedFilters) {
-    btnApplyAdvancedFilters.addEventListener("click", applyAdvancedFilters);
-  }
-  
-  if (btnClearAdvancedFilters) {
-    btnClearAdvancedFilters.addEventListener("click", clearAdvancedFilters);
-  }
-  
-  // Cuando se selecciona un mes, limpiar las fechas manuales
-  if (filterMes) {
-    filterMes.addEventListener("change", function() {
-      if (this.value) {
-        filterFechaInicio.value = "";
-        filterFechaFin.value = "";
-      }
-    });
-  }
-  
-  // Cuando se seleccionan fechas manuales, limpiar el selector de mes
-  if (filterFechaInicio) {
-    filterFechaInicio.addEventListener("change", function() {
-      if (this.value) {
-        filterMes.value = "";
-      }
-    });
-  }
-  
-  if (filterFechaFin) {
-    filterFechaFin.addEventListener("change", function() {
-      if (this.value) {
-        filterMes.value = "";
-      }
-    });
-  }
-  
-  // Filtros en cascada existentes
-  filterTipoCliente.addEventListener("change", function() {
-    const tipoSeleccionado = this.value;
-    
-    filterNombreCliente.innerHTML = '<option value="">Todos</option>';
-    
-    if (tipoSeleccionado === "Particular" || tipoSeleccionado === "") {
-      filterNombreClienteContainer.style.display = "none";
-      filterNombreCliente.value = "";
-    } else if (tipoSeleccionado === "ARL" || tipoSeleccionado === "CCF") {
-      filterNombreClienteContainer.style.display = "block";
-      labelNombreCliente.textContent = `Seleccione ${tipoSeleccionado}:`;
-      
-      const opciones = ENTIDADES[tipoSeleccionado];
-      opciones.forEach(entidad => {
-        const option = document.createElement("option");
-        option.value = entidad;
-        option.textContent = entidad;
-        filterNombreCliente.appendChild(option);
-      });
-    }
-    
-    applyFilters();
-  });
-  
-  filterNombreCliente.addEventListener("change", applyFilters);
-  filterVinculo.addEventListener("change", applyFilters);
-  filterSede.addEventListener("change", applyFilters);
-  filterEmpresa.addEventListener("change", applyFilters);
-  filterSubcontratista.addEventListener("change", applyFilters);
-  
-  btnClearFilters.addEventListener("click", clearAllFilters);
-}
-
-// Aplicar todos los filtros (locales)
+// ─── Aplicar filtros locales (cascada) ───────────────────────────────────────
 function applyFilters() {
-  let filtered = [...allClients];
-  
-  const tipoVal = filterTipoCliente.value;
-  const nombreVal = filterNombreCliente.value;
-  const vinculoVal = filterVinculo.value;
-  const sedeVal = filterSede.value;
-  const empresaVal = filterEmpresa.value;
+  let filtered = [...matrizRows];
+
+  const tipoVal          = filterTipoCliente.value;
+  const nombreVal        = filterNombreCliente.value;
+  const vinculoVal       = filterVinculo.value;
+  const sedeVal          = filterSede.value;
+  const empresaVal       = filterEmpresa.value;
   const subcontratistaVal = filterSubcontratista.value;
-  
+
   if (tipoVal) {
-    filtered = filtered.filter(c => c.tipo_entidad_pagadora === tipoVal);
+    filtered = filtered.filter(r => r.client.tipo_entidad_pagadora === tipoVal);
   }
-  
+
   if (nombreVal) {
-    filtered = filtered.filter(c => c.entidad_pagadora_especifica === nombreVal);
+    filtered = filtered.filter(r => r.client.entidad_pagadora_especifica === nombreVal);
   }
-  
+
   if (vinculoVal) {
-    filtered = filtered.filter(c => c.vinculo === vinculoVal);
+    filtered = filtered.filter(r => r.client.vinculo === vinculoVal);
   }
-  
+
   if (sedeVal) {
-    filtered = filtered.filter(c => c.sede === sedeVal);
+    filtered = filtered.filter(r => r.client.sede === sedeVal);
   }
-  
+
   if (empresaVal) {
-    filtered = filtered.filter(c => c.cliente_final === empresaVal);
+    filtered = filtered.filter(r => r.client.cliente_final === empresaVal);
   }
-  
+
   if (subcontratistaVal) {
     if (subcontratistaVal === "NO_APLICA") {
-      filtered = filtered.filter(c => !c.subcontratista_id && !c.subcontratista_nombre && !c.subcontratista_definitivo);
+      filtered = filtered.filter(r =>
+        !r.client.subcontratista_id && !r.client.subcontratista_nombre && !r.client.subcontratista_definitivo
+      );
     } else {
-      filtered = filtered.filter(c => {
-        const subName = c.subcontratista_definitivo || c.subcontratista_nombre;
-        return subName === subcontratistaVal;
+      filtered = filtered.filter(r => {
+        const name = r.client.subcontratista_definitivo || r.client.subcontratista_nombre;
+        return name === subcontratistaVal;
       });
     }
   }
-  
-  renderClients(filtered);
-  updateStatistics(filtered);
+
+  renderRows(filtered);
+  updateStats(filtered);
 }
 
-// Limpiar todos los filtros
+// ─── Limpiar filtros básicos ──────────────────────────────────────────────────
 function clearAllFilters() {
   filterTipoCliente.value = "";
   filterNombreCliente.value = "";
@@ -577,26 +403,232 @@ function clearAllFilters() {
   filterSede.value = "";
   filterEmpresa.value = "";
   filterSubcontratista.value = "";
-  
-  renderClients(allClients);
-  updateStatistics(allClients);
+
+  renderRows(matrizRows);
+  updateStats(matrizRows);
 }
 
-// ✅ FUNCIÓN: Exportar datos visibles a Excel
+// ─── Filtros avanzados (admin: profesional + fechas) ─────────────────────────
+async function applyAdvancedFilters() {
+  const profesionalId   = filterProfesional.value;
+  const mesSeleccionado = filterMes.value;
+  let fechaInicio       = filterFechaInicio.value;
+  let fechaFin          = filterFechaFin.value;
+
+  if (mesSeleccionado) {
+    const fechas = calcularRangoFechas(mesSeleccionado);
+    fechaInicio = fechas.inicio;
+    fechaFin    = fechas.fin;
+    filterFechaInicio.value = fechaInicio;
+    filterFechaFin.value    = fechaFin;
+  }
+
+  const params = new URLSearchParams();
+  if (profesionalId) params.append('profesional_id', profesionalId);
+  if (fechaInicio)   params.append('fecha_inicio', fechaInicio);
+  if (fechaFin)      params.append('fecha_fin', fechaFin);
+
+  tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;">Filtrando datos...</td></tr>`;
+
+  try {
+    const [resClients, resConsultas] = await Promise.all([
+      fetch(`${API_URL}/filters?${params.toString()}`, {
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
+      }),
+      fetch(API_CONSULTAS, {
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
+      })
+    ]);
+
+    if (!resClients.ok)   throw new Error("Error al filtrar clientes");
+    if (!resConsultas.ok) throw new Error("Error al filtrar consultas");
+
+    const clients   = await resClients.json();
+    const consultas = await resConsultas.json();
+
+    if (!Array.isArray(clients) || clients.length === 0) {
+      showNoData();
+      updateStats([]);
+      return;
+    }
+
+    allClients   = clients.sort((a, b) => b.id - a.id);
+    allConsultas = Array.isArray(consultas) ? consultas : [];
+
+    // Si hay filtro de fechas, también filtrar consultas por fecha
+    let consultasFiltradas = allConsultas;
+    if (fechaInicio || fechaFin) {
+      consultasFiltradas = allConsultas.filter(c => {
+        if (!c.fecha) return false;
+        const f = c.fecha.split('T')[0];
+        if (fechaInicio && f < fechaInicio) return false;
+        if (fechaFin    && f > fechaFin)    return false;
+        return true;
+      });
+    }
+
+    matrizRows = buildMatrizRows(allClients, consultasFiltradas);
+
+    populateFilterOptions();
+    renderRows(matrizRows);
+    updateStats(matrizRows);
+
+  } catch (err) {
+    console.error("Error aplicando filtros avanzados:", err);
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;color:#e74c3c;">Error al filtrar datos</td></tr>`;
+  }
+}
+
+// ─── Limpiar filtros avanzados ────────────────────────────────────────────────
+function clearAdvancedFilters() {
+  filterProfesional.value  = "";
+  filterMes.value          = "";
+  filterFechaInicio.value  = "";
+  filterFechaFin.value     = "";
+  loadData();
+}
+
+// ─── Calcular rango de fechas predefinido ─────────────────────────────────────
+function calcularRangoFechas(opcion) {
+  const hoy = new Date();
+  let inicio, fin;
+
+  switch (opcion) {
+    case 'mes_actual':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      fin    = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+      break;
+    case 'mes_anterior':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+      fin    = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+      break;
+    case 'ultimos_3_meses':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 3, 1);
+      fin    = hoy;
+      break;
+    case 'ultimos_6_meses':
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
+      fin    = hoy;
+      break;
+    case 'este_año':
+      inicio = new Date(hoy.getFullYear(), 0, 1);
+      fin    = hoy;
+      break;
+    default:
+      return { inicio: '', fin: '' };
+  }
+
+  return {
+    inicio: formatearFecha(inicio),
+    fin:    formatearFecha(fin)
+  };
+}
+
+function formatearFecha(fecha) {
+  const y  = fecha.getFullYear();
+  const m  = String(fecha.getMonth() + 1).padStart(2, '0');
+  const d  = String(fecha.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// ─── Estadísticas ─────────────────────────────────────────────────────────────
+function updateStats(rows) {
+  // Contar clientes únicos
+  const clientesUnicos = new Set(rows.map(r => r.client.id));
+  const totalRegistros  = rows.length;
+  const totalSesiones   = rows.filter(r => r.consulta !== null).length;
+
+  // Contar clientes únicos por tipo (no filas, para no duplicar por sesiones)
+  const particular = new Set(rows.filter(r => r.client.tipo_entidad_pagadora === 'Particular').map(r => r.client.id)).size;
+  const arl        = new Set(rows.filter(r => r.client.tipo_entidad_pagadora === 'ARL').map(r => r.client.id)).size;
+  const ccf        = new Set(rows.filter(r => r.client.tipo_entidad_pagadora === 'CCF').map(r => r.client.id)).size;
+
+  document.getElementById("statTotal").textContent    = clientesUnicos.size;
+  document.getElementById("statParticular").textContent = particular;
+  document.getElementById("statARL").textContent      = arl;
+  document.getElementById("statCCF").textContent      = ccf;
+  document.getElementById("statSesiones").textContent = totalSesiones;
+  document.getElementById("statHoras").textContent    = totalSesiones; // 1 sesión = 1 hora
+}
+
+// ─── Mostrar / Ocultar mensaje sin datos ──────────────────────────────────────
+function showNoData() {
+  tableContainer.style.display = "none";
+  noDataMessage.style.display  = "block";
+}
+
+function hideNoData() {
+  tableContainer.style.display = "block";
+  noDataMessage.style.display  = "none";
+}
+
+// ─── Configurar eventos de filtros ───────────────────────────────────────────
+function setupFilterEvents() {
+  if (btnApplyAdvancedFilters) {
+    btnApplyAdvancedFilters.addEventListener("click", applyAdvancedFilters);
+  }
+  if (btnClearAdvancedFilters) {
+    btnClearAdvancedFilters.addEventListener("click", clearAdvancedFilters);
+  }
+  if (filterMes) {
+    filterMes.addEventListener("change", function () {
+      if (this.value) {
+        filterFechaInicio.value = "";
+        filterFechaFin.value    = "";
+      }
+    });
+  }
+  if (filterFechaInicio) {
+    filterFechaInicio.addEventListener("change", () => { filterMes.value = ""; });
+  }
+  if (filterFechaFin) {
+    filterFechaFin.addEventListener("change", () => { filterMes.value = ""; });
+  }
+
+  // Filtro tipo cliente (cascada)
+  filterTipoCliente.addEventListener("change", function () {
+    const tipo = this.value;
+    filterNombreCliente.innerHTML = '<option value="">Todos</option>';
+
+    if (tipo === "Particular" || tipo === "") {
+      filterNombreClienteContainer.style.display = "none";
+      filterNombreCliente.value = "";
+    } else if (tipo === "ARL" || tipo === "CCF") {
+      filterNombreClienteContainer.style.display = "block";
+      labelNombreCliente.textContent = `Seleccione ${tipo}:`;
+      (ENTIDADES[tipo] || []).forEach(entidad => {
+        const option = document.createElement("option");
+        option.value = entidad;
+        option.textContent = entidad;
+        filterNombreCliente.appendChild(option);
+      });
+    }
+    applyFilters();
+  });
+
+  filterNombreCliente.addEventListener("change",   applyFilters);
+  filterVinculo.addEventListener("change",         applyFilters);
+  filterSede.addEventListener("change",            applyFilters);
+  filterEmpresa.addEventListener("change",         applyFilters);
+  filterSubcontratista.addEventListener("change",  applyFilters);
+  btnClearFilters.addEventListener("click",        clearAllFilters);
+}
+
+// ─── Exportar a Excel ────────────────────────────────────────────────────────
 function exportarExcel() {
-  const datos = currentFilteredClients;
+  const datos = currentFilteredRows;
 
   if (!datos || datos.length === 0) {
-    alert('⚠️ No hay datos para exportar. Aplica los filtros primero o espera a que carguen los registros.');
+    alert('⚠️ No hay datos para exportar.');
     return;
   }
 
-  // Mapear cada cliente a una fila con las 8 columnas de la tabla
-  const filas = datos.map(client => {
+  const filas = datos.map(({ client, consulta, sesionNum }) => {
+
     // Tipo Cliente
     const tipoCliente = client.tipo_entidad_pagadora || '-';
 
-    // Nombre Cliente (empresa o entidad pagadora según tipo)
+    // Nombre Cliente
     let nombreCliente = '-';
     if (client.tipo_entidad_pagadora === 'Particular') {
       nombreCliente = client.cliente_final || '-';
@@ -607,63 +639,102 @@ function exportarExcel() {
     // Empresa Usuario
     const empresaUsuario = client.cliente_final || '-';
 
-    // Cliente Final (subcontratista, N/A si no aplica)
+    // Cliente Final (subcontratista)
     const subcontratistaName = client.subcontratista_definitivo || client.subcontratista_nombre;
     const clienteFinal = subcontratistaName || 'N/A';
 
-    // Vínculo
+    // Vínculo, Sede, Nombre, Cédula
     const vinculo = client.vinculo || '-';
+    const sede    = client.sede    || '-';
+    const cedula  = String(client.cedula || '-');
 
-    // Sede
-    const sede = client.sede || '-';
+    // Nombre: si es Familiar Trabajador, incluir info del trabajador relacionado
+    let nombre = client.nombre || '-';
+    if (client.vinculo === 'Familiar Trabajador' && client.nombre_trabajador) {
+      const relacion = client.cedula_trabajador
+        ? `Relacionado al trabajador: ${client.nombre_trabajador} con c.c ${client.cedula_trabajador}`
+        : `Relacionado al trabajador: ${client.nombre_trabajador}`;
+      nombre = `${nombre} - ${relacion}`;
+    }
 
-    // Nombre trabajador
-    const nombre = client.nombre || '-';
+    // Sesiones sugeridas
+    const sesionessugeridas = client.consultas_sugeridas
+      ? String(client.consultas_sugeridas)
+      : '-';
 
-    // Cédula
-    const cedula = client.cedula || '-';
+    // Campos de la sesión
+    let fechaConsulta = '-';
+    let motivoConsulta = '-';
+    let numSesion = '-';
+    let horasSesion = '-';
+    let observaciones = '-';
+    let profesional = '-';
+
+    if (consulta) {
+      if (consulta.fecha) {
+        const d = new Date(consulta.fecha);
+        fechaConsulta = d.toLocaleDateString('es-CO', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+      }
+      motivoConsulta = consulta.motivo_consulta || '-';
+      numSesion      = sesionNum !== null ? String(sesionNum) : '-';
+      horasSesion    = '1';
+      observaciones  = consulta.columna1 || '-';
+
+      const profId   = consulta.profesional_id || client.profesional_id;
+      profesional    = getNombreProfesional(profId);
+    }
 
     return {
-      'Tipo Cliente':    tipoCliente,
-      'Nombre Cliente':  nombreCliente,
-      'Empresa Usuario': empresaUsuario,
-      'Cliente Final':   clienteFinal,
-      'Vínculo':         vinculo,
-      'Sede':            sede,
-      'Nombre':          nombre,
-      'Cédula':          String(cedula)  // Forzar texto para no perder ceros a la izquierda
+      'Fecha Consulta':      fechaConsulta,
+      'Tipo Cliente':        tipoCliente,
+      'Nombre Cliente':      nombreCliente,
+      'Empresa Usuario':     empresaUsuario,
+      'Cliente Final':       clienteFinal,
+      'Vínculo':             vinculo,
+      'Sede':                sede,
+      'Nombre':              nombre,
+      'Cédula':              cedula,
+      'Motivo Consulta':     motivoConsulta,
+      'Sesión #':            numSesion,
+      'Horas Sesión':        horasSesion,
+      'Sesiones Sugeridas':  sesionessugeridas,
+      'Observaciones':       observaciones,
+      'Profesional':         profesional
     };
   });
 
-  // Crear libro y hoja de Excel
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(filas);
 
-  // Ajustar ancho de columnas automáticamente
-  const colWidths = [
+  ws['!cols'] = [
+    { wch: 14 }, // Fecha Consulta
     { wch: 14 }, // Tipo Cliente
-    { wch: 30 }, // Nombre Cliente
-    { wch: 30 }, // Empresa Usuario
-    { wch: 30 }, // Cliente Final
+    { wch: 28 }, // Nombre Cliente
+    { wch: 28 }, // Empresa Usuario
+    { wch: 28 }, // Cliente Final
     { wch: 18 }, // Vínculo
-    { wch: 16 }, // Sede
+    { wch: 14 }, // Sede
     { wch: 28 }, // Nombre
     { wch: 14 }, // Cédula
+    { wch: 30 }, // Motivo Consulta
+    { wch:  9 }, // Sesión #
+    { wch: 12 }, // Horas Sesión
+    { wch: 16 }, // Sesiones Sugeridas
+    { wch: 40 }, // Observaciones
+    { wch: 24 }, // Profesional
   ];
-  ws['!cols'] = colWidths;
 
   XLSX.utils.book_append_sheet(wb, ws, 'Trazabilidad');
 
-  // Nombre del archivo con fecha
   const hoy = new Date();
-  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-  const nombreArchivo = `Trazabilidad_Pagos_${fecha}.xlsx`;
-
-  XLSX.writeFile(wb, nombreArchivo);
-  console.log(`✅ Exportado: ${nombreArchivo} con ${filas.length} registros`);
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  XLSX.writeFile(wb, `Trazabilidad_Pagos_${fecha}.xlsx`);
+  console.log(`✅ Exportado con ${filas.length} registros`);
 }
 
-// Escape HTML para seguridad
+// ─── Escape HTML ─────────────────────────────────────────────────────────────
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -673,66 +744,3 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-// ⭐ COMENTADO TEMPORALMENTE - Estadísticas del Profesional
-/* async function loadStatsProfesional(profesionalId) {
-  try {
-    console.log("📊 Cargando estadísticas del profesional:", profesionalId);
-    console.log("📡 URL:", `${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`);
-    
-    const res = await fetch(`${API_CONSULTAS}/estadisticas-profesional?profesional_id=${profesionalId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
-    });
-    
-    console.log("📥 Response status:", res.status);
-    
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("❌ Error response:", errorText);
-      throw new Error("Error al cargar estadísticas del profesional");
-    }
-    
-    const stats = await res.json();
-    console.log("✅ Estadísticas recibidas:", stats);
-    
-    // Obtener nombre del profesional
-    const profesionalSelect = document.getElementById("filterProfesional");
-    const profesionalNombre = profesionalSelect.options[profesionalSelect.selectedIndex].text;
-    
-    console.log("👤 Nombre profesional:", profesionalNombre);
-    
-    // Mostrar estadísticas
-    showStatsProfesional(profesionalNombre, stats);
-    
-  } catch (err) {
-    console.error("❌ Error cargando estadísticas del profesional:", err);
-    hideStatsProfesional();
-  }
-}
-
-// ⭐ NUEVO: Mostrar estadísticas del profesional
-function showStatsProfesional(nombre, stats) {
-  statsProfesionalNombre.textContent = nombre;
-  statPacientesAtendidos.textContent = stats.pacientes_atendidos || 0;
-  statSesionesRealizadas.textContent = stats.total_consultas || 0;
-  statHorasAtendidas.textContent = stats.total_consultas || 0;
-  statCasosCerrados.textContent = stats.casos_cerrados || 0;
-  
-  statsProfesionalContainer.style.display = "block";
-  
-  // Animación suave
-  statsProfesionalContainer.style.opacity = "0";
-  setTimeout(() => {
-    statsProfesionalContainer.style.opacity = "1";
-  }, 100);
-}
-
-// ⭐ NUEVO: Ocultar estadísticas del profesional
-function hideStatsProfesional() {
-  if (statsProfesionalContainer) {
-    statsProfesionalContainer.style.display = "none";
-  }
-}
-*/ // FIN BLOQUE COMENTADO - Estadísticas del Profesional

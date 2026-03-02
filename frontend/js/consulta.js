@@ -42,13 +42,21 @@ function toggleFechaCierreField() {
     fechaCierreInput.required = true;
     recomendacionesInput.required = true;
     
-    // Si no tiene valor, establecer la fecha de hoy por defecto
+    // ⭐ Resetear el flag de modificación manual al abrir el campo
+    fechaCierreModificadaManualmente = false;
+    
+    // ⭐ Sincronizar con la fecha del formulario si está disponible, sino usar hoy
+    const fechaFormulario = document.getElementById("fecha")?.value;
     if (!fechaCierreInput.value) {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      fechaCierreInput.value = `${year}-${month}-${day}`;
+      if (fechaFormulario) {
+        fechaCierreInput.value = fechaFormulario;
+      } else {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        fechaCierreInput.value = `${year}-${month}-${day}`;
+      }
     }
     
     // ⭐ NUEVO: Cargar recomendaciones existentes si las hay
@@ -60,11 +68,32 @@ function toggleFechaCierreField() {
     fechaCierreInput.required = false;
     recomendacionesInput.required = false;
     fechaCierreInput.value = "";
+    // ⭐ Resetear el flag al cerrar el campo
+    fechaCierreModificadaManualmente = false;
   }
 }
 
 // Agregar listener al campo de estado
 document.getElementById("estado")?.addEventListener("change", toggleFechaCierreField);
+
+// ⭐ NUEVO: Sincronizar fecha de cierre cuando cambia la fecha del formulario
+// Flag para saber si el usuario modificó manualmente la fecha de cierre
+let fechaCierreModificadaManualmente = false;
+
+document.getElementById("fecha_cierre")?.addEventListener("change", function() {
+  // El usuario cambió manualmente la fecha de cierre → marcar como modificada
+  fechaCierreModificadaManualmente = true;
+});
+
+document.getElementById("fecha")?.addEventListener("change", function() {
+  const estadoSelect = document.getElementById("estado");
+  const fechaCierreInput = document.getElementById("fecha_cierre");
+  
+  // Solo sincronizar si el estado es "Cerrado" y el usuario NO modificó la fecha de cierre manualmente
+  if (estadoSelect?.value === "Cerrado" && fechaCierreInput && !fechaCierreModificadaManualmente) {
+    fechaCierreInput.value = this.value;
+  }
+});
 
 // ⭐ NUEVO: Función para toggle de confidencialidad
 window.toggleConfidencialidad = function() {

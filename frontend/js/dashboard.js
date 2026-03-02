@@ -39,19 +39,59 @@ async function cargarDatosOriginales() {
     const clientesRes = await fetch(API_URL, {
       headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
-    datosOriginales.clientes = await clientesRes.json();
+
+    // Manejar respuesta de clientes: el profesional puede recibir
+    // un objeto filtrado o un array, según el rol en el backend
+    if (clientesRes.ok) {
+      const clientesData = await clientesRes.json();
+      // Asegurarse de que siempre sea un array
+      datosOriginales.clientes = Array.isArray(clientesData) ? clientesData : [];
+    } else {
+      console.warn("No se pudo obtener clientes (status:", clientesRes.status, "). Se usará array vacío.");
+      datosOriginales.clientes = [];
+    }
 
     // Obtener consultas
     const consultasRes = await fetch(CONSULTAS_API_URL, {
       headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
-    datosOriginales.consultas = await consultasRes.json();
+
+    if (consultasRes.ok) {
+      const consultasData = await consultasRes.json();
+      datosOriginales.consultas = Array.isArray(consultasData) ? consultasData : [];
+    } else {
+      console.warn("No se pudo obtener consultas (status:", consultasRes.status, "). Se usará array vacío.");
+      datosOriginales.consultas = [];
+    }
+
+    // Si no hay clientes desde /api/clients, intentar reconstruirlos
+    // a partir de las consultas (útil para el perfil profesional)
+    if (datosOriginales.clientes.length === 0 && datosOriginales.consultas.length > 0) {
+      const clientesMap = {};
+      datosOriginales.consultas.forEach(c => {
+        if (c.cliente_id && !clientesMap[c.cliente_id]) {
+          clientesMap[c.cliente_id] = {
+            id: c.cliente_id,
+            cedula: c.cedula,
+            nombre: c.nombre,
+            sede: c.sede
+          };
+        }
+      });
+      datosOriginales.clientes = Object.values(clientesMap);
+      console.info(`Clientes reconstruidos desde consultas: ${datosOriginales.clientes.length}`);
+    }
 
     // Obtener estadísticas
     const statsRes = await fetch(`${CONSULTAS_API_URL}/estadisticas`, {
       headers: { "Authorization": `Bearer ${getAuthToken()}` }
     });
-    datosOriginales.estadisticas = await statsRes.json();
+
+    if (statsRes.ok) {
+      datosOriginales.estadisticas = await statsRes.json();
+    } else {
+      datosOriginales.estadisticas = {};
+    }
 
   } catch (err) {
     console.error("Error cargando datos originales:", err);
@@ -131,7 +171,8 @@ function calcularEstadisticas(consultas) {
 
 // Mostrar estadísticas generales
 async function mostrarEstadisticasGenerales(stats) {
-  document.getElementById("totalClientes").textContent = datosOriginales.clientes.length;
+  const totalClientes = Array.isArray(datosOriginales.clientes) ? datosOriginales.clientes.length : 0;
+  document.getElementById("totalClientes").textContent = totalClientes;
   document.getElementById("totalConsultas").textContent = stats.total_consultas || 0;
   document.getElementById("casosAbiertos").textContent = stats.casos_abiertos || 0;
   document.getElementById("casosCerrados").textContent = stats.casos_cerrados || 0;
@@ -273,7 +314,8 @@ async function mostrarTopClientes(consultas) {
   
   // Crear un mapa de todos los clientes disponibles para tener sus datos completos
   const clientesMap = {};
-  datosOriginales.clientes.forEach(cliente => {
+  const clientesArr = Array.isArray(datosOriginales.clientes) ? datosOriginales.clientes : [];
+  clientesArr.forEach(cliente => {
     clientesMap[cliente.id] = cliente;
   });
   
@@ -464,7 +506,7 @@ function mostrarTodosLosClientes(todosLosClientes) {
 // Cargar estadísticas por sede
 async function loadSedesStats() {
   try {
-    const clientes = datosOriginales.clientes;
+    const clientes = Array.isArray(datosOriginales.clientes) ? datosOriginales.clientes : [];
     const clientesPorSede = {};
     
     clientes.forEach(c => {
@@ -744,7 +786,7 @@ window.exportarJSON = function() {
         fecha_fin: fechaFinFiltro
       },
       estadisticas: {
-        total_clientes: datosOriginales.clientes.length,
+        total_clientes: Array.isArray(datosOriginales.clientes) ? datosOriginales.clientes.length : 0,
         total_consultas: estadisticasExport.total_consultas,
         casos_abiertos: estadisticasExport.casos_abiertos,
         casos_cerrados: estadisticasExport.casos_cerrados,

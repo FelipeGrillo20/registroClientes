@@ -825,9 +825,31 @@ body {
 .trazabilidad-table .col-horas      { text-align: center; min-width: 80px; font-weight: 600; }
 .trazabilidad-table .col-sugeridas  { text-align: center; min-width: 90px; }
 .trazabilidad-table .col-obs        { min-width: 220px; max-width: 340px;
-                                      white-space: normal; word-wrap: break-word;
-                                      line-height: 1.4; text-align: justify;
                                       vertical-align: top; padding: 10px 12px; }
+
+.obs-texto {
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.45;
+  text-align: justify;
+  font-size: 0.82em;
+}
+
+.obs-ver-mas {
+  display: inline-block;
+  margin-top: 5px;
+  color: #667eea;
+  font-weight: 600;
+  font-style: normal;
+  font-size: 0.82em;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.obs-ver-mas:hover {
+  color: #764ba2;
+}
 .trazabilidad-table .col-profesional{ min-width: 130px; font-style: italic; color: #555; }
 .trazabilidad-table .col-estado     { text-align: center; min-width: 90px; white-space: nowrap; }
 

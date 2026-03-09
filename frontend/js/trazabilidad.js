@@ -178,6 +178,50 @@ function getNombreProfesional(profesionalId) {
   return prof ? prof.nombre : `Prof. #${profesionalId}`;
 }
 
+// ─── Celda Observaciones con truncado a 10 líneas ────────────────────────────
+function buildObsCell(consulta, index) {
+  if (!consulta || !consulta.columna1) return '-';
+
+  const texto = consulta.columna1;
+  const LIMITE = 10;
+
+  // Dividir por saltos de línea reales; si no hay, simular líneas por caracteres (~60 por línea)
+  const lineas = texto.split('\n');
+  const totalLineas = lineas.length;
+
+  // Estimar líneas visuales si el texto es un bloque continuo (~60 chars por línea)
+  const lineasEstimadas = lineas.reduce((acc, l) => acc + Math.max(1, Math.ceil(l.length / 60)), 0);
+
+  if (lineasEstimadas <= LIMITE) {
+    // Texto corto: mostrar completo
+    return `<span class="obs-texto">${escapeHtml(texto)}</span>`;
+  }
+
+  // Texto largo: recortar aproximadamente a 10 líneas visuales (~600 chars)
+  const CHARS_LIMITE = 600;
+  const textoCorto   = texto.length > CHARS_LIMITE ? texto.substring(0, CHARS_LIMITE) : texto;
+  const id           = `obs-${index}`;
+
+  return `
+    <span class="obs-texto obs-corto" id="${id}-corto">${escapeHtml(textoCorto)}<span class="obs-puntos">...</span>
+      <a class="obs-ver-mas" onclick="toggleObs('${id}')">Ver más</a>
+    </span>
+    <span class="obs-texto obs-completo" id="${id}-completo" style="display:none">${escapeHtml(texto)}
+      <a class="obs-ver-mas" onclick="toggleObs('${id}')">Ver menos</a>
+    </span>
+  `;
+}
+
+// Toggle ver más / ver menos
+function toggleObs(id) {
+  const corto    = document.getElementById(`${id}-corto`);
+  const completo = document.getElementById(`${id}-completo`);
+  if (!corto || !completo) return;
+  const expandido = completo.style.display !== 'none';
+  corto.style.display    = expandido ? 'block' : 'none';
+  completo.style.display = expandido ? 'none'  : 'block';
+}
+
 // ─── Badge de estado de la consulta ──────────────────────────────────────────
 function buildEstadoBadge(consulta) {
   if (!consulta || !consulta.estado) return '-';
@@ -217,7 +261,7 @@ function renderRows(rows) {
 
   hideNoData();
 
-  rows.forEach(({ client, consulta, sesionNum }) => {
+  rows.forEach(({ client, consulta, sesionNum }, index) => {
 
     // ── Campos del cliente ───────────────────────────────────────────────────
     let tipoBadge = '-';
@@ -315,7 +359,7 @@ function renderRows(rows) {
       <td class="col-sesion-num">${sesionNumCell}</td>
       <td class="col-horas">${horasSesion}</td>
       <td class="col-sugeridas">${sesionessugeridas}</td>
-      <td class="col-obs">${observaciones}</td>
+      <td class="col-obs">${buildObsCell(consulta, index)}</td>
       <td class="col-profesional">${profesionalNombre}</td>
       <td class="col-estado">${buildEstadoBadge(consulta)}</td>
     `;

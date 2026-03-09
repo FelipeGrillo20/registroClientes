@@ -829,6 +829,31 @@ body {
                                       line-height: 1.4; text-align: justify;
                                       vertical-align: top; padding: 10px 12px; }
 .trazabilidad-table .col-profesional{ min-width: 130px; font-style: italic; color: #555; }
+.trazabilidad-table .col-estado     { text-align: center; min-width: 90px; white-space: nowrap; }
+
+/* Badges de estado */
+.badge-estado-abierto {
+  display: inline-block;
+  background: #eafaf1;
+  color: #1e8449;
+  border: 1px solid #a9dfbf;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-estado-cerrado {
+  display: inline-block;
+  background: #fdf2f2;
+  color: #c0392b;
+  border: 1px solid #f5b7b1;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
 
 /* Stat cards nuevas */
 #statSesiones, #statHoras {

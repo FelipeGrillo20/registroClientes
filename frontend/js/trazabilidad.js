@@ -178,6 +178,17 @@ function getNombreProfesional(profesionalId) {
   return prof ? prof.nombre : `Prof. #${profesionalId}`;
 }
 
+// ─── Badge de estado de la consulta ──────────────────────────────────────────
+function buildEstadoBadge(consulta) {
+  if (!consulta || !consulta.estado) return '-';
+  if (consulta.estado === 'Abierto') {
+    return '<span class="badge badge-estado-abierto">🟢 Abierto</span>';
+  } else if (consulta.estado === 'Cerrado') {
+    return '<span class="badge badge-estado-cerrado">🔴 Cerrado</span>';
+  }
+  return escapeHtml(consulta.estado);
+}
+
 // ─── Construir celda Nombre (con info del trabajador si es Familiar) ─────────
 function buildNombreCell(client) {
   const nombre = escapeHtml(client.nombre || '-');
@@ -306,6 +317,7 @@ function renderRows(rows) {
       <td class="col-sugeridas">${sesionessugeridas}</td>
       <td class="col-obs">${observaciones}</td>
       <td class="col-profesional">${profesionalNombre}</td>
+      <td class="col-estado">${buildEstadoBadge(consulta)}</td>
     `;
 
     tbody.appendChild(tr);
@@ -701,7 +713,8 @@ function exportarExcel() {
       'Horas Sesión':        horasSesion,
       'Sesiones Sugeridas':  sesionessugeridas,
       'Observaciones':       observaciones,
-      'Profesional':         profesional
+      'Profesional':         profesional,
+      'Estado':              consulta ? (consulta.estado || '-') : '-'
     };
   });
 
@@ -724,6 +737,7 @@ function exportarExcel() {
     { wch: 16 }, // Sesiones Sugeridas
     { wch: 40 }, // Observaciones
     { wch: 24 }, // Profesional
+    { wch: 10 }, // Estado
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Trazabilidad');

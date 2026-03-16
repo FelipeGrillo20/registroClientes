@@ -1,12 +1,12 @@
 // frontend/js/informe.js
 
 /**
- * Módulo para la generación de informes clínicos del paciente
- * Funciones principales:
- * - generarInformePaciente(): Genera y descarga directamente el PDF
+ * Módulo para la generación de informes clínicos del paciente.
+ * Cada consulta (consulta_number) tiene su propio informe independiente.
+ * Lee fecha_cierre y recomendaciones_finales desde la tabla consultas,
+ * no desde el cliente.
  */
 
-// Formatear fecha para el informe
 function formatDateInforme(dateString) {
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, '0');
@@ -15,7 +15,6 @@ function formatDateInforme(dateString) {
   return `${day}/${month}/${year}`;
 }
 
-// Escape HTML para seguridad
 function escapeHtmlInforme(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -25,95 +24,96 @@ function escapeHtmlInforme(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Calcular días en proceso usando fecha_cierre del cliente
 function calcularDiasEnProceso(fechaInicial, fechaFinal) {
   const fecha1 = new Date(fechaInicial);
   const fecha2 = new Date(fechaFinal);
-  
-  // Resetear horas para comparar solo fechas
   fecha1.setHours(0, 0, 0, 0);
   fecha2.setHours(0, 0, 0, 0);
-  
-  // Calcular diferencia en días
-  const diferenciaMilisegundos = fecha2 - fecha1;
-  const diferenciaDias = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
-  
-  // Si es el mismo día (diferencia = 0), retornar 1 día
+  const diferenciaDias = Math.floor((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
   return diferenciaDias === 0 ? 1 : diferenciaDias;
 }
 
-// Generar y descargar informe del paciente directamente como PDF
 window.generarInformePaciente = function() {
-  // Obtener datos desde window (compartidos desde consulta.js)
   const clienteActual = window.clienteActual;
   const consultasDelCliente = window.consultasDelCliente;
-  
-  console.log("📊 Generando informe...");
-  console.log("Cliente:", clienteActual);
-  console.log("Consultas:", consultasDelCliente);
-  
-  // Obtener usuario logueado
+
+  // Obtener el consulta_number activo (la pestaña que el profesional está viendo)
+  const consultaNumberActual = window.getConsultaNumberActual
+    ? window.getConsultaNumberActual()
+    : null;
+
+  console.log("📊 Generando informe para consulta_number:", consultaNumberActual);
+
   const userData = window.getUserData();
   const profesionalNombre = userData ? userData.nombre : 'No especificado';
   const profesionalCedula = userData ? userData.cedula : null;
-  
-  // Construir ruta de la firma según la cédula del profesional
   const rutaFirma = profesionalCedula ? `img/firmas/firma_${profesionalCedula}.png` : null;
 
   if (!clienteActual || !consultasDelCliente || consultasDelCliente.length === 0) {
-    console.error("❌ No hay información suficiente");
     alert("⚠️ No hay información suficiente para generar el informe");
     return;
   }
 
-  // Validar: El caso debe estar cerrado para generar informe
-  console.log("🔍 Verificando fecha de cierre...");
-  console.log("fecha_cierre del cliente:", clienteActual.fecha_cierre);
-  
-  if (!clienteActual.fecha_cierre) {
-    console.error("❌ El caso NO está cerrado");
-    console.log("Estado del cliente completo:", JSON.stringify(clienteActual, null, 2));
-    alert("⚠️ El caso debe estar cerrado para generar el informe.\n\nPor favor, cierra el caso desde el formulario de consulta seleccionando estado 'Cerrado' y estableciendo una fecha de cierre.");
+  if (consultaNumberActual === null) {
+    alert("⚠️ No se pudo determinar la consulta activa. Por favor recarga la página.");
     return;
   }
-  
-  console.log("✅ Caso cerrado, generando informe...");
 
-  // Ordenar consultas por fecha y por ID para mantener el orden correcto en el informe
-  const consultasOrdenadas = [...consultasDelCliente].sort((a, b) => {
-    const diffFecha = new Date(a.fecha) - new Date(b.fecha);
-    if (diffFecha !== 0) return diffFecha;
-    return a.id - b.id;
-  });
+  // Filtrar SOLO las sesiones de la consulta activa
+  const sesionesConsulta = consultasDelCliente
+    .filter(c => c.consulta_number === consultaNumberActual)
+    .sort((a, b) => {
+      const diffFecha = new Date(a.fecha) - new Date(b.fecha);
+      return diffFecha !== 0 ? diffFecha : a.id - b.id;
+    });
 
-  const numeroSesiones = consultasDelCliente.length;
-  const numeroHoras = numeroSesiones; // 1 hora por sesión
-  
-  // Cálculo de fechas usando fecha_cierre del cliente
-  const fechaInicial = new Date(consultasOrdenadas[0].fecha);
-  const fechaCierre = new Date(clienteActual.fecha_cierre);
-  
+  if (sesionesConsulta.length === 0) {
+    alert("⚠️ No hay sesiones registradas para esta consulta.");
+    return;
+  }
+
+  // Leer fecha_cierre y recomendaciones desde las sesiones (no desde clienteActual)
+  const sesionConCierre = sesionesConsulta.find(s => s.fecha_cierre);
+  const fechaCierreConsulta = sesionConCierre ? sesionConCierre.fecha_cierre : null;
+  const recomendacionesConsulta = sesionConCierre ? sesionConCierre.recomendaciones_finales : null;
+
+  // Validar que el caso esté cerrado
+  if (!fechaCierreConsulta) {
+    alert(
+      "⚠️ El caso debe estar cerrado para generar el informe.\n\n" +
+      "Por favor cierra la Consulta " + consultaNumberActual +
+      " desde el formulario seleccionando estado 'Cerrado'."
+    );
+    return;
+  }
+
+  console.log("✅ Generando informe para Consulta", consultaNumberActual);
+
+  const numeroSesiones = sesionesConsulta.length;
+  const numeroHoras = numeroSesiones;
+
+  const fechaInicial = new Date(sesionesConsulta[0].fecha);
+  const fechaCierre = new Date(fechaCierreConsulta);
+
   const diasEnProceso = calcularDiasEnProceso(fechaInicial, fechaCierre);
-  
-  // Formatear fechas
-  const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+
+  const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  
+
   const mesCierre = mesesES[fechaCierre.getMonth()];
   const anioCierre = fechaCierre.getFullYear();
   const fechaCierreFormateada = formatDateInforme(fechaCierre.toISOString());
 
-  // Crear contenido del informe
   const informeHTML = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Seguimiento Psicológico - ${clienteActual.nombre}</title>
+      <title>Seguimiento Psicológico - ${clienteActual.nombre} - Consulta ${consultaNumberActual}</title>
       <link rel="stylesheet" href="css/informe.css">
       <style>
-        body { 
-          font-family: 'Segoe UI', Arial, sans-serif; 
-          padding: 30px; 
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          padding: 30px;
           background: white;
           color: #2c3e50;
         }
@@ -121,18 +121,18 @@ window.generarInformePaciente = function() {
     </head>
     <body>
       <div class="informe-container">
-        <!-- Encabezado del Informe -->
+
         <div class="informe-header">
           <div class="informe-logo">
             <div class="logo-circle">📋</div>
             <h1>Orientación Psicológica</h1>
           </div>
           <div class="informe-fecha-generacion">
+            <strong>Consulta N°:</strong> ${consultaNumberActual}<br>
             <strong>Fecha de generación:</strong> ${formatDateInforme(new Date().toISOString())}
           </div>
         </div>
 
-        <!-- Información Personal -->
         <div class="informe-section informe-datos-personales">
           <h2 class="informe-section-title">
             <span class="section-icon">👤</span>
@@ -169,18 +169,17 @@ window.generarInformePaciente = function() {
             </div>
             <div class="informe-data-item">
               <span class="data-label">Contacto de Emergencia:</span>
-              <span class="data-value">${clienteActual.contacto_emergencia_nombre ? 
-                `${clienteActual.contacto_emergencia_nombre} (${clienteActual.contacto_emergencia_parentesco}) - ${clienteActual.contacto_emergencia_telefono}` 
+              <span class="data-value">${clienteActual.contacto_emergencia_nombre
+                ? `${clienteActual.contacto_emergencia_nombre} (${clienteActual.contacto_emergencia_parentesco}) - ${clienteActual.contacto_emergencia_telefono}`
                 : '-'}</span>
             </div>
           </div>
         </div>
 
-        <!-- Resumen Estadístico -->
         <div class="informe-section informe-estadisticas">
           <h2 class="informe-section-title">
             <span class="section-icon">📊</span>
-            Resumen del Proceso
+            Resumen del Proceso — Consulta ${consultaNumberActual}
           </h2>
           <div class="estadisticas-grid">
             <div class="estadistica-card">
@@ -217,24 +216,22 @@ window.generarInformePaciente = function() {
           </div>
         </div>
 
-        <!-- Motivo Principal -->
         <div class="informe-section informe-motivo">
           <h2 class="informe-section-title">
             <span class="section-icon">📋</span>
             Motivo de Consulta
           </h2>
           <div class="motivo-principal">
-            ${consultasOrdenadas[0].motivo_consulta || 'No especificado'}
+            ${sesionesConsulta[0].motivo_consulta || 'No especificado'}
           </div>
         </div>
 
-        <!-- Historial de Sesiones -->
         <div class="informe-section informe-sesiones">
           <h2 class="informe-section-title">
             <span class="section-icon">📖</span>
             Historial de Sesiones
           </h2>
-          ${consultasOrdenadas.map((consulta, index) => `
+          ${sesionesConsulta.map((consulta, index) => `
             <div class="sesion-detalle">
               <div class="sesion-header">
                 <span class="sesion-numero">Sesión ${index + 1}</span>
@@ -259,28 +256,26 @@ window.generarInformePaciente = function() {
           `).join('')}
         </div>
 
-        <!-- ⭐ BLOQUE FINAL INDIVISIBLE: Recomendaciones + Firma + Nota -->
         <div class="informe-bloque-final">
-          ${clienteActual.recomendaciones_finales ? `
+          ${recomendacionesConsulta ? `
           <div class="informe-section informe-recomendaciones">
             <h2 class="informe-section-title">
               <span class="section-icon">📝</span>
               Recomendaciones Finales
             </h2>
             <div class="recomendaciones-contenido">
-              <p>${escapeHtmlInforme(clienteActual.recomendaciones_finales).replace(/\n/g, '<br>')}</p>
+              <p>${escapeHtmlInforme(recomendacionesConsulta).replace(/\n/g, '<br>')}</p>
             </div>
           </div>
           ` : ''}
 
-          <!-- Firma -->
           <div class="informe-footer">
             <div class="firma-seccion">
               ${rutaFirma ? `
                 <div class="firma-imagen-container">
-                  <img src="${rutaFirma}" 
-                       alt="Firma del Profesional" 
-                       class="firma-imagen" 
+                  <img src="${rutaFirma}"
+                       alt="Firma del Profesional"
+                       class="firma-imagen"
                        onerror="this.style.display='none'">
                 </div>
               ` : ''}
@@ -294,18 +289,17 @@ window.generarInformePaciente = function() {
             </div>
           </div>
         </div>
+
       </div>
     </body>
     </html>
   `;
 
-  // Abrir ventana de impresión/PDF directamente
   const ventanaImpresion = window.open('', '_blank');
   ventanaImpresion.document.write(informeHTML);
   ventanaImpresion.document.close();
   ventanaImpresion.focus();
-  
-  // Esperar un momento para que cargue completamente y luego abrir diálogo de impresión
+
   setTimeout(() => {
     ventanaImpresion.print();
   }, 500);

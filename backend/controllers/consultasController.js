@@ -2,50 +2,89 @@
 
 const consultaModel = require("../models/consultaModel");
 
-// Crear nueva consulta
+// ============================================
+// Crear nueva consulta / sesión
+//
+// El frontend envía un campo opcional "consulta_number":
+//
+//   - Si viene    → es una sesión adicional de una consulta existente.
+//                   Solo validamos que ese consulta_number exista y esté Abierto.
+//
+//   - Si NO viene → es la primera sesión de una consulta NUEVA.
+//                   Calculamos MAX(consulta_number) + 1 y validamos que no
+//                   haya otra consulta abierta del mismo trabajador.
+// ============================================
 exports.createConsulta = async (req, res) => {
   try {
     const {
       cliente_id,
+      consulta_number: consulta_number_recibido, // opcional desde el frontend
       motivo_consulta,
       actividad,
       modalidad,
       fecha,
       columna1,
       estado,
-      observaciones_confidenciales // ⭐ NUEVO
+      observaciones_confidenciales
     } = req.body;
 
-    // Validaciones
+    // --- Validaciones básicas ---
     if (!cliente_id || !motivo_consulta || !actividad || !modalidad || !fecha || !estado) {
-      return res.status(400).json({ 
-        message: "Cliente, motivo de consulta, actividad, modalidad, fecha y estado son requeridos" 
+      return res.status(400).json({
+        message: "Cliente, motivo de consulta, actividad, modalidad, fecha y estado son requeridos"
       });
     }
 
-    // Validar modalidad
     if (modalidad !== "Virtual" && modalidad !== "Presencial") {
-      return res.status(400).json({ 
-        message: "La modalidad debe ser 'Virtual' o 'Presencial'" 
+      return res.status(400).json({
+        message: "La modalidad debe ser 'Virtual' o 'Presencial'"
       });
     }
 
-    // Validar estado
     if (estado !== "Abierto" && estado !== "Cerrado") {
-      return res.status(400).json({ 
-        message: "El estado debe ser 'Abierto' o 'Cerrado'" 
+      return res.status(400).json({
+        message: "El estado debe ser 'Abierto' o 'Cerrado'"
       });
+    }
+
+    let consulta_number;
+
+    if (consulta_number_recibido) {
+      // --- Caso A: sesión adicional de una consulta existente ---
+      // El frontend conoce el consulta_number activo y lo envía.
+      // No recalculamos ni bloqueamos por consulta abierta, porque
+      // precisamente esa consulta ya está abierta y le pertenece.
+      consulta_number = parseInt(consulta_number_recibido);
+    } else {
+      // --- Caso B: primera sesión de una consulta NUEVA ---
+      // Verificar que no haya otra consulta abierta del trabajador
+      // (regla: máximo una consulta abierta por trabajador)
+      const nextNumber = await consultaModel.getNextConsultaNumber(cliente_id);
+
+      const tieneAbiertaEnOtro = await consultaModel.tieneConsultaAbiertaEnOtroNumero(
+        cliente_id,
+        nextNumber
+      );
+
+      if (tieneAbiertaEnOtro) {
+        return res.status(409).json({
+          message: "El trabajador ya tiene una consulta abierta. Debe cerrarla antes de abrir una nueva."
+        });
+      }
+
+      consulta_number = nextNumber;
     }
 
     const newConsulta = await consultaModel.createConsulta({
       cliente_id,
+      consulta_number,
       motivo_consulta,
       actividad,
       modalidad,
       fecha,
       columna1: columna1 || null,
       estado,
-      observaciones_confidenciales: observaciones_confidenciales || false // ⭐ NUEVO (default: false)
+      observaciones_confidenciales: observaciones_confidenciales || false
     });
 
     res.status(201).json(newConsulta);
@@ -55,22 +94,22 @@ exports.createConsulta = async (req, res) => {
   }
 };
 
-// ⭐ MODIFICADO: Obtener consultas según el rol del usuario
+// ============================================
+// Obtener consultas según el rol del usuario
+// ============================================
 exports.getAllConsultas = async (req, res) => {
   try {
-    const userRole = req.user.rol; // Del token JWT
-    const userId = req.user.id;    // Del token JWT
-    
+    const userRole = req.user.rol;
+    const userId = req.user.id;
+
     let consultas;
-    
+
     if (userRole === 'admin') {
-      // Admin ve TODAS las consultas
       consultas = await consultaModel.getAllConsultas();
     } else {
-      // Profesionales solo ven consultas de sus clientes
       consultas = await consultaModel.getConsultasByProfesional(userId);
     }
-    
+
     res.json(consultas);
   } catch (err) {
     console.error("Error obteniendo consultas:", err);
@@ -78,7 +117,9 @@ exports.getAllConsultas = async (req, res) => {
   }
 };
 
+// ============================================
 // Obtener consultas de un cliente específico
+// ============================================
 exports.getConsultasByCliente = async (req, res) => {
   try {
     const { cliente_id } = req.params;
@@ -90,7 +131,9 @@ exports.getConsultasByCliente = async (req, res) => {
   }
 };
 
+// ============================================
 // Obtener consulta por ID
+// ============================================
 exports.getConsultaById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -107,7 +150,10 @@ exports.getConsultaById = async (req, res) => {
   }
 };
 
+// ============================================
 // Actualizar consulta
+// consulta_number NO se toca en el UPDATE
+// ============================================
 exports.updateConsulta = async (req, res) => {
   try {
     const { id } = req.params;
@@ -118,27 +164,24 @@ exports.updateConsulta = async (req, res) => {
       fecha,
       columna1,
       estado,
-      observaciones_confidenciales // ⭐ NUEVO
+      observaciones_confidenciales
     } = req.body;
 
-    // Validaciones
     if (!motivo_consulta || !actividad || !modalidad || !fecha || !estado) {
-      return res.status(400).json({ 
-        message: "Motivo de consulta, actividad, modalidad, fecha y estado son requeridos" 
+      return res.status(400).json({
+        message: "Motivo de consulta, actividad, modalidad, fecha y estado son requeridos"
       });
     }
 
-    // Validar modalidad
     if (modalidad !== "Virtual" && modalidad !== "Presencial") {
-      return res.status(400).json({ 
-        message: "La modalidad debe ser 'Virtual' o 'Presencial'" 
+      return res.status(400).json({
+        message: "La modalidad debe ser 'Virtual' o 'Presencial'"
       });
     }
 
-    // Validar estado
     if (estado !== "Abierto" && estado !== "Cerrado") {
-      return res.status(400).json({ 
-        message: "El estado debe ser 'Abierto' o 'Cerrado'" 
+      return res.status(400).json({
+        message: "El estado debe ser 'Abierto' o 'Cerrado'"
       });
     }
 
@@ -149,7 +192,9 @@ exports.updateConsulta = async (req, res) => {
       fecha,
       columna1: columna1 || null,
       estado,
-      observaciones_confidenciales: observaciones_confidenciales !== undefined ? observaciones_confidenciales : false // ⭐ NUEVO
+      observaciones_confidenciales: observaciones_confidenciales !== undefined
+        ? observaciones_confidenciales
+        : false
     });
 
     if (!updatedConsulta) {
@@ -163,7 +208,9 @@ exports.updateConsulta = async (req, res) => {
   }
 };
 
+// ============================================
 // Eliminar consulta
+// ============================================
 exports.deleteConsulta = async (req, res) => {
   try {
     const { id } = req.params;
@@ -173,9 +220,9 @@ exports.deleteConsulta = async (req, res) => {
       return res.status(404).json({ message: "Consulta no encontrada" });
     }
 
-    res.json({ 
-      message: "Consulta eliminada correctamente", 
-      consulta: deletedConsulta 
+    res.json({
+      message: "Consulta eliminada correctamente",
+      consulta: deletedConsulta
     });
   } catch (err) {
     console.error("Error eliminando consulta:", err);
@@ -183,22 +230,139 @@ exports.deleteConsulta = async (req, res) => {
   }
 };
 
-// ⭐ MODIFICADO: Obtener estadísticas según el rol del usuario
+// ============================================
+// Cerrar una consulta completa
+// PUT /api/consultas/cerrar
+// Body: { cliente_id, consulta_number, fecha_cierre, recomendaciones_finales }
+// ============================================
+exports.cerrarConsulta = async (req, res) => {
+  try {
+    const { cliente_id, consulta_number, fecha_cierre, recomendaciones_finales } = req.body;
+
+    if (!cliente_id || !consulta_number || !fecha_cierre) {
+      return res.status(400).json({
+        message: "cliente_id, consulta_number y fecha_cierre son requeridos"
+      });
+    }
+
+    const sesiones = await consultaModel.cerrarConsulta(
+      cliente_id,
+      consulta_number,
+      fecha_cierre,
+      recomendaciones_finales || null
+    );
+
+    if (!sesiones || sesiones.length === 0) {
+      return res.status(404).json({ message: "No se encontraron sesiones para cerrar" });
+    }
+
+    res.json({ message: "Consulta cerrada correctamente", sesiones });
+  } catch (err) {
+    console.error("Error cerrando consulta:", err);
+    res.status(500).json({ message: "Error al cerrar la consulta" });
+  }
+};
+
+// ============================================
+// Reabrir una consulta
+// PUT /api/consultas/reabrir
+// Body: { cliente_id, consulta_number }
+// ============================================
+exports.reabrirConsulta = async (req, res) => {
+  try {
+    const { cliente_id, consulta_number } = req.body;
+
+    if (!cliente_id || !consulta_number) {
+      return res.status(400).json({
+        message: "cliente_id y consulta_number son requeridos"
+      });
+    }
+
+    // Regla de negocio: solo una consulta abierta por trabajador.
+    // Verificar que no haya otra consulta abierta con distinto consulta_number.
+    const tieneAbierta = await consultaModel.tieneConsultaAbiertaEnOtroNumero(
+      cliente_id,
+      parseInt(consulta_number)
+    );
+
+    if (tieneAbierta) {
+      return res.status(409).json({
+        message: `El trabajador ya tiene otra consulta abierta. Ciérrala antes de reabrir esta.`
+      });
+    }
+
+    const sesiones = await consultaModel.reabrirConsulta(cliente_id, consulta_number);
+
+    if (!sesiones || sesiones.length === 0) {
+      return res.status(404).json({ message: "No se encontraron sesiones para reabrir" });
+    }
+
+    res.json({ message: "Consulta reabierta correctamente", sesiones });
+  } catch (err) {
+    console.error("Error reabriendo consulta:", err);
+    res.status(500).json({ message: "Error al reabrir la consulta" });
+  }
+};
+
+// ============================================
+// Guardar consultas sugeridas
+// PUT /api/consultas/sugeridas
+// Body: { cliente_id, consulta_number, consultas_sugeridas }
+// ============================================
+exports.guardarConsultasSugeridas = async (req, res) => {
+  try {
+    const { cliente_id, consulta_number, consultas_sugeridas } = req.body;
+
+    if (!cliente_id || !consulta_number || consultas_sugeridas === undefined) {
+      return res.status(400).json({
+        message: "cliente_id, consulta_number y consultas_sugeridas son requeridos"
+      });
+    }
+
+    const sesiones = await consultaModel.guardarConsultasSugeridas(
+      cliente_id,
+      consulta_number,
+      parseInt(consultas_sugeridas)
+    );
+
+    res.json({ message: "Consultas sugeridas guardadas", sesiones });
+  } catch (err) {
+    console.error("Error guardando consultas sugeridas:", err);
+    res.status(500).json({ message: "Error al guardar consultas sugeridas" });
+  }
+};
+
+// ============================================
+// Obtener datos de cierre de una consulta
+// GET /api/consultas/cierre/:cliente_id/:consulta_number
+// ============================================
+exports.getDatosCierreConsulta = async (req, res) => {
+  try {
+    const { cliente_id, consulta_number } = req.params;
+    const datos = await consultaModel.getDatosCierreConsulta(cliente_id, consulta_number);
+    res.json(datos || {});
+  } catch (err) {
+    console.error("Error obteniendo datos de cierre:", err);
+    res.status(500).json({ message: "Error al obtener datos de cierre" });
+  }
+};
+
+// ============================================
+// Estadísticas según rol del usuario
+// ============================================
 exports.getEstadisticas = async (req, res) => {
   try {
-    const userRole = req.user.rol; // Del token JWT
-    const userId = req.user.id;    // Del token JWT
-    
+    const userRole = req.user.rol;
+    const userId = req.user.id;
+
     let stats;
-    
+
     if (userRole === 'admin') {
-      // Admin ve estadísticas de TODAS las consultas
       stats = await consultaModel.getEstadisticas();
     } else {
-      // Profesionales solo ven estadísticas de sus clientes
       stats = await consultaModel.getEstadisticasByProfesional(userId);
     }
-    
+
     res.json(stats);
   } catch (err) {
     console.error("Error obteniendo estadísticas:", err);
@@ -206,13 +370,14 @@ exports.getEstadisticas = async (req, res) => {
   }
 };
 
-// ⭐ NUEVO: Obtener estadísticas detalladas por profesional (solo para admin)
+// ============================================
+// Estadísticas detalladas por profesional (solo admin)
+// ============================================
 exports.getEstadisticasDetalladasByProfesional = async (req, res) => {
   try {
     const userRole = req.user?.rol;
     const { profesional_id } = req.query;
 
-    // Solo admin puede consultar estadísticas de otros profesionales
     if (userRole !== 'admin') {
       return res.status(403).json({ message: "No tienes permisos para ver estas estadísticas" });
     }
@@ -222,7 +387,7 @@ exports.getEstadisticasDetalladasByProfesional = async (req, res) => {
     }
 
     const stats = await consultaModel.getEstadisticasDetalladasByProfesional(profesional_id);
-    
+
     res.json(stats);
   } catch (err) {
     console.error("Error obteniendo estadísticas detalladas:", err);

@@ -9,6 +9,7 @@ dotenv.config();
 
 // Ahora sí importar rutas y middleware
 const clientsRoutes = require("./routes/clients");
+const antecedenteRoutes = require("./routes/antecedenteRoutes");
 const consultasRoutes = require("./routes/consultas");
 const empresasRoutes = require("./routes/empresas");
 const authRoutes = require("./routes/auth");
@@ -16,6 +17,8 @@ const authMiddleware = require("./middleware/authMiddleware");
 const statsRoutes = require("./routes/stats");
 const mesaTrabajoSveRoutes = require("./routes/mesaTrabajoSve");
 const consultasSveRoutes = require("./routes/consultasSve");
+const citasRoutes = require("./routes/citas");
+const creditosRoutes = require("./routes/creditos");
 
 const app = express();
 
@@ -61,13 +64,21 @@ app.use('/uploads', (req, res, next) => {
 // Rutas públicas (sin autenticación)
 app.use("/api/auth", authRoutes);
 
+// ✅ NUEVA RUTA PÚBLICA: Confirmación de citas desde email
+// Esta ruta debe estar ANTES de aplicar el middleware a todas las rutas de citas
+const CitasController = require("./controllers/citasController");
+app.get("/api/citas/:id/confirmar", CitasController.confirmarDesdeEmail);
+
 // Rutas protegidas (requieren autenticación)
 app.use("/api/clients", authMiddleware.verifyToken, clientsRoutes);
+app.use("/api/clients", authMiddleware.verifyToken, antecedenteRoutes);
 app.use("/api/consultas", authMiddleware.verifyToken, consultasRoutes);
 app.use("/api/empresas", authMiddleware.verifyToken, empresasRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/mesa-trabajo-sve", authMiddleware.verifyToken, mesaTrabajoSveRoutes);
 app.use("/api/consultas-sve", authMiddleware.verifyToken, consultasSveRoutes);
+app.use("/api/citas", authMiddleware.verifyToken, citasRoutes);
+app.use("/api/creditos", authMiddleware.verifyToken, creditosRoutes);
 
 // Ruta de prueba (pública)
 app.get("/", (req, res) => {
@@ -115,5 +126,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - GET  /api/clients (Clientes) 🔒`);
   console.log(`   - GET  /api/consultas (Consultas) 🔒`);
   console.log(`   - GET  /api/empresas (Empresas) 🔒`);
+  console.log(`   - GET  /api/citas (Agendamiento) 🔒`);
+  console.log(`   - GET  /api/creditos (Gestión de Créditos) 🔒`);
   console.log(`   - GET  /uploads/* (Archivos adjuntos) 📎`);
 });

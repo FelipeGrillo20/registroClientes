@@ -265,6 +265,14 @@ body {
   margin: 0;
 }
 
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
 .card-badge {
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
@@ -276,6 +284,41 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   z-index: 1;
+}
+
+.consultas-sugeridas-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  padding: 8px 16px;
+}
+
+.consultas-sugeridas-icon {
+  font-size: 20px;
+}
+
+.consultas-sugeridas-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.consultas-sugeridas-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.consultas-sugeridas-valor {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
 }
 
 /* Body de la tarjeta */
@@ -2251,5 +2294,552 @@ body {
 
   .nota-texto {
     font-size: 13px;
+  }
+}
+
+/* ============================================================ */
+/* ANTECEDENTES DE SALUD — Agregar al final de consulta.css    */
+/* ============================================================ */
+
+/* ── Botón Antecedentes de Salud ─────────────────────────── */
+.btn-antecedentes-salud {
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(22, 160, 133, 0.25);
+  width: 100%;
+  height: 42px;
+}
+
+.btn-antecedentes-salud:hover {
+  background: linear-gradient(135deg, #16a085, #0e8c72);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 160, 133, 0.35);
+}
+
+.btn-antecedentes-salud:active {
+  transform: translateY(0);
+}
+
+/* Ícono del info-item de antecedentes */
+.info-icon-antecedentes {
+  background: linear-gradient(135deg, #1abc9c, #16a085) !important;
+}
+
+/* ── Overlay / modal base ─────────────────────────────────── */
+.modal-overlay-antecedentes {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay-antecedentes.show {
+  display: flex;
+}
+
+/* ── Contenedor modal ─────────────────────────────────────── */
+.modal-content-antecedentes {
+  background: #fff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 580px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-content-antecedentes--edit {
+  max-width: 480px;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.modal-header-antecedentes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  flex-shrink: 0;
+}
+
+.modal-header-antecedentes h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-header-antecedentes--edit {
+  background: linear-gradient(135deg, #8e44ad, #7d3c98);
+}
+
+.btn-close-modal-antecedentes {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.btn-close-modal-antecedentes:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* ── Body (scrollable) ───────────────────────────────────── */
+.modal-body-antecedentes {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Lista de antecedentes existentes ────────────────────── */
+.lista-antecedentes-container {
+  margin-bottom: 24px;
+}
+
+.antecedentes-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: #888;
+  font-size: 14px;
+}
+
+.spinner-antecedente {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #1abc9c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Tabla */
+.tabla-antecedentes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-antecedentes thead tr {
+  background: linear-gradient(135deg, #f0fdf9, #e6f9f4);
+}
+
+.tabla-antecedentes th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #16a085;
+  border-bottom: 2px solid #b2dfdb;
+  white-space: nowrap;
+}
+
+.tabla-antecedentes td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+  color: #444;
+}
+
+.tabla-antecedentes tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-antecedentes tr:hover td {
+  background: #f9fffe;
+}
+
+/* Badge tipo antecedente */
+.badge-tipo-antecedente {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-fisico {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badge-psicologico {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Acciones en la tabla */
+.btn-editar-antecedente,
+.btn-eliminar-antecedente {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-editar-antecedente {
+  background: #e8f5e9;
+  color: #2e7d32;
+  margin-right: 4px;
+}
+
+.btn-editar-antecedente:hover {
+  background: #c8e6c9;
+}
+
+.btn-eliminar-antecedente {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.btn-eliminar-antecedente:hover {
+  background: #f8bbd9;
+}
+
+/* Mensaje sin antecedentes */
+.antecedentes-empty {
+  text-align: center;
+  padding: 20px;
+  color: #aaa;
+  font-size: 14px;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 2px dashed #e0e0e0;
+}
+
+/* ── Formulario nuevo antecedente ────────────────────────── */
+.nuevo-antecedente-form {
+  border-top: 2px solid #e8f9f4;
+  padding-top: 20px;
+}
+
+.form-antecedente-titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #16a085;
+  margin: 0 0 16px 0;
+}
+
+.form-antecedente-row {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.form-antecedente-row label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.form-antecedente-row select,
+.form-antecedente-row textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: #fdfdfd;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.form-antecedente-row select:focus,
+.form-antecedente-row textarea:focus {
+  outline: none;
+  border-color: #1abc9c;
+  box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.15);
+}
+
+.char-counter {
+  display: block;
+  text-align: right;
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.form-antecedente-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Botones del modal ───────────────────────────────────── */
+.btn-guardar-antecedente {
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(22,160,133,0.25);
+}
+
+.btn-guardar-antecedente:hover {
+  background: linear-gradient(135deg, #16a085, #0e8c72);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22,160,133,0.35);
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.modal-footer-antecedentes {
+  padding: 14px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.btn-cerrar-antecedentes {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cerrar-antecedentes:hover {
+  background: #e0e0e0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .modal-content-antecedentes {
+    width: 96%;
+    max-height: 92vh;
+  }
+
+  .modal-header-antecedentes {
+    padding: 16px 18px 14px;
+  }
+
+  .modal-body-antecedentes {
+    padding: 16px 18px;
+  }
+
+  .tabla-antecedentes th,
+  .tabla-antecedentes td {
+    padding: 8px 8px;
+    font-size: 12px;
+  }
+}
+
+/* ============================================================ */
+/* NUEVA CONSULTA — Header de sección con botón                */
+/* ============================================================ */
+
+.consulta-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.consulta-section-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-nueva-consulta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #8e44ad, #7d3c98);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(142, 68, 173, 0.3);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.btn-nueva-consulta:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7d3c98, #6c3483);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(142, 68, 173, 0.4);
+}
+
+.btn-nueva-consulta:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-nueva-consulta:disabled {
+  background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.65;
+}
+
+/* ============================================================ */
+/* PESTAÑAS DE CONSULTAS en el historial                       */
+/* ============================================================ */
+
+.consultas-tabs-header {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.consulta-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #f5f5f5;
+  border: 1.5px solid #ddd;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+  font-family: inherit;
+}
+
+.consulta-tab:hover:not(.consulta-tab-active) {
+  background: #ede7f6;
+  color: #6a1b9a;
+  border-color: #ce93d8;
+}
+
+.consulta-tab-active {
+  background: white;
+  border-color: #9c27b0;
+  border-bottom: 2px solid white;
+  color: #6a1b9a;
+  font-weight: 700;
+  z-index: 1;
+}
+
+/* Badge de estado dentro de la pestaña */
+.badge-consulta-estado {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.badge-consulta-activa {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.badge-consulta-cerrada {
+  background: #fce4ec;
+  color: #880e4f;
+  border: 1px solid #f48fb1;
+}
+
+/* Paneles de contenido por consulta */
+.consultas-tabs-content {
+  /* Sin estilos especiales: los paneles se apilan */
+}
+
+.consulta-pane {
+  display: none;
+  animation: fadeInPane 0.2s ease;
+}
+
+.consulta-pane-active {
+  display: block;
+}
+
+@keyframes fadeInPane {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================ */
+/* Responsive                                                  */
+/* ============================================================ */
+@media (max-width: 600px) {
+  .consulta-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-nueva-consulta {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .consultas-tabs-header {
+    gap: 4px;
+  }
+
+  .consulta-tab {
+    padding: 7px 12px;
+    font-size: 12px;
   }
 }

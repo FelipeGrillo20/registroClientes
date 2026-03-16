@@ -66,8 +66,8 @@ app.use("/api/auth", authRoutes);
 
 // ✅ NUEVA RUTA PÚBLICA: Confirmación de citas desde email
 // Esta ruta debe estar ANTES de aplicar el middleware a todas las rutas de citas
-const CitasController = require("./controllers/citasController");
-app.get("/api/citas/:id/confirmar", CitasController.confirmarDesdeEmail);
+//const CitasController = require("./controllers/citasController");
+//app.get("/api/citas/:id/confirmar", CitasController.confirmarDesdeEmail);
 
 // Rutas protegidas (requieren autenticación)
 app.use("/api/clients", authMiddleware.verifyToken, clientsRoutes);

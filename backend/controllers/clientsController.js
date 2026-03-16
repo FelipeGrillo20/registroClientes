@@ -20,9 +20,13 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_nombre,
       contacto_emergencia_parentesco,
       contacto_emergencia_telefono,
-      modalidad, // ✅ NUEVO: Campo modalidad
-      sexo,      // ✅ NUEVO: Solo para SVE
-      cargo,     // ✅ NUEVO: Solo para SVE
+      modalidad,
+      sexo,
+      cargo,
+      fecha_nacimiento,
+      direccion,
+      estado_civil,
+      fecha_ingreso,
     } = req.body;
 
     // Validaciones básicas
@@ -63,15 +67,7 @@ exports.createClient = async (req, res) => {
       }
     }
 
-    // ✅ NUEVO: Validar campos SVE si la modalidad es SVE
-    if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
-      if (!sexo || !['Femenino', 'Masculino'].includes(sexo)) {
-        return res.status(400).json({ message: "El campo Sexo es requerido para la modalidad SVE (Femenino o Masculino)" });
-      }
-      if (!cargo || cargo.trim() === '') {
-        return res.status(400).json({ message: "El campo Cargo es requerido para la modalidad SVE" });
-      }
-    }
+    // Sexo y cargo son opcionales en ambas modalidades (requeridos solo en SVE por el frontend)
 
     // Obtener el ID del profesional del token JWT
     const profesional_id = req.user?.id;
@@ -97,9 +93,13 @@ exports.createClient = async (req, res) => {
       contacto_emergencia_parentesco: contacto_emergencia_parentesco || null,
       contacto_emergencia_telefono: contacto_emergencia_telefono || null,
       profesional_id,
-      modalidad, // ✅ NUEVO: Guardar modalidad
-      sexo: modalidad === 'Sistema de Vigilancia Epidemiológica' ? (sexo || null) : null,   // ✅ NUEVO
-      cargo: modalidad === 'Sistema de Vigilancia Epidemiológica' ? (cargo || null) : null, // ✅ NUEVO
+      modalidad,
+      sexo:             sexo             || null,
+      cargo:            cargo            || null,
+      fecha_nacimiento: fecha_nacimiento || null,
+      direccion:        direccion        || null,
+      estado_civil:     estado_civil     || null,
+      fecha_ingreso:    fecha_ingreso    || null,
     });
 
     res.status(201).json(newClient);
@@ -289,8 +289,12 @@ exports.updateClient = async (req, res) => {
       fecha_cierre_sve,
       recomendaciones_finales_sve,
       modalidad,
-      sexo,   // ✅ NUEVO: Solo para SVE
-      cargo,  // ✅ NUEVO: Solo para SVE
+      sexo,
+      cargo,
+      fecha_nacimiento,
+      direccion,
+      estado_civil,
+      fecha_ingreso,
     } = req.body;
 
     // Verificar que el cliente existe
@@ -321,15 +325,7 @@ exports.updateClient = async (req, res) => {
       }
     }
 
-    // ✅ NUEVO: Validar campos SVE si corresponde
-    if (modalidadFinal === 'Sistema de Vigilancia Epidemiológica') {
-      if (!sexo || !['Femenino', 'Masculino'].includes(sexo)) {
-        return res.status(400).json({ message: "El campo Sexo es requerido para la modalidad SVE" });
-      }
-      if (!cargo || cargo.trim() === '') {
-        return res.status(400).json({ message: "El campo Cargo es requerido para la modalidad SVE" });
-      }
-    }
+    // Sexo y cargo son opcionales en ambas modalidades (requeridos solo en SVE por el frontend)
 
     // ✅ NUEVA VALIDACIÓN: Si es Familiar Trabajador, validar campos adicionales
     if (vinculo === 'Familiar Trabajador') {
@@ -375,9 +371,13 @@ exports.updateClient = async (req, res) => {
       consultas_sugeridas: consultas_sugeridas || null,
       fecha_cierre_sve: fecha_cierre_sve || null,
       recomendaciones_finales_sve: recomendaciones_finales_sve || null,
-      modalidad: modalidadFinal,
-      sexo: modalidadFinal === 'Sistema de Vigilancia Epidemiológica' ? (sexo || null) : null,   // ✅ NUEVO
-      cargo: modalidadFinal === 'Sistema de Vigilancia Epidemiológica' ? (cargo || null) : null, // ✅ NUEVO
+      modalidad:        modalidadFinal,
+      sexo:             sexo             || null,
+      cargo:            cargo            || null,
+      fecha_nacimiento: fecha_nacimiento || null,
+      direccion:        direccion        || null,
+      estado_civil:     estado_civil     || null,
+      fecha_ingreso:    fecha_ingreso    || null,
     });
 
     res.json(updatedClient);
@@ -605,5 +605,91 @@ exports.deleteDocumento = async (req, res) => {
   } catch (err) {
     console.error("Error eliminando documento:", err);
     res.status(500).json({ message: "Error al eliminar documento" });
+  }
+};
+// ============================================================
+// ⭐ NUEVAS FUNCIONES: ANTECEDENTES DE SALUD
+// ============================================================
+
+const pool = require("../config/db");
+
+// GET /api/clients/:clienteId/antecedentes
+exports.getAntecedentes = async (req, res) => {
+  try {
+    const { clienteId } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM antecedentes_salud
+       WHERE client_id = $1
+       ORDER BY created_at DESC`,
+      [clienteId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error obteniendo antecedentes:", err);
+    res.status(500).json({ message: "Error al obtener antecedentes" });
+  }
+};
+
+// POST /api/clients/:clienteId/antecedentes
+exports.createAntecedente = async (req, res) => {
+  try {
+    const { clienteId } = req.params;
+    const { tipo_antecedente, detalle } = req.body;
+
+    if (!tipo_antecedente || !detalle) {
+      return res.status(400).json({ message: "Tipo y detalle son requeridos" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO antecedentes_salud (client_id, tipo_antecedente, detalle)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [clienteId, tipo_antecedente, detalle]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error creando antecedente:", err);
+    res.status(500).json({ message: "Error al crear antecedente" });
+  }
+};
+
+// PUT /api/clients/:clienteId/antecedentes/:id
+exports.updateAntecedente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipo_antecedente, detalle } = req.body;
+
+    const result = await pool.query(
+      `UPDATE antecedentes_salud
+       SET tipo_antecedente = $1, detalle = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3
+       RETURNING *`,
+      [tipo_antecedente, detalle, id]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ message: "Antecedente no encontrado" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error actualizando antecedente:", err);
+    res.status(500).json({ message: "Error al actualizar antecedente" });
+  }
+};
+
+// DELETE /api/clients/:clienteId/antecedentes/:id
+exports.deleteAntecedente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `DELETE FROM antecedentes_salud WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ message: "Antecedente no encontrado" });
+    }
+    res.json({ message: "Antecedente eliminado correctamente" });
+  } catch (err) {
+    console.error("Error eliminando antecedente:", err);
+    res.status(500).json({ message: "Error al eliminar antecedente" });
   }
 };

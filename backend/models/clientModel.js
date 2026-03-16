@@ -21,8 +21,12 @@ exports.createClient = async (data) => {
     contacto_emergencia_telefono,
     profesional_id,
     modalidad,
-    sexo,   // ✅ NUEVO: Solo para SVE
-    cargo,  // ✅ NUEVO: Solo para SVE
+    sexo,
+    cargo,
+    fecha_nacimiento,
+    direccion,
+    estado_civil,
+    fecha_ingreso,
   } = data;
 
   const result = await pool.query(
@@ -31,14 +35,17 @@ exports.createClient = async (data) => {
      tipo_entidad_pagadora, entidad_pagadora_especifica, 
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     profesional_id, modalidad, sexo, cargo, created_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,CURRENT_TIMESTAMP)
+     profesional_id, modalidad, sexo, cargo,
+     fecha_nacimiento, direccion, estado_civil, fecha_ingreso,
+     created_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,CURRENT_TIMESTAMP)
     RETURNING *`,
     [cedula, nombre, vinculo, cedula_trabajador, nombre_trabajador, sede, 
      tipo_entidad_pagadora, entidad_pagadora_especifica,
      empresa_id, subcontratista_id, email, telefono,
      contacto_emergencia_nombre, contacto_emergencia_parentesco, contacto_emergencia_telefono,
-     profesional_id, modalidad, sexo || null, cargo || null]
+     profesional_id, modalidad, sexo || null, cargo || null,
+     fecha_nacimiento || null, direccion || null, estado_civil || null, fecha_ingreso || null]
   );
 
   return result.rows[0];
@@ -212,8 +219,12 @@ exports.updateClient = async (id, data) => {
     fecha_cierre_sve,
     recomendaciones_finales_sve,
     modalidad,
-    sexo,   // ✅ NUEVO: Solo para SVE
-    cargo,  // ✅ NUEVO: Solo para SVE
+    sexo,
+    cargo,
+    fecha_nacimiento,
+    direccion,
+    estado_civil,
+    fecha_ingreso,
   } = data;
 
   const result = await pool.query(
@@ -240,8 +251,12 @@ exports.updateClient = async (id, data) => {
       recomendaciones_finales_sve = $20,
       modalidad = $21,
       sexo = $22,
-      cargo = $23
-    WHERE id = $24
+      cargo = $23,
+      fecha_nacimiento = $24,
+      direccion = $25,
+      estado_civil = $26,
+      fecha_ingreso = $27
+    WHERE id = $28
     RETURNING *`,
     [cedula, nombre, vinculo, cedula_trabajador, nombre_trabajador, sede, 
      tipo_entidad_pagadora, entidad_pagadora_especifica,
@@ -251,6 +266,7 @@ exports.updateClient = async (id, data) => {
      fecha_cierre_sve, recomendaciones_finales_sve,
      modalidad,
      sexo || null, cargo || null,
+     fecha_nacimiento || null, direccion || null, estado_civil || null, fecha_ingreso || null,
      id]
   );
 

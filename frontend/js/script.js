@@ -104,7 +104,7 @@ function setupCamposSVE() {
   if (!campSexo || !campCargo) return;
 
   if (esSVE) {
-    // SVE: activar campos reales, ocultar placeholders, marcar el form
+    // SVE: mostrar campos, marcar como requeridos
     campSexo.style.display  = 'flex';
     campCargo.style.display = 'flex';
     if (placeholderSexo)  placeholderSexo.style.display  = 'none';
@@ -115,15 +115,15 @@ function setupCamposSVE() {
     if (cargoInput) cargoInput.setAttribute('required', 'required');
 
   } else {
-    // OP: TODO con display:none — no ocupan ninguna celda del grid
-    campSexo.style.display  = 'none';
-    campCargo.style.display = 'none';
+    // OP: mostrar campos también, pero sin required (opcionales)
+    campSexo.style.display  = 'flex';
+    campCargo.style.display = 'flex';
     if (placeholderSexo)  placeholderSexo.style.display  = 'none';
     if (placeholderCargo) placeholderCargo.style.display = 'none';
     form.classList.add('modalidad-op');
     form.classList.remove('modalidad-sve');
-    if (sexoInput)  { sexoInput.removeAttribute('required');  sexoInput.value  = ''; }
-    if (cargoInput) { cargoInput.removeAttribute('required'); cargoInput.value = ''; }
+    if (sexoInput)  sexoInput.removeAttribute('required');
+    if (cargoInput) cargoInput.removeAttribute('required');
   }
 }
 
@@ -853,15 +853,19 @@ form.addEventListener("submit", async (e) => {
   let email = document.getElementById("email").value.trim();
   const telefono = document.getElementById("phone").value.trim();
 
-  // ✅ NUEVO: Capturar campos SVE si corresponde
-  let sexo = null;
-  let cargo = null;
-  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
-    sexo = document.getElementById("sexo")?.value || null;
-    cargo = document.getElementById("cargo")?.value.trim() || null;
+  // Capturar sexo y cargo — visibles en ambas modalidades, obligatorios solo en SVE
+  const sexo  = document.getElementById("sexo")?.value  || null;
+  const cargo = document.getElementById("cargo")?.value.trim() || null;
 
+  // Capturar campos nuevos (opcionales en ambas modalidades)
+  const fechaNacimiento = document.getElementById("fechaNacimiento")?.value || null;
+  const direccion       = document.getElementById("direccion")?.value.trim() || null;
+  const estadoCivil     = document.getElementById("estadoCivil")?.value || null;
+  const fechaIngreso    = document.getElementById("fechaIngreso")?.value || null;
+
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
     if (!sexo) {
-      alert("El campo Sexo es obligatorio para la modalidad SVE.");
+      alert("El campo Género es obligatorio para la modalidad SVE.");
       return;
     }
     if (!cargo) {
@@ -980,9 +984,13 @@ form.addEventListener("submit", async (e) => {
     subcontratista_id: subcontratistaIdFinal,
     email,
     telefono,
-    sexo,   // ✅ NUEVO: Solo aplica para SVE
-    cargo,  // ✅ NUEVO: Solo aplica para SVE
-    modalidad, // ✅ NUEVO: Enviar modalidad al backend
+    sexo,
+    cargo,
+    fecha_nacimiento:   fechaNacimiento,
+    direccion:          direccion,
+    estado_civil:       estadoCivil,
+    fecha_ingreso:      fechaIngreso,
+    modalidad,
     actividad: null,
     fecha: null,
     columna1: null,
@@ -1121,14 +1129,25 @@ window.startEdit = async function (id) {
     document.getElementById("email").value = client.email || "";
     document.getElementById("phone").value = client.telefono || "";
 
-    // ✅ NUEVO: Cargar campos SVE si la modalidad corresponde
-    const modalidadEditSVE = localStorage.getItem('modalidadSeleccionada');
-    if (modalidadEditSVE === 'Sistema de Vigilancia Epidemiológica') {
-      const sexoInput = document.getElementById("sexo");
-      const cargoInput = document.getElementById("cargo");
-      if (sexoInput && client.sexo) sexoInput.value = client.sexo;
-      if (cargoInput && client.cargo) cargoInput.value = client.cargo;
-    }
+    // Cargar campos Sexo y Cargo (visibles en ambas modalidades)
+    const sexoInput = document.getElementById("sexo");
+    const cargoInput = document.getElementById("cargo");
+    if (sexoInput && client.sexo) sexoInput.value = client.sexo;
+    if (cargoInput && client.cargo) cargoInput.value = client.cargo;
+
+    // Cargar campos nuevos
+    const fechaNacInput = document.getElementById("fechaNacimiento");
+    const direccionInput = document.getElementById("direccion");
+    const estadoCivilInput = document.getElementById("estadoCivil");
+    const fechaIngresoInput = document.getElementById("fechaIngreso");
+    if (fechaNacInput && client.fecha_nacimiento)
+      fechaNacInput.value = client.fecha_nacimiento.split('T')[0];
+    if (direccionInput && client.direccion)
+      direccionInput.value = client.direccion;
+    if (estadoCivilInput && client.estado_civil)
+      estadoCivilInput.value = client.estado_civil;
+    if (fechaIngresoInput && client.fecha_ingreso)
+      fechaIngresoInput.value = client.fecha_ingreso.split('T')[0];
 
     editingId = id;
     form.querySelector("button[type='submit']").textContent = "Guardar cambios";

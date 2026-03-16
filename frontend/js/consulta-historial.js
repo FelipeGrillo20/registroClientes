@@ -3,8 +3,23 @@
 // Depende de: consulta-api.js, consulta-cliente.js
 
 // ============================================
-// SISTEMA DE SESIONES - LÓGICA DE CONTROL
+// CACHÉ DE DATOS DE CIERRE POR CONSULTA
+// Guarda fecha_cierre y recomendaciones_finales
+// de cada consulta antes de que el backend las
+// limpie al reabrir. Se indexa por consulta_number.
 // ============================================
+const cacheDatosCierre = {};
+
+window.getCacheDatosCierre = function(consultaNumber) {
+  return cacheDatosCierre[consultaNumber] || null;
+};
+
+window.setCacheDatosCierre = function(consultaNumber, fechaCierre, recomendaciones) {
+  cacheDatosCierre[consultaNumber] = {
+    fecha_cierre: fechaCierre,
+    recomendaciones_finales: recomendaciones
+  };
+};
 
 // Devuelve true si la consulta activa (consultaNumberActual) tiene
 // alguna sesión cerrada — no mezcla con otras consultas del trabajador
@@ -158,6 +173,21 @@ window.reabrirCaso = async function() {
   const clienteId = getClienteIdFromURL();
 
   try {
+    // Capturar fecha_cierre y recomendaciones ANTES de llamar al backend
+    // porque el endpoint /reabrir las limpia (fecha_cierre = NULL).
+    // Las guardamos en caché indexadas por consulta_number para que
+    // toggleFechaCierreField las encuentre cuando el profesional vuelva
+    // a seleccionar estado "Cerrado".
+    const sesionesActuales = consultasDelCliente.filter(
+      c => c.consulta_number === numActual
+    );
+    const sesionConCierre = sesionesActuales.find(s => s.fecha_cierre);
+    window.setCacheDatosCierre(
+      numActual,
+      sesionConCierre ? sesionConCierre.fecha_cierre : null,
+      sesionConCierre ? sesionConCierre.recomendaciones_finales : null
+    );
+
     const res = await fetch(`${CONSULTAS_API_URL}/reabrir`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -269,11 +299,23 @@ async function loadHistorialConsultas(clienteId) {
     window.setConsultaNumberActual(consultaActivaNum);
 
     // Asignar numeroSesion dentro de cada consulta de forma independiente
+    // y poblar el caché de datos de cierre para todas las consultas
     numerosConsulta.forEach(num => {
       const sesionesDeEstaConsulta = consultasDelCliente
         .filter(c => c.consulta_number === num)
         .sort((a, b) => new Date(a.fecha) - new Date(b.fecha) || a.id - b.id);
       sesionesDeEstaConsulta.forEach((s, i) => { s.numeroSesion = i + 1; });
+
+      // Guardar en caché fecha_cierre y recomendaciones de cada consulta
+      // para que toggleFechaCierreField las encuentre incluso tras reabrir
+      const sesionConCierre = sesionesDeEstaConsulta.find(s => s.fecha_cierre);
+      if (sesionConCierre) {
+        window.setCacheDatosCierre(
+          num,
+          sesionConCierre.fecha_cierre,
+          sesionConCierre.recomendaciones_finales
+        );
+      }
     });
 
     // Renderizar pestañas y contenido

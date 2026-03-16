@@ -40,21 +40,19 @@ function toggleFechaCierreField() {
     fechaCierreContainer.classList.add("show");
     fechaCierreInput.required = true;
     recomendacionesInput.required = true;
-
     fechaCierreModificadaManualmente = false;
 
-    // Leer fecha_cierre y recomendaciones desde las sesiones de la consulta activa,
-    // no desde clienteActual — así cada consulta carga sus propios datos al reabrir.
+    // Leer datos de cierre desde el caché indexado por consulta_number.
+    // El caché se puebla al cargar el historial y al reabrir un caso,
+    // garantizando que cada consulta tenga sus propios datos incluso
+    // después de que el backend limpie fecha_cierre al reabrir.
     const numActual = window.getConsultaNumberActual ? window.getConsultaNumberActual() : null;
-    const sesionesActuales = (window.consultasDelCliente || []).filter(
-      c => c.consulta_number === numActual
-    );
-    const sesionConCierre = sesionesActuales.find(s => s.fecha_cierre);
+    const datosCierre = window.getCacheDatosCierre ? window.getCacheDatosCierre(numActual) : null;
 
-    const fechaCierreConsulta  = sesionConCierre ? sesionConCierre.fecha_cierre : null;
-    const recomendacionesConsulta = sesionConCierre ? sesionConCierre.recomendaciones_finales : null;
+    const fechaCierreConsulta     = datosCierre ? datosCierre.fecha_cierre : null;
+    const recomendacionesConsulta = datosCierre ? datosCierre.recomendaciones_finales : null;
 
-    // Precargar fecha de cierre solo si el campo está vacío
+    // Precargar fecha de cierre (solo si el campo está vacío)
     if (!fechaCierreInput.value) {
       if (fechaCierreConsulta) {
         fechaCierreInput.value = fechaCierreConsulta.substring(0, 10);
@@ -64,15 +62,17 @@ function toggleFechaCierreField() {
       }
     }
 
-    // Precargar recomendaciones solo si el campo está vacío
-    if (!recomendacionesInput.value && recomendacionesConsulta) {
-      recomendacionesInput.value = recomendacionesConsulta;
-    }
+    // Precargar recomendaciones SIEMPRE desde el caché de la consulta activa.
+    // No usamos "solo si vacío" porque el campo puede tener texto residual
+    // de otra consulta editada anteriormente en la misma sesión del navegador.
+    recomendacionesInput.value = recomendacionesConsulta || "";
+
   } else {
     fechaCierreContainer.classList.remove("show");
     fechaCierreInput.required = false;
     recomendacionesInput.required = false;
     fechaCierreInput.value = "";
+    recomendacionesInput.value = "";
     fechaCierreModificadaManualmente = false;
   }
 }

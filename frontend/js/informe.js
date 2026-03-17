@@ -222,7 +222,7 @@ window.generarInformePaciente = function() {
               <span class="data-value">${clienteActual.cargo || '-'}</span>
             </div>
             <div class="informe-data-item">
-              <span class="data-label">Empresa Usuario / Cliente Final:</span>
+              <span class="data-label">Empresa Usuario </span>
               <span class="data-value">${clienteActual.cliente_final || '-'}</span>
             </div>
 

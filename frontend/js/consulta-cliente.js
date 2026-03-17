@@ -111,26 +111,12 @@ function displayClientData(cliente) {
     vinculoElement.textContent = "-";
   }
 
-  // Mostrar Empresa Usuario con badge
+  // Mostrar solo Cliente Final
   const empresaElement = document.getElementById("clientEmpresa");
   if (cliente.cliente_final) {
     empresaElement.innerHTML = `<span class="badge-empresa-consulta">${escapeHtml(cliente.cliente_final)}</span>`;
   } else {
     empresaElement.textContent = "-";
-  }
-
-  // Mostrar Subcontratista si existe
-  const subcontratistaElement = document.getElementById("clientSubcontratista");
-  const labelSubcontratista = document.getElementById("labelSubcontratista");
-  const nombreSubcontratista = cliente.subcontratista_definitivo || cliente.subcontratista_nombre;
-
-  if (nombreSubcontratista) {
-    labelSubcontratista.style.display = "inline";
-    subcontratistaElement.style.display = "block";
-    subcontratistaElement.innerHTML = `<span class="badge-subcontratista-consulta">${escapeHtml(nombreSubcontratista)}</span>`;
-  } else {
-    labelSubcontratista.style.display = "none";
-    subcontratistaElement.style.display = "none";
   }
 
   // Mostrar Entidad Pagadora

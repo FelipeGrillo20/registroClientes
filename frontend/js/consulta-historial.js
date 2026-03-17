@@ -437,6 +437,11 @@ function renderSesiones(sesiones, consultaNum) {
           <div class="consulta-badges">
             <span class="badge badge-modalidad">${c.modalidad}</span>
             <span class="badge badge-estado ${estadoClass}">${c.estado}</span>
+            ${c.numeroSesion === 1 && c.consultas_sugeridas ? `
+              <span class="badge badge-sugeridas" title="Proyección de sesiones necesarias">
+                📊 ${c.consultas_sugeridas} sesiones sugeridas
+              </span>
+            ` : ''}
           </div>
         </div>
 

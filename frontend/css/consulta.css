@@ -528,6 +528,9 @@ body {
   gap: 15px;
   justify-content: center;
   padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px dashed #e0e0e0;
 }
 
 .btn-submit-consulta,
@@ -1463,13 +1466,14 @@ body {
    ==================================== */
 
 .recomendaciones-finales-card {
-  background: linear-gradient(135deg, #d0d0d1 0%, #463f4d 100%);
+  background: #f0ebfa;
   border-radius: 12px;
   padding: 25px;
   margin-top: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-  color: rgb(46, 91, 128);
+  border: 1.5px solid #d4c5ee;
+  border-left: 5px solid #7c4dcc;
+  box-shadow: 0 2px 12px rgba(124, 77, 204, 0.1);
   animation: slideIn 0.5s ease;
 }
 
@@ -1490,12 +1494,12 @@ body {
   gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1.5px solid #ede7f6;
 }
 
 .recomendaciones-icon {
   font-size: 28px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #ede7f6;
   width: 50px;
   height: 50px;
   display: flex;
@@ -1505,21 +1509,20 @@ body {
 }
 
 .recomendaciones-titulo {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   margin: 0;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #4a235a;
 }
 
 .recomendaciones-contenido-historial {
-  background: rgba(255, 255, 255, 0.15);
-  padding: 20px;
+  background: #e8dff7;
+  padding: 18px 20px;
   border-radius: 8px;
-  border-left: 4px solid rgba(255, 255, 255, 0.5);
+  border-left: 4px solid #9c6fdc;
   line-height: 1.8;
   font-size: 15px;
-  color: white;
+  color: #2c3e50;
   text-align: justify;
   margin-bottom: 15px;
   white-space: pre-wrap;
@@ -1531,15 +1534,15 @@ body {
   justify-content: flex-end;
   align-items: center;
   padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #ede7f6;
 }
 
 .recomendaciones-fecha {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  color: #5d4e75;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px 15px;
+  background: #ede7f6;
+  padding: 6px 14px;
   border-radius: 20px;
 }
 
@@ -1547,14 +1550,8 @@ body {
 @media (max-width: 768px) {
   .recomendaciones-finales-card {
     padding: 20px;
+    border-left-width: 4px;
   }
-
-  @media (max-width: 768px) {
-  .btn-dashboard {
-    padding: 8px 16px;
-    font-size: 13px;
-  }
-}
 
   .recomendaciones-header {
     flex-direction: column;
@@ -2841,5 +2838,74 @@ body {
   .consulta-tab {
     padding: 7px 12px;
     font-size: 12px;
+  }
+}
+
+
+/* ============================================================ */
+/* BADGE CONSULTAS SUGERIDAS — solo sesión 1 del historial      */
+/* ============================================================ */
+.badge-sugeridas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #EEEDFE;
+  color: #3C3489;
+  border: 1px solid #AFA9EC;
+  white-space: nowrap;
+}
+
+/* ============================================================ */
+/* GRID COMPACTO UNIFICADO — todas las tarjetas igual tamaño   */
+/* ============================================================ */
+.info-grid-compacto {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+.info-grid-compacto .info-item {
+  padding: 13px 14px !important;
+  gap: 11px !important;
+}
+
+.info-grid-compacto .info-icon-wrapper {
+  min-width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+}
+
+.info-grid-compacto .info-icon {
+  font-size: 19px !important;
+}
+
+.info-grid-compacto .info-label {
+  font-size: 10px !important;
+  margin-bottom: 4px !important;
+}
+
+.info-grid-compacto .info-value {
+  font-size: 14px !important;
+}
+
+/* Botón antecedentes ajustado al tamaño compacto */
+.info-grid-compacto .btn-antecedentes-salud {
+  padding: 7px 12px !important;
+  font-size: 13px !important;
+  height: 36px !important;
+}
+
+@media (max-width: 900px) {
+  .info-grid-compacto {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .info-grid-compacto {
+    grid-template-columns: 1fr !important;
   }
 }

@@ -48,6 +48,49 @@ async function loadClientData() {
 }
 
 // ============================================
+// FUNCIONES DE CÁLCULO DE EDAD Y TIEMPO LABORADO
+// ============================================
+
+function calcularEdad(fechaNacimiento) {
+  if (!fechaNacimiento) return null;
+  const hoy = new Date();
+  const nac = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nac.getFullYear();
+  const m = hoy.getMonth() - nac.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  return edad;
+}
+
+function calcularTiempoLaborado(fechaIngreso) {
+  if (!fechaIngreso) return null;
+  const hoy = new Date();
+  const ingreso = new Date(fechaIngreso);
+
+  let anios  = hoy.getFullYear() - ingreso.getFullYear();
+  let meses  = hoy.getMonth()    - ingreso.getMonth();
+  let dias   = hoy.getDate()     - ingreso.getDate();
+
+  if (dias < 0) {
+    meses--;
+    const ultimoDiaMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
+    dias += ultimoDiaMesAnterior;
+  }
+  if (meses < 0) {
+    anios--;
+    meses += 12;
+  }
+
+  const partes = [];
+  if (anios  > 0) partes.push(`${anios}  ${anios  === 1 ? 'año'  : 'años'}`);
+  if (meses  > 0) partes.push(`${meses} ${meses  === 1 ? 'mes'  : 'meses'}`);
+  if (dias   > 0) partes.push(`${dias}  ${dias   === 1 ? 'día'  : 'días'}`);
+
+  if (partes.length === 0) return 'Recién ingresado';
+  if (partes.length === 1) return partes[0];
+  return partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1];
+}
+
+// ============================================
 // MOSTRAR DATOS DEL CLIENTE EN LA TARJETA
 // ============================================
 
@@ -125,6 +168,38 @@ function displayClientData(cliente) {
     consultasSugeridasInfo.style.display = "flex";
   } else {
     consultasSugeridasInfo.style.display = "none";
+  }
+
+  // ── Campos nuevos ──────────────────────────────────────────────────────────
+
+  // Edad (calculada desde fecha_nacimiento)
+  const edadEl = document.getElementById("clientEdad");
+  if (edadEl) {
+    const edad = calcularEdad(cliente.fecha_nacimiento);
+    edadEl.textContent = edad !== null ? `${edad} años` : "-";
+  }
+
+  // Cargo
+  const cargoEl = document.getElementById("clientCargo");
+  if (cargoEl) cargoEl.textContent = cliente.cargo || "-";
+
+  // Género
+  const generoEl = document.getElementById("clientGenero");
+  if (generoEl) generoEl.textContent = cliente.sexo || "-";
+
+  // Dirección
+  const direccionEl = document.getElementById("clientDireccion");
+  if (direccionEl) direccionEl.textContent = cliente.direccion || "-";
+
+  // Estado Civil
+  const estadoCivilEl = document.getElementById("clientEstadoCivil");
+  if (estadoCivilEl) estadoCivilEl.textContent = cliente.estado_civil || "-";
+
+  // Tiempo laborado (calculado desde fecha_ingreso)
+  const tiempoLaboradoEl = document.getElementById("clientTiempoLaborado");
+  if (tiempoLaboradoEl) {
+    const tiempo = calcularTiempoLaborado(cliente.fecha_ingreso);
+    tiempoLaboradoEl.textContent = tiempo || "-";
   }
 
   // Actualizar badge con nombre del cliente

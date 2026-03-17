@@ -24,6 +24,34 @@ function escapeHtmlInforme(str) {
     .replace(/'/g, "&#039;");
 }
 
+function calcularEdadInforme(fechaNacimiento) {
+  if (!fechaNacimiento) return null;
+  const hoy = new Date();
+  const nac = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nac.getFullYear();
+  const m = hoy.getMonth() - nac.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  return edad;
+}
+
+function calcularTiempoLaboradoInforme(fechaIngreso) {
+  if (!fechaIngreso) return null;
+  const hoy = new Date();
+  const ingreso = new Date(fechaIngreso);
+  let anios = hoy.getFullYear() - ingreso.getFullYear();
+  let meses  = hoy.getMonth()    - ingreso.getMonth();
+  let dias   = hoy.getDate()     - ingreso.getDate();
+  if (dias < 0) { meses--; dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate(); }
+  if (meses < 0) { anios--; meses += 12; }
+  const partes = [];
+  if (anios > 0) partes.push(`${anios} ${anios === 1 ? 'año' : 'años'}`);
+  if (meses > 0) partes.push(`${meses} ${meses === 1 ? 'mes' : 'meses'}`);
+  if (dias  > 0) partes.push(`${dias} ${dias === 1 ? 'día' : 'días'}`);
+  if (partes.length === 0) return 'Recién ingresado';
+  if (partes.length === 1) return partes[0];
+  return partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1];
+}
+
 function calcularDiasEnProceso(fechaInicial, fechaFinal) {
   const fecha1 = new Date(fechaInicial);
   const fecha2 = new Date(fechaFinal);
@@ -141,6 +169,8 @@ window.generarInformePaciente = function() {
             Datos del Trabajador
           </h2>
           <div class="informe-grid">
+
+            <!-- Fila 1: Cédula | Nombre Completo | Género -->
             <div class="informe-data-item">
               <span class="data-label">Cédula:</span>
               <span class="data-value">${clienteActual.cedula || '-'}</span>
@@ -150,31 +180,68 @@ window.generarInformePaciente = function() {
               <span class="data-value">${clienteActual.nombre || '-'}</span>
             </div>
             <div class="informe-data-item">
-              <span class="data-label">Vínculo:</span>
-              <span class="data-value">${clienteActual.vinculo || '-'}</span>
+              <span class="data-label">Género:</span>
+              <span class="data-value">${clienteActual.sexo || '-'}</span>
+            </div>
+
+            <!-- Fila 2: Edad | Dirección | Teléfono -->
+            <div class="informe-data-item">
+              <span class="data-label">Edad:</span>
+              <span class="data-value">${calcularEdadInforme(clienteActual.fecha_nacimiento) !== null ? calcularEdadInforme(clienteActual.fecha_nacimiento) + ' años' : '-'}</span>
             </div>
             <div class="informe-data-item">
-              <span class="data-label">Sede:</span>
-              <span class="data-value">${clienteActual.sede || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Empresa:</span>
-              <span class="data-value">${clienteActual.cliente_final || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Email:</span>
-              <span class="data-value">${clienteActual.email || '-'}</span>
+              <span class="data-label">Dirección:</span>
+              <span class="data-value">${clienteActual.direccion || '-'}</span>
             </div>
             <div class="informe-data-item">
               <span class="data-label">Teléfono:</span>
               <span class="data-value">${clienteActual.telefono || '-'}</span>
             </div>
+
+            <!-- Fila 3: Correo Electrónico | Estado Civil | Sede -->
+            <div class="informe-data-item">
+              <span class="data-label">Correo Electrónico:</span>
+              <span class="data-value">${clienteActual.email || '-'}</span>
+            </div>
+            <div class="informe-data-item">
+              <span class="data-label">Estado Civil:</span>
+              <span class="data-value">${clienteActual.estado_civil || '-'}</span>
+            </div>
+            <div class="informe-data-item">
+              <span class="data-label">Sede:</span>
+              <span class="data-value">${clienteActual.sede || '-'}</span>
+            </div>
+
+            <!-- Fila 4: Vínculo | Cargo | Empresa Usuario / Cliente Final -->
+            <div class="informe-data-item">
+              <span class="data-label">Vínculo:</span>
+              <span class="data-value">${clienteActual.vinculo || '-'}</span>
+            </div>
+            <div class="informe-data-item">
+              <span class="data-label">Cargo:</span>
+              <span class="data-value">${clienteActual.cargo || '-'}</span>
+            </div>
+            <div class="informe-data-item">
+              <span class="data-label">Empresa Usuario / Cliente Final:</span>
+              <span class="data-value">${clienteActual.cliente_final || '-'}</span>
+            </div>
+
+            <!-- Fila 5: Entidad Pagadora | Tiempo Laborado | Contacto de Emergencia -->
+            <div class="informe-data-item">
+              <span class="data-label">Entidad Pagadora:</span>
+              <span class="data-value">${clienteActual.tipo_entidad_pagadora ? (clienteActual.entidad_pagadora_especifica ? clienteActual.tipo_entidad_pagadora + ' — ' + clienteActual.entidad_pagadora_especifica : clienteActual.tipo_entidad_pagadora) : '-'}</span>
+            </div>
+            <div class="informe-data-item">
+              <span class="data-label">Tiempo Laborado:</span>
+              <span class="data-value">${calcularTiempoLaboradoInforme(clienteActual.fecha_ingreso) || '-'}</span>
+            </div>
             <div class="informe-data-item">
               <span class="data-label">Contacto de Emergencia:</span>
               <span class="data-value">${clienteActual.contacto_emergencia_nombre
-                ? `${clienteActual.contacto_emergencia_nombre} (${clienteActual.contacto_emergencia_parentesco}) - ${clienteActual.contacto_emergencia_telefono}`
+                ? `${clienteActual.contacto_emergencia_nombre} (${clienteActual.contacto_emergencia_parentesco}) — ${clienteActual.contacto_emergencia_telefono}`
                 : '-'}</span>
             </div>
+
           </div>
         </div>
 

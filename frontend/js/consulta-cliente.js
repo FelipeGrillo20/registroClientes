@@ -150,6 +150,8 @@ document.getElementById("btnContactoEmergencia")?.addEventListener("click", () =
       clienteActual.contacto_emergencia_parentesco;
     document.getElementById("contactoTelefonoVer").textContent =
       clienteActual.contacto_emergencia_telefono;
+    document.getElementById("contactoCiudadVer").textContent =
+      clienteActual.contacto_emergencia_ciudad || "-";
     document.getElementById("modalVerContacto").classList.add("show");
   } else {
     abrirModalCrearContacto();
@@ -160,6 +162,7 @@ function abrirModalCrearContacto() {
   document.getElementById("editContactoNombre").value = clienteActual.contacto_emergencia_nombre || "";
   document.getElementById("editContactoParentesco").value = clienteActual.contacto_emergencia_parentesco || "";
   document.getElementById("editContactoTelefono").value = clienteActual.contacto_emergencia_telefono || "";
+  document.getElementById("editContactoCiudad").value = clienteActual.contacto_emergencia_ciudad || "";
 
   document.getElementById("modalEditarContacto").classList.add("show");
 }
@@ -190,9 +193,10 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
   const nombre = document.getElementById("editContactoNombre").value.trim();
   const parentesco = document.getElementById("editContactoParentesco").value;
   const telefono = document.getElementById("editContactoTelefono").value.trim();
+  const ciudad = document.getElementById("editContactoCiudad").value.trim();
 
   if (!nombre || !parentesco || !telefono) {
-    alert("⚠️ Por favor completa todos los campos");
+    alert("⚠️ Por favor completa todos los campos obligatorios");
     return;
   }
 
@@ -203,7 +207,8 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
       ...clienteActual,
       contacto_emergencia_nombre: nombre,
       contacto_emergencia_parentesco: parentesco,
-      contacto_emergencia_telefono: telefono
+      contacto_emergencia_telefono: telefono,
+      contacto_emergencia_ciudad: ciudad || null
     };
 
     const res = await fetch(`${API_URL}/${clienteId}`, {
@@ -224,6 +229,7 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
     clienteActual.contacto_emergencia_nombre = nombre;
     clienteActual.contacto_emergencia_parentesco = parentesco;
     clienteActual.contacto_emergencia_telefono = telefono;
+    clienteActual.contacto_emergencia_ciudad = ciudad || null;
     window.clienteActual = clienteActual;
 
     cerrarModalEditarContacto();
@@ -249,6 +255,8 @@ window.verContactoDesdeHistorial = async function() {
       clienteActual.contacto_emergencia_parentesco;
     document.getElementById("contactoTelefonoVer").textContent =
       clienteActual.contacto_emergencia_telefono;
+    document.getElementById("contactoCiudadVer").textContent =
+      clienteActual.contacto_emergencia_ciudad || "-";
     document.getElementById("modalVerContacto").classList.add("show");
   }
 };

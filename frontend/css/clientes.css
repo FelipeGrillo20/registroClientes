@@ -1525,3 +1525,175 @@ body {
     max-width: 160px;
   }
 }
+
+/* ============================================================ */
+/* MODAL SELECCIÓN DE INFORMES                                  */
+/* ============================================================ */
+
+.modal-informes-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 3000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.25s ease;
+}
+
+.modal-informes-overlay.show { display: flex; }
+
+.modal-informes-container {
+  background: #fff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-informes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px 14px;
+  background: linear-gradient(135deg, #7c4dcc, #534AB7);
+  color: white;
+}
+
+.modal-informes-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.modal-informes-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 18px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-informes-close:hover { background: rgba(255, 255, 255, 0.35); }
+
+.modal-informes-subtitle {
+  font-size: 13px;
+  color: #666;
+  padding: 12px 22px 8px;
+  margin: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-informes-lista {
+  padding: 10px 16px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.informe-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e8e0f7;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #faf8ff;
+}
+
+.informe-item:last-child { margin-bottom: 0; }
+
+.informe-item:hover {
+  background: #ede7f6;
+  border-color: #9c6fdc;
+  transform: translateX(3px);
+}
+
+.informe-item-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: #534AB7;
+  background: #EEEDFE;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.informe-item-detalle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.informe-item-motivo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.informe-item-fecha {
+  font-size: 11px;
+  color: #888;
+}
+
+.informe-item-arrow {
+  font-size: 20px;
+  color: #9c6fdc;
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+.modal-informes-footer {
+  padding: 12px 22px 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-modal-cerrar-informes {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-modal-cerrar-informes:hover { background: #e0e0e0; }
+
+/* Badge para botón con múltiples informes */
+.btn-informe-multi {
+  position: relative;
+}
+
+.btn-informe-multi::after {
+  content: '›';
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}

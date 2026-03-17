@@ -37,10 +37,12 @@ window.generarInformePaciente = function() {
   const clienteActual = window.clienteActual;
   const consultasDelCliente = window.consultasDelCliente;
 
-  // Obtener el consulta_number activo (la pestaña que el profesional está viendo)
-  const consultaNumberActual = window.getConsultaNumberActual
+  // Obtener el consulta_number activo:
+  // 1. Desde getConsultaNumberActual (cuando se llama desde consulta.html)
+  // 2. Desde _informeConsultaNumber (cuando se llama desde clientes.html via onInforme)
+  const consultaNumberActual = (window.getConsultaNumberActual && window.getConsultaNumberActual() !== null)
     ? window.getConsultaNumberActual()
-    : null;
+    : (window._informeConsultaNumber ?? null);
 
   console.log("📊 Generando informe para consulta_number:", consultaNumberActual);
 

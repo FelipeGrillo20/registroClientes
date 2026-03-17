@@ -125,105 +125,82 @@ function getCurrentUserData() {
   return userData ? JSON.parse(userData) : null;
 }
 
-// ✅ NUEVA FUNCIÓN: Verificar si un cliente tiene informe disponible
+// ✅ ACTUALIZADO: Verificar informes disponibles por trabajador
+// Devuelve el número de consultas cerradas (con fecha_cierre) para Orientación Psicosocial,
+// o true/false para SVE (que no tiene múltiples consultas).
+// El cache ahora almacena { count, consultas } para Psicosocial.
 async function verificarInformeDisponible(clienteId, modalidad) {
   try {
-    // Verificar en cache primero
     if (consultasDisponibles[clienteId] !== undefined) {
       return consultasDisponibles[clienteId];
     }
 
-    console.log(`🔍 Verificando informe para cliente ${clienteId} en modalidad: ${modalidad}`);
-
-    // Para Orientación Psicosocial: Verificar que el caso esté cerrado
     if (modalidad === 'Orientación Psicosocial') {
-      // Obtener datos del cliente para verificar fecha_cierre
-      const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
-        }
-      });
-
-      if (!resCliente.ok) {
-        console.log(`❌ No se pudo cargar cliente ${clienteId}`);
-        consultasDisponibles[clienteId] = false;
-        return false;
-      }
-
-      const cliente = await resCliente.json();
-      
-      console.log(`📋 Cliente ${clienteId} - fecha_cierre:`, cliente.fecha_cierre);
-
-      // ✅ CRÍTICO: Verificar que tenga fecha_cierre (caso cerrado)
-      if (!cliente.fecha_cierre) {
-        console.log(`❌ Cliente ${clienteId} NO tiene fecha_cierre (caso NO cerrado)`);
-        consultasDisponibles[clienteId] = false;
-        return false;
-      }
-
-      // Verificar que tenga consultas
       const resConsultas = await fetch(`${CONSULTAS_URL}/cliente/${clienteId}`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
-        }
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
       });
 
       if (!resConsultas.ok) {
-        console.log(`❌ Cliente ${clienteId} NO tiene consultas`);
-        consultasDisponibles[clienteId] = false;
-        return false;
+        consultasDisponibles[clienteId] = { count: 0, consultas: [] };
+        return consultasDisponibles[clienteId];
       }
 
       const consultas = await resConsultas.json();
-      const tieneConsultas = Array.isArray(consultas) && consultas.length > 0;
-
-      if (!tieneConsultas) {
-        console.log(`❌ Cliente ${clienteId} tiene 0 consultas`);
-        consultasDisponibles[clienteId] = false;
-        return false;
+      if (!Array.isArray(consultas) || consultas.length === 0) {
+        consultasDisponibles[clienteId] = { count: 0, consultas: [] };
+        return consultasDisponibles[clienteId];
       }
 
-      console.log(`✅ Cliente ${clienteId} TIENE informe disponible (caso cerrado + ${consultas.length} consultas)`);
-      consultasDisponibles[clienteId] = true;
-      return true;
+      // Agrupar por consulta_number y contar las que tienen fecha_cierre
+      const grupos = {};
+      consultas.forEach(c => {
+        const num = c.consulta_number;
+        if (!grupos[num]) grupos[num] = [];
+        grupos[num].push(c);
+      });
+
+      const consultasCerradas = Object.entries(grupos)
+        .filter(([, sesiones]) => sesiones.some(s => s.fecha_cierre))
+        .map(([num, sesiones]) => {
+          const sesionCierre = sesiones.find(s => s.fecha_cierre);
+          return {
+            consulta_number: parseInt(num),
+            motivo: sesiones[0].motivo_consulta,
+            fecha_cierre: sesionCierre.fecha_cierre,
+            sesiones
+          };
+        })
+        .sort((a, b) => a.consulta_number - b.consulta_number);
+
+      const resultado = { count: consultasCerradas.length, consultas: consultasCerradas };
+      consultasDisponibles[clienteId] = resultado;
+      return resultado;
     }
 
-    // Para SVE: Solo verificar que tenga consultas
+    // SVE: solo verificar que tenga consultas (sin múltiples consultas)
     if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
       const resConsultas = await fetch(`${CONSULTAS_SVE_URL}/cliente/${clienteId}`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
-        }
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
       });
 
       if (!resConsultas.ok) {
-        console.log(`❌ Cliente ${clienteId} NO tiene consultas SVE`);
         consultasDisponibles[clienteId] = false;
         return false;
       }
 
       const consultas = await resConsultas.json();
-      const tieneConsultas = Array.isArray(consultas) && consultas.length > 0;
-
-      if (!tieneConsultas) {
-        console.log(`❌ Cliente ${clienteId} tiene 0 consultas SVE`);
-        consultasDisponibles[clienteId] = false;
-        return false;
-      }
-
-      console.log(`✅ Cliente ${clienteId} TIENE informe SVE disponible (${consultas.length} consultas)`);
-      consultasDisponibles[clienteId] = true;
-      return true;
+      const tiene = Array.isArray(consultas) && consultas.length > 0;
+      consultasDisponibles[clienteId] = tiene;
+      return tiene;
     }
 
-    // Si la modalidad no coincide con ninguna
-    consultasDisponibles[clienteId] = false;
-    return false;
+    consultasDisponibles[clienteId] = { count: 0, consultas: [] };
+    return consultasDisponibles[clienteId];
 
   } catch (err) {
     console.error(`❌ Error verificando informe para cliente ${clienteId}:`, err);
-    consultasDisponibles[clienteId] = false;
-    return false;
+    consultasDisponibles[clienteId] = { count: 0, consultas: [] };
+    return consultasDisponibles[clienteId];
   }
 }
 
@@ -642,13 +619,34 @@ async function renderClients(list) {
         </button>
       `;
     }
-    // ✅ NUEVO: Verificar si tiene informe disponible
-    console.log(`🔍 Verificando informe para cliente ID: ${c.id}, Nombre: ${c.nombre}, Cédula: ${c.cedula}`);
-    const tieneInforme = await verificarInformeDisponible(c.id, modalidad);
-    console.log(`${tieneInforme ? '✅' : '❌'} Cliente ${c.id} (${c.nombre}): Informe ${tieneInforme ? 'DISPONIBLE' : 'NO DISPONIBLE'}`);
-    
-    const informeDisabled = tieneInforme ? '' : 'disabled';
-    const informeClass = tieneInforme ? 'btn-informe' : 'btn-informe btn-informe-disabled';
+    // ✅ Verificar informes disponibles para el trabajador
+    const informeData = await verificarInformeDisponible(c.id, modalidad);
+
+    let informeDisabled = 'disabled';
+    let informeClass = 'btn-informe btn-informe-disabled';
+    let informeOnClick = '';
+
+    if (modalidad === 'Orientación Psicosocial') {
+      const count = informeData?.count || 0;
+      if (count === 1) {
+        // Un solo informe → comportamiento directo igual que antes
+        informeDisabled = '';
+        informeClass = 'btn-informe';
+        informeOnClick = `onInforme(${c.id}, '${modalidad}')`;
+      } else if (count > 1) {
+        // Múltiples informes → abre modal de selección
+        informeDisabled = '';
+        informeClass = 'btn-informe btn-informe-multi';
+        informeOnClick = `abrirModalInformes(${c.id}, '${modalidad}')`;
+      }
+    } else {
+      // SVE: booleano simple
+      if (informeData === true) {
+        informeDisabled = '';
+        informeClass = 'btn-informe';
+        informeOnClick = `onInforme(${c.id}, '${modalidad}')`;
+      }
+    }
 
     tr.innerHTML = `
       <td>${c.cedula ?? ""}</td>
@@ -668,7 +666,7 @@ async function renderClients(list) {
           <button class="btn-action btn-edit" data-id="${c.id}" onclick="onEdit(${c.id})">Editar</button>
           <button class="btn-action btn-delete" data-id="${c.id}" onclick="onDelete(${c.id})">Eliminar</button>
           <button class="btn-action btn-consulta" data-id="${c.id}" onclick="onConsulta(${c.id})">Consulta</button>
-          <button class="btn-action ${informeClass}" data-id="${c.id}" onclick="onInforme(${c.id}, '${modalidad}')" ${informeDisabled}>Informe</button>
+          <button class="btn-action ${informeClass}" data-id="${c.id}" ${informeOnClick ? `onclick="${informeOnClick}"` : ''} ${informeDisabled}>Informe</button>
         </div>
       </td>
     `;
@@ -920,126 +918,168 @@ window.onConsulta = function(id) {
   window.location.href = `consulta.html?cliente=${id}`;
 };
 
-// ✅ NUEVA FUNCIÓN: Abrir informe según modalidad (replicando comportamiento de consulta.html)
-window.onInforme = async function(clienteId, modalidad) {
-  console.log(`📄 Generando informe para cliente ${clienteId} en modalidad: ${modalidad}`);
-  
-  try {
-    // Cargar datos del cliente
-    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
-      headers: {
-        "Authorization": `Bearer ${getAuthToken()}`
-      }
+// ============================================
+// MODAL DE SELECCIÓN DE INFORMES
+// Se muestra cuando el trabajador tiene 2+ consultas cerradas
+// ============================================
+
+window.abrirModalInformes = function(clienteId, modalidad) {
+  const datos = consultasDisponibles[clienteId];
+  if (!datos || !datos.consultas || datos.consultas.length === 0) {
+    alert("No hay informes disponibles para este trabajador.");
+    return;
+  }
+
+  // Crear modal si no existe
+  let modal = document.getElementById('modalSeleccionInformes');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalSeleccionInformes';
+    modal.className = 'modal-informes-overlay';
+    modal.innerHTML = `
+      <div class="modal-informes-container">
+        <div class="modal-informes-header">
+          <h3>📄 Seleccionar Informe</h3>
+          <button class="modal-informes-close" onclick="cerrarModalInformes()">✕</button>
+        </div>
+        <p class="modal-informes-subtitle">Este trabajador tiene múltiples consultas cerradas. Selecciona el informe que deseas generar.</p>
+        <div class="modal-informes-lista" id="modalInformesLista"></div>
+        <div class="modal-informes-footer">
+          <button class="btn-modal-cerrar-informes" onclick="cerrarModalInformes()">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => {
+      if (e.target === modal) cerrarModalInformes();
     });
-    
+  }
+
+  // Poblar la lista de consultas
+  const lista = document.getElementById('modalInformesLista');
+  lista.innerHTML = datos.consultas.map(consulta => {
+    const fechaCierre = consulta.fecha_cierre
+      ? new Date(consulta.fecha_cierre).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : '-';
+    return `
+      <div class="informe-item" onclick="onInforme(${clienteId}, '${modalidad}', ${consulta.consulta_number}); cerrarModalInformes();">
+        <div class="informe-item-num">Consulta ${consulta.consulta_number}</div>
+        <div class="informe-item-detalle">
+          <span class="informe-item-motivo">${consulta.motivo || 'Sin motivo'}</span>
+          <span class="informe-item-fecha">📅 Cierre: ${fechaCierre}</span>
+        </div>
+        <span class="informe-item-arrow">›</span>
+      </div>
+    `;
+  }).join('');
+
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.cerrarModalInformes = function() {
+  const modal = document.getElementById('modalSeleccionInformes');
+  if (modal) {
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+  }
+};
+
+// ✅ ACTUALIZADO: onInforme acepta consulta_number opcional
+// - Sin consulta_number (o null): genera el informe de la única consulta cerrada (SVE o 1 consulta)
+// - Con consulta_number: genera el informe de esa consulta específica
+window.onInforme = async function(clienteId, modalidad, consultaNumber = null) {
+  console.log(`📄 Generando informe para cliente ${clienteId}, modalidad: ${modalidad}, consulta: ${consultaNumber ?? 'única'}`);
+
+  try {
+    const resCliente = await fetch(`${API_URL}/${clienteId}`, {
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
+    });
+
     if (!resCliente.ok) {
       alert("❌ Error al cargar datos del cliente");
       return;
     }
-    
+
     const cliente = await resCliente.json();
-    console.log("✅ Cliente cargado:", cliente.nombre);
-    
-    // Cargar consultas según modalidad
+
     if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
-      // Cargar consultas SVE
       const resConsultas = await fetch(`${CONSULTAS_SVE_URL}/cliente/${clienteId}`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
-        }
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
       });
-      
-      if (!resConsultas.ok) {
-        alert("❌ No se encontraron consultas SVE");
-        return;
-      }
-      
+
+      if (!resConsultas.ok) { alert("❌ No se encontraron consultas SVE"); return; }
+
       const consultas = await resConsultas.json();
-      console.log(`✅ Consultas SVE cargadas: ${consultas.length}`);
-      
       if (!consultas || consultas.length === 0) {
         alert("ℹ️ No hay consultas SVE registradas para generar el informe");
         return;
       }
-      
-      // ✅ CRÍTICO: Asignar datos globales para que informeSVE.js pueda accederlos
+
       window.clienteActual = cliente;
       window.consultasDelCliente = consultas;
-      
-      // ✅ NUEVO: Crear función auxiliar para obtener clienteId
-      window.getClienteIdFromContext = function() {
-        return clienteId; // Retornar el ID que ya tenemos
-      };
-      
-      // Cargar script SVE si no está disponible
+      window.getClienteIdFromContext = () => clienteId;
+
       if (typeof window.generarInformeSVE !== 'function') {
         const script = document.createElement('script');
         script.src = 'js/informeSVE.js';
-        script.onload = () => {
-          console.log("✅ Script informeSVE.js cargado");
-          // ✅ Pasar clienteId como parámetro
-          window.generarInformeSVE(clienteId);
-        };
-        script.onerror = () => {
-          console.error("❌ Error cargando informeSVE.js");
-          alert("❌ Error al cargar el generador de informes SVE");
-        };
+        script.onload = () => window.generarInformeSVE(clienteId);
+        script.onerror = () => alert("❌ Error al cargar el generador de informes SVE");
         document.head.appendChild(script);
       } else {
-        // ✅ Pasar clienteId como parámetro
         window.generarInformeSVE(clienteId);
       }
+
     } else {
-      // Orientación Psicosocial (código existente sin cambios)
+      // Orientación Psicosocial
       const resConsultas = await fetch(`${CONSULTAS_URL}/cliente/${clienteId}`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
-        }
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
       });
-      
-      if (!resConsultas.ok) {
-        alert("❌ No se encontraron consultas");
-        return;
-      }
-      
-      const consultas = await resConsultas.json();
-      console.log(`✅ Consultas cargadas: ${consultas.length}`);
-      
-      if (!consultas || consultas.length === 0) {
+
+      if (!resConsultas.ok) { alert("❌ No se encontraron consultas"); return; }
+
+      const todasConsultas = await resConsultas.json();
+      if (!todasConsultas || todasConsultas.length === 0) {
         alert("ℹ️ No hay consultas registradas para generar el informe");
         return;
       }
-      
-      // Verificar que el caso esté cerrado
-      if (!cliente.fecha_cierre) {
-        alert("⚠️ El caso debe estar cerrado para generar el informe.\n\nPor favor, cierra el caso desde el formulario de consulta seleccionando estado 'Cerrado' y estableciendo una fecha de cierre.");
-        return;
+
+      // Determinar qué consulta_number usar
+      let numParaInforme = consultaNumber;
+      if (numParaInforme === null) {
+        // Caso de 1 sola consulta cerrada: usar la primera con fecha_cierre
+        const grupos = {};
+        todasConsultas.forEach(c => {
+          if (!grupos[c.consulta_number]) grupos[c.consulta_number] = [];
+          grupos[c.consulta_number].push(c);
+        });
+        const cerrada = Object.entries(grupos).find(([, s]) => s.some(x => x.fecha_cierre));
+        if (!cerrada) {
+          alert("⚠️ No hay ninguna consulta cerrada para generar el informe.");
+          return;
+        }
+        numParaInforme = parseInt(cerrada[0]);
       }
-      
-      console.log("✅ Caso cerrado, generando informe...");
-      
-      // Asignar datos globales (tal como lo hace consulta.html)
+
       window.clienteActual = cliente;
-      window.consultasDelCliente = consultas;
-      
-      // Cargar script de informe si no está disponible
+      window.consultasDelCliente = todasConsultas;
+
+      // Informar a informe.js qué consulta_number debe usar
+      window.setConsultaNumberActual && window.setConsultaNumberActual(numParaInforme);
+      // Fallback para cuando informe.js no tenga setConsultaNumberActual disponible
+      window._informeConsultaNumber = numParaInforme;
+
       if (typeof window.generarInformePaciente !== 'function') {
         const script = document.createElement('script');
         script.src = 'js/informe.js';
-        script.onload = () => {
-          console.log("✅ Script informe.js cargado");
-          window.generarInformePaciente();
-        };
-        script.onerror = () => {
-          console.error("❌ Error cargando informe.js");
-          alert("❌ Error al cargar el generador de informes");
-        };
+        script.onload = () => window.generarInformePaciente();
+        script.onerror = () => alert("❌ Error al cargar el generador de informes");
         document.head.appendChild(script);
       } else {
         window.generarInformePaciente();
       }
     }
-    
+
   } catch (err) {
     console.error("❌ Error generando informe:", err);
     alert("❌ Error al generar el informe: " + err.message);

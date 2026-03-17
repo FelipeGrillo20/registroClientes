@@ -919,7 +919,7 @@ form.addEventListener("submit", async (e) => {
   email = email.toLowerCase();
 
   // === VALIDACIONES ===
-  if (!cedula || !nombre || !vinculo || !sede || !tipoEntidadPagadora || !empresaId || !email || !telefono) {
+  if (!cedula || !nombre || !vinculo || !sede || !tipoEntidadPagadora || !empresaId || !telefono) {
     alert("Todos los campos obligatorios deben estar completos.");
     return;
   }
@@ -951,10 +951,12 @@ form.addEventListener("submit", async (e) => {
       return;
     }
     
-    const duplicadoEmail = cachedClients.some((c) => c.email === email);
-    if (duplicadoEmail) {
-      alert("⚠️ Ya existe un cliente registrado con ese email en esta modalidad");
-      return;
+    if (email) {
+      const duplicadoEmail = cachedClients.some((c) => c.email === email);
+      if (duplicadoEmail) {
+        alert("⚠️ Ya existe un cliente registrado con ese email en esta modalidad");
+        return;
+      }
     }
   } else {
     const duplicadoCedula = cachedClients.some((c) => c.cedula === cedula && c.id !== editingId);
@@ -963,10 +965,12 @@ form.addEventListener("submit", async (e) => {
       return;
     }
     
-    const duplicadoEmail = cachedClients.some((c) => c.email === email && c.id !== editingId);
-    if (duplicadoEmail) {
-      alert("⚠️ Ya existe otro cliente registrado con ese email en esta modalidad");
-      return;
+    if (email) {
+      const duplicadoEmail = cachedClients.some((c) => c.email === email && c.id !== editingId);
+      if (duplicadoEmail) {
+        alert("⚠️ Ya existe otro cliente registrado con ese email en esta modalidad");
+        return;
+      }
     }
   }
 

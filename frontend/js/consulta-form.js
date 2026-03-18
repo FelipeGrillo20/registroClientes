@@ -212,27 +212,62 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     }
   }
 
-  // VALIDACIÓN: La fecha de la sesión no puede ser anterior a las sesiones
-  // de la misma consulta (mismo consulta_number)
+  // VALIDACIÓN DE FECHAS
+  // Al registrar una sesión nueva: la fecha debe ser >= a la última sesión existente.
+  // Al EDITAR una sesión: la fecha debe ser >= a la sesión anterior Y <= a la sesión
+  // posterior (si existe), respetando el orden cronológico ya establecido.
+
   const sesionesConsultaActual = consultasDelCliente.filter(
     c => c.consulta_number === consultaNumberActual
   );
 
   if (sesionesConsultaActual.length > 0) {
-    const sesionesOrdenadas = [...sesionesConsultaActual]
-      .filter(c => !editandoConsultaId || c.id !== editandoConsultaId)
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    // Ordenar todas las sesiones de esta consulta por fecha
+    const todasOrdenadas = [...sesionesConsultaActual]
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha) || a.id - b.id);
 
-    if (sesionesOrdenadas.length > 0) {
-      const ultimaFecha = sesionesOrdenadas[sesionesOrdenadas.length - 1].fecha.substring(0, 10);
-      const ultimoNumero = sesionesOrdenadas[sesionesOrdenadas.length - 1].numeroSesion || sesionesOrdenadas.length;
+    if (editandoConsultaId) {
+      // Modo edición: encontrar la posición de la sesión editada
+      // y validar solo contra su vecina anterior y siguiente
+      const posicion = todasOrdenadas.findIndex(c => c.id === editandoConsultaId);
+      const sesionAnterior = posicion > 0 ? todasOrdenadas[posicion - 1] : null;
+      const sesionSiguiente = posicion < todasOrdenadas.length - 1 ? todasOrdenadas[posicion + 1] : null;
 
-      if (fecha < ultimaFecha) {
-        alert(
-          `⚠️ La fecha seleccionada (${formatDate(fecha)}) es anterior a la Sesión ${ultimoNumero} (${formatDate(ultimaFecha)}).\n\n` +
-          `Debes elegir una fecha igual o posterior a la sesión anterior.`
-        );
-        return;
+      if (sesionAnterior) {
+        const fechaAnterior = sesionAnterior.fecha.substring(0, 10);
+        if (fecha < fechaAnterior) {
+          alert(
+            `⚠️ La fecha seleccionada (${formatDate(fecha)}) es anterior a la Sesión ${sesionAnterior.numeroSesion} (${formatDate(fechaAnterior)}).\n\n` +
+            `Debes elegir una fecha igual o posterior a la sesión anterior.`
+          );
+          return;
+        }
+      }
+
+      if (sesionSiguiente) {
+        const fechaSiguiente = sesionSiguiente.fecha.substring(0, 10);
+        if (fecha > fechaSiguiente) {
+          alert(
+            `⚠️ La fecha seleccionada (${formatDate(fecha)}) es posterior a la Sesión ${sesionSiguiente.numeroSesion} (${formatDate(fechaSiguiente)}).\n\n` +
+            `Debes elegir una fecha igual o anterior a la sesión siguiente.`
+          );
+          return;
+        }
+      }
+    } else {
+      // Modo registro nuevo: la fecha debe ser >= a la última sesión existente
+      const sesionesRestantes = todasOrdenadas;
+      if (sesionesRestantes.length > 0) {
+        const ultimaSesion = sesionesRestantes[sesionesRestantes.length - 1];
+        const ultimaFecha = ultimaSesion.fecha.substring(0, 10);
+
+        if (fecha < ultimaFecha) {
+          alert(
+            `⚠️ La fecha seleccionada (${formatDate(fecha)}) es anterior a la Sesión ${ultimaSesion.numeroSesion} (${formatDate(ultimaFecha)}).\n\n` +
+            `Debes elegir una fecha igual o posterior a la sesión anterior.`
+          );
+          return;
+        }
       }
     }
   }

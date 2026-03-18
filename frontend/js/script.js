@@ -128,6 +128,24 @@ function setupCamposSVE() {
 }
 
 // ============================================
+// CARGO: Obligatorio/opcional según vínculo
+// ============================================
+function actualizarObligatoriedadCargo(vinculo) {
+  const cargoInput     = document.getElementById('cargo');
+  const cargoAsterisco = document.getElementById('cargoAsterisco');
+
+  if (vinculo === 'Familiar Trabajador') {
+    // Opcional: quitar asterisco y required
+    if (cargoInput)     cargoInput.removeAttribute('required');
+    if (cargoAsterisco) cargoAsterisco.style.display = 'none';
+  } else {
+    // Obligatorio: mostrar asterisco y añadir required
+    if (cargoInput)     cargoInput.setAttribute('required', 'required');
+    if (cargoAsterisco) cargoAsterisco.style.display = 'inline';
+  }
+}
+
+// ============================================
 // ✅ MODAL: Datos de Familiar Trabajador
 // Se abre automáticamente al seleccionar "Familiar Trabajador" en Vínculo
 // ============================================
@@ -162,6 +180,7 @@ function setupCamposFamiliarTrabajador() {
   // El evento 'click' cubre el caso en que ya estaba en "Familiar Trabajador"
   // y el usuario vuelve a hacer clic (change no se dispara en ese caso).
   vinculoSelect.addEventListener('change', function () {
+    actualizarObligatoriedadCargo(this.value);
     if (this.value === 'Familiar Trabajador') {
       abrirModalFamiliar();
     } else {
@@ -539,6 +558,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initializeSearchableSelects();
   setupCamposFamiliarTrabajador(); // ✅ NUEVO: Inicializar campos condicionales
   setupCamposSVE(); // ✅ NUEVO: Mostrar/ocultar campos SVE según modalidad
+  actualizarObligatoriedadCargo(document.getElementById('vinculo')?.value || '');
 });
 
 function initializeSearchableSelects() {
@@ -709,11 +729,12 @@ function resetForm() {
   if (mCedula) { mCedula.value = ""; mCedula.classList.remove("input-error"); }
   if (mNombre) { mNombre.value = ""; mNombre.classList.remove("input-error"); }
 
-  // ✅ NUEVO: Limpiar campos SVE (no se ocultan, sólo se limpian)
+  // Limpiar campos SVE y restablecer obligatoriedad de cargo
   const sexoInput = document.getElementById("sexo");
   const cargoInput = document.getElementById("cargo");
   if (sexoInput) sexoInput.value = "";
-  if (cargoInput) cargoInput.value = "";  
+  if (cargoInput) cargoInput.value = "";
+  actualizarObligatoriedadCargo(''); // Vínculo vacío → cargo vuelve a obligatorio  
   sedeSelector.reset();
   document.getElementById("entidadPagadora").value = "";
   if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
@@ -863,13 +884,15 @@ form.addEventListener("submit", async (e) => {
   const estadoCivil     = document.getElementById("estadoCivil")?.value || null;
   const fechaIngreso    = document.getElementById("fechaIngreso")?.value || null;
 
+  // Cargo obligatorio si vínculo es Trabajador (en ambas modalidades)
+  if (vinculo === 'Trabajador' && !cargo) {
+    alert("El campo Cargo es obligatorio para el vínculo Trabajador.");
+    return;
+  }
+
   if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
     if (!sexo) {
       alert("El campo Género es obligatorio para la modalidad SVE.");
-      return;
-    }
-    if (!cargo) {
-      alert("El campo Cargo es obligatorio para la modalidad SVE.");
       return;
     }
   }
@@ -1078,6 +1101,8 @@ window.startEdit = async function (id) {
     document.getElementById("cedula").value = client.cedula || "";
     document.getElementById("name").value = toTitleCase(client.nombre || ""); // ✅ Title Case
     document.getElementById("vinculo").value = client.vinculo || "";
+    // Actualizar obligatoriedad de cargo según el vínculo cargado
+    actualizarObligatoriedadCargo(client.vinculo || '');
     
     // ✅ Cargar datos de familiar trabajador en modo edición (sin abrir modal)
     if (client.vinculo === 'Familiar Trabajador') {

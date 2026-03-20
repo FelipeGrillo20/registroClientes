@@ -2909,3 +2909,151 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ============================================================ */
+/* WIDGET MÚLTIPLES MOTIVOS DE CONSULTA                        */
+/* ============================================================ */
+
+.motivos-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #EEEDFE;
+  color: #3C3489;
+  border: 1px solid #AFA9EC;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.motivos-selector-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.motivos-selector-row .select2-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-agregar-motivo {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  background: #534AB7;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  height: 46px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-agregar-motivo:hover:not(:disabled) {
+  background: #3C3489;
+}
+
+.btn-agregar-motivo:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+
+.motivos-seleccionados {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.motivo-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #EEEDFE;
+  border: 1px solid #AFA9EC;
+  border-radius: 8px;
+  padding: 7px 12px;
+  animation: fadeInPill 0.2s ease;
+}
+
+@keyframes fadeInPill {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.motivo-pill-num {
+  background: #534AB7;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.motivo-pill-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #26215C;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.motivo-pill-remove {
+  background: none;
+  border: none;
+  color: #993C1D;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.motivo-pill-remove:hover { color: #D85A30; }
+.motivo-pill-remove:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Motivos múltiples en el historial */
+.consulta-motivo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.motivo-tag {
+  display: inline-block;
+  background: #FAEEDA;
+  color: #633806;
+  border: 1px solid #EF9F27;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Separación botones formulario / documentos */
+.form-actions {
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px dashed #e0e0e0;
+}
+
+/* Selector de motivo deshabilitado */
+.select2-container--disabled .select2-selection--single {
+  background: #f5f5f5 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}

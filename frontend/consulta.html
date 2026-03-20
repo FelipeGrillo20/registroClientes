@@ -711,50 +711,131 @@
       <div id="formOrientacionPsicosocial" style="display: none;">
         <form id="formConsulta" class="form-consulta">
           <div class="form-grid">
-            <!-- Motivo de Consulta -->
+            <!-- Motivos de Consulta — múltiple selección -->
             <div class="form-group full-width">
-              <label for="motivo_consulta">
+              <label>
                 <span class="label-icon">📋</span>
-                Motivo de Consulta <span class="required">*</span>
+                Motivos de Consulta <span class="required">*</span>
+                <span class="motivos-badge" id="motivosBadge">0 / 5</span>
               </label>
-              <select id="motivo_consulta" class="select2-motivo" required style="width: 100%;">
-                <option value="">Seleccione un motivo</option>
-                <option value="DUELO">DUELO</option>
-                <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
-                <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
-                <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
-                <option value="ESTABILIDAD EMOCIONAL">ESTABILIDAD EMOCIONAL</option>
-                <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
-                <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
-                <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
-                <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
-                <option value="DEPRESIÓN">DEPRESIÓN</option>
-                <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
-                <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
-                <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
-                <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
-                <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
-                <option value="ANSIEDAD">ANSIEDAD</option>
-                <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
-                <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
-                <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
-                <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
-                <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
-                <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
-                <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
-                <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
-                <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
-                <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
-                <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
-                <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
-                <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
-                <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
-                <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
-                <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-                <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-                <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
-                <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
-              </select>
+
+              <div class="motivos-selector-row">
+                <select id="motivo_consulta" class="select2-motivo" style="width: 100%;">
+                  <option value="">Seleccione un motivo...</option>
+                  <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
+                  <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
+                  <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
+                  <option value="ACOMPAÑAMIENTO PROCESO DE JUBILACIÓN">ACOMPAÑAMIENTO PROCESO DE JUBILACIÓN</option>
+                  <option value="AISLAMIENTO SOCIAL">AISLAMIENTO SOCIAL</option>
+                  <option value="ANSIEDAD">ANSIEDAD</option>
+                  <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
+                  <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
+                  <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
+                  <option value="AUTOEXIGENCIA EXCESIVA / PERFECCIONISMO">AUTOEXIGENCIA EXCESIVA / PERFECCIONISMO</option>
+                  <option value="AUTOLESIONES">AUTOLESIONES</option>
+                  <option value="BAJA AUTOESTIMA">BAJA AUTOESTIMA</option>
+                  <option value="BAJA TOLERANCIA A LA FRUSTRACIÓN">BAJA TOLERANCIA A LA FRUSTRACIÓN</option>
+                  <option value="BÚSQUEDA DE CRECIMIENTO PERSONAL">BÚSQUEDA DE CRECIMIENTO PERSONAL</option>
+                  <option value="CANCELA A ULTIMA HORA">CANCELA A ULTIMA HORA</option>
+                  <option value="CELOS Y CONTROL">CELOS Y CONTROL</option>
+                  <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
+                  <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
+                  <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+                  <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
+                  <option value="CONDUCTAS AGRESIVAS">CONDUCTAS AGRESIVAS</option>
+                  <option value="CONFLICTOS DE PAREJA">CONFLICTOS DE PAREJA</option>
+                  <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
+                  <option value="CRISIS EXISTENCIALES">CRISIS EXISTENCIALES</option>
+                  <option value="DEPENDENCIA EMOCIONAL">DEPENDENCIA EMOCIONAL</option>
+                  <option value="DEPRESIÓN">DEPRESIÓN</option>
+                  <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
+                  <option value="DESMOTIVACIÓN CRÓNICA / VACÍO EMOCIONAL">DESMOTIVACIÓN CRÓNICA / VACÍO EMOCIONAL</option>
+                  <option value="DESMOTIVACIÓN LABORAL">DESMOTIVACIÓN LABORAL</option>
+                  <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
+                  <option value="DIFICULTAD PARA ADAPTARSE A CAMBIOS ORGANIZACIONALES">DIFICULTAD PARA ADAPTARSE A CAMBIOS ORGANIZACIONALES</option>
+                  <option value="DIFICULTAD PARA MANEJAR LA IRA">DIFICULTAD PARA MANEJAR LA IRA</option>
+                  <option value="DIFICULTAD PARA TOMAR DECISIONES">DIFICULTAD PARA TOMAR DECISIONES</option>
+                  <option value="DIFICULTAD PARA TOMAR DECISIONES IMPORTANTES">DIFICULTAD PARA TOMAR DECISIONES IMPORTANTES</option>
+                  <option value="DIFICULTADES DE ADAPTACIÓN A CAMBIOS (EJ: CAMBIOS ORGANIZACIONALES, MIGRACIÓN)">DIFICULTADES DE ADAPTACIÓN A CAMBIOS (EJ: CAMBIOS ORGANIZACIONALES, MIGRACIÓN)</option>
+                  <option value="DIFICULTADES DE COMUNICACIÓN">DIFICULTADES DE COMUNICACIÓN</option>
+                  <option value="DIFICULTADES EN HABILIDADES SOCIALES">DIFICULTADES EN HABILIDADES SOCIALES</option>
+                  <option value="DIFICULTADES EN LA IDENTIDAD PERSONAL">DIFICULTADES EN LA IDENTIDAD PERSONAL</option>
+                  <option value="DUELO">DUELO</option>
+                  <option value="DUELO GESTACIONAL O PERINATAL">DUELO GESTACIONAL O PERINATAL</option>
+                  <option value="DUELO MIGRATORIO">DUELO MIGRATORIO</option>
+                  <option value="DUELO POR CAMBIOS VITALES (SALUD, TRABAJO, ROL)">DUELO POR CAMBIOS VITALES (SALUD, TRABAJO, ROL)</option>
+                  <option value="DUELO POR FALLECIMIENTO">DUELO POR FALLECIMIENTO</option>
+                  <option value="DUELO POR RUPTURA DE PAREJA">DUELO POR RUPTURA DE PAREJA</option>
+                  <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
+                  <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
+                  <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
+                  <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
+                  <option value="ESTABILIDAD EMOCIONAL">ESTABILIDAD EMOCIONAL</option>
+                  <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
+                  <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
+                  <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
+                  <option value="EXPLOSIONES EMOCIONALES">EXPLOSIONES EMOCIONALES</option>
+                  <option value="FALTA DE PROPÓSITO">FALTA DE PROPÓSITO</option>
+                  <option value="FORTALECIMIENTO DE HABILIDADES PERSONALES">FORTALECIMIENTO DE HABILIDADES PERSONALES</option>
+                  <option value="IMPACTO POR PRESUNTO ACCIDENTE DE TRABAJO">IMPACTO POR PRESUNTO ACCIDENTE DE TRABAJO</option>
+                  <option value="IMPULSIVIDAD">IMPULSIVIDAD</option>
+                  <option value="INESTABILIDAD EMOCIONAL">INESTABILIDAD EMOCIONAL</option>
+                  <option value="INSEGURIDAD CONSTANTE">INSEGURIDAD CONSTANTE</option>
+                  <option value="MANEJO DE CAMBIOS">MANEJO DE CAMBIOS</option>
+                  <option value="NO HABIA PACIENTE PROGRAMADO">NO HABIA PACIENTE PROGRAMADO</option>
+                  <option value="NO SE PRESENTA A CONSULTA">NO SE PRESENTA A CONSULTA</option>
+                  <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
+                  <option value="POSIBLE CRISIS DE PÁNICO">POSIBLE CRISIS DE PÁNICO</option>
+                  <option value="POSIBLE CUADRO DE ANSIEDAD">POSIBLE CUADRO DE ANSIEDAD</option>
+                  <option value="POSIBLE CUADRO DE ANSIEDAD GENERALIZADA">POSIBLE CUADRO DE ANSIEDAD GENERALIZADA</option>
+                  <option value="POSIBLE CUADRO DE ANSIEDAD LABORAL / BURNOUT">POSIBLE CUADRO DE ANSIEDAD LABORAL / BURNOUT</option>
+                  <option value="POSIBLE CUADRO DE ANSIEDAD POR SEPARACIÓN">POSIBLE CUADRO DE ANSIEDAD POR SEPARACIÓN</option>
+                  <option value="POSIBLE CUADRO DE ESTRÉS AGUDO">POSIBLE CUADRO DE ESTRÉS AGUDO</option>
+                  <option value="POSIBLE CUADRO DE ESTRÉS CRÓNICO">POSIBLE CUADRO DE ESTRÉS CRÓNICO</option>
+                  <option value="POSIBLE CUADRO DE HIPOCONDRÍA">POSIBLE CUADRO DE HIPOCONDRÍA</option>
+                  <option value="POSIBLE CUADRO DEPRESIVO">POSIBLE CUADRO DEPRESIVO</option>
+                  <option value="POSIBLE CUADRO DEPRESIÓN PERSISTENTE">POSIBLE CUADRO DEPRESIÓN PERSISTENTE</option>
+                  <option value="POSIBLE CUADRO TRASTORNO BIPOLAR">POSIBLE CUADRO TRASTORNO BIPOLAR</option>
+                  <option value="POSIBLE DESORDEN PSIQUIATRICO">POSIBLE DESORDEN PSIQUIATRICO</option>
+                  <option value="POSIBLE FOBIAS ESPECÍFICAS (ALTURA, ANIMALES, ENFERMEDAD, ETC.)">POSIBLE FOBIAS ESPECÍFICAS (ALTURA, ANIMALES, ENFERMEDAD, ETC.)</option>
+                  <option value="POSIBLE TRASTORNO DE ANSIEDAD SOCIAL">POSIBLE TRASTORNO DE ANSIEDAD SOCIAL</option>
+                  <option value="POSIBLE TRASTORNO DE ESTRÉS POSTRAUMÁTICO (TEPT)">POSIBLE TRASTORNO DE ESTRÉS POSTRAUMÁTICO (TEPT)</option>
+                  <option value="POSIBLE TRASTORNO EVITATIVO">POSIBLE TRASTORNO EVITATIVO</option>
+                  <option value="POSIBLE TRASTORNO LÍMITE DE LA PERSONALIDAD">POSIBLE TRASTORNO LÍMITE DE LA PERSONALIDAD</option>
+                  <option value="POSIBLE TRASTORNO NARCISISTA">POSIBLE TRASTORNO NARCISISTA</option>
+                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: BULIMIA">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: BULIMIA</option>
+                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: ANOREXIA">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: ANOREXIA</option>
+                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: TRASTORNO POR ATRACÓN">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: TRASTORNO POR ATRACÓN</option>
+                  <option value="POSIBLE TRAUMA COMPLEJO (HISTORIA PROLONGADA DE EXPERIENCIAS ADVERSAS)">POSIBLE TRAUMA COMPLEJO (HISTORIA PROLONGADA DE EXPERIENCIAS ADVERSAS)</option>
+                  <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
+                  <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
+                  <option value="PROBLEMAS FAMILIARES">PROBLEMAS FAMILIARES</option>
+                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: CONFLICTOS CON JEFES O EQUIPOS">PROBLEMAS RELACIONADOS CON EL TRABAJO: CONFLICTOS CON JEFES O EQUIPOS</option>
+                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: ESTRÉS LABORAL">PROBLEMAS RELACIONADOS CON EL TRABAJO: ESTRÉS LABORAL</option>
+                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: SÍNDROME DE BURNOUT">PROBLEMAS RELACIONADOS CON EL TRABAJO: SÍNDROME DE BURNOUT</option>
+                  <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
+                  <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
+                  <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
+                  <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
+                  <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
+                  <option value="PROCESO DE CALIFICACIÓN PERDIDA DE CAPACIDAD">PROCESO DE CALIFICACIÓN PERDIDA DE CAPACIDAD</option>
+                  <option value="PROYECCIÓN LABORAL">PROYECCIÓN LABORAL</option>
+                  <option value="RELACIÓN CONFLICTIVA CON LA COMIDA">RELACIÓN CONFLICTIVA CON LA COMIDA</option>
+                  <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
+                  <option value="SENSACIÓN DE NO SABER QUÉ HACER CON LA VIDA">SENSACIÓN DE NO SABER QUÉ HACER CON LA VIDA</option>
+                  <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
+                  <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
+                  <option value="SOBRECARGA / FALTA DE LÍMITES">SOBRECARGA / FALTA DE LÍMITES</option>
+                  <option value="TRASTORNO DEPENDIENTE">TRASTORNO DEPENDIENTE</option>
+                </select>
+                <button type="button" id="btnAgregarMotivo" class="btn-agregar-motivo" onclick="agregarMotivo()">
+                  + Agregar
+                </button>
+              </div>
+
+              <div id="motivosSeleccionados" class="motivos-seleccionados"></div>
+              <p class="field-info" id="motivosHint">Seleccione un motivo y pulse "Agregar". Puede agregar hasta 5.</p>
+              <input type="hidden" id="motivos_valor_final" />
             </div>
 
             <!-- Modalidad -->

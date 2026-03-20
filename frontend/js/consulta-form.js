@@ -5,17 +5,9 @@
 
 // ============================================
 // VARIABLE: consulta_number de la consulta activa
-//
-// Se inicializa en null y se actualiza en dos momentos:
-//   1. Al cargar el historial (loadHistorialConsultas la detecta y la expone)
-//   2. Al pulsar "Nueva Consulta" (se pone a null para que el backend calcule el siguiente)
-//
-// Cuando vale null  → el backend calcula MAX+1 (primera sesión de consulta nueva)
-// Cuando vale número → el backend usa ese valor (sesión adicional de consulta existente)
 // ============================================
 let consultaNumberActual = null;
 
-// Exponer globalmente para que consulta-historial.js pueda actualizarla
 window.setConsultaNumberActual = function(num) {
   consultaNumberActual = num;
 };
@@ -23,6 +15,123 @@ window.setConsultaNumberActual = function(num) {
 window.getConsultaNumberActual = function() {
   return consultaNumberActual;
 };
+
+// ============================================
+// SISTEMA DE MÚLTIPLES MOTIVOS DE CONSULTA
+//
+// motivosSeleccionadosArray — array en memoria con los motivos agregados.
+// El valor final se une con " | " y se guarda en motivo_consulta.
+// ============================================
+let motivosSeleccionadosArray = [];
+const MOTIVOS_MAX = 5;
+
+// Agregar un motivo desde el selector
+window.agregarMotivo = function() {
+  const select = $('#motivo_consulta');
+  const val = select.val();
+
+  if (!val) {
+    alert("⚠️ Selecciona un motivo antes de agregar.");
+    return;
+  }
+  if (motivosSeleccionadosArray.includes(val)) {
+    alert("⚠️ Este motivo ya fue agregado.");
+    return;
+  }
+  if (motivosSeleccionadosArray.length >= MOTIVOS_MAX) {
+    alert(`⚠️ Máximo ${MOTIVOS_MAX} motivos por sesión.`);
+    return;
+  }
+
+  motivosSeleccionadosArray.push(val);
+  select.val(null).trigger('change');
+  renderMotivos();
+};
+
+// Quitar un motivo de la lista
+window.quitarMotivo = function(index) {
+  motivosSeleccionadosArray.splice(index, 1);
+  renderMotivos();
+};
+
+// Renderizar las pills y actualizar el campo oculto
+function renderMotivos(bloqueado) {
+  const lista = document.getElementById('motivosSeleccionados');
+  const badge = document.getElementById('motivosBadge');
+  const hint = document.getElementById('motivosHint');
+  const btnAgregar = document.getElementById('btnAgregarMotivo');
+  const campoOculto = document.getElementById('motivos_valor_final');
+
+  if (!lista) return;
+
+  const count = motivosSeleccionadosArray.length;
+  const lleno = count >= MOTIVOS_MAX;
+
+  if (badge) {
+    badge.textContent = `${count} / ${MOTIVOS_MAX}`;
+    badge.style.background = lleno ? '#FAECE7' : '#EEEDFE';
+    badge.style.color = lleno ? '#712B13' : '#3C3489';
+    badge.style.borderColor = lleno ? '#F0997B' : '#AFA9EC';
+  }
+
+  // Bloquear selector y botón si está bloqueado o lleno
+  if (btnAgregar) btnAgregar.disabled = lleno || bloqueado;
+
+  // Bloquear/habilitar el selector Select2
+  const selectMotivo = document.getElementById('motivo_consulta');
+  if (selectMotivo) {
+    selectMotivo.disabled = !!bloqueado;
+    // Notificar a Select2 del cambio de estado
+    if (typeof $ !== 'undefined' && $('#motivo_consulta').data('select2')) {
+      if (bloqueado) {
+        $('#motivo_consulta').prop('disabled', true).trigger('change.select2');
+      } else {
+        $('#motivo_consulta').prop('disabled', false).trigger('change.select2');
+      }
+    }
+  }
+
+  if (hint) hint.style.display = count > 0 || bloqueado ? 'none' : 'block';
+
+  lista.innerHTML = motivosSeleccionadosArray.map((m, i) => `
+    <div class="motivo-pill">
+      <span class="motivo-pill-num">${i + 1}</span>
+      <span class="motivo-pill-text" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
+      <button type="button" class="motivo-pill-remove"
+        onclick="quitarMotivo(${i})"
+        ${bloqueado ? 'disabled title="No se puede editar en este estado"' : ''}
+      >✕</button>
+    </div>
+  `).join('');
+
+  // Actualizar campo oculto con el valor final
+  if (campoOculto) {
+    campoOculto.value = motivosSeleccionadosArray.join(' | ');
+  }
+}
+
+// Limpiar completamente los motivos (en reset y nueva consulta)
+function limpiarMotivos() {
+  motivosSeleccionadosArray = [];
+  renderMotivos(false);
+  $('#motivo_consulta').val(null).trigger('change');
+}
+
+// Cargar motivos desde un string guardado (al editar una sesión)
+// Formato: "DUELO | ANSIEDAD" o "DUELO" (compatibilidad con registros anteriores)
+function cargarMotivosDesdeString(motivoStr, bloqueado) {
+  if (!motivoStr) {
+    motivosSeleccionadosArray = [];
+  } else {
+    motivosSeleccionadosArray = motivoStr.split(' | ').map(m => m.trim()).filter(Boolean);
+  }
+  renderMotivos(bloqueado);
+}
+
+// Obtener el valor final de motivos para enviar al backend
+function getMotivosValor() {
+  return motivosSeleccionadosArray.join(' | ');
+}
 
 // ============================================
 // CAMPO FECHA DE CIERRE - TOGGLE
@@ -179,7 +288,7 @@ async function limpiarConsultasSugeridas(clienteId) {
 document.getElementById("formConsulta")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const motivo_consulta = $('#motivo_consulta').val();
+  const motivo_consulta = getMotivosValor();
   const modalidad = document.getElementById("modalidad").value;
   const fecha = document.getElementById("fecha").value;
   const columna1 = document.getElementById("columna1").value.trim();
@@ -190,7 +299,11 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const consultas_sugeridas = document.getElementById("consultas_sugeridas").value;
 
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
-    alert("⚠️ Por favor completa todos los campos obligatorios");
+    if (!motivo_consulta) {
+      alert("⚠️ Debes agregar al menos un motivo de consulta.");
+    } else {
+      alert("⚠️ Por favor completa todos los campos obligatorios");
+    }
     return;
   }
 
@@ -361,7 +474,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
 
     // Reset del formulario
     document.getElementById("formConsulta").reset();
-    $('#motivo_consulta').val(null).trigger('change');
+    limpiarMotivos();
     editandoConsultaId = null;
 
     document.getElementById("observaciones_confidenciales").value = "false";
@@ -400,8 +513,16 @@ window.editarConsulta = async function(id) {
 
     const consulta = await res.json();
 
-    $('#motivo_consulta').val(consulta.motivo_consulta).trigger('change');
-    $('#motivo_consulta').prop('disabled', false);
+    // Determinar si la sesión que se edita es la primera de su consulta
+    const consultaEnHistorial = consultasDelCliente.find(c => c.id === id);
+    const esPrimeraSesion = consultaEnHistorial && consultaEnHistorial.numeroSesion === 1;
+
+    // Bloquear el widget de motivos si:
+    //   - El caso está cerrado globalmente, O
+    //   - No es la primera sesión (las sesiones 2, 3... no pueden cambiar el motivo)
+    const bloquearMotivos = hayCasoCerrado() || !esPrimeraSesion;
+    cargarMotivosDesdeString(consulta.motivo_consulta, bloquearMotivos);
+
     document.getElementById("modalidad").value = consulta.modalidad;
     document.getElementById("fecha").value = consulta.fecha.split('T')[0];
     document.getElementById("columna1").value = consulta.columna1 || "";
@@ -435,8 +556,7 @@ window.editarConsulta = async function(id) {
       window.setConsultaNumberActual(consultaNumberActual);
     }
 
-    const consultaEnHistorial = consultasDelCliente.find(c => c.id === id);
-    const esPrimeraSesion = consultaEnHistorial && consultaEnHistorial.numeroSesion === 1;
+    // esPrimeraSesion ya fue calculado arriba para el bloqueo de motivos
 
     const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");
     const consultasSugeridasInput = document.getElementById("consultas_sugeridas");
@@ -541,6 +661,7 @@ document.getElementById("formConsulta")?.addEventListener("reset", () => {
   editandoConsultaId = null;
   document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
   document.getElementById("fechaCierreContainer").classList.remove("show");
+  limpiarMotivos();
 
   const recomendacionesActuales = document.getElementById("recomendaciones_finales").value;
 
@@ -566,10 +687,13 @@ $(document).ready(function() {
   $('#motivo_consulta').select2({
     theme: 'default',
     language: 'es',
-    placeholder: 'Seleccione un motivo de consulta',
-    allowClear: true,
+    placeholder: 'Seleccione un motivo...',
+    allowClear: false,
     width: '100%'
   });
+
+  // Renderizar estado inicial del widget
+  renderMotivos(false);
 });
 
 console.log('✅ Módulo consulta-form.js cargado');

@@ -291,7 +291,13 @@ window.generarInformePaciente = function() {
             Motivo de Consulta
           </h2>
           <div class="motivo-principal">
-            ${sesionesConsulta[0].motivo_consulta || 'No especificado'}
+            ${sesionesConsulta[0].motivo_consulta
+              ? sesionesConsulta[0].motivo_consulta.split(' | ').map((m, i) =>
+                  `<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:13px;font-weight:600;color:#2c3e50;">
+                    ${i + 1}. ${escapeHtmlInforme(m.trim())}
+                  </div>`
+                ).join('')
+              : 'No especificado'}
           </div>
         </div>
 

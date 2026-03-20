@@ -40,9 +40,8 @@ function getMotivoSesionActual() {
   return sesiones.length > 0 ? sesiones[0].motivo_consulta : null;
 }
 
-// Configura el campo motivo según el estado de la consulta activa
+// Configura el widget de motivos según el estado de la consulta activa
 function configurarCampoMotivo() {
-  const select = $('#motivo_consulta');
   const numActual = window.getConsultaNumberActual ? window.getConsultaNumberActual() : null;
   const sesionesActuales = consultasDelCliente.filter(
     c => c.consulta_number === numActual
@@ -51,24 +50,23 @@ function configurarCampoMotivo() {
   const casoCerrado = hayCasoCerrado();
 
   if (editandoConsultaId) {
-    select.prop('disabled', false);
+    // En edición, los motivos ya se cargaron en editarConsulta()
     return;
   }
 
   if (casoCerrado) {
-    select.prop('disabled', true);
+    // Caso cerrado: bloquear widget
+    if (window.renderMotivos) renderMotivos(true);
     return;
   }
 
   if (numSesiones === 0) {
-    // Primera sesión de esta consulta: motivo libre
-    select.prop('disabled', false);
-    select.val(null).trigger('change');
+    // Primera sesión: limpiar widget para nueva entrada
+    if (window.limpiarMotivos) limpiarMotivos();
   } else {
-    // Sesiones siguientes: motivo bloqueado al de la primera sesión
-    const motivoActual = getMotivoSesionActual();
-    select.val(motivoActual).trigger('change');
-    select.prop('disabled', true);
+    // Sesiones siguientes: cargar motivo de la primera sesión y bloquear
+    const motivoSesion1 = getMotivoSesionActual();
+    if (window.cargarMotivosDesdeString) cargarMotivosDesdeString(motivoSesion1, true);
   }
 
   mostrarCampoConsultasSugeridas(numSesiones, casoCerrado);
@@ -448,7 +446,11 @@ function renderSesiones(sesiones, consultaNum) {
         <div class="consulta-motivo-section">
           <h4 class="consulta-motivo-titulo">📋 Motivo de Consulta</h4>
           <div class="consulta-motivo">
-            ${c.motivo_consulta ? escapeHtml(c.motivo_consulta) : 'No especificado'}
+            ${c.motivo_consulta
+              ? c.motivo_consulta.split(' | ').map((m, i) =>
+                  `<span class="motivo-tag">${i + 1}. ${escapeHtml(m.trim())}</span>`
+                ).join('')
+              : 'No especificado'}
           </div>
         </div>
 
@@ -586,8 +588,7 @@ window.abrirNuevaConsulta = function() {
   const formConsulta = document.getElementById("formConsulta");
   if (formConsulta) formConsulta.reset();
 
-  $('#motivo_consulta').val(null).trigger('change');
-  $('#motivo_consulta').prop('disabled', false);
+  if (window.limpiarMotivos) limpiarMotivos();
 
   // Mostrar campo de consultas sugeridas vacío para la nueva consulta
   const consultasSugeridasGroup = document.getElementById("consultasSugeridasGroup");

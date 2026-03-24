@@ -94,14 +94,55 @@ function calcularTiempoLaborado(fechaIngreso) {
 // MOSTRAR DATOS DEL CLIENTE EN LA TARJETA
 // ============================================
 
+// Muestra u oculta una tarjeta según si tiene valor
+function mostrarItem(itemId, tieneValor) {
+  const el = document.getElementById(itemId);
+  if (el) el.style.display = tieneValor ? '' : 'none';
+}
+
 function displayClientData(cliente) {
+
+  // ── Siempre visibles (campos obligatorios) ─────────────────────────────────
   document.getElementById("clientCedula").textContent = cliente.cedula || "-";
   document.getElementById("clientNombre").textContent = cliente.nombre || "-";
-  document.getElementById("clientSede").textContent = cliente.sede || "-";
-  document.getElementById("clientEmail").textContent = cliente.email || "-";
+
+  // ── Campos opcionales: mostrar tarjeta solo si tiene valor ─────────────────
+
+  // Género
+  mostrarItem('item-genero', !!cliente.sexo);
+  const generoEl = document.getElementById("clientGenero");
+  if (generoEl) generoEl.textContent = cliente.sexo || "-";
+
+  // Edad (depende de fecha_nacimiento)
+  const edad = calcularEdad(cliente.fecha_nacimiento);
+  mostrarItem('item-edad', edad !== null);
+  const edadEl = document.getElementById("clientEdad");
+  if (edadEl) edadEl.textContent = edad !== null ? `${edad} años` : "-";
+
+  // Dirección
+  mostrarItem('item-direccion', !!cliente.direccion);
+  const direccionEl = document.getElementById("clientDireccion");
+  if (direccionEl) direccionEl.textContent = cliente.direccion || "-";
+
+  // Teléfono
+  mostrarItem('item-telefono', !!cliente.telefono);
   document.getElementById("clientTelefono").textContent = cliente.telefono || "-";
 
-  // Mostrar Vínculo con badge
+  // Correo
+  mostrarItem('item-email', !!cliente.email);
+  document.getElementById("clientEmail").textContent = cliente.email || "-";
+
+  // Estado Civil
+  mostrarItem('item-estado-civil', !!cliente.estado_civil);
+  const estadoCivilEl = document.getElementById("clientEstadoCivil");
+  if (estadoCivilEl) estadoCivilEl.textContent = cliente.estado_civil || "-";
+
+  // Sede
+  mostrarItem('item-sede', !!cliente.sede);
+  document.getElementById("clientSede").textContent = cliente.sede || "-";
+
+  // Vínculo
+  mostrarItem('item-vinculo', !!cliente.vinculo);
   const vinculoElement = document.getElementById("clientVinculo");
   if (cliente.vinculo === 'Trabajador') {
     vinculoElement.innerHTML = '<span class="badge-vinculo-consulta badge-trabajador-consulta">Trabajador</span>';
@@ -111,7 +152,13 @@ function displayClientData(cliente) {
     vinculoElement.textContent = "-";
   }
 
-  // Mostrar solo Cliente Final
+  // Cargo
+  mostrarItem('item-cargo', !!cliente.cargo);
+  const cargoEl = document.getElementById("clientCargo");
+  if (cargoEl) cargoEl.textContent = cliente.cargo || "-";
+
+  // Empresa
+  mostrarItem('item-empresa', !!cliente.cliente_final);
   const empresaElement = document.getElementById("clientEmpresa");
   if (cliente.cliente_final) {
     empresaElement.innerHTML = `<span class="badge-empresa-consulta">${escapeHtml(cliente.cliente_final)}</span>`;
@@ -119,12 +166,11 @@ function displayClientData(cliente) {
     empresaElement.textContent = "-";
   }
 
-  // Mostrar Entidad Pagadora
+  // Entidad Pagadora
+  mostrarItem('item-entidad', !!cliente.tipo_entidad_pagadora);
   const entidadPagadoraElement = document.getElementById("clientEntidadPagadora");
-
   if (cliente.tipo_entidad_pagadora) {
     let textoEntidad = '';
-
     if (cliente.tipo_entidad_pagadora === 'Particular') {
       textoEntidad = '<span class="badge-entidad-pagadora badge-particular">Particular</span>';
     } else {
@@ -139,16 +185,22 @@ function displayClientData(cliente) {
         </span>
       `;
     }
-
     entidadPagadoraElement.innerHTML = textoEntidad;
   } else {
     entidadPagadoraElement.textContent = "-";
   }
 
-  // Mostrar consultas sugeridas si existe
+  // Tiempo Laborado (depende de fecha_ingreso)
+  const tiempo = calcularTiempoLaborado(cliente.fecha_ingreso);
+  mostrarItem('item-tiempo-laborado', tiempo !== null);
+  const tiempoLaboradoEl = document.getElementById("clientTiempoLaborado");
+  if (tiempoLaboradoEl) tiempoLaboradoEl.textContent = tiempo || "-";
+
+  // Antecedentes: siempre visible (no tiene mostrarItem)
+
+  // Consultas sugeridas (header de la tarjeta)
   const consultasSugeridasInfo = document.getElementById("consultasSugeridasInfo");
   const consultasSugeridasValue = document.getElementById("clientConsultasSugeridas");
-
   if (cliente.consultas_sugeridas) {
     consultasSugeridasValue.textContent = `${cliente.consultas_sugeridas} sesiones`;
     consultasSugeridasInfo.style.display = "flex";
@@ -156,39 +208,7 @@ function displayClientData(cliente) {
     consultasSugeridasInfo.style.display = "none";
   }
 
-  // ── Campos nuevos ──────────────────────────────────────────────────────────
-
-  // Edad (calculada desde fecha_nacimiento)
-  const edadEl = document.getElementById("clientEdad");
-  if (edadEl) {
-    const edad = calcularEdad(cliente.fecha_nacimiento);
-    edadEl.textContent = edad !== null ? `${edad} años` : "-";
-  }
-
-  // Cargo
-  const cargoEl = document.getElementById("clientCargo");
-  if (cargoEl) cargoEl.textContent = cliente.cargo || "-";
-
-  // Género
-  const generoEl = document.getElementById("clientGenero");
-  if (generoEl) generoEl.textContent = cliente.sexo || "-";
-
-  // Dirección
-  const direccionEl = document.getElementById("clientDireccion");
-  if (direccionEl) direccionEl.textContent = cliente.direccion || "-";
-
-  // Estado Civil
-  const estadoCivilEl = document.getElementById("clientEstadoCivil");
-  if (estadoCivilEl) estadoCivilEl.textContent = cliente.estado_civil || "-";
-
-  // Tiempo laborado (calculado desde fecha_ingreso)
-  const tiempoLaboradoEl = document.getElementById("clientTiempoLaborado");
-  if (tiempoLaboradoEl) {
-    const tiempo = calcularTiempoLaborado(cliente.fecha_ingreso);
-    tiempoLaboradoEl.textContent = tiempo || "-";
-  }
-
-  // Actualizar badge con nombre del cliente
+  // Badge con nombre del cliente
   const badge = document.getElementById("clientBadge");
   const primerNombre = cliente.nombre ? cliente.nombre.split(" ")[0] : "Cliente";
   badge.textContent = primerNombre;

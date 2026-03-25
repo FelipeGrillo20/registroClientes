@@ -61,7 +61,7 @@ function calcularDiasEnProceso(fechaInicial, fechaFinal) {
   return diferenciaDias === 0 ? 1 : diferenciaDias;
 }
 
-window.generarInformePaciente = function() {
+window.generarInformePaciente = async function() {
   const clienteActual = window.clienteActual;
   const consultasDelCliente = window.consultasDelCliente;
 
@@ -134,6 +134,21 @@ window.generarInformePaciente = function() {
   const anioCierre = fechaCierre.getFullYear();
   const fechaCierreFormateada = formatDateInforme(fechaCierre.toISOString());
 
+  // Obtener antecedentes de salud del cliente
+  let antecedentes = [];
+  try {
+    const apiUrl = window.API_CONFIG?.ENDPOINTS?.CLIENTS || '/api/clients';
+    const token = localStorage.getItem('authToken');
+    const resAnt = await fetch(`${apiUrl}/${clienteActual.id}/antecedentes`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (resAnt.ok) {
+      antecedentes = await resAnt.json();
+    }
+  } catch (err) {
+    console.warn('No se pudieron cargar antecedentes:', err);
+  }
+
   const informeHTML = `
     <!DOCTYPE html>
     <html>
@@ -169,79 +184,45 @@ window.generarInformePaciente = function() {
             Datos del Trabajador
           </h2>
           <div class="informe-grid">
+            ${(() => {
+              // Helper: genera un item solo si tiene valor
+              const item = (label, valor) => {
+                if (!valor || valor === '-') return '';
+                return `<div class="informe-data-item">
+                  <span class="data-label">${label}</span>
+                  <span class="data-value">${valor}</span>
+                </div>`;
+              };
 
-            <!-- Fila 1: Cédula | Nombre Completo | Género -->
-            <div class="informe-data-item">
-              <span class="data-label">Cédula:</span>
-              <span class="data-value">${clienteActual.cedula || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Nombre Completo:</span>
-              <span class="data-value">${clienteActual.nombre || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Género:</span>
-              <span class="data-value">${clienteActual.sexo || '-'}</span>
-            </div>
-
-            <!-- Fila 2: Edad | Dirección | Teléfono -->
-            <div class="informe-data-item">
-              <span class="data-label">Edad:</span>
-              <span class="data-value">${calcularEdadInforme(clienteActual.fecha_nacimiento) !== null ? calcularEdadInforme(clienteActual.fecha_nacimiento) + ' años' : '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Dirección:</span>
-              <span class="data-value">${clienteActual.direccion || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Teléfono:</span>
-              <span class="data-value">${clienteActual.telefono || '-'}</span>
-            </div>
-
-            <!-- Fila 3: Correo Electrónico | Estado Civil | Sede -->
-            <div class="informe-data-item">
-              <span class="data-label">Correo Electrónico:</span>
-              <span class="data-value">${clienteActual.email || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Estado Civil:</span>
-              <span class="data-value">${clienteActual.estado_civil || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Sede:</span>
-              <span class="data-value">${clienteActual.sede || '-'}</span>
-            </div>
-
-            <!-- Fila 4: Vínculo | Cargo | Empresa Usuario / Cliente Final -->
-            <div class="informe-data-item">
-              <span class="data-label">Vínculo:</span>
-              <span class="data-value">${clienteActual.vinculo || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Cargo:</span>
-              <span class="data-value">${clienteActual.cargo || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Empresa Usuario </span>
-              <span class="data-value">${clienteActual.cliente_final || '-'}</span>
-            </div>
-
-            <!-- Fila 5: Entidad Pagadora | Tiempo Laborado | Contacto de Emergencia -->
-            <div class="informe-data-item">
-              <span class="data-label">Entidad Pagadora:</span>
-              <span class="data-value">${clienteActual.tipo_entidad_pagadora ? (clienteActual.entidad_pagadora_especifica ? clienteActual.tipo_entidad_pagadora + ' — ' + clienteActual.entidad_pagadora_especifica : clienteActual.tipo_entidad_pagadora) : '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Tiempo Laborado:</span>
-              <span class="data-value">${calcularTiempoLaboradoInforme(clienteActual.fecha_ingreso) || '-'}</span>
-            </div>
-            <div class="informe-data-item">
-              <span class="data-label">Contacto de Emergencia:</span>
-              <span class="data-value">${clienteActual.contacto_emergencia_nombre
+              const edad = calcularEdadInforme(clienteActual.fecha_nacimiento);
+              const tiempoLaborado = calcularTiempoLaboradoInforme(clienteActual.fecha_ingreso);
+              const entidadPagadora = clienteActual.tipo_entidad_pagadora
+                ? (clienteActual.entidad_pagadora_especifica
+                    ? clienteActual.tipo_entidad_pagadora + ' — ' + clienteActual.entidad_pagadora_especifica
+                    : clienteActual.tipo_entidad_pagadora)
+                : null;
+              const contactoEmergencia = clienteActual.contacto_emergencia_nombre
                 ? `${clienteActual.contacto_emergencia_nombre} (${clienteActual.contacto_emergencia_parentesco}) — ${clienteActual.contacto_emergencia_telefono}`
-                : '-'}</span>
-            </div>
+                : null;
 
+              return [
+                item('Cédula:', clienteActual.cedula),
+                item('Nombre Completo:', clienteActual.nombre),
+                item('Género:', clienteActual.sexo),
+                item('Edad:', edad !== null ? edad + ' años' : null),
+                item('Dirección:', clienteActual.direccion),
+                item('Teléfono:', clienteActual.telefono),
+                item('Correo Electrónico:', clienteActual.email),
+                item('Estado Civil:', clienteActual.estado_civil),
+                item('Sede:', clienteActual.sede),
+                item('Vínculo:', clienteActual.vinculo),
+                item('Cargo:', clienteActual.cargo),
+                item('Empresa Usuario:', clienteActual.cliente_final),
+                item('Entidad Pagadora:', entidadPagadora),
+                item('Tiempo Laborado:', tiempoLaborado),
+                item('Contacto de Emergencia:', contactoEmergencia),
+              ].join('');
+            })()}
           </div>
         </div>
 
@@ -284,6 +265,33 @@ window.generarInformePaciente = function() {
             </div>
           </div>
         </div>
+
+        ${antecedentes.length > 0 ? `
+        <div class="informe-section informe-antecedentes">
+          <h2 class="informe-section-title">
+            <span class="section-icon">🩺</span>
+            Antecedentes de Salud
+          </h2>
+          <table class="informe-antecedentes-tabla">
+            <thead>
+              <tr>
+                <th class="ant-th">Tipo</th>
+                <th class="ant-th">Detalle</th>
+                <th class="ant-th">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${antecedentes.map(a => `
+                <tr>
+                  <td class="ant-td"><span class="ant-badge ant-badge-${escapeHtmlInforme(a.tipo_antecedente).toLowerCase()}">${escapeHtmlInforme(a.tipo_antecedente)}</span></td>
+                  <td class="ant-td">${escapeHtmlInforme(a.detalle)}</td>
+                  <td class="ant-td ant-fecha">${a.created_at ? formatDateInforme(a.created_at) : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
 
         <div class="informe-section informe-motivo">
           <h2 class="informe-section-title">

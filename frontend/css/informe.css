@@ -378,6 +378,68 @@
   white-space: nowrap;
 }
 
+/* Antecedentes de Salud */
+.informe-antecedentes {
+  background: #f0fdf9;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #9fe1cb;
+}
+
+.informe-antecedentes-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ant-th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #0f6e56;
+  background: #e1f5ee;
+  border-bottom: 2px solid #9fe1cb;
+}
+
+.ant-td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #d0ede4;
+  color: #2c3e50;
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.ant-fecha {
+  white-space: nowrap;
+  color: #7f8c8d;
+}
+
+.informe-antecedentes-tabla tbody tr:last-child .ant-td {
+  border-bottom: none;
+}
+
+.ant-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #e1f5ee;
+  color: #085041;
+  border: 1px solid #5dcaa5;
+}
+
+.ant-badge-físico    { background: #fce4ec; color: #880e4f; border-color: #f48fb1; }
+.ant-badge-psicológico { background: #ede7f6; color: #4a148c; border-color: #ce93d8; }
+.ant-badge-médico    { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; }
+.ant-badge-familiar  { background: #fff8e1; color: #f57f17; border-color: #ffd54f; }
+
+/* ============================================================ */
 /* Motivo Principal */
 .informe-motivo {
   background: #f8f8f6;
@@ -775,6 +837,41 @@
   .cierre-item {
     font-size: 11px !important;
     white-space: nowrap !important;
+  }
+
+  .informe-antecedentes {
+    background: #f0fdf9 !important;
+    padding: 15px !important;
+    border-radius: 12px !important;
+    border: 2px solid #9fe1cb !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .informe-antecedentes-tabla {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+  }
+
+  .ant-th {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+    background: #e1f5ee !important;
+    color: #0f6e56 !important;
+    border-bottom: 2px solid #9fe1cb !important;
+  }
+
+  .ant-td {
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+    border-bottom: 1px solid #d0ede4 !important;
+  }
+
+  .ant-badge {
+    font-size: 9px !important;
+    padding: 2px 7px !important;
   }
 
   .informe-motivo {

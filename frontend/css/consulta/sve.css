@@ -1,0 +1,108 @@
+/* ============================================================ */
+/* SVE — Sistema de Vigilancia Epidemiológica                   */
+/* ============================================================ */
+
+/* ── Lista de consultas SVE ─────────────────────────────────── */
+.consultas-sve-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.consulta-sve-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #56ab2f;
+}
+
+.consulta-sve-card:hover {
+  border-color: #56ab2f;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.2);
+  transform: translateX(5px);
+}
+
+.consulta-sve-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.sesion-sve-numero {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.consulta-sve-body { display: flex; flex-direction: column; gap: 12px; }
+
+.consulta-sve-item { display: flex; flex-direction: column; gap: 5px; }
+.consulta-sve-item strong { font-size: 13px; color: #7f8c8d; font-weight: 600; }
+.consulta-sve-item span   { font-size: 15px; color: #2c3e50; font-weight: 500; }
+
+.consulta-sve-item p {
+  font-size: 14px;
+  color: #2c3e50;
+  line-height: 1.6;
+  margin: 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #56ab2f;
+}
+
+/* ── Botón de informe SVE ───────────────────────────────────── */
+#contenedorBotonInformeSVE {
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 14px;
+  border: 2px solid #56ab2f;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+.btn-informe-sve {
+  background: linear-gradient(135deg, #56ab2f, #a8e063);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-informe-sve:hover {
+  background: linear-gradient(135deg, #a8e063, #56ab2f);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(86, 171, 47, 0.5);
+}
+
+.btn-informe-sve:active  { transform: translateY(-1px); }
+.btn-informe-sve:focus   { outline: none; box-shadow: 0 0 0 3px rgba(86, 171, 47, 0.3); }
+
+#contenedorBotonInformeSVE p {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #56ab2f;
+  font-weight: 600;
+}

@@ -1,0 +1,420 @@
+/* ============================================================ */
+/* MODALES — Contacto emergencia, antecedentes, informes        */
+/* ============================================================ */
+
+/* ── Modal Contacto de Emergencia ───────────────────────────── */
+.modal-overlay-contacto {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay-contacto.show { display: flex; }
+
+.modal-content-contacto {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease;
+  overflow: hidden;
+}
+
+.modal-header-contacto {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  color: white;
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header-contacto h2 { margin: 0; font-size: 1.4em; font-weight: 600; }
+
+.modal-header-edit { background: linear-gradient(135deg, #667eea, #764ba2); }
+
+.btn-close-modal-contacto {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  padding: 0;
+  width: 32px; height: 32px;
+}
+
+.btn-close-modal-contacto:hover { transform: rotate(90deg); }
+
+.modal-body-contacto { padding: 30px; }
+
+.contacto-info-card {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.contacto-info-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.contacto-info-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+.contacto-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contacto-value    { font-size: 18px; font-weight: 600; color: #2c3e50; }
+.contacto-telefono { color: #e67e22; font-size: 20px; letter-spacing: 1px; }
+
+.modal-footer-contacto {
+  padding: 20px 30px;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-close-footer-contacto {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-close-footer-contacto:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Formulario editar contacto */
+.modal-header-contacto.modal-header-edit {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.form-editar-contacto { padding: 30px; }
+
+.form-row-modal-contacto { margin-bottom: 20px; }
+
+.form-row-modal-contacto label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.form-row-modal-contacto input,
+.form-row-modal-contacto select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.form-row-modal-contacto input:focus,
+.form-row-modal-contacto select:focus {
+  border-color: #e67e22;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.1);
+  background: white;
+}
+
+.btn-save-contacto {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-save-contacto:hover {
+  background: linear-gradient(135deg, #229954, #1e8449);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-cancel-contacto {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel-contacto:hover { background: #7f8c8d; }
+
+.btn-edit-contacto-footer {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-edit-contacto-footer:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Modal Antecedentes de Salud ────────────────────────────── */
+.modal-overlay-antecedentes {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay-antecedentes.show { display: flex; }
+
+.modal-content-antecedentes {
+  background: #fff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 580px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-content-antecedentes--edit { max-width: 480px; }
+
+.modal-header-antecedentes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  flex-shrink: 0;
+}
+
+.modal-header-antecedentes h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.modal-header-antecedentes--edit { background: linear-gradient(135deg, #8e44ad, #7d3c98); }
+
+.btn-close-modal-antecedentes {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: 22px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.btn-close-modal-antecedentes:hover { background: rgba(255,255,255,0.35); }
+
+.modal-body-antecedentes {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Modal Selección de Informes ────────────────────────────── */
+.modal-informes-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 3000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.25s ease;
+}
+
+.modal-informes-overlay.show { display: flex; }
+
+.modal-informes-container {
+  background: #fff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: slideUp 0.25s ease;
+}
+
+.modal-informes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px 14px;
+  background: linear-gradient(135deg, #7c4dcc, #534AB7);
+  color: white;
+}
+
+.modal-informes-header h3 { margin: 0; font-size: 17px; font-weight: 700; }
+
+.modal-informes-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 18px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-informes-close:hover { background: rgba(255, 255, 255, 0.35); }
+
+.modal-informes-subtitle {
+  font-size: 13px;
+  color: #666;
+  padding: 12px 22px 8px;
+  margin: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-informes-lista {
+  padding: 10px 16px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.informe-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e8e0f7;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #faf8ff;
+}
+
+.informe-item:last-child  { margin-bottom: 0; }
+.informe-item:hover {
+  background: #ede7f6;
+  border-color: #9c6fdc;
+  transform: translateX(3px);
+}
+
+.informe-item-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: #534AB7;
+  background: #EEEDFE;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.informe-item-detalle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.informe-item-motivo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.informe-item-fecha { font-size: 11px; color: #888; }
+.informe-item-arrow { font-size: 20px; color: #9c6fdc; font-weight: 300; flex-shrink: 0; }
+
+.modal-informes-footer {
+  padding: 12px 22px 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-modal-cerrar-informes {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-modal-cerrar-informes:hover { background: #e0e0e0; }
+
+/* ── Modal Trabajador Relacionado ───────────────────────────── */
+.modal-trabajador-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  z-index: 3000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-trabajador-overlay.show { display: flex; }

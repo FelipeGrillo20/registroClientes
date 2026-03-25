@@ -1,0 +1,157 @@
+/* ============================================================ */
+/* ESTADOS — Badges, indicadores visuales, entidades            */
+/* ============================================================ */
+
+/* ── Badges de vínculo ──────────────────────────────────────── */
+.badge-vinculo-consulta {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+}
+
+.badge-trabajador-consulta {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.badge-familiar-consulta {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* ── Badges de empresa ──────────────────────────────────────── */
+.badge-empresa-consulta {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: white;
+  box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+  letter-spacing: 0.3px;
+}
+
+.badge-subcontratista-consulta {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  color: white;
+  box-shadow: 0 2px 8px rgba(22, 160, 133, 0.3);
+  letter-spacing: 0.3px;
+}
+
+.info-subcontratista {
+  padding-top: 8px;
+  border-top: 1px dashed #e9ecef;
+}
+
+/* ── Entidad Pagadora ───────────────────────────────────────── */
+.info-item-with-button { position: relative; }
+
+.btn-trazabilidad {
+  position: absolute;
+  top: 50%; right: 15px;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-trazabilidad:hover {
+  background: linear-gradient(135deg, #764ba2, #667eea);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-trazabilidad:active { transform: translateY(-50%) scale(0.95); }
+
+.badge-entidad-pagadora {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-right: 5px;
+}
+
+.badge-entidad-pagadora.badge-particular {
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  box-shadow: 0 2px 8px rgba(22, 160, 133, 0.3);
+}
+
+.badge-entidad-pagadora.badge-arl {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.badge-entidad-pagadora.badge-ccf {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+.entidad-arrow {
+  display: inline-block;
+  margin: 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  vertical-align: middle;
+}
+
+.badge-entidad-especifica {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  letter-spacing: 0.3px;
+}
+
+#clientEntidadPagadora {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* ── Spinner general ────────────────────────────────────────── */
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Botón informe multi ────────────────────────────────────── */
+.btn-informe-multi::after {
+  content: '›';
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}

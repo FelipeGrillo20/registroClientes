@@ -1,0 +1,254 @@
+/* ============================================================ */
+/* TABLAS — Antecedentes de salud y tablas del modal            */
+/* ============================================================ */
+
+/* ── Botón y tarjeta de antecedentes ───────────────────────── */
+.btn-antecedentes-salud {
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(22, 160, 133, 0.25);
+  width: 100%;
+  height: 42px;
+}
+
+.btn-antecedentes-salud:hover {
+  background: linear-gradient(135deg, #16a085, #0e8c72);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 160, 133, 0.35);
+}
+
+.btn-antecedentes-salud:active { transform: translateY(0); }
+
+.info-icon-antecedentes {
+  background: linear-gradient(135deg, #1abc9c, #16a085) !important;
+}
+
+.info-grid-compacto .btn-antecedentes-salud {
+  padding: 7px 12px !important;
+  font-size: 13px !important;
+  height: 36px !important;
+}
+
+/* ── Tabla de antecedentes en el modal ──────────────────────── */
+.lista-antecedentes-container { margin-bottom: 24px; }
+
+.antecedentes-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: #888;
+  font-size: 14px;
+}
+
+.spinner-antecedente {
+  display: inline-block;
+  width: 28px; height: 28px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #1abc9c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.tabla-antecedentes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-antecedentes thead tr {
+  background: linear-gradient(135deg, #f0fdf9, #e6f9f4);
+}
+
+.tabla-antecedentes th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #16a085;
+  border-bottom: 2px solid #b2dfdb;
+  white-space: nowrap;
+}
+
+.tabla-antecedentes td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+  color: #444;
+}
+
+.tabla-antecedentes tr:last-child td { border-bottom: none; }
+.tabla-antecedentes tr:hover td { background: #f9fffe; }
+
+/* Badge tipo antecedente */
+.badge-antecedente {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge-antecedente-fisico      { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+.badge-antecedente-psicologico { background: #ede7f6; color: #4a148c; border: 1px solid #ce93d8; }
+.badge-antecedente-medico      { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+.badge-antecedente-familiar    { background: #fff8e1; color: #f57f17; border: 1px solid #ffd54f; }
+.badge-antecedente-otro        { background: #f5f5f5; color: #424242; border: 1px solid #bdbdbd; }
+
+/* Sin antecedentes */
+.antecedentes-empty {
+  text-align: center;
+  padding: 30px 20px;
+  color: #95a5a6;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Botones acción en tabla */
+.btn-editar-antecedente,
+.btn-eliminar-antecedente {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-editar-antecedente {
+  background: #eaf4fb;
+  color: #2980b9;
+  border: 1px solid #aed6f1;
+}
+
+.btn-editar-antecedente:hover {
+  background: #2980b9;
+  color: white;
+}
+
+.btn-eliminar-antecedente {
+  background: #fdf2f2;
+  color: #e74c3c;
+  border: 1px solid #fadbd8;
+}
+
+.btn-eliminar-antecedente:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+/* ── Formulario agregar antecedente ─────────────────────────── */
+.form-agregar-antecedente { margin-top: 10px; }
+
+.agregar-antecedente-titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: #16a085;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-agregar-antecedente .form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.form-agregar-antecedente label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.form-agregar-antecedente input,
+.form-agregar-antecedente select,
+.form-agregar-antecedente textarea {
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #f8f9fa;
+  transition: border-color 0.2s;
+}
+
+.form-agregar-antecedente input:focus,
+.form-agregar-antecedente select:focus,
+.form-agregar-antecedente textarea:focus {
+  border-color: #1abc9c;
+  outline: none;
+  background: white;
+}
+
+.form-agregar-antecedente textarea { resize: vertical; min-height: 70px; }
+
+.btn-guardar-antecedente {
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(22, 160, 133, 0.25);
+}
+
+.btn-guardar-antecedente:hover {
+  background: linear-gradient(135deg, #16a085, #0e8c72);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 160, 133, 0.35);
+}
+
+.btn-cancelar-antecedente {
+  background: #ecf0f1;
+  color: #7f8c8d;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cancelar-antecedente:hover { background: #dfe6e9; }
+
+.antecedente-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-agregar-antecedente-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #1abc9c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.btn-agregar-antecedente-link:hover { color: #16a085; }

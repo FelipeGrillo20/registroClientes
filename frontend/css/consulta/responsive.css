@@ -1,0 +1,130 @@
+/* ============================================================ */
+/* RESPONSIVE — Media queries de todos los módulos              */
+/* ============================================================ */
+
+/* ── 768px ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  body { padding: 15px; }
+
+  /* Layout */
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-left-section { width: 100%; flex-wrap: wrap; }
+  .page-header h1 { font-size: 1.5em; }
+  .card-header { padding: 20px; flex-direction: column; gap: 15px; align-items: flex-start; }
+  .card-body { padding: 25px 20px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .info-item { padding: 15px; }
+  .info-icon-wrapper { min-width: 42px; height: 42px; }
+  .info-icon { font-size: 20px; }
+  .info-value { font-size: 15px; }
+  .consulta-section { padding: 25px 20px; }
+  .section-title { font-size: 1.3em; }
+
+  /* Grid compacto */
+  .info-grid-compacto { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Formularios */
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full-width { grid-column: span 1; }
+
+  /* Historial */
+  .consulta-badges { flex-direction: column; align-items: flex-start; }
+  .consulta-actions { flex-direction: column; }
+  .btn-edit-consulta, .btn-delete-consulta { width: 100%; justify-content: center; }
+  .recomendaciones-finales-card { padding: 20px; border-left-width: 4px; }
+  .recomendaciones-header { flex-direction: column; align-items: flex-start; }
+  .recomendaciones-titulo { font-size: 18px; }
+  .recomendaciones-contenido-historial { font-size: 14px; padding: 15px; }
+
+  /* Estados / badges */
+  .badge-entidad-pagadora, .badge-entidad-especifica { font-size: 11px; padding: 5px 10px; }
+  .entidad-arrow { font-size: 14px; margin: 0 5px; }
+
+  /* SVE */
+  .consulta-sve-header { flex-wrap: wrap; }
+  .sesion-sve-numero { width: 100%; text-align: center; }
+  .btn-informe-sve { width: 100%; justify-content: center; padding: 14px 30px; font-size: 15px; }
+  #contenedorBotonInformeSVE { padding: 20px; }
+  #contenedorBotonInformeSVE p { font-size: 12px; }
+
+  /* Documentos */
+  .documentos-section { padding: 25px 20px; }
+  .documentos-grid { grid-template-columns: 1fr; gap: 20px; }
+  .documento-actions { flex-direction: column; }
+  .btn-adjuntar, .btn-ver-documento, .btn-eliminar-documento { width: 100%; justify-content: center; }
+
+  /* Pestañas */
+  .consulta-section-header { flex-direction: column; align-items: stretch; }
+  .btn-nueva-consulta { width: 100%; justify-content: center; margin-top: 8px; }
+  .consultas-tabs-header { gap: 4px; }
+  .consulta-tab { padding: 7px 12px; font-size: 12px; }
+
+  /* Sitemap */
+  .btn-sitemap { font-size: 12px; padding: 6px 12px !important; width: fit-content; }
+}
+
+/* ── 560px ──────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .info-grid-compacto { grid-template-columns: 1fr !important; }
+}
+
+/* ── 480px ──────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  /* Layout */
+  .user-info-bar { flex-direction: column; gap: 10px; }
+  .user-left-section { width: 100%; flex-direction: column; align-items: flex-start; }
+  .btn-back { padding: 8px 16px; font-size: 13px; }
+  .card-title h2 { font-size: 1.2em; }
+  .info-item { flex-direction: column; align-items: center; text-align: center; }
+
+  /* Formularios */
+  .form-actions { flex-direction: column; }
+  .btn-submit-consulta, .btn-reset-consulta { width: 100%; justify-content: center; }
+
+  /* Historial */
+  .acciones-caso-container { flex-direction: column; }
+  .btn-informe-paciente, .btn-reabrir-caso { width: 100%; justify-content: center; font-size: 14px; padding: 12px 24px; }
+  .acciones-caso-info { font-size: 12px; }
+
+  /* Estados */
+  #clientEntidadPagadora { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .entidad-arrow { display: none; }
+  .badge-entidad-especifica { margin-left: 0 !important; }
+
+  /* SVE */
+  .consulta-sve-card { padding: 15px; }
+  .sesion-sve-numero { font-size: 12px; padding: 5px 12px; }
+  .btn-informe-sve { padding: 12px 24px; font-size: 14px; }
+  #contenedorBotonInformeSVE { padding: 15px; border-radius: 10px; }
+
+  /* Documentos */
+  .documentos-section { padding: 20px 15px; }
+  .documento-card { padding: 20px 15px; }
+  .documento-icon-wrapper { width: 50px; height: 50px; }
+  .documento-icon { font-size: 26px; }
+  .documento-titulo { font-size: 16px; }
+  .documentos-nota { flex-direction: column; text-align: center; }
+  .nota-texto { font-size: 13px; }
+
+  /* Subcontratista */
+  .badge-subcontratista-consulta { font-size: 11px; padding: 5px 10px; }
+  #labelSubcontratista { display: block !important; margin-top: 5px; }
+
+  /* Sitemap */
+  .btn-sitemap { font-size: 11px; padding: 5px 10px !important; }
+}
+
+/* ── 900px (grid compacto) ──────────────────────────────────── */
+@media (max-width: 900px) {
+  .info-grid-compacto { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── 600px (pestañas) ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .consulta-section-header { flex-direction: column; align-items: stretch; }
+  .btn-nueva-consulta { width: 100%; justify-content: center; margin-top: 8px; }
+  .consultas-tabs-header { gap: 4px; }
+  .consulta-tab { padding: 7px 12px; font-size: 12px; }
+}

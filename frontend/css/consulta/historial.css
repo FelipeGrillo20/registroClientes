@@ -1,0 +1,479 @@
+/* ============================================================ */
+/* HISTORIAL — Sesiones, pestañas, cards, recomendaciones       */
+/* ============================================================ */
+
+/* ── Sección historial ──────────────────────────────────────── */
+.historial-section {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.7s ease;
+}
+
+.historial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+}
+
+.btn-refresh:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: rotate(180deg);
+}
+
+.historial-container { min-height: 200px; }
+
+.loading-historial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-historial p { color: #7f8c8d; font-size: 14px; }
+
+.no-historial {
+  text-align: center;
+  padding: 60px 20px;
+  color: #95a5a6;
+}
+
+.no-historial-icon { font-size: 64px; margin-bottom: 15px; opacity: 0.5; }
+.no-historial p    { font-size: 16px; margin: 0; }
+
+/* ── Pestañas de consultas ──────────────────────────────────── */
+.consultas-tabs-header {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.consulta-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #f5f5f5;
+  border: 1.5px solid #ddd;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+  font-family: inherit;
+}
+
+.consulta-tab:hover:not(.consulta-tab-active) {
+  background: #ede7f6;
+  color: #6a1b9a;
+  border-color: #ce93d8;
+}
+
+.consulta-tab-active {
+  background: white;
+  border-color: #9c27b0;
+  border-bottom: 2px solid white;
+  color: #6a1b9a;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.badge-consulta-estado {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.badge-consulta-activa  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.badge-consulta-cerrada { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+
+.consulta-pane         { display: none; animation: fadeInPane 0.2s ease; }
+.consulta-pane-active  { display: block; }
+
+/* ── Cards de sesión ────────────────────────────────────────── */
+.consulta-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 2px solid #e9ecef;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.consulta-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 5px; height: 100%;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+}
+
+.consulta-card:hover {
+  border-color: #667eea;
+  transform: translateX(5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.consulta-card.consulta-cerrada {
+  background: linear-gradient(135deg, #ecf0f1 0%, #d5dbdb 100%);
+  border-color: #bdc3c7;
+  opacity: 0.85;
+}
+
+.consulta-card.consulta-cerrada::before {
+  background: linear-gradient(180deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
+.consulta-card.consulta-cerrada:hover {
+  border-color: #95a5a6;
+  transform: translateX(3px);
+}
+
+.consulta-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.consulta-fecha-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.consulta-sesion-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  align-self: flex-start;
+}
+
+.consulta-cerrada .consulta-sesion-badge {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  box-shadow: 0 2px 8px rgba(149, 165, 166, 0.3);
+}
+
+.consulta-fecha-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.consulta-fecha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.consulta-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-modalidad { background: #e3f2fd; color: #1976d2; }
+.badge-estado    { color: white; }
+.badge-estado.abierto  { background: linear-gradient(135deg, #27ae60, #229954); }
+.badge-estado.cerrado  { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+.badge-motivo {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge consultas sugeridas — sesión 1 */
+.badge-sugeridas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #EEEDFE;
+  color: #3C3489;
+  border: 1px solid #AFA9EC;
+  white-space: nowrap;
+}
+
+/* ── Motivo y observaciones ─────────────────────────────────── */
+.consulta-motivo-section  { margin-bottom: 15px; }
+
+.consulta-motivo-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+/* Motivos múltiples en el historial */
+.consulta-motivo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.motivo-tag {
+  display: inline-block;
+  background: #FAEEDA;
+  color: #633806;
+  border: 1px solid #EF9F27;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.consulta-observaciones {
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+/* ── Acciones de sesión ─────────────────────────────────────── */
+.consulta-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.btn-edit-consulta,
+.btn-delete-consulta {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-edit-consulta   { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+.btn-delete-consulta { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+
+.btn-edit-consulta:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #1f6691);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-delete-consulta:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-edit-consulta:disabled,
+.btn-delete-consulta:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Recomendaciones Finales ────────────────────────────────── */
+.recomendaciones-finales-card {
+  background: #f0ebfa;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 1.5px solid #d4c5ee;
+  border-left: 5px solid #7c4dcc;
+  box-shadow: 0 2px 12px rgba(124, 77, 204, 0.1);
+  animation: slideIn 0.5s ease;
+}
+
+.recomendaciones-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1.5px solid #ede7f6;
+}
+
+.recomendaciones-icon {
+  font-size: 28px;
+  background: #ede7f6;
+  width: 50px; height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.recomendaciones-titulo { font-size: 20px; font-weight: 600; margin: 0; color: #4a235a; }
+
+.recomendaciones-contenido-historial {
+  background: #e8dff7;
+  padding: 18px 20px;
+  border-radius: 8px;
+  border-left: 4px solid #9c6fdc;
+  line-height: 1.8;
+  font-size: 15px;
+  color: #2c3e50;
+  text-align: justify;
+  margin-bottom: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.recomendaciones-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid #ede7f6;
+}
+
+.recomendaciones-fecha {
+  font-size: 13px;
+  color: #5d4e75;
+  font-weight: 500;
+  background: #ede7f6;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* ── Acciones del caso (Informe / Reabrir) ──────────────────── */
+.acciones-caso-container {
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: 14px;
+  border: 2px solid #ffb74d;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: slideUp 0.4s ease;
+}
+
+.btn-informe-paciente {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-informe-paciente:hover {
+  background: linear-gradient(135deg, #764ba2, #667eea);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-reabrir-caso {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-reabrir-caso:hover {
+  background: linear-gradient(135deg, #f57c00, #e65100);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+}
+
+.btn-informe-paciente:active,
+.btn-reabrir-caso:active { transform: translateY(-1px); }
+
+.acciones-caso-info {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #e65100;
+  font-weight: 600;
+  line-height: 1.5;
+}

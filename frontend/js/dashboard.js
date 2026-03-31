@@ -6,6 +6,8 @@ const CONSULTAS_API_URL = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 // Variables globales para filtros
 let fechaInicioFiltro = null;
 let fechaFinFiltro = null;
+let filtroTablaAno = null;
+let filtroTablaMes = null;
 let datosOriginales = {
   clientes: [],
   consultas: [],
@@ -835,6 +837,52 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
+// ============================================
+// FILTROS DE LA TABLA TOP CLIENTES
+// ============================================
+
+function filtrarTablaTopClientes() {
+  let consultas = [...datosOriginales.consultas];
+
+  // Aplicar también el filtro global de fechas si está activo
+  if (fechaInicioFiltro) {
+    const fi = new Date(fechaInicioFiltro + 'T00:00:00');
+    consultas = consultas.filter(c => new Date(c.fecha) >= fi);
+  }
+  if (fechaFinFiltro) {
+    const ff = new Date(fechaFinFiltro + 'T23:59:59');
+    consultas = consultas.filter(c => new Date(c.fecha) <= ff);
+  }
+
+  // Filtrar por año
+  if (filtroTablaAno) {
+    consultas = consultas.filter(c => {
+      const fecha = new Date(c.fecha);
+      return fecha.getFullYear() === parseInt(filtroTablaAno);
+    });
+  }
+
+  // Filtrar por mes (1-based)
+  if (filtroTablaMes) {
+    consultas = consultas.filter(c => {
+      const fecha = new Date(c.fecha);
+      return (fecha.getMonth() + 1) === parseInt(filtroTablaMes);
+    });
+  }
+
+  mostrarTopClientes(consultas);
+}
+
+document.getElementById("filtroTablaAno")?.addEventListener("change", (e) => {
+  filtroTablaAno = e.target.value || null;
+  filtrarTablaTopClientes();
+});
+
+document.getElementById("filtroTablaMes")?.addEventListener("change", (e) => {
+  filtroTablaMes = e.target.value || null;
+  filtrarTablaTopClientes();
+});
 
 document.getElementById("btnBack")?.addEventListener("click", () => {
   window.location.href = "clientes.html";

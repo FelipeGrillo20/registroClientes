@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación de Créditos - Sistema de Gestión</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/creditos.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Ajustes para header con botón */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .btn-volver-header {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-volver-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-volver-header i {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .btn-volver-header span {
+                display: none;
+            }
+            .btn-volver-header {
+                padding: 10px 12px;
+            }
+        }
+        
+        /* Filtros de la lista */
+        .list-filters {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-select {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #374151;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23374151' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 28px;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-select:hover {
+            border-color: #9ca3af;
+        }
+        
+        /* Estilos para horas usadas/disponibles */
+        .horas-status {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .horas-usadas {
+            color: #ef4444;
+        }
+        
+        .horas-disponibles {
+            color: #10b981;
+        }
+        
+        /* Botón editar */
+        .btn-edit {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+        
+        .btn-edit:hover:not(.disabled) {
+            background: #eff6ff;
+            color: #2563eb;
+            border-radius: 4px;
+        }
+        
+        /* Botón eliminar */
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-delete:hover:not(.disabled) {
+            background: #fef2f2;
+            color: #dc2626;
+            border-radius: 4px;
+        }
+        
+        /* Estado deshabilitado */
+        .btn-edit.disabled,
+        .btn-delete.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ===== BOTÓN LISTA AGENDADOS ===== */
+        .btn-lista-agendados {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-lista-agendados:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 960px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-18px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .modal-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header-left i { font-size: 20px; }
+        .modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
+        .modal-header p  { font-size: 12px; opacity: 0.85; margin: 2px 0 0; }
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.35); }
+
+        /* Info resumen del crédito seleccionado */
+        .modal-credito-info {
+            background: #f5f3ff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 24px;
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .credito-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .credito-info-item i { color: #667eea; font-size: 13px; }
+        .credito-info-item strong { color: #374151; }
+
+        /* Cuerpo del modal */
+        .modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Loading */
+        .modal-loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #667eea;
+        }
+        .modal-loading i {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .modal-loading p { font-size: 14px; color: #6b7280; }
+
+        /* Estado vacío */
+        .modal-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .modal-empty i {
+            font-size: 42px;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.5;
+        }
+        .modal-empty p { font-size: 14px; }
+
+        /* Tabla de citas */
+        .citas-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .citas-table thead {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .citas-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #374151;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .citas-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+        .citas-table tbody tr:hover { background: #faf5ff; }
+        .citas-table td {
+            padding: 12px;
+            color: #374151;
+            vertical-align: middle;
+        }
+        .td-profesional { font-weight: 600; color: #6d28d9; }
+        .td-fecha .fecha-dia  { font-weight: 600; color: #374151; display: block; }
+        .td-fecha .fecha-hora { font-size: 12px; color: #6b7280; display: block; margin-top: 2px; }
+
+        /* Badges de estado */
+        .badge-estado {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .badge-programada  { background: #fef3c7; color: #92400e; }
+        .badge-confirmada  { background: #d1fae5; color: #065f46; }
+        .badge-realizada   { background: #dbeafe; color: #1e40af; }
+        .badge-cancelada   { background: #fee2e2; color: #991b1b; }
+        .badge-no_asistio  { background: #f3f4f6; color: #374151; }
+
+        /* Select de formato dentro del modal */
+        .select-formato {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #374151;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .select-formato:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,0.15);
+        }
+
+        /* Botón Asignar por fila */
+        .btn-asignar-fila {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .btn-asignar-fila:hover:not(:disabled) { opacity: 0.85; }
+        .btn-asignar-fila:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-asignar-fila.asignado {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        /* Footer del modal */
+        .modal-footer {
+            padding: 14px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            background: #f9fafb;
+        }
+        .modal-footer-info { font-size: 12px; color: #6b7280; }
+        .modal-footer-info strong { color: #374151; }
+        .btn-cerrar-modal {
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        .btn-cerrar-modal:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header compacto -->
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-hand-holding-dollar"></i>
+                <div class="header-text">
+                    <h1>Asignación de Créditos</h1>
+                    <p>Gestión de horas habilitadas para atención de consultas</p>
+                </div>
+            </div>
+            <button class="btn-volver-header" id="btnVolverAgendamiento">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver</span>
+            </button>
+        </div>
+
+        <!-- Layout principal -->
+        <div class="main-layout">
+            <!-- Panel izquierdo: Formulario -->
+            <div class="form-panel">
+                <!-- Periodo de Asignación -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Periodo de Asignación
+                    </div>
+
+                    <div class="form-group">
+                        <label for="anio">
+                            <i class="fas fa-calendar"></i>
+                            Año *
+                        </label>
+                        <select id="anio" class="form-control" required>
+                            <option value="">Seleccione un año</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                        <span class="help-text">
+                            <i class="fas fa-info-circle"></i>
+                            Año del periodo
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mes">
+                            <i class="fas fa-calendar-days"></i>
+                            Mes *
+                        </label>
+                        <select id="mes" class="form-control" required>
+                            <option value="">Seleccione un mes</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        <span class="help-text">
+                            <i class="fas fa-info-circle"></i>
+                            Mes del periodo
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Datos del Crédito -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Datos del Crédito
+                    </div>
+
+                    <div class="form-group">
+                        <label for="consecutivo">
+                            <i class="fas fa-barcode"></i>
+                            Consecutivo *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="consecutivo" 
+                            class="form-control" 
+                            placeholder="Ej: ABC123"
+                            maxlength="50"
+                            required
+                        >
+                        <span class="help-text">
+                            <i class="fas fa-info-circle"></i>
+                            Código del formato PDF
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidadHoras">
+                            <i class="fas fa-clock"></i>
+                            Cantidad de Horas *
+                        </label>
+                        <select id="cantidadHoras" class="form-control" required>
+                            <option value="">Seleccione las horas</option>
+                        </select>
+                        <span class="help-text">
+                            <i class="fas fa-info-circle"></i>
+                            Horas habilitadas
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelar">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardar">
+                        <i class="fas fa-save"></i>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel derecho: Listado de créditos -->
+            <div class="list-panel">
+                <div class="list-header">
+                    <div class="list-title">
+                        <i class="fas fa-list"></i>
+                        Créditos Asignados
+                    </div>
+                    
+                    <!-- Filtros de búsqueda -->
+                    <div class="list-filters">
+                        <select id="filtroAnio" class="filter-select">
+                            <option value="">Todos los años</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                        
+                        <select id="filtroMes" class="filter-select">
+                            <option value="">Todos los meses</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    
+                    <span class="list-count" id="creditosCount">0</span>
+                </div>
+
+                <table class="creditos-table" id="creditosTable">
+                    <thead>
+                        <tr>
+                            <th>Consecutivo</th>
+                            <th>Cantidad de Horas</th>
+                            <th>Horas Usadas / Disponibles</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditosTableBody">
+                        <!-- Aquí se cargarán dinámicamente los créditos -->
+                    </tbody>
+                </table>
+
+                <!-- Estado vacío (se muestra cuando no hay créditos) -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-inbox"></i>
+                    <p>No hay créditos asignados</p>
+                    <small>Complete el formulario para agregar créditos</small>
+                </div>
+
+                <!-- Botón Lista Agendados -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" id="btnListaAgendados"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                   color: #fff; border: none; padding: 10px 20px; border-radius: 8px;
+                                   font-size: 14px; font-weight: 600; cursor: pointer;
+                                   display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                        <i class="fas fa-calendar-check"></i>
+                        Lista Agendados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: LISTA AGENDADOS / ASIGNACIÓN DE CRÉDITO ===== -->
+    <div class="modal-overlay" id="modalDetalleCredito">
+        <div class="modal-box">
+
+            <!-- Encabezado -->
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <i class="fas fa-receipt"></i>
+                    <div>
+                        <h2>Detalle de uso del crédito</h2>
+                        <p id="modalHeaderSubtitle">Periodo: —</p>
+                    </div>
+                </div>
+                <button class="modal-close" id="btnCerrarModal" title="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Resumen del crédito seleccionado (igual que en el PDF) -->
+            <div class="modal-credito-info" id="modalCreditoInfo" style="display:none">
+                <div class="credito-info-item">
+                    <i class="fas fa-barcode"></i>
+                    <strong>Consecutivo:</strong>
+                    <span id="infoConsecutivo">—</span>
+                </div>
+                <div class="credito-info-item">
+                    <i class="fas fa-clock"></i>
+                    <strong>Total:</strong>
+                    <span id="infoTotal">—</span>
+                </div>
+                <div class="credito-info-item">
+                    <i class="fas fa-check-circle" style="color:#ef4444"></i>
+                    <strong>Usadas:</strong>
+                    <span id="infoUsadas" style="color:#ef4444;font-weight:600">—</span>
+                </div>
+                <div class="credito-info-item">
+                    <i class="fas fa-hourglass-half" style="color:#10b981"></i>
+                    <strong>Disponibles:</strong>
+                    <span id="infoDisponibles" style="color:#10b981;font-weight:600">—</span>
+                </div>
+            </div>
+
+            <!-- Cuerpo con tabla de citas -->
+            <div class="modal-body" id="modalBody">
+
+                <!-- Estado de carga -->
+                <div class="modal-loading" id="modalLoading">
+                    <i class="fas fa-spinner"></i>
+                    <p>Cargando citas agendadas...</p>
+                </div>
+
+                <!-- Estado vacío -->
+                <div class="modal-empty" id="modalEmpty" style="display:none">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No hay citas agendadas</p>
+                </div>
+
+                <!-- Tabla de citas -->
+                <table class="citas-table" id="citasDetalleTable" style="display:none">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user-md"></i> Profesional</th>
+                            <th><i class="fas fa-user"></i> Trabajador</th>
+                            <th><i class="fas fa-calendar-day"></i> Día y hora</th>
+                            <th><i class="fas fa-tag"></i> Estado</th>
+                            <th><i class="fas fa-file-invoice-dollar"></i> Formato</th>
+                            <th>Asignar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="citasDetalleBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <span class="modal-footer-info">
+                    Citas mostradas: <strong id="totalCitasModal">0</strong>
+                </span>
+                <button class="btn-cerrar-modal" id="btnCerrarModalFooter"
+                        style="background:#6b7280;">
+                    <i class="fas fa-times"></i>
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/creditos.js"></script>
+</body>
+</html>

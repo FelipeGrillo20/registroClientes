@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamiento de Citas - Sistema de Gestión</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/agendamiento.css">
+    <link rel="stylesheet" href="css/eventos-calendario.css">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== BUSCADOR TRABAJADOR ===== */
+        .trab-wrapper { position: relative; width: 100%; }
+
+        .trab-display {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+            background: #fff; cursor: pointer; min-height: 42px; font-size: 14px;
+            color: #374151; transition: border-color 0.2s, box-shadow 0.2s; user-select: none;
+        }
+        .trab-display:hover { border-color: #4f46e5; }
+        .trab-display:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+        .trab-display.open {
+            border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+            border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+        }
+        .trab-display.disabled { background: #f3f4f6; cursor: not-allowed; color: #9ca3af; }
+
+        .trab-display-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .trab-display-text.placeholder { color: #9ca3af; }
+
+        .trab-arrow { font-size: 11px; color: #6b7280; margin-left: 8px; flex-shrink: 0; transition: transform 0.2s; }
+        .trab-display.open .trab-arrow { transform: rotate(180deg); }
+
+        .trab-dropdown {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
+            background: #fff; border: 1px solid #4f46e5; border-top: none;
+            border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+        }
+        .trab-dropdown.open { display: block; }
+
+        .trab-search-box {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; border-bottom: 1px solid #e5e7eb; background: #fafafa;
+        }
+        .trab-search-box .fa-search { color: #9ca3af; font-size: 13px; flex-shrink: 0; }
+        .trab-search-input {
+            flex: 1; border: none; outline: none; font-size: 14px;
+            color: #111827; background: transparent; padding: 2px 0;
+        }
+        .trab-search-input::placeholder { color: #9ca3af; font-style: italic; }
+
+        .trab-clear-btn {
+            width: 28px; height: 28px; border: none; border-radius: 6px;
+            background: #ef4444; color: #fff; cursor: pointer; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; transition: background 0.15s;
+        }
+        .trab-clear-btn:hover { background: #dc2626; }
+
+        .trab-options { max-height: 200px; overflow-y: auto; }
+
+        .trab-option {
+            padding: 10px 14px; font-size: 14px; color: #374151; cursor: pointer;
+            border-left: 3px solid transparent; transition: background 0.12s;
+        }
+        .trab-option:hover { background: #eef2ff; border-left-color: #4f46e5; }
+        .trab-option.selected { background: #e0e7ff; border-left-color: #4f46e5; font-weight: 600; color: #3730a3; }
+        .trab-option.no-results { color: #9ca3af; font-style: italic; cursor: default; }
+        .trab-option.no-results:hover { background: none; border-left-color: transparent; }
+        .trab-option mark { background: #fef08a; color: inherit; border-radius: 2px; padding: 0 1px; font-style: normal; }
+
+        .trab-options::-webkit-scrollbar { width: 5px; }
+        .trab-options::-webkit-scrollbar-track { background: #f9fafb; }
+        .trab-options::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        /* ===== BOTONES DE ACCIÓN CALENDARIO ===== */
+        .calendar-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0 6px;
+            margin-top: auto;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            min-width: 0;
+            justify-content: center;
+        }
+
+        .action-btn i {
+            font-size: 13px;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .action-btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .action-btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+        }
+
+        .action-btn-secondary:hover {
+            background: linear-gradient(135deg, #e77ee8 0%, #e24458 100%);
+            box-shadow: 0 4px 16px rgba(245, 87, 108, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .action-btn-volver {
+            background: #fff;
+            color: #374151;
+            border: 2px solid #d1d5db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .action-btn-volver:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Empujar botones al fondo del área del calendario */
+        .calendar-area {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== LEYENDA INTERACTIVA ===== */
+        .legend-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        /* "Todos" ocupa las 2 columnas */
+        .legend-btn[data-estado=""] {
+            grid-column: 1 / -1;
+        }
+
+        .legend-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            padding: 5px 8px;
+            border: 1.5px solid transparent;
+            border-radius: 7px;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.18s ease;
+        }
+
+        .legend-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .legend-btn.active {
+            background: #fff;
+            border-color: var(--dot, #6b7280);
+            color: #111827;
+            font-weight: 700;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+        }
+
+        .legend-btn .legend-color {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .calendar-actions {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .action-btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra Superior -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <i class="fas fa-calendar-check"></i>
+                <h1>Agendamiento de Citas</h1>
+            </div>
+            
+            <!-- Indicador de Modalidad -->
+            <div id="modalidadIndicador" class="modalidad-indicator">
+                <i class="fas fa-tag"></i>
+                <span id="modalidadNombre"></span>
+            </div>
+            
+            <!-- Info del Usuario -->
+            <div id="userInfo" class="user-info"></div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <div class="main-container">
+        <!-- Panel Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-filter"></i>
+                <h3>Filtros y Acciones</h3>
+            </div>
+
+            <!-- Botón Nueva Cita -->
+            <button class="btn-nueva-cita" id="btnNuevaCita">
+                <i class="fas fa-plus-circle"></i>
+                Nueva Cita
+            </button>
+
+            <!-- Filtro Profesional (ancho completo) -->
+            <div class="filters-grid" style="grid-template-columns: 1fr;">
+                <div class="filter-group">
+                    <label><i class="fas fa-user-md"></i> Profesional</label>
+                    <select id="filtroProfesional" class="filter-select">
+                        <option value="">Todos los profesionales</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- select oculto de estado — lo manejan los botones de leyenda -->
+            <select id="filtroEstado" style="display:none">
+                <option value="">Todos</option>
+                <option value="programada">Programada</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="realizada">Realizada</option>
+                <option value="cancelada">Cancelada</option>
+                <option value="no_asistio">No asistió</option>
+            </select>
+
+            <!-- Leyenda interactiva — cada botón filtra por estado -->
+            <div class="legend">
+                <h4><i class="fas fa-palette"></i> Leyenda</h4>
+                <div class="legend-items">
+                    <button class="legend-btn active" data-estado="" style="--dot:#6b7280;">
+                        <span class="legend-color" style="background:#6b7280;"></span>
+                        Todos
+                    </button>
+                    <button class="legend-btn" data-estado="confirmada" style="--dot:#28A745;">
+                        <span class="legend-color" style="background:#28A745;"></span>
+                        Confirmada
+                    </button>
+                    <button class="legend-btn" data-estado="programada" style="--dot:#FFA500;">
+                        <span class="legend-color" style="background:#FFA500;"></span>
+                        Programada
+                    </button>
+                    <button class="legend-btn" data-estado="realizada" style="--dot:#007BFF;">
+                        <span class="legend-color" style="background:#007BFF;"></span>
+                        Realizada
+                    </button>
+                    <button class="legend-btn" data-estado="cancelada" style="--dot:#DC3545;">
+                        <span class="legend-color" style="background:#DC3545;"></span>
+                        Cancelada
+                    </button>
+                    <button class="legend-btn" data-estado="no_asistio" style="--dot:#6C757D;">
+                        <span class="legend-color" style="background:#6C757D;"></span>
+                        No asistió
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumen del Mes -->
+            <div class="resumen-mes" id="resumenMes">
+                <h4><i class="fas fa-chart-bar"></i> Resumen del Mes</h4>
+                <div class="resumen-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-check text-success"></i>
+                        <div>
+                            <span class="stat-label">Confirmadas</span>
+                            <span class="stat-value" id="statConfirmadas">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock text-warning"></i>
+                        <div>
+                            <span class="stat-label">Programadas</span>
+                            <span class="stat-value" id="statProgramadas">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-check-double text-primary"></i>
+                        <div>
+                            <span class="stat-label">Realizadas</span>
+                            <span class="stat-value" id="statRealizadas">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-times-circle text-danger"></i>
+                        <div>
+                            <span class="stat-label">Canceladas</span>
+                            <span class="stat-value" id="statCanceladas">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-user-slash text-secondary"></i>
+                        <div>
+                            <span class="stat-label">No asistió</span>
+                            <span class="stat-value" id="statNoAsistio">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Área del Calendario -->
+        <main class="calendar-area">
+            <div id="calendar"></div>
+            
+            <!-- Botones de Acciones (solo admin) -->
+            <div class="calendar-actions" id="calendarActions">
+                <button class="action-btn action-btn-volver" id="btnVolver">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="btn-text">Volver al Registro</span>
+                </button>
+                <button class="action-btn action-btn-primary" id="btnInformeAgendamiento">
+                    <i class="fas fa-file-chart-line"></i>
+                    <span class="btn-text">Informe Agendamiento</span>
+                </button>
+                <button class="action-btn action-btn-secondary" id="btnAsignacionCreditos">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                    <span class="btn-text">Asignación de Créditos</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Nueva/Editar Cita -->
+    <div id="modalCita" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">
+                    <i class="fas fa-calendar-plus"></i>
+                    Nueva Cita
+                </h2>
+                <button class="modal-close" id="btnCerrarModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="formCita">
+                    <input type="hidden" id="citaId">
+                    
+                    <div class="form-row">
+                        <!-- Trabajador -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-user"></i>
+                                Trabajador *
+                            </label>
+                            <div class="trab-wrapper" id="trabWrapper">
+                                <!-- Display: muestra el nombre del trabajador seleccionado -->
+                                <div class="trab-display" id="trabDisplay" tabindex="0">
+                                    <span class="trab-display-text placeholder" id="trabDisplayText">Seleccione un trabajador</span>
+                                    <i class="fas fa-chevron-down trab-arrow"></i>
+                                </div>
+                                <!-- Dropdown con buscador separado -->
+                                <div class="trab-dropdown" id="trabDropdown">
+                                    <div class="trab-search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="trabBuscador" class="trab-search-input" placeholder="Buscar..." autocomplete="off">
+                                        <button type="button" class="trab-clear-btn" id="trabClearBtn" title="Limpiar">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="trab-options" id="trabOptions"></div>
+                                </div>
+                            </div>
+                            <!-- Hidden input que guarda el ID para el formulario -->
+                            <input type="hidden" id="trabajadorId" required>
+                        </div>
+
+                        <!-- Profesional -->
+                        <div class="form-group">
+                            <label for="profesionalId">
+                                <i class="fas fa-user-md"></i>
+                                Profesional *
+                            </label>
+                            <select id="profesionalId" class="form-control" required>
+                                <option value="">Seleccione un profesional</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Fecha -->
+                        <div class="form-group">
+                            <label for="fecha">
+                                <i class="fas fa-calendar-alt"></i>
+                                Fecha *
+                            </label>
+                            <input type="date" id="fecha" class="form-control" required>
+                        </div>
+
+                        <!-- Hora Inicio -->
+                        <div class="form-group">
+                            <label for="horaInicio">
+                                <i class="fas fa-clock"></i>
+                                Hora Inicio *
+                            </label>
+                            <input type="time" id="horaInicio" class="form-control" required>
+                        </div>
+
+                        <!-- Hora Fin -->
+                        <div class="form-group">
+                            <label for="horaFin">
+                                <i class="fas fa-clock"></i>
+                                Hora Fin *
+                            </label>
+                            <input type="time" id="horaFin" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Modalidad de Cita -->
+                        <div class="form-group">
+                            <label for="modalidadCita">
+                                <i class="fas fa-laptop-house"></i>
+                                Modalidad *
+                            </label>
+                            <select id="modalidadCita" class="form-control" required>
+                                <option value="presencial">Presencial</option>
+                                <option value="virtual">Virtual</option>
+                            </select>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="form-group">
+                            <label for="estado">
+                                <i class="fas fa-info-circle"></i>
+                                Estado *
+                            </label>
+                            <select id="estado" class="form-control" required>
+                                <option value="programada">Programada</option>
+                                <option value="confirmada">Confirmada</option>
+                                <option value="realizada">Realizada</option>
+                                <option value="cancelada">Cancelada</option>
+                                <option value="no_asistio">No asistió</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones Internas - OCULTO TEMPORALMENTE -->
+                    <!--
+                    <div class="form-group">
+                        <label for="observacionesInternas">
+                            <i class="fas fa-sticky-note"></i>
+                            Observaciones Internas
+                        </label>
+                        <textarea id="observacionesInternas" class="form-control" rows="3" 
+                                  placeholder="Notas para uso interno del equipo"></textarea>
+                        <small class="form-text">Estas observaciones solo son visibles internamente</small>
+                    </div>
+                    -->
+
+                    <!-- Observaciones para Informe -->
+                    <div class="form-group">
+                        <label for="observacionesInforme">
+                            <i class="fas fa-file-alt"></i>
+                            Observaciones para Informe
+                        </label>
+                        <textarea id="observacionesInforme" class="form-control" rows="3" 
+                                  placeholder="Observaciones que aparecerán en el informe"></textarea>
+                        <small class="form-text">Estas observaciones serán visibles en informes generados</small>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="btnCancelar">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="submit" form="formCita" class="btn-primary" id="btnGuardarCita">
+                    <i class="fas fa-save"></i>
+                    Guardar Cita
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle Cita -->
+    <div id="modalDetalle" class="modal">
+        <div class="modal-content modal-detalle">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-info-circle"></i>
+                    Detalle de la Cita
+                </h2>
+                <button class="modal-close" id="btnCerrarDetalle">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="detalleContent">
+                <!-- Se llenará dinámicamente -->
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="btnCerrarDetalleBtn">
+                    <i class="fas fa-times"></i>
+                    Cerrar
+                </button>
+                <button type="button" class="btn-warning" id="btnEditarCita">
+                    <i class="fas fa-edit"></i>
+                    Editar
+                </button>
+                <button type="button" class="btn-danger" id="btnEliminarCita">
+                    <i class="fas fa-trash"></i>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth-check.js"></script>
+    
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/es.global.min.js"></script>
+    
+    <!-- Script principal -->
+    <script src="js/agendamiento.js"></script>
+</body>
+</html>

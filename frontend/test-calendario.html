@@ -1,0 +1,152 @@
+<!-- test-calendario.html -->
+<!-- Coloca este archivo en frontend/ para probar el calendario -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calendario</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #calendar {
+            max-width: 900px;
+            margin: 20px auto;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #4CAF50;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .log.success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .log.info {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test de Calendario - Diagnóstico</h1>
+    
+    <div id="logs">
+        <h3>📋 Logs:</h3>
+    </div>
+    
+    <div id="calendar"></div>
+
+    <script>
+        // Función para agregar logs
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logElement);
+            
+            // También imprimir en consola
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        // Token de prueba (usando la clave correcta del sistema)
+        const token = localStorage.getItem('authToken'); // ← CORREGIDO: authToken en lugar de token
+        addLog(`Token encontrado: ${token ? 'SÍ' : 'NO'}`, token ? 'success' : 'error');
+
+        // Modalidad
+        const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
+        addLog(`Modalidad: ${modalidad}`, 'info');
+
+        // API URL
+        const API_URL = 'http://localhost:5000';
+        addLog(`API URL: ${API_URL}`, 'info');
+
+        // Inicializar calendario
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Inicializando calendario...', 'info');
+            
+            const calendarEl = document.getElementById('calendar');
+            
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: async function(info, successCallback, failureCallback) {
+                    try {
+                        const fechaInicio = info.start.toISOString().split('T')[0];
+                        const fechaFin = info.end.toISOString().split('T')[0];
+                        
+                        addLog(`📅 Solicitando eventos del ${fechaInicio} al ${fechaFin}`, 'info');
+                        
+                        const url = `${API_URL}/api/citas/calendario?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&modalidad_programa=${encodeURIComponent(modalidad)}`;
+                        addLog(`📡 URL: ${url}`, 'info');
+                        
+                        const response = await fetch(url, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        addLog(`📥 Respuesta HTTP: ${response.status} ${response.statusText}`, 
+                               response.ok ? 'success' : 'error');
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            addLog(`❌ Error del servidor: ${errorText}`, 'error');
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        addLog(`✅ Datos recibidos: ${JSON.stringify(data).substring(0, 200)}...`, 'success');
+                        
+                        if (data.success && Array.isArray(data.data)) {
+                            addLog(`📦 Total eventos: ${data.data.length}`, 'success');
+                            
+                            if (data.data.length > 0) {
+                                addLog(`🎨 Primer evento: ${JSON.stringify(data.data[0], null, 2)}`, 'info');
+                            } else {
+                                addLog(`⚠️ No hay eventos en este rango de fechas`, 'info');
+                            }
+                            
+                            successCallback(data.data);
+                        } else {
+                            addLog(`❌ Formato de respuesta inválido: ${JSON.stringify(data)}`, 'error');
+                            failureCallback(new Error('Formato inválido'));
+                        }
+                        
+                    } catch (error) {
+                        addLog(`❌ Error al cargar eventos: ${error.message}`, 'error');
+                        console.error('Error completo:', error);
+                        failureCallback(error);
+                    }
+                },
+                eventDidMount: function(info) {
+                    addLog(`🎨 Renderizando evento: ${info.event.title}`, 'success');
+                },
+                loading: function(isLoading) {
+                    addLog(`⏳ Cargando: ${isLoading ? 'SÍ' : 'NO'}`, 'info');
+                }
+            });
+            
+            calendar.render();
+            addLog('✅ Calendario renderizado', 'success');
+        });
+    </script>
+</body>
+</html>

@@ -222,6 +222,17 @@ function toggleObs(id) {
   completo.style.display = expandido ? 'none'  : 'block';
 }
 
+// ─── Badge de modalidad de la consulta ───────────────────────────────────────
+function buildModalidadBadge(consulta) {
+  if (!consulta || !consulta.modalidad) return '-';
+  if (consulta.modalidad === 'Virtual') {
+    return '<span class="badge badge-modalidad-virtual">💻 Virtual</span>';
+  } else if (consulta.modalidad === 'Presencial') {
+    return '<span class="badge badge-modalidad-presencial">🏢 Presencial</span>';
+  }
+  return escapeHtml(consulta.modalidad);
+}
+
 // ─── Badge de estado de la consulta ──────────────────────────────────────────
 function buildEstadoBadge(consulta) {
   if (!consulta || !consulta.estado) return '-';
@@ -356,6 +367,7 @@ function renderRows(rows) {
       <td class="col-nombre">${buildNombreCell(client)}</td>
       <td class="col-cedula">${escapeHtml(client.cedula || '-')}</td>
       <td class="col-motivo">${motivoConsulta}</td>
+      <td class="col-modalidad">${buildModalidadBadge(consulta)}</td>
       <td class="col-sesion-num">${sesionNumCell}</td>
       <td class="col-horas">${horasSesion}</td>
       <td class="col-sugeridas">${sesionessugeridas}</td>
@@ -753,6 +765,7 @@ function exportarExcel() {
       'Nombre':              nombre,
       'Cédula':              cedula,
       'Motivo Consulta':     motivoConsulta,
+      'Modalidad':           consulta ? (consulta.modalidad || '-') : '-',
       'Sesión #':            numSesion,
       'Horas Sesión':        horasSesion,
       'Sesiones Sugeridas':  sesionessugeridas,
@@ -776,6 +789,7 @@ function exportarExcel() {
     { wch: 28 }, // Nombre
     { wch: 14 }, // Cédula
     { wch: 30 }, // Motivo Consulta
+    { wch: 12 }, // Modalidad
     { wch:  9 }, // Sesión #
     { wch: 12 }, // Horas Sesión
     { wch: 16 }, // Sesiones Sugeridas

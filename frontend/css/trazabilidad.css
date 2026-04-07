@@ -439,7 +439,16 @@ body {
   padding: 15px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 75vh;        /* altura máxima: el scroll vertical queda dentro */
   animation: slideUp 0.7s ease;
+}
+
+/* Cabecera fija mientras se hace scroll vertical */
+.trazabilidad-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 /* ====== TABLA ====== */
@@ -785,7 +794,57 @@ body {
   }
 }
 
-/* ====== NUEVAS COLUMNAS - MATRIZ COMPLETA ====== */
+/* ====== SCROLL HORIZONTAL - TABLA ANCHA ====== */
+
+/* El contenedor scrollea horizontalmente */
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #f0f0f0;
+}
+
+/* Cabecera de la tabla fija verticalmente al hacer scroll */
+.trazabilidad-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Barra de scroll superior (espejo) */
+.scroll-top-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 12px;
+  border-radius: 8px 8px 0 0;
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #e8eaf6;
+  margin-bottom: 2px;
+}
+.scroll-top-inner {
+  height: 1px; /* solo necesitamos el ancho */
+}
+
+/* Scrollbar estilizada - Chrome/Edge/Safari */
+.table-container::-webkit-scrollbar,
+.scroll-top-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+.table-container::-webkit-scrollbar-track,
+.scroll-top-wrapper::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb,
+.scroll-top-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb:hover,
+.scroll-top-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #764ba2;
+}
+
 
 /* Texto del trabajador relacionado en columna Nombre */
 .familiar-relacionado-titulo {
@@ -821,6 +880,31 @@ body {
 .trazabilidad-table .col-nombre     { min-width: 150px; }
 .trazabilidad-table .col-cedula     { white-space: nowrap; min-width: 90px; }
 .trazabilidad-table .col-motivo     { min-width: 160px; max-width: 220px; }
+.trazabilidad-table .col-modalidad  { text-align: center; min-width: 110px; white-space: nowrap; }
+
+/* Badges de modalidad */
+.badge-modalidad-virtual {
+  display: inline-block;
+  background: #eaf4fe;
+  color: #1a6fb3;
+  border: 1px solid #a8d4f5;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-modalidad-presencial {
+  display: inline-block;
+  background: #fef9e7;
+  color: #9a6f00;
+  border: 1px solid #f5d97a;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
 .trazabilidad-table .col-sesion-num { text-align: center; min-width: 70px; }
 .trazabilidad-table .col-horas      { text-align: center; min-width: 80px; font-weight: 600; }
 .trazabilidad-table .col-sugeridas  { text-align: center; min-width: 90px; }

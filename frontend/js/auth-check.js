@@ -11,6 +11,22 @@
     return 'http://localhost:5000/api/auth';
   }
   
+  // ⭐ NUEVO: Verificar si la página actual requiere modalidad
+  function requiereModalidad() {
+    const paginasConModalidad = [
+      'index.html',
+      'clientes.html',
+      'consulta.html',
+      'agendamiento.html',  // ⭐ Agregado
+      'dashboard.html',
+      'dashboardSVE.html',
+      'trazabilidad.html'
+    ];
+    
+    const paginaActual = window.location.pathname.split('/').pop();
+    return paginasConModalidad.includes(paginaActual);
+  }
+  
   // Verificar autenticación al cargar la página
   async function checkAuth() {
     const token = localStorage.getItem("authToken");
@@ -47,7 +63,7 @@
       // Mostrar información del usuario (solo si existe el elemento)
       displayUserInfo(data.user);
       
-      // ⭐ NUEVO: Mostrar modalidad seleccionada
+      // ⭐ MEJORADO: Mostrar modalidad seleccionada (sin redirección forzada)
       displayModalidadIndicador();
       
     } catch (err) {
@@ -71,7 +87,7 @@
     localStorage.removeItem("userData");
   }
   
-  // ⭐ NUEVO: Mostrar modalidad seleccionada
+  // ⭐ MEJORADO: Mostrar modalidad seleccionada SIN redirección agresiva
   function displayModalidadIndicador() {
     const modalidadIndicador = document.getElementById("modalidadIndicador");
     
@@ -82,20 +98,48 @@
     // Obtener la modalidad desde localStorage
     let modalidad = localStorage.getItem('modalidadSeleccionada');
     
-    // ⚠️ IMPORTANTE: No establecer modalidad por defecto aquí
-    // Dejar que el usuario la seleccione explícitamente
-    if (!modalidad) {
-      console.log("No hay modalidad seleccionada");
+    // ⭐ MEJORADO: Si no hay modalidad Y la página la requiere, avisar pero NO redirigir
+    if (!modalidad && requiereModalidad()) {
+      console.warn("⚠️ No hay modalidad seleccionada. Algunas funciones pueden estar limitadas.");
+      
+      // Mostrar mensaje en el indicador
+      modalidadIndicador.style.display = "flex";
+      modalidadIndicador.style.background = "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)";
+      modalidadIndicador.innerHTML = `
+        <div class="modalidad-info">
+          <span class="modalidad-icon">⚠️</span>
+          <span class="modalidad-text">
+            <strong>Sin modalidad seleccionada</strong> 
+            - <a href="modalidad.html" style="color: white; text-decoration: underline;">Seleccionar ahora</a>
+          </span>
+        </div>
+      `;
       return;
     }
     
-    // Mostrar el indicador con la modalidad
-    const modalidadNombre = document.getElementById("modalidadNombre");
-    if (modalidadNombre) {
-      modalidadNombre.textContent = modalidad;
+    // Si hay modalidad, mostrarla normalmente
+    if (modalidad) {
+      const modalidadNombre = document.getElementById("modalidadNombre");
+      if (modalidadNombre) {
+        // Convertir el código a nombre legible
+        const nombreModalidad = modalidad === 'orientacion' 
+          ? 'Orientación Psicosocial' 
+          : modalidad === 'vigilancia' 
+            ? 'Sistema de Vigilancia Epidemiológica'
+            : modalidad;
+        
+        modalidadNombre.textContent = nombreModalidad;
+      }
+      
+      // Aplicar el color correcto según la modalidad
+      if (modalidad === 'orientacion') {
+        modalidadIndicador.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+      } else if (modalidad === 'vigilancia') {
+        modalidadIndicador.style.background = "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)";
+      }
+      
+      modalidadIndicador.style.display = "flex";
     }
-    
-    modalidadIndicador.style.display = "flex";
   }
   
   // Mostrar información del usuario en la página
@@ -195,6 +239,11 @@
   window.getUserData = function() {
     const userData = localStorage.getItem("userData");
     return userData ? JSON.parse(userData) : null;
+  };
+  
+  // ⭐ NUEVA: Función para obtener modalidad actual
+  window.getModalidadActual = function() {
+    return localStorage.getItem('modalidadSeleccionada');
   };
   
   // Función de logout global

@@ -41,6 +41,57 @@ function getMotivoSesionActual() {
 }
 
 // Configura el widget de motivos según el estado de la consulta activa
+// ============================================
+// BLOQUEAR / HABILITAR FORMULARIO COMPLETO
+// Se llama cuando el caso está cerrado (bloqueado=true)
+// y cuando se abre una nueva consulta (bloqueado=false)
+// ============================================
+
+function bloquearFormulario(bloqueado) {
+  const form = document.getElementById("formConsulta");
+  if (!form) return;
+
+  // Campos nativos dentro del formulario
+  const campos = form.querySelectorAll(
+    'input:not([type="hidden"]), select, textarea, button[type="submit"], button[type="reset"]'
+  );
+  campos.forEach(el => { el.disabled = bloqueado; });
+
+  // Botón contacto de emergencia
+  const btnEmergencia = document.getElementById("btnContactoEmergencia");
+  if (btnEmergencia) btnEmergencia.disabled = bloqueado;
+
+  // Botón candado de confidencialidad
+  const btnCandado = document.getElementById("btnCandado");
+  if (btnCandado) btnCandado.disabled = bloqueado;
+
+  // Bloqueo visual SOLO sobre el formulario, no sobre documentos
+  const formWrapper = document.getElementById("formOrientacionPsicosocial");
+  if (formWrapper) {
+    formWrapper.style.opacity       = bloqueado ? "0.55" : "1";
+    formWrapper.style.pointerEvents = bloqueado ? "none" : "";
+  }
+
+  // Botón Nueva Consulta: nunca lo habilitamos aquí incondicionalmente.
+  // Su estado disabled lo gestiona renderBotonesNuevaConsulta según si
+  // hay consulta abierta o cerrada. Solo controlamos apariencia y eventos.
+  const btnNueva = document.getElementById("btnNuevaConsulta");
+  if (btnNueva) {
+    btnNueva.style.pointerEvents = "auto";
+    btnNueva.style.opacity       = "1";
+    btnNueva.style.filter        = "none";
+    btnNueva.style.background    = bloqueado
+      ? "linear-gradient(135deg, #8e44ad, #7d3c98)"
+      : "";
+    btnNueva.style.boxShadow     = bloqueado
+      ? "0 4px 20px rgba(142, 68, 173, 0.65)"
+      : "";
+  }
+
+  // Widget de motivos: sincronizar
+  if (window.renderMotivos) renderMotivos(bloqueado);
+}
+
 function configurarCampoMotivo() {
   const numActual = window.getConsultaNumberActual ? window.getConsultaNumberActual() : null;
   const sesionesActuales = consultasDelCliente.filter(
@@ -55,16 +106,19 @@ function configurarCampoMotivo() {
   }
 
   if (casoCerrado) {
-    // Caso cerrado: bloquear widget
-    if (window.renderMotivos) renderMotivos(true);
+    // Caso cerrado: bloquear formulario completo
+    bloquearFormulario(true);
     return;
   }
+
+  // Caso abierto: asegurar que el formulario esté habilitado
+  bloquearFormulario(false);
 
   if (numSesiones === 0) {
     // Primera sesión: limpiar widget para nueva entrada
     if (window.limpiarMotivos) limpiarMotivos();
   } else {
-    // Sesiones siguientes: cargar motivo de la primera sesión y bloquear
+    // Sesiones siguientes: cargar motivo de la primera sesión y bloquear solo motivos
     const motivoSesion1 = getMotivoSesionActual();
     if (window.cargarMotivosDesdeString) cargarMotivosDesdeString(motivoSesion1, true);
   }
@@ -587,6 +641,9 @@ window.abrirNuevaConsulta = function() {
   // Limpiar y habilitar el formulario para la nueva consulta
   const formConsulta = document.getElementById("formConsulta");
   if (formConsulta) formConsulta.reset();
+
+  // Habilitar todos los campos del formulario
+  bloquearFormulario(false);
 
   if (window.limpiarMotivos) limpiarMotivos();
 

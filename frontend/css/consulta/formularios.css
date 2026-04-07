@@ -418,3 +418,12 @@
 
 /* Consultas Sugeridas */
 #consultasSugeridasGroup { display: none; }
+
+/* ── Estado bloqueado del formulario completo ───────────────── */
+.consulta-section[style*="opacity: 0.6"] .section-title::after {
+  content: " — Caso cerrado";
+  font-size: 13px;
+  font-weight: 500;
+  color: #95a5a6;
+  letter-spacing: 0;
+}

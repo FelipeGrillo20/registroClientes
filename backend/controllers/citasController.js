@@ -982,7 +982,7 @@ const CitasController = {
         `);
       }
 
-      // ✅ Si cancela y tenía crédito asignado: devolver horas Y limpiar credito_id
+      // ✅ Si cancela y tenía crédito asignado: devolver horas Y limpiar credito_id.
       const estadosQueConsumen = ["programada", "confirmada", "realizada", "no_asistio"];
       if (nuevoEstado === "cancelada" && cita.credito_id && estadosQueConsumen.includes(cita.estado)) {
         await devolverYLimpiarCredito(id, cita, "confirmarDesdeEmail");

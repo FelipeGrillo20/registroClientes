@@ -1,5 +1,6 @@
 // backend/utils/googleCalendarService.js
 // Integración con Google Calendar API usando Service Account
+// ✅ VERSIÓN UNIFICADA — Sincronización + Validación de disponibilidad
 
 const { google } = require('googleapis');
 const path = require('path');
@@ -38,24 +39,46 @@ if (!fs.existsSync(CREDENTIALS_PATH)) {
 // HELPERS
 // ============================================================
 
+/**
+ * Construye un datetime ISO con offset fijo de Colombia -05:00.
+ * Extrae YYYY-MM-DD directamente del string para evitar que new Date()
+ * interprete la fecha en UTC y desfase un día.
+ */
 function construirDatetime(fecha, hora) {
   if (!fecha || !hora) {
     console.error('❌ Fecha u hora inválida:', fecha, hora);
     return null;
   }
 
-  // Extraer YYYY-MM-DD directamente del string para evitar
-  // que new Date() interprete la fecha en UTC y desfase un día
-  const soloFecha = String(fecha).split('T')[0]; // "2026-04-19"
+  // Extraer YYYY-MM-DD de forma segura:
+  // Si viene como ISO UTC (ej: "2026-04-09T05:00:00.000Z"), convertir a fecha
+  // local Colombia antes de extraer el día, para evitar desfase de un día.
+  let soloFecha;
+  const strFecha = String(fecha);
+  if (strFecha.includes('T')) {
+    // Tiene componente de hora — parsear y ajustar a Colombia (UTC-5)
+    const d = new Date(strFecha);
+    // Restar 5 horas para llevar UTC a Colombia y extraer la fecha correcta
+    const dColombia = new Date(d.getTime() - 5 * 60 * 60 * 1000);
+    const anioC = dColombia.getUTCFullYear();
+    const mesC  = String(dColombia.getUTCMonth() + 1).padStart(2, '0');
+    const diaC  = String(dColombia.getUTCDate()).padStart(2, '0');
+    soloFecha = `${anioC}-${mesC}-${diaC}`;
+  } else {
+    // Ya es string limpio "YYYY-MM-DD" — tomar directo
+    soloFecha = strFecha.split('T')[0];
+  }
+
   const [anio, mes, dia] = soloFecha.split('-');
 
-  // Extraer HH:MM de la hora
+  // Extraer HH:MM (hora puede venir como "09:00" o "09:00:00")
   const [h, m] = String(hora).split(':');
   const hh = (h || '00').padStart(2, '0');
   const mm = (m || '00').padStart(2, '0');
 
-  // Construir con offset fijo de Colombia -05:00
-  return `${anio}-${mes}-${dia}T${hh}:${mm}:00-05:00`;
+  const resultado = `${anio}-${mes}-${dia}T${hh}:${mm}:00-05:00`;
+  console.log(`   construirDatetime(${strFecha}, ${hora}) → ${resultado}`);
+  return resultado;
 }
 
 // ============================================================
@@ -167,8 +190,9 @@ async function crearEventoCalendario(citaData) {
   const evento = {
     summary: `Cita - ${trabajador_nombre}`,
     description: descripcion,
-    start: { dateTime: startDateTime },
-    end:   { dateTime: endDateTime   },
+    // ✅ CRÍTICO: timeZone incluido en start y end para correcta sincronización
+    start: { dateTime: startDateTime, timeZone: TIMEZONE },
+    end:   { dateTime: endDateTime,   timeZone: TIMEZONE },
     reminders: {
       useDefault: false,
       overrides: [
@@ -192,19 +216,29 @@ async function crearEventoCalendario(citaData) {
 
   // LOG 8 — llamada a Google Calendar API
   console.log('📡 [LOG-8] Enviando evento a Google Calendar API...');
-  console.log('   calendarId: primary');
-  console.log('   email destino:', profesional_email);
+  console.log('   calendarId:', profesional_email);
 
-  // 🧪 DEBUG CRÍTICO (AGREGAR AQUÍ)
-console.log('🧪 EVENTO COMPLETO RAW:');
-console.dir(evento, { depth: null });
+  // 🧪 DIAGNÓSTICO — verificar valores exactos antes del insert
+  console.log('🧪 [LOG-8] Valores críticos:');
+  console.log('   startDateTime RAW:', JSON.stringify(startDateTime));
+  console.log('   endDateTime RAW:  ', JSON.stringify(endDateTime));
+  console.log('   startDateTime null?', startDateTime === null);
+  console.log('   endDateTime null?  ', endDateTime === null);
+  console.log('🧪 EVENTO COMPLETO RAW:');
+  console.dir(evento, { depth: null });
+
+  // Guard final: no enviar si las fechas son inválidas
+  if (!startDateTime || !endDateTime) {
+    console.error('❌ [LOG-8] ABORTANDO: fechas null/undefined');
+    return { success: false, razon: 'fechas_invalidas_al_insertar' };
+  }
 
   try {
     const calendar = google.calendar({ version: 'v3', auth });
     const response = await calendar.events.insert({
-      calendarId: profesional_email,  // ✅ el calendario compartido con la Service Account
-      resource: evento,
-      conferenceDataVersion: 0
+      calendarId: profesional_email,
+      resource: evento
+      // Sin conferenceDataVersion — solo necesario si se crea conferencia Meet
     });
 
     // LOG 9 — resultado
@@ -227,7 +261,6 @@ console.dir(evento, { depth: null });
     console.error('   Código HTTP:', insertError.code);
     console.error('   Errores detallados:', JSON.stringify(insertError.errors || [], null, 2));
 
-    // Diagnóstico por código de error
     if (insertError.code === 401) {
       console.error('   → CAUSA 401: Token inválido o expirado. Verifica la Service Account.');
     } else if (insertError.code === 403) {
@@ -265,7 +298,6 @@ async function actualizarEventoCalendario(googleEventId, citaData) {
     const auth = new google.auth.GoogleAuth({
       keyFile: CREDENTIALS_PATH,
       scopes: SCOPES
-      // Sin subject — acceso directo al calendario compartido
     });
     const calendar = google.calendar({ version: 'v3', auth });
     const meetLink = getMeetLink(profesional_id);
@@ -280,13 +312,14 @@ async function actualizarEventoCalendario(googleEventId, citaData) {
     ].filter(Boolean).join('\n');
 
     await calendar.events.update({
-      calendarId: profesional_email,  // ✅ calendario compartido
+      calendarId: profesional_email,
       eventId: googleEventId,
       resource: {
         summary: `Cita - ${trabajador_nombre}`,
         description: descripcion,
-        start: { dateTime: construirDatetime(fecha, hora_inicio) },
-        end:   { dateTime: construirDatetime(fecha, hora_fin)    }
+        // ✅ CRÍTICO: timeZone incluido para correcta sincronización
+        start: { dateTime: construirDatetime(fecha, hora_inicio), timeZone: TIMEZONE },
+        end:   { dateTime: construirDatetime(fecha, hora_fin),    timeZone: TIMEZONE }
       }
     });
 
@@ -315,12 +348,11 @@ async function eliminarEventoCalendario(googleEventId, profesional_email) {
     const auth = new google.auth.GoogleAuth({
       keyFile: CREDENTIALS_PATH,
       scopes: SCOPES
-      // Sin subject — acceso directo al calendario compartido
     });
     const calendar = google.calendar({ version: 'v3', auth });
 
     await calendar.events.delete({
-      calendarId: profesional_email,  // ✅ calendario compartido
+      calendarId: profesional_email,
       eventId: googleEventId
     });
 
@@ -337,32 +369,24 @@ async function eliminarEventoCalendario(googleEventId, profesional_email) {
   }
 }
 
-module.exports = {
-  crearEventoCalendario,
-  actualizarEventoCalendario,
-  eliminarEventoCalendario,
-  verificarDisponibilidadGoogleCalendar
-};
-
 // ============================================================
-// VERIFICAR DISPONIBILIDAD EN GOOGLE CALENDAR — Freebusy API
+// VERIFICAR DISPONIBILIDAD EN GOOGLE CALENDAR — Freebusy + events.list
 // ============================================================
 
 /**
- * Consulta la Freebusy API de Google para detectar si el profesional
- * tiene algún compromiso que se solape con el horario solicitado.
+ * Verifica si el profesional tiene disponibilidad en el horario solicitado.
  *
- * Usa freebusy en lugar de events.list porque:
- *  - Detecta solapamiento real (evento que empieza antes y termina dentro)
- *  - No requiere leer los detalles de cada evento (privacidad)
- *  - Es la API correcta para consultas de disponibilidad
+ * Estrategia en dos pasos:
+ *  1. Freebusy API — rápida y precisa para detectar si hay ocupación.
+ *  2. Si hay ocupación → events.list en ventana ampliada para obtener
+ *     el título y la hora exacta del evento conflictivo (mejor UX).
  *
- * @param {string}  profesional_email  - Email del profesional
- * @param {string}  fecha              - Fecha de la cita (ISO o YYYY-MM-DD)
- * @param {string}  hora_inicio        - "09:00" o "09:00:00"
- * @param {string}  hora_fin           - "10:00" o "10:00:00"
- * @param {string|null} googleEventIdExcluir - ID del evento propio a excluir (para ediciones)
- * @returns {{ disponible: boolean, conflicto: { inicio, fin } | null }}
+ * @param {string}       profesional_email      - Email del profesional
+ * @param {string}       fecha                  - Fecha de la cita (ISO o YYYY-MM-DD)
+ * @param {string}       hora_inicio            - "09:00" o "09:00:00"
+ * @param {string}       hora_fin               - "10:00" o "10:00:00"
+ * @param {string|null}  googleEventIdExcluir   - ID del evento propio a excluir (para ediciones)
+ * @returns {{ disponible: boolean, conflicto: { titulo, inicio, fin } | null }}
  */
 async function verificarDisponibilidadGoogleCalendar(
   profesional_email,
@@ -394,7 +418,7 @@ async function verificarDisponibilidadGoogleCalendar(
   }
   console.log('✅ [FB-2] Credenciales encontradas');
 
-  // Construir timestamps
+  // Construir timestamps con el mismo helper que usa crearEventoCalendario
   const timeMin = construirDatetime(fecha, hora_inicio);
   const timeMax = construirDatetime(fecha, hora_fin);
   console.log('✅ [FB-3] Timestamps construidos:');
@@ -415,24 +439,50 @@ async function verificarDisponibilidadGoogleCalendar(
 
     const calendar = google.calendar({ version: 'v3', auth });
 
-    // ── ESTRATEGIA: events.list con ventana ampliada ─────────────────
-    // Usamos events.list en lugar de freebusy porque el permiso actual
-    // ("Hacer cambios y gestionar uso compartido") permite leer eventos
-    // pero no siempre expone free/busy. Con events.list calculamos el
-    // solapamiento nosotros mismos.
-    //
-    // Ventana: desde 12h antes hasta 12h después del horario solicitado
-    // para capturar eventos que empiecen antes y terminen dentro del bloque.
+    // ── PASO 1: FREEBUSY — detectar si hay ocupación ─────────────────
+    console.log('📡 [FB-5] Llamando freebusy.query...');
+    console.log('   calendarId:', profesional_email);
+    console.log('   timeMin:', timeMin, '| timeMax:', timeMax);
+
+    const fbResponse = await calendar.freebusy.query({
+      resource: {
+        timeMin,
+        timeMax,
+        timeZone: TIMEZONE,
+        items: [{ id: profesional_email }]
+      }
+    });
+
+    console.log('✅ [FB-5] Respuesta freebusy recibida');
+    console.log('   Calendarios en respuesta:', Object.keys(fbResponse.data?.calendars || {}));
+
+    const calData = fbResponse.data?.calendars?.[profesional_email];
+    console.log('   Datos del calendario:', JSON.stringify(calData, null, 2));
+
+    const bloques = calData?.busy || [];
+    console.log(`   Bloques ocupados encontrados: ${bloques.length}`);
+    if (bloques.length > 0) {
+      bloques.forEach((b, i) => console.log(`   Bloque[${i}]: ${b.start} → ${b.end}`));
+    }
+
+    // ── Horario libre: retornar directamente ─────────────────────────
+    if (bloques.length === 0) {
+      console.log('✅ [FB-5] Horario LIBRE — no hay conflictos');
+      return { disponible: true, conflicto: null };
+    }
+
+    // ── PASO 2: HAY OCUPACIÓN — buscar detalle del evento ────────────
+    // Usamos events.list para obtener el título y hora exacta del conflicto.
+    console.log('⚠️ [FB-6] Hay ocupación. Buscando detalle del evento...');
+
     const tMin = new Date(timeMin).getTime();
     const tMax = new Date(timeMax).getTime();
 
-    const busquedaMin = new Date(tMin - 12 * 60 * 60 * 1000).toISOString();
-    const busquedaMax = new Date(tMax + 12 * 60 * 60 * 1000).toISOString();
+    // Ventana ampliada de 1h para capturar eventos que empiezan antes
+    const busquedaMin = new Date(tMin - 60 * 60 * 1000).toISOString();
+    const busquedaMax = new Date(tMax + 60 * 60 * 1000).toISOString();
 
-    console.log('📡 [FB-5] Llamando events.list...');
-    console.log('   calendarId:', profesional_email);
-    console.log('   busquedaMin:', busquedaMin);
-    console.log('   busquedaMax:', busquedaMax);
+    console.log('   Ventana ampliada:', busquedaMin, '→', busquedaMax);
 
     const evResponse = await calendar.events.list({
       calendarId:   profesional_email,
@@ -440,29 +490,37 @@ async function verificarDisponibilidadGoogleCalendar(
       timeMax:      busquedaMax,
       singleEvents: true,
       orderBy:      'startTime',
-      maxResults:   50
+      maxResults:   20
     });
 
     const eventos = evResponse.data.items || [];
-    console.log(`✅ [FB-5] events.list encontró ${eventos.length} evento(s) en ventana ampliada:`);
+    console.log(`   events.list encontró ${eventos.length} evento(s):`);
     eventos.forEach((ev, i) => {
       console.log(`   [${i}] id:"${ev.id}" | title:"${ev.summary}" | status:${ev.status}`);
       console.log(`        start: ${ev.start?.dateTime || ev.start?.date}`);
       console.log(`        end:   ${ev.end?.dateTime   || ev.end?.date}`);
     });
 
-    // ── DETECTAR SOLAPAMIENTO REAL ────────────────────────────────────
     const formatHora = (isoStr) => {
       if (!isoStr) return '';
       const d = new Date(isoStr);
       let h = d.getHours(), m = d.getMinutes();
       const ampm = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
-      return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+      return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
     };
 
+    // Valores por defecto (del bloque freebusy) en caso de no encontrar el evento exacto
+    let tituloConflicto = 'Evento personal';
+    let inicioConflicto = formatHora(bloques[0].start);
+    let finConflicto    = formatHora(bloques[0].end);
+
     for (const ev of eventos) {
-      if (ev.status === 'cancelled') { console.log(`   Saltando cancelado: ${ev.id}`); continue; }
+      if (ev.status === 'cancelled') {
+        console.log(`   Saltando cancelado: ${ev.id}`);
+        continue;
+      }
+      // Al editar, excluir el propio evento de la cita para no bloquearse a sí mismo
       if (googleEventIdExcluir && ev.id === googleEventIdExcluir) {
         console.log(`   Saltando evento propio: ${ev.id}`);
         continue;
@@ -470,30 +528,41 @@ async function verificarDisponibilidadGoogleCalendar(
 
       const evStart = new Date(ev.start?.dateTime || ev.start?.date + 'T00:00:00').getTime();
       const evEnd   = new Date(ev.end?.dateTime   || ev.end?.date   + 'T23:59:59').getTime();
+      const solapa  = evStart < tMax && evEnd > tMin;
 
-      // Solapamiento: el evento toca el bloque solicitado de alguna forma
-      const solapa = evStart < tMax && evEnd > tMin;
-
-      console.log(`   Revisando "${ev.summary}": evStart=${evStart} evEnd=${evEnd} tMin=${tMin} tMax=${tMax} → solapa=${solapa}`);
+      console.log(`   Revisando "${ev.summary}": evStart<tMax=${evStart < tMax}, evEnd>tMin=${evEnd > tMin}, solapa=${solapa}`);
 
       if (solapa) {
-        const conflicto = {
-          titulo: ev.summary || 'Evento sin título',
-          inicio: formatHora(ev.start?.dateTime || ev.start?.date),
-          fin:    formatHora(ev.end?.dateTime   || ev.end?.date)
-        };
-        console.warn(`🚫 [FB-6] Conflicto encontrado: "${conflicto.titulo}" ${conflicto.inicio} - ${conflicto.fin}`);
-        return { disponible: false, conflicto };
+        tituloConflicto = ev.summary || 'Evento sin título';
+        inicioConflicto = formatHora(ev.start?.dateTime || ev.start?.date);
+        finConflicto    = formatHora(ev.end?.dateTime   || ev.end?.date);
+        console.warn(`   ✅ Conflicto confirmado: "${tituloConflicto}" ${inicioConflicto} - ${finConflicto}`);
+        break;
       }
     }
 
-    console.log('✅ [FB-6] Horario LIBRE — no hay conflictos');
-    return { disponible: true, conflicto: null };
+    console.log(`🚫 [FB-6] Retornando disponible:false — conflicto:"${tituloConflicto}"`);
+    return {
+      disponible: false,
+      conflicto: { titulo: tituloConflicto, inicio: inicioConflicto, fin: finConflicto }
+    };
 
   } catch (error) {
-    console.error('❌ [FB-ERROR] Error en freebusy:', error.message);
+    console.error('❌ [FB-ERROR] Error en verificación de disponibilidad:', error.message);
     console.error('   Código:', error.code);
-    console.error('   Stack:', error.stack?.split('\n').slice(0,3).join('\n'));
+    console.error('   Stack:', error.stack?.split('\n').slice(0, 3).join('\n'));
+    // En caso de error, permitir el agendamiento (no bloquear por falla de Google)
     return { disponible: true, conflicto: null };
   }
 }
+
+// ============================================================
+// EXPORTS
+// ============================================================
+
+module.exports = {
+  crearEventoCalendario,
+  actualizarEventoCalendario,
+  eliminarEventoCalendario,
+  verificarDisponibilidadGoogleCalendar
+};

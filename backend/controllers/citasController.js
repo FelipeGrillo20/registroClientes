@@ -178,6 +178,25 @@ const CitasController = {
 
       console.log("💾 [createCita] Guardando en BD...");
 
+      // ============================================================
+// 🔍 VALIDAR DISPONIBILIDAD EN GOOGLE CALENDAR
+// ============================================================
+          const disponibilidad = await verificarDisponibilidadGoogleCalendar(
+            citaData.profesional_email,
+            citaData.fecha,
+            citaData.hora_inicio,
+            citaData.hora_fin
+          );
+
+          if (!disponibilidad.disponible) {
+            return res.status(400).json({
+              success: false,
+              message: `El profesional tiene un compromiso en ese horario: "${disponibilidad.conflicto?.titulo}" (${citaData.hora_inicio} - ${citaData.hora_fin})`
+            });
+          }
+
+
+      
       // Crear la cita (sin consumir horas automáticamente — 
       // el crédito se asigna manualmente desde creditos.html)
       const nuevaCita = await CitaModel.createCita(citaData, userId);
@@ -216,16 +235,6 @@ const CitasController = {
           console.log("📅 [createCita] Creando evento en Google Calendar...");
           const citaCompleta = await CitaModel.getCitaById(nuevaCita.id);
 
-          // 🧪 DIAGNÓSTICO: ver qué devuelve getCitaById para campos de hora
-          console.log("🧪 [createCita] citaCompleta.hora_inicio:", citaCompleta.hora_inicio);
-          console.log("🧪 [createCita] citaCompleta.hora_fin:   ", citaCompleta.hora_fin);
-          console.log("🧪 [createCita] citaData.hora_inicio:   ", citaData.hora_inicio);
-          console.log("🧪 [createCita] citaData.hora_fin:      ", citaData.hora_fin);
-          console.log("🧪 [createCita] citaCompleta.fecha:     ", citaCompleta.fecha);
-          console.log("🧪 [createCita] citaData.fecha:         ", citaData.fecha);
-
-          // Usar citaCompleta para datos enriquecidos (nombre, email, cédula del JOIN)
-          // pero preferir citaData para hora/fecha si citaCompleta los trae undefined
           const gcResult = await crearEventoCalendario({
             id:                  citaCompleta.id,
             profesional_email:   citaCompleta.profesional_email,
@@ -233,14 +242,11 @@ const CitasController = {
             profesional_id:      citaCompleta.profesional_id,
             trabajador_nombre:   citaCompleta.trabajador_nombre,
             trabajador_cedula:   citaCompleta.trabajador_cedula,
-            // ✅ Usar citaData para fecha/hora — citaCompleta.fecha viene como ISO UTC
-            // (ej: 2026-04-09T05:00:00.000Z) y puede desfasar un día al parsear.
-            // citaData trae el string limpio directamente del frontend (ej: 2026-04-09).
-            fecha:               citaData.fecha,
-            hora_inicio:         citaData.hora_inicio,
-            hora_fin:            citaData.hora_fin,
-            modalidad_cita:      citaCompleta.modalidad_cita || citaData.modalidad_cita,
-            observaciones_informe: citaCompleta.observaciones_informe || citaData.observaciones_informe
+            fecha:               citaCompleta.fecha,
+            hora_inicio:         citaCompleta.hora_inicio,
+            hora_fin:            citaCompleta.hora_fin,
+            modalidad_cita:      citaCompleta.modalidad_cita,
+            observaciones_informe: citaCompleta.observaciones_informe
           });
 
           if (gcResult.success) {

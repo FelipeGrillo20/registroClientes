@@ -491,25 +491,25 @@ async function applyAdvancedFilters() {
     filterFechaFin.value    = fechaFin;
   }
 
-  const params = new URLSearchParams();
-  if (profesionalId) params.append('profesional_id', profesionalId);
-  if (fechaInicio)   params.append('fecha_inicio', fechaInicio);
-  if (fechaFin)      params.append('fecha_fin', fechaFin);
-
-  tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;">Filtrando datos...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:40px;">Filtrando datos...</td></tr>`;
 
   try {
+    // ── El filtro de profesional va al backend (filtra qué clientes traer)
+    // ── El filtro de fechas se aplica LOCALMENTE sobre las consultas
+    const params = new URLSearchParams();
+    if (profesionalId) params.append('profesional_id', profesionalId);
+
+    const clientsUrl = profesionalId
+      ? `${API_URL}/filters?${params.toString()}`
+      : API_URL;
+
     const [resClients, resConsultas] = await Promise.all([
-      fetch(`${API_URL}/filters?${params.toString()}`, {
-        headers: { "Authorization": `Bearer ${getAuthToken()}` }
-      }),
-      fetch(API_CONSULTAS, {
-        headers: { "Authorization": `Bearer ${getAuthToken()}` }
-      })
+      fetch(clientsUrl, { headers: { "Authorization": `Bearer ${getAuthToken()}` } }),
+      fetch(API_CONSULTAS, { headers: { "Authorization": `Bearer ${getAuthToken()}` } })
     ]);
 
     if (!resClients.ok)   throw new Error("Error al filtrar clientes");
-    if (!resConsultas.ok) throw new Error("Error al filtrar consultas");
+    if (!resConsultas.ok) throw new Error("Error al cargar consultas");
 
     const clients   = await resClients.json();
     const consultas = await resConsultas.json();
@@ -523,7 +523,7 @@ async function applyAdvancedFilters() {
     allClients   = clients.sort((a, b) => b.id - a.id);
     allConsultas = Array.isArray(consultas) ? consultas : [];
 
-    // Si hay filtro de fechas, también filtrar consultas por fecha
+    // ── Filtrar consultas por fecha de la sesión (campo `fecha` de la tabla consultas)
     let consultasFiltradas = allConsultas;
     if (fechaInicio || fechaFin) {
       consultasFiltradas = allConsultas.filter(c => {
@@ -535,7 +535,13 @@ async function applyAdvancedFilters() {
       });
     }
 
-    matrizRows = buildMatrizRows(allClients, consultasFiltradas);
+    // ── Solo mostrar clientes que tengan consultas en el rango filtrado
+    const clientesConConsultas = new Set(consultasFiltradas.map(c => c.cliente_id));
+    const clientesFiltrados = (fechaInicio || fechaFin)
+      ? allClients.filter(c => clientesConConsultas.has(c.id))
+      : allClients;
+
+    matrizRows = buildMatrizRows(clientesFiltrados, consultasFiltradas);
 
     populateFilterOptions();
     renderRows(matrizRows);
@@ -543,7 +549,7 @@ async function applyAdvancedFilters() {
 
   } catch (err) {
     console.error("Error aplicando filtros avanzados:", err);
-    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;color:#e74c3c;">Error al filtrar datos</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:40px;color:#e74c3c;">Error al filtrar datos</td></tr>`;
   }
 }
 

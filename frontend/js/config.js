@@ -15,6 +15,9 @@ window.API_CONFIG = {
   BASE_URL: API_BASE_URL,
 
   ENDPOINTS: {
+    // ⭐ BASE: usada por módulos como agendamiento.js → API_URL = API_CONFIG.ENDPOINTS.BASE
+    BASE: API_BASE_URL,
+
     // Autenticación
     AUTH: {
       LOGIN: `/api/auth/login`,
@@ -37,7 +40,13 @@ window.API_CONFIG = {
 
     // Sistema de Vigilancia Epidemiológica
     MESA_TRABAJO_SVE: `/api/mesa-trabajo-sve`,
-    CONSULTAS_SVE: `/api/consultas-sve`
+    CONSULTAS_SVE: `/api/consultas-sve`,
+
+    // Agendamiento de citas
+    CITAS: `/api/citas`,
+
+    // Créditos
+    CREDITOS: `/api/creditos`
   }
 };
 

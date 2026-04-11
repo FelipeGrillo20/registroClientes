@@ -291,12 +291,30 @@ const CitasController = {
         });
       }
 
-      // Verificar disponibilidad si cambió la fecha/hora o el profesional
+      // Normalizar fecha y horas para comparar correctamente:
+      // citaData viene del frontend como string '2026-04-16' y '09:00'
+      // citaExistente viene de PostgreSQL como Date ISO y hora con segundos '09:00:00'
+      const fechaNueva      = citaData.fecha;
+      const fechaExistente  = new Date(citaExistente.fecha).toISOString().split('T')[0];
+      const horaIniNueva    = citaData.hora_inicio.substring(0, 5);
+      const horaIniExist    = citaExistente.hora_inicio.substring(0, 5);
+      const horaFinNueva    = citaData.hora_fin.substring(0, 5);
+      const horaFinExist    = citaExistente.hora_fin.substring(0, 5);
+      const profIdNuevo     = parseInt(citaData.profesional_id);
+      const profIdExistente = parseInt(citaExistente.profesional_id);
+
+      console.log('🔍 [updateCita] Comparando cambios:');
+      console.log(`   fecha:       ${fechaNueva} vs ${fechaExistente} → cambió: ${fechaNueva !== fechaExistente}`);
+      console.log(`   hora_inicio: ${horaIniNueva} vs ${horaIniExist} → cambió: ${horaIniNueva !== horaIniExist}`);
+      console.log(`   hora_fin:    ${horaFinNueva} vs ${horaFinExist} → cambió: ${horaFinNueva !== horaFinExist}`);
+      console.log(`   profesional: ${profIdNuevo} vs ${profIdExistente} → cambió: ${profIdNuevo !== profIdExistente}`);
+
+      // Solo verificar disponibilidad si realmente cambió fecha, hora o profesional
       if (
-        citaData.fecha !== citaExistente.fecha ||
-        citaData.hora_inicio !== citaExistente.hora_inicio ||
-        citaData.hora_fin !== citaExistente.hora_fin ||
-        citaData.profesional_id !== citaExistente.profesional_id
+        fechaNueva     !== fechaExistente  ||
+        horaIniNueva   !== horaIniExist    ||
+        horaFinNueva   !== horaFinExist    ||
+        profIdNuevo    !== profIdExistente
       ) {
         // 1️⃣ Verificar en BD (citas de la app)
         const disponible = await CitaModel.verificarDisponibilidad(

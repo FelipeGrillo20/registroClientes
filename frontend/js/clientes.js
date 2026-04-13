@@ -308,7 +308,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-  loadClients(modalidad);
+  // ✅ Inicializar filtros activos con el año y mes en curso
+  const hoy = new Date();
+  filtrosActivos.año = String(hoy.getFullYear());
+  filtrosActivos.mes = String(hoy.getMonth() + 1);
+
+  loadClients(modalidad, null, filtrosActivos.año, filtrosActivos.mes);
   loadEmpresas();
   setupFilterEvents();
 });
@@ -523,6 +528,8 @@ function populateYearFilter() {
   const filterAño = document.getElementById('filterAño');
   if (!filterAño) return;
   
+  const añoActual = new Date().getFullYear();
+  
   filterAño.innerHTML = '<option value="">Todos los Años</option>';
   
   // Generar años desde 2026 hasta 2030
@@ -533,7 +540,10 @@ function populateYearFilter() {
     filterAño.appendChild(option);
   }
   
-  console.log("✅ Filtro de años poblado (2026-2030)");
+  // ✅ Seleccionar el año actual por defecto
+  filterAño.value = añoActual;
+  
+  console.log(`✅ Filtro de años poblado (2026-2030), año seleccionado: ${añoActual}`);
 }
 
 // ============================================
@@ -542,6 +552,8 @@ function populateYearFilter() {
 function populateMesFilter() {
   const filterMes = document.getElementById('filterMes');
   if (!filterMes) return;
+  
+  const mesActual = new Date().getMonth() + 1; // getMonth() retorna 0-11, sumamos 1
   
   const meses = [
     { valor: '', nombre: 'Todos los Meses' },
@@ -568,7 +580,10 @@ function populateMesFilter() {
     filterMes.appendChild(option);
   });
   
-  console.log("✅ Filtro de meses poblado");
+  // ✅ Seleccionar el mes actual por defecto
+  filterMes.value = String(mesActual);
+  
+  console.log(`✅ Filtro de meses poblado, mes seleccionado: ${getMesNombre(mesActual)}`);
 }
 
 

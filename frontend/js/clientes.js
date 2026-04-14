@@ -23,6 +23,11 @@ let filtrosActivos = { // ✅ NUEVO: Objeto para mantener filtros activos
   mes: null
 };
 
+// ✅ Token de renderizado: evita race conditions entre peticiones concurrentes.
+// Cada llamada a loadClients genera un nuevo ID; renderClients lo verifica
+// después de cada await y aborta si ya fue reemplazado por una petición más reciente.
+let renderToken = 0;
+
 // ============================================
 // ✅ FUNCIONES DEL MODAL DE TRABAJADOR RELACIONADO
 // ============================================
@@ -308,12 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-  // ✅ Inicializar filtros activos con el año y mes en curso
-  const hoy = new Date();
-  filtrosActivos.año = String(hoy.getFullYear());
-  filtrosActivos.mes = String(hoy.getMonth() + 1);
-
-  loadClients(modalidad, null, filtrosActivos.año, filtrosActivos.mes);
+  loadClients(modalidad);
   loadEmpresas();
   setupFilterEvents();
 });
@@ -408,7 +408,13 @@ function populateEmpresaFilter() {
 
 // Cargar clientes CON filtro de modalidad y profesional
 async function loadClients(modalidad, profesionalId = null, año = null, mes = null) {
+  // ✅ Incrementar token: cualquier renderClients anterior que siga en curso
+  //    detectará que su token ya no es válido y se detendrá.
+  const myToken = ++renderToken;
+
+  // Limpiar tabla INMEDIATAMENTE para que no queden datos viejos visibles
   tbody.innerHTML = `<tr><td colspan="8" class="no-data">Cargando clientes...</td></tr>`;
+  allClients = [];
   
   // ✅ Limpiar cache de consultas al recargar
   consultasDisponibles = {};
@@ -441,6 +447,12 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
         "Authorization": `Bearer ${getAuthToken()}`
       }
     });
+
+    // ✅ Si llegó una petición más reciente mientras esperábamos, descartar esta respuesta
+    if (myToken !== renderToken) {
+      console.log("⚠️ Respuesta descartada (petición más reciente en curso)");
+      return;
+    }
     
     if (!res.ok) {
       tbody.innerHTML = `<tr><td colspan="8" class="no-data">Error al cargar clientes</td></tr>`;
@@ -450,6 +462,12 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
     }
     
     const clients = await res.json();
+
+    // ✅ Verificar token nuevamente después de parsear JSON
+    if (myToken !== renderToken) {
+      console.log("⚠️ Respuesta descartada tras parsear JSON (petición más reciente en curso)");
+      return;
+    }
     
     console.log("📦 Clientes recibidos:", clients.length);
     if (clients.length > 0) {
@@ -489,7 +507,7 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
     // ✅ Guardar modalidad actual para usar en renderClients
     window.currentModalidad = modalidad;
     
-    renderClients(allClients);
+    renderClients(allClients, myToken);
     populateFilterOptions(allClients);
   } catch (err) {
     console.error("Error loading clients:", err);
@@ -528,8 +546,6 @@ function populateYearFilter() {
   const filterAño = document.getElementById('filterAño');
   if (!filterAño) return;
   
-  const añoActual = new Date().getFullYear();
-  
   filterAño.innerHTML = '<option value="">Todos los Años</option>';
   
   // Generar años desde 2026 hasta 2030
@@ -540,10 +556,7 @@ function populateYearFilter() {
     filterAño.appendChild(option);
   }
   
-  // ✅ Seleccionar el año actual por defecto
-  filterAño.value = añoActual;
-  
-  console.log(`✅ Filtro de años poblado (2026-2030), año seleccionado: ${añoActual}`);
+  console.log("✅ Filtro de años poblado (2026-2030)");
 }
 
 // ============================================
@@ -552,8 +565,6 @@ function populateYearFilter() {
 function populateMesFilter() {
   const filterMes = document.getElementById('filterMes');
   if (!filterMes) return;
-  
-  const mesActual = new Date().getMonth() + 1; // getMonth() retorna 0-11, sumamos 1
   
   const meses = [
     { valor: '', nombre: 'Todos los Meses' },
@@ -580,16 +591,14 @@ function populateMesFilter() {
     filterMes.appendChild(option);
   });
   
-  // ✅ Seleccionar el mes actual por defecto
-  filterMes.value = String(mesActual);
-  
-  console.log(`✅ Filtro de meses poblado, mes seleccionado: ${getMesNombre(mesActual)}`);
+  console.log("✅ Filtro de meses poblado");
 }
 
 
 
 // ✅ ACTUALIZADO: Renderizar clientes con botón de informe
-async function renderClients(list) {
+// Recibe myToken para abortar si llega una petición más nueva mientras renderiza.
+async function renderClients(list, myToken = null) {
   tbody.innerHTML = "";
   if (!list || list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" class="no-data">No se encontraron clientes con esos filtros</td></tr>`;
@@ -600,6 +609,12 @@ async function renderClients(list) {
   console.log(`🎨 Renderizando ${list.length} clientes en modalidad: ${modalidad}`);
 
   for (const c of list) {
+    // ✅ Verificar antes de cada await: si el token cambió, detener el render
+    if (myToken !== null && myToken !== renderToken) {
+      console.log("⚠️ Render cancelado: nueva petición reemplazó a esta");
+      return;
+    }
+
     const tr = document.createElement("tr");
 
     // Determinar badge de vínculos
@@ -636,6 +651,12 @@ async function renderClients(list) {
     }
     // ✅ Verificar informes disponibles para el trabajador
     const informeData = await verificarInformeDisponible(c.id, modalidad);
+
+    // ✅ Verificar token también después del await de informes
+    if (myToken !== null && myToken !== renderToken) {
+      console.log("⚠️ Render cancelado tras verificar informe: nueva petición activa");
+      return;
+    }
 
     let informeDisabled = 'disabled';
     let informeClass = 'btn-informe btn-informe-disabled';

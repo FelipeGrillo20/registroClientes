@@ -742,46 +742,59 @@ const CitasController = {
    * Obtener estadísticas de citas
    */
   async getEstadisticas(req, res) {
-    try {
-      console.log("📥 [getEstadisticas] Iniciando...");
-      const filters = {
-        fecha_inicio:      req.query.fecha_inicio,
-        fecha_fin:         req.query.fecha_fin,
-        modalidad_programa: req.query.modalidad_programa,
-        profesional_id:    req.query.profesional_id,   // ← faltaba
-      };
-      console.log("🔍 [getEstadisticas] Filtros:", filters);
+  try {
+    console.log("📥 [getEstadisticas] Iniciando...");
+    const filters = {
+      fecha_inicio:      req.query.fecha_inicio,
+      fecha_fin:         req.query.fecha_fin,
+      modalidad_programa: req.query.modalidad_programa,
+      profesional_id:    req.query.profesional_id,
+    };
+    console.log("🔍 [getEstadisticas] Filtros:", filters);
 
-      const estadisticas = await CitaModel.getEstadisticas(filters);
+    const estadisticas = await CitaModel.getEstadisticas(filters);
 
-      const resultado = {
-        total: 0,
-        programadas: 0,
-        confirmadas: 0,
-        realizadas: 0,
-        canceladas: 0,
-        no_asistio: 0,
-      };
+    const resultado = {
+      total: 0,
+      programadas: 0,
+      confirmadas: 0,
+      realizadas: 0,
+      canceladas: 0,
+      no_asistio: 0,
+    };
 
-      estadisticas.forEach((item) => {
+    // 🔥 MAPEO CORRECTO BD → FRONTEND
+    const estadoMap = {
+      programada: "programadas",
+      confirmada: "confirmadas",
+      realizada: "realizadas",
+      cancelada: "canceladas",
+      no_asistio: "no_asistio",
+    };
+
+    estadisticas.forEach((item) => {
+      const estadoFrontend = estadoMap[item.estado];
+
+      if (estadoFrontend) {
+        resultado[estadoFrontend] = parseInt(item.cantidad);
         resultado.total += parseInt(item.cantidad);
-        resultado[item.estado] = parseInt(item.cantidad);
-      });
+      }
+    });
 
-      console.log("✅ [getEstadisticas] Resultado:", resultado);
-      res.json({
-        success: true,
-        data: resultado,
-      });
-    } catch (error) {
-      console.error("❌ [getEstadisticas] Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener estadísticas",
-        error: error.message,
-      });
-    }
-  },
+    console.log("✅ [getEstadisticas] Resultado:", resultado);
+    res.json({
+      success: true,
+      data: resultado,
+    });
+  } catch (error) {
+    console.error("❌ [getEstadisticas] Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener estadísticas",
+      error: error.message,
+    });
+  }
+},
 
   /**
    * ✅ NUEVO: Obtener trabajadores que tienen citas previas con un profesional

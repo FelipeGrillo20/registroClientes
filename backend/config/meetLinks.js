@@ -28,6 +28,15 @@ const MEET_LINKS = {
   // ── ENTORNO PRODUCCIÓN (Hostinger) ─────────────────────────
   // Copia las mismas entradas pero con los IDs del servidor:
   // 5: 'https://meet.google.com/jca-ejwr-tnp',  // Andrés Felipe Buendía en producción
+  42: 'https://meet.google.com/mga-xbsq-mhb',
+  45: 'https://meet.google.com/yhz-hybz-tqt',
+  46: 'https://meet.google.com/vvk-qcxp-uqp',
+  48: 'https://meet.google.com/kma-shyr-zkr',
+  50: 'https://meet.google.com/hzb-saqu-sqw',
+  44: 'https://meet.google.com/ouj-ejxx-mso',
+  47: 'https://meet.google.com/jwp-kuwp-vfs',
+  49: 'https://meet.google.com/urf-kbgc-eai',
+  51: 'https://meet.google.com/hce-brup-jzi',
 };
 
 /**

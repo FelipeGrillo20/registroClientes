@@ -311,3 +311,64 @@ exports.getEstadisticasDetalladasByProfesional = async (profesionalId) => {
 
   return result.rows[0];
 };
+// ============================================
+// Obtener sesiones de un profesional filtradas
+// por año y mes (para asignación de créditos)
+// Devuelve cada sesión como fila independiente
+// ============================================
+exports.getSesionesByProfesionalMesAnio = async (profesional_id, anio, mes) => {
+  const result = await pool.query(`
+    SELECT
+      c.id,
+      c.cliente_id,
+      c.consulta_number,
+      c.fecha,
+      c.motivo_consulta,
+      c.actividad,
+      c.modalidad,
+      c.estado,
+      cl.nombre  AS trabajador_nombre,
+      cl.cedula  AS trabajador_cedula
+    FROM consultas c
+    INNER JOIN clients cl ON c.cliente_id = cl.id
+    WHERE cl.profesional_id = $1
+      AND EXTRACT(YEAR  FROM c.fecha) = $2
+      AND EXTRACT(MONTH FROM c.fecha) = $3
+    ORDER BY cl.nombre ASC, c.fecha ASC, c.consulta_number ASC
+  `, [profesional_id, anio, mes]);
+  return result.rows;
+};
+
+// ============================================
+// Sesiones SIN crédito asignado de un profesional
+// Todas las fechas, ordenadas cronológicamente
+// Se filtra por credito_id IS NULL en tabla citas
+// ============================================
+exports.getSesionesSinAsignacion = async (profesional_id) => {
+  const result = await pool.query(`
+    SELECT
+      c.id,
+      c.cliente_id,
+      c.consulta_number,
+      c.fecha,
+      c.motivo_consulta,
+      c.actividad,
+      c.modalidad,
+      c.estado,
+      cl.nombre  AS trabajador_nombre,
+      cl.cedula  AS trabajador_cedula,
+      EXTRACT(YEAR  FROM c.fecha)::int AS anio,
+      EXTRACT(MONTH FROM c.fecha)::int AS mes
+    FROM consultas c
+    INNER JOIN clients cl ON c.cliente_id = cl.id
+    WHERE cl.profesional_id = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM citas ci
+        WHERE ci.trabajador_id = c.cliente_id
+          AND ci.credito_id IS NOT NULL
+          AND DATE_TRUNC('month', ci.fecha) = DATE_TRUNC('month', c.fecha)
+      )
+    ORDER BY c.fecha ASC, cl.nombre ASC
+  `, [profesional_id]);
+  return result.rows;
+};

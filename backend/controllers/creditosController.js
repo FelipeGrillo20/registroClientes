@@ -17,6 +17,15 @@ const CreditosController = {
         });
       }
 
+      // Validar que no exista ya un formato con el mismo consecutivo
+      const existente = await CreditoModel.buscarPorConsecutivo(consecutivo);
+      if (existente) {
+        return res.status(409).json({
+          success: false,
+          message: `Ya tienes cargado un formato con ese nombre ("${consecutivo}"), debes cambiarlo por uno diferente`
+        });
+      }
+
       const creditoData = {
         anio: parseInt(anio),
         mes: parseInt(mes),
@@ -35,6 +44,13 @@ const CreditosController = {
 
     } catch (error) {
       console.error('Error al crear crédito:', error);
+      // Capturar error de restricción unique de la BD como fallback
+      if (error.code === '23505' || (error.detail && error.detail.includes('consecutivo'))) {
+        return res.status(409).json({
+          success: false,
+          message: `Ya tienes cargado un formato con ese nombre, debes cambiarlo por uno diferente`
+        });
+      }
       res.status(500).json({
         success: false,
         message: 'Error al crear crédito'
@@ -159,7 +175,7 @@ const CreditosController = {
         });
       }
 
-      // Verificar que el crédito existe y no tiene horas consumidas
+      // Verificar que el crédito existe
       const creditoExistente = await CreditoModel.obtenerPorId(id);
       
       if (!creditoExistente) {
@@ -169,10 +185,23 @@ const CreditosController = {
         });
       }
 
-      if (creditoExistente.horas_consumidas > 0) {
+      // Validar que el consecutivo nuevo no exista en otro crédito diferente
+      const creditoMismoNombre = await CreditoModel.buscarPorConsecutivo(consecutivo);
+      if (creditoMismoNombre && String(creditoMismoNombre.id) !== String(id)) {
+        return res.status(409).json({
+          success: false,
+          message: `Ya tienes cargado un formato con ese nombre ("${consecutivo}"), debes cambiarlo por uno diferente`
+        });
+      }
+
+      const nuevaCantidad   = parseInt(cantidad_horas);
+      const horasConsumidas = parseFloat(creditoExistente.horas_consumidas) || 0;
+
+      // Validar que la nueva cantidad no sea menor a las horas ya consumidas
+      if (nuevaCantidad < horasConsumidas) {
         return res.status(400).json({
           success: false,
-          message: 'No se puede editar un crédito que ya tiene horas consumidas'
+          message: `No se puede establecer ${nuevaCantidad} hora(s) porque ya están asignadas ${horasConsumidas} hora(s). El valor mínimo permitido es ${horasConsumidas} hora(s).`
         });
       }
 
@@ -180,7 +209,7 @@ const CreditosController = {
         anio: parseInt(anio),
         mes: parseInt(mes),
         consecutivo,
-        cantidad_horas: parseInt(cantidad_horas),
+        cantidad_horas: nuevaCantidad,
         modalidad_programa
       };
 
@@ -239,7 +268,96 @@ const CreditosController = {
         message: 'Error al eliminar crédito'
       });
     }
+  },
+
+  /**
+   * Consumir horas de un crédito directamente (sin cita)
+   * PATCH /api/creditos/:id/consumir
+   * body: { horas }
+   */
+  async consumirHoras(req, res) {
+    try {
+      const { id } = req.params;
+      const { horas } = req.body;
+
+      if (!horas || horas <= 0) {
+        return res.status(400).json({ success: false, message: 'Horas inválidas' });
+      }
+
+      const creditoExistente = await CreditoModel.obtenerPorId(id);
+      if (!creditoExistente) {
+        return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
+      }
+
+      const horasDisponibles = creditoExistente.cantidad_horas - creditoExistente.horas_consumidas;
+      if (horasDisponibles < horas) {
+        return res.status(400).json({
+          success: false,
+          message: `Horas insuficientes en "${creditoExistente.consecutivo}". Disponibles: ${horasDisponibles.toFixed(1)}h, Requeridas: ${horas}h`
+        });
+      }
+
+      await CreditoModel.consumirHoras(id, horas);
+
+      const actualizado = await CreditoModel.obtenerPorId(id);
+      const dispActual  = actualizado.cantidad_horas - actualizado.horas_consumidas;
+
+      res.json({
+        success: true,
+        message: `${horas}h consumidas del crédito "${creditoExistente.consecutivo}"`,
+        data: {
+          credito_id:        parseInt(id),
+          horas_consumidas:  horas,
+          horas_disponibles: dispActual
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al consumir horas:', error);
+      res.status(500).json({ success: false, message: 'Error al consumir horas del crédito' });
+    }
+  },
+
+  /**
+   * Devolver horas a un crédito directamente (sin cita)
+   * PATCH /api/creditos/:id/devolver
+   * body: { horas }
+   */
+  async devolverHoras(req, res) {
+    try {
+      const { id } = req.params;
+      const { horas } = req.body;
+
+      if (!horas || horas <= 0) {
+        return res.status(400).json({ success: false, message: 'Horas inválidas' });
+      }
+
+      const creditoExistente = await CreditoModel.obtenerPorId(id);
+      if (!creditoExistente) {
+        return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
+      }
+
+      await CreditoModel.devolverHoras(id, horas);
+
+      const actualizado = await CreditoModel.obtenerPorId(id);
+      const dispActual  = actualizado.cantidad_horas - actualizado.horas_consumidas;
+
+      res.json({
+        success: true,
+        message: `${horas}h devueltas al crédito "${creditoExistente.consecutivo}"`,
+        data: {
+          credito_id:        parseInt(id),
+          horas_devueltas:   horas,
+          horas_disponibles: dispActual
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al devolver horas:', error);
+      res.status(500).json({ success: false, message: 'Error al devolver horas al crédito' });
+    }
   }
+
 };
 
 module.exports = CreditosController;

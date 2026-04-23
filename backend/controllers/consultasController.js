@@ -394,3 +394,54 @@ exports.getEstadisticasDetalladasByProfesional = async (req, res) => {
     res.status(500).json({ message: "Error al obtener estadísticas" });
   }
 };
+// ============================================
+// Obtener sesiones de un profesional por mes/año
+// GET /api/consultas/sesiones-creditos?profesional_id=&anio=&mes=
+// Usado desde creditos.html al pulsar "Generar"
+// ============================================
+exports.getSesionesCreditos = async (req, res) => {
+  try {
+    const { profesional_id, anio, mes } = req.query;
+
+    if (!profesional_id || !anio || !mes) {
+      return res.status(400).json({
+        message: "profesional_id, anio y mes son requeridos"
+      });
+    }
+
+    const sesiones = await consultaModel.getSesionesByProfesionalMesAnio(
+      parseInt(profesional_id),
+      parseInt(anio),
+      parseInt(mes)
+    );
+
+    res.json(sesiones);
+  } catch (err) {
+    console.error("Error obteniendo sesiones para créditos:", err);
+    res.status(500).json({ message: "Error al obtener sesiones" });
+  }
+};
+
+// ============================================
+// Sesiones SIN crédito asignado de un profesional
+// GET /api/consultas/sesiones-sin-asignacion?profesional_id=
+// Usado desde el modal "Trabajadores sin asignación"
+// ============================================
+exports.getSesionesSinAsignacion = async (req, res) => {
+  try {
+    const { profesional_id } = req.query;
+
+    if (!profesional_id) {
+      return res.status(400).json({ message: "profesional_id es requerido" });
+    }
+
+    const sesiones = await consultaModel.getSesionesSinAsignacion(
+      parseInt(profesional_id)
+    );
+
+    res.json(sesiones);
+  } catch (err) {
+    console.error("Error obteniendo sesiones sin asignación:", err);
+    res.status(500).json({ message: "Error al obtener sesiones sin asignación" });
+  }
+};

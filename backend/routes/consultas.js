@@ -32,6 +32,14 @@ router.get("/cliente/:cliente_id", consultasController.getConsultasByCliente);
 // GET /api/consultas/estadisticas/detalladas
 router.get("/estadisticas/detalladas", consultasController.getEstadisticasDetalladasByProfesional);
 
+// ✅ NUEVA: Sesiones filtradas por profesional + mes + año (para asignación de créditos)
+// GET /api/consultas/sesiones-creditos?profesional_id=&anio=&mes=
+router.get("/sesiones-creditos", consultasController.getSesionesCreditos);
+
+// ✅ NUEVA: Sesiones sin crédito asignado de un profesional (todas las fechas)
+// GET /api/consultas/sesiones-sin-asignacion?profesional_id=
+router.get("/sesiones-sin-asignacion", consultasController.getSesionesSinAsignacion);
+
 // ============================================
 // RUTAS ESTÁNDAR
 // ============================================

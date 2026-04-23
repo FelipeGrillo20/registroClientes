@@ -177,6 +177,16 @@ const CreditoModel = {
     return result.rows[0];
   },
 
+
+  /**
+   * Buscar crédito por consecutivo (para validar duplicados)
+   */
+  async buscarPorConsecutivo(consecutivo) {
+    const query = `SELECT * FROM creditos WHERE LOWER(consecutivo) = LOWER($1) LIMIT 1`;
+    const result = await pool.query(query, [consecutivo]);
+    return result.rows[0] || null;
+  },
+
   /**
    * Eliminar crédito
    */

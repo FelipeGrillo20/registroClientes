@@ -380,6 +380,154 @@
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
+        /* ===== SPINNER DE HORAS EN TABLA ===== */
+        .horas-spinner {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .spinner-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 10px;
+            color: #374151;
+            transition: background 0.15s;
+            line-height: 1;
+            user-select: none;
+        }
+        .spinner-btn:hover { background: #667eea; color: #fff; }
+        .spinner-value {
+            min-width: 28px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #374151;
+            padding: 0 2px;
+        }
+
+        /* ===== BARRA DE FILTROS DEL MODAL ===== */
+        .modal-filtros-bar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            padding: 16px 0 20px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 18px;
+        }
+        .modal-filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 160px;
+        }
+        .modal-filtro-group--sm {
+            flex: 0 0 110px;
+            min-width: 100px;
+        }
+        .modal-filtro-group--xs {
+            flex: 0 0 90px;
+            min-width: 80px;
+        }
+        .modal-filtro-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .modal-filtro-label i { color: #667eea; margin-right: 4px; }
+        .modal-filtro-select {
+            padding: 7px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #374151;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+        .modal-filtro-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,0.12);
+        }
+        .modal-filtro-select:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* ===== LISTA DE TRABAJADORES EN EL MODAL ===== */
+        .trabajadores-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding: 4px 2px;
+        }
+        .trabajador-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1.5px solid #e5e7eb;
+            background: #f9fafb;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .trabajador-chip i {
+            font-size: 12px;
+            color: #9ca3af;
+            transition: color 0.18s;
+        }
+        .trabajador-chip:hover {
+            border-color: #667eea;
+            background: #f5f3ff;
+            color: #4c1d95;
+        }
+        .trabajador-chip:hover i { color: #667eea; }
+        .trabajador-chip.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: 600;
+        }
+        .trabajador-chip.selected i { color: rgba(255,255,255,0.85); }
+
+        /* Columna "Estado" en tabla del modal */
+        .td-estado-select {
+            min-width: 130px;
+        }
+        .select-estado-modal {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #374151;
+            background: #fff;
+            cursor: pointer;
+        }
+        .select-estado-modal:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         /* Footer del modal */
         .modal-footer {
             padding: 14px 24px;
@@ -596,16 +744,39 @@
                     <small>Complete el formulario para agregar créditos</small>
                 </div>
 
-                <!-- Botón Lista Agendados -->
-                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                    <button type="button" id="btnListaAgendados"
-                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                   color: #fff; border: none; padding: 10px 20px; border-radius: 8px;
-                                   font-size: 14px; font-weight: 600; cursor: pointer;
-                                   display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
-                        <i class="fas fa-calendar-check"></i>
-                        Lista Agendados
-                    </button>
+                <!-- Botones de acción -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb;
+                            display:flex;flex-direction:column;gap:10px;">
+                    <!-- Fila 1 -->
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button type="button" id="btnListaAgendados"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                       color: #fff; border: none; padding: 10px 20px; border-radius: 8px;
+                                       font-size: 14px; font-weight: 600; cursor: pointer;
+                                       display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fas fa-calendar-check"></i>
+                            Lista Agendados
+                        </button>
+                        <button type="button" id="btnSinAsignacion"
+                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                                       color: #fff; border: none; padding: 10px 20px; border-radius: 8px;
+                                       font-size: 14px; font-weight: 600; cursor: pointer;
+                                       display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fas fa-user-clock"></i>
+                            Trabajadores sin asignación
+                        </button>
+                    </div>
+                    <!-- Fila 2 -->
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button type="button" id="btnInformeAsignados"
+                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                       color: #fff; border: none; padding: 10px 20px; border-radius: 8px;
+                                       font-size: 14px; font-weight: 600; cursor: pointer;
+                                       display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fas fa-file-alt"></i>
+                            Informe Asignados
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -653,43 +824,306 @@
                 </div>
             </div>
 
-            <!-- Cuerpo con tabla de citas -->
+            <!-- Cuerpo del modal: filtros + tabla -->
             <div class="modal-body" id="modalBody">
 
-                <!-- Estado de carga -->
-                <div class="modal-loading" id="modalLoading">
+                <!-- ===== FILA DE FILTROS ===== -->
+                <div class="modal-filtros-bar">
+
+                    <!-- Profesional -->
+                    <div class="modal-filtro-group">
+                        <label class="modal-filtro-label">
+                            <i class="fas fa-user-md"></i> Profesional *
+                        </label>
+                        <select id="modalProfesional" class="modal-filtro-select">
+                            <option value="">Seleccione un profesional</option>
+                        </select>
+                    </div>
+
+                    <!-- Año -->
+                    <div class="modal-filtro-group modal-filtro-group--sm">
+                        <label class="modal-filtro-label">
+                            <i class="fas fa-calendar"></i> Año *
+                        </label>
+                        <select id="modalAnio" class="modal-filtro-select">
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                    </div>
+
+                    <!-- Mes -->
+                    <div class="modal-filtro-group modal-filtro-group--sm">
+                        <label class="modal-filtro-label">
+                            <i class="fas fa-calendar-days"></i> Mes *
+                        </label>
+                        <select id="modalMes" class="modal-filtro-select">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+
+                    <!-- Botón Generar -->
+                    <div class="modal-filtro-group modal-filtro-group--xs"
+                         style="justify-content:flex-end;">
+                        <label class="modal-filtro-label" style="visibility:hidden;">_</label>
+                        <button id="btnGenerarSesiones"
+                                style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+                                       color:#fff;border:none;padding:8px 18px;border-radius:6px;
+                                       font-size:13px;font-weight:600;cursor:pointer;
+                                       display:flex;align-items:center;gap:6px;
+                                       transition:opacity 0.2s;white-space:nowrap;opacity:0.45;"
+                                disabled>
+                            <i class="fas fa-bolt"></i> Generar
+                        </button>
+                    </div>
+
+                </div>
+
+
+
+                <!-- Campo oculto para compatibilidad — el valor real viene de cada fila -->
+                <input type="hidden" id="modalHoras" value="1">
+
+                <!-- ===== ESTADO DE CARGA ===== -->
+                <div class="modal-loading" id="modalLoading" style="display:none">
                     <i class="fas fa-spinner"></i>
-                    <p>Cargando citas agendadas...</p>
+                    <p>Cargando trabajadores...</p>
                 </div>
 
-                <!-- Estado vacío -->
-                <div class="modal-empty" id="modalEmpty" style="display:none">
+                <!-- ===== ESTADO VACÍO ===== -->
+                <div class="modal-empty" id="modalEmpty" style="display:block">
                     <i class="fas fa-calendar-times"></i>
-                    <p>No hay citas agendadas</p>
+                    <p id="modalEmptyMsg">Seleccione un profesional para ver sus trabajadores</p>
                 </div>
 
-                <!-- Tabla de citas -->
+                <!-- ===== TABLA DE REGISTROS ===== -->
                 <table class="citas-table" id="citasDetalleTable" style="display:none">
                     <thead>
                         <tr>
-                            <th><i class="fas fa-user-md"></i> Profesional</th>
                             <th><i class="fas fa-user"></i> Trabajador</th>
-                            <th><i class="fas fa-calendar-day"></i> Día y hora</th>
-                            <th><i class="fas fa-tag"></i> Estado</th>
+                            <th><i class="fas fa-calendar-day"></i> Fecha Sesión</th>
+                            <th><i class="fas fa-clock"></i> Horas</th>
+                            <!-- <th><i class="fas fa-tag"></i> Estado</th> -->
                             <th><i class="fas fa-file-invoice-dollar"></i> Formato</th>
                             <th>Asignar</th>
                         </tr>
                     </thead>
                     <tbody id="citasDetalleBody"></tbody>
                 </table>
+
             </div>
 
             <!-- Footer -->
             <div class="modal-footer">
                 <span class="modal-footer-info">
-                    Citas mostradas: <strong id="totalCitasModal">0</strong>
+                    Registros: <strong id="totalCitasModal">0</strong>
                 </span>
-                <button class="btn-cerrar-modal" id="btnCerrarModalFooter"
+                <div style="display:flex;gap:10px;align-items:center;">
+
+                    <button class="btn-cerrar-modal" id="btnCerrarModalFooter"
+                            style="background:#6b7280;">
+                        <i class="fas fa-times"></i>
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== MODAL: TRABAJADORES SIN ASIGNACIÓN ===== -->
+    <div class="modal-overlay" id="modalSinAsignacion">
+        <div class="modal-box" style="max-width:860px;">
+
+            <!-- Encabezado -->
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <i class="fas fa-user-clock"></i>
+                    <div>
+                        <h2>Trabajadores sin asignación</h2>
+                        <p>Sesiones pendientes de asignación de crédito</p>
+                    </div>
+                </div>
+                <button class="modal-close" id="btnCerrarModalSA" title="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="modal-body" id="modalSABody">
+
+                <!-- Selector de profesional -->
+                <div class="modal-filtros-bar" style="border-bottom:1px solid #e5e7eb;padding-bottom:16px;margin-bottom:16px;">
+                    <div class="modal-filtro-group">
+                        <label class="modal-filtro-label">
+                            <i class="fas fa-user-md"></i> Profesional *
+                        </label>
+                        <select id="modalSAProfesional" class="modal-filtro-select">
+                            <option value="">Seleccione un profesional</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="modal-loading" id="modalSALoading" style="display:none">
+                    <i class="fas fa-spinner"></i>
+                    <p>Cargando sesiones...</p>
+                </div>
+
+                <!-- Vacío -->
+                <div class="modal-empty" id="modalSAEmpty" style="display:block">
+                    <i class="fas fa-calendar-check"></i>
+                    <p id="modalSAEmptyMsg">Seleccione un profesional para ver sus sesiones pendientes</p>
+                </div>
+
+                <!-- Tabla -->
+                <table class="citas-table" id="modalSATable" style="display:none">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-calendar"></i> Mes</th>
+                            <th><i class="fas fa-user"></i> Trabajador</th>
+                            <th><i class="fas fa-calendar-day"></i> Fecha Sesión</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalSABody2"></tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <span class="modal-footer-info">
+                    Sesiones pendientes: <strong id="modalSATotal">0</strong>
+                </span>
+                <button class="btn-cerrar-modal" id="btnCerrarModalSAFooter"
+                        style="background:#6b7280;">
+                    <i class="fas fa-times"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: INFORME ASIGNADOS ===== -->
+    <div class="modal-overlay" id="modalInformeAsignados">
+        <div class="modal-box" style="max-width:900px;">
+
+            <!-- Encabezado -->
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <h2>Informe Asignados</h2>
+                        <p>Trabajadores con crédito asignado por formato</p>
+                    </div>
+                </div>
+                <button class="modal-close" id="btnCerrarInforme" title="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div style="padding:16px 24px;border-bottom:1px solid #e5e7eb;
+                        display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+
+                <!-- Año -->
+                <div class="modal-filtro-group modal-filtro-group--sm">
+                    <label class="modal-filtro-label">
+                        <i class="fas fa-calendar"></i> Año *
+                    </label>
+                    <select id="informeAnio" class="modal-filtro-select">
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                        <option value="2030">2030</option>
+                    </select>
+                </div>
+
+                <!-- Mes -->
+                <div class="modal-filtro-group modal-filtro-group--sm">
+                    <label class="modal-filtro-label">
+                        <i class="fas fa-calendar-days"></i> Mes *
+                    </label>
+                    <select id="informeMes" class="modal-filtro-select">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+
+                <!-- Formato -->
+                <div class="modal-filtro-group" style="min-width:220px;">
+                    <label class="modal-filtro-label">
+                        <i class="fas fa-file-invoice-dollar"></i> Formato *
+                    </label>
+                    <select id="informeFormato" class="modal-filtro-select">
+                        <option value="">— Seleccione un formato —</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="modal-body" id="informeBody">
+
+                <!-- Loading -->
+                <div class="modal-loading" id="informeLoading" style="display:none">
+                    <i class="fas fa-spinner"></i>
+                    <p>Cargando informe...</p>
+                </div>
+
+                <!-- Vacío -->
+                <div class="modal-empty" id="informeEmpty" style="display:block">
+                    <i class="fas fa-file-search"></i>
+                    <p id="informeEmptyMsg">Seleccione año, mes y formato para generar el informe</p>
+                </div>
+
+                <!-- Tabla -->
+                <table class="citas-table" id="informeTable" style="display:none">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user-md"></i> Profesional</th>
+                            <th><i class="fas fa-user"></i> Trabajador</th>
+                            <th><i class="fas fa-calendar-day"></i> Fecha Sesión</th>
+                            <th><i class="fas fa-clock"></i> Horas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="informeTableBody"></tbody>
+                </table>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <span class="modal-footer-info">
+                    Registros: <strong id="informeTotal">0</strong>
+                    &nbsp;|&nbsp;
+                    Total horas: <strong id="informeTotalHoras">0</strong>
+                </span>
+                <button class="btn-cerrar-modal" id="btnCerrarInformeFooter"
                         style="background:#6b7280;">
                     <i class="fas fa-times"></i>
                     Cerrar
@@ -702,5 +1136,6 @@
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/creditos.js"></script>
+    <script src="js/informe-asignados.js"></script>
 </body>
 </html>

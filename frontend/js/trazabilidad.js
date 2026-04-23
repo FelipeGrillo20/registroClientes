@@ -27,13 +27,47 @@ const filterFechaFin         = document.getElementById("filterFechaFin");
 const btnApplyAdvancedFilters = document.getElementById("btnApplyAdvancedFilters");
 const btnClearAdvancedFilters = document.getElementById("btnClearAdvancedFilters");
 
+// ─── Leer asignaciones de créditos desde localStorage (generado en creditos.js) ──
+function getAsignacionesCreditos() {
+  // El key incluye la modalidad. Intentamos ambas modalidades y las unimos.
+  const modalidades = [
+    'Orientación Psicosocial',
+    'Sistema de Vigilancia Epidemiológica'
+  ];
+  const mapa = new Map();
+  modalidades.forEach(mod => {
+    try {
+      const key = `creditos_asignaciones_${mod}`;
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const entries = JSON.parse(raw);
+      entries.forEach(([k, v]) => mapa.set(k, v));
+    } catch (_) {}
+  });
+  return mapa;
+}
+
+/**
+ * Dado un profesionalId, clienteId y consultaId, busca en el Map si tiene
+ * formato asignado. Retorna el consecutivo o null.
+ * Clave en creditos.js: `${profesionalId}_${clienteId}_${sesionId}`
+ */
+function getFormatoAsignado(profesionalId, clienteId, consultaId, asignaciones) {
+  if (!profesionalId || !clienteId || !consultaId) return null;
+  const clave = `${profesionalId}_${clienteId}_${consultaId}`;
+  const asig  = asignaciones.get(clave);
+  return asig ? asig.credito_id : null;
+}
+
 // ─── Estado global ───────────────────────────────────────────────────────────
 let allClients          = [];   // Lista base de clientes cargados
 let allConsultas        = [];   // Todas las consultas cargadas
 let allProfesionales    = [];   // Lista de profesionales (para cruzar nombre)
+let allCreditos         = [];   // Créditos cargados para cruzar consecutivo
 let matrizRows          = [];   // Filas combinadas (1 fila por sesión)
 let currentFilteredRows = [];   // Filas visibles (para exportar)
 let currentUserRole     = null;
+let _asignacionesMap    = new Map(); // Asignaciones desde creditos.js
 
 const ENTIDADES = {
   ARL: ['Sura', 'Positiva', 'Colpatria', 'Bolívar', 'Colmena'],
@@ -96,21 +130,51 @@ async function loadData() {
   tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;">Cargando datos...</td></tr>`;
 
   try {
-    // Petición de clientes y consultas en paralelo
-    const [resClients, resConsultas] = await Promise.all([
+    // Cargar asignaciones desde localStorage (generado en creditos.js)
+    _asignacionesMap = getAsignacionesCreditos();
+
+    // Petición de clientes, consultas y créditos en paralelo
+    const API_CREDITOS_BASE = window.API_CONFIG?.ENDPOINTS?.BASE || 'http://localhost:5000';
+    const now = new Date();
+    const anioActual = now.getFullYear();
+
+    const [resClients, resConsultas, resCreditos] = await Promise.all([
       fetch(API_URL, {
         headers: { "Authorization": `Bearer ${getAuthToken()}` }
       }),
       fetch(API_CONSULTAS, {
         headers: { "Authorization": `Bearer ${getAuthToken()}` }
-      })
+      }),
+      fetch(`${API_CREDITOS_BASE}/api/creditos?anio=${anioActual}&mes=1&modalidad_programa=Orientaci%C3%B3n%20Psicosocial`, {
+        headers: { "Authorization": `Bearer ${getAuthToken()}` }
+      }).catch(() => ({ ok: false }))
     ]);
 
     if (!resClients.ok)   throw new Error("Error al cargar clientes");
     if (!resConsultas.ok) throw new Error("Error al cargar consultas");
 
-    const clients  = await resClients.json();
+    const clients   = await resClients.json();
     const consultas = await resConsultas.json();
+
+
+    // Cargar todos los créditos del año actual para obtener el consecutivo por ID
+    try {
+      const meses = [1,2,3,4,5,6,7,8,9,10,11,12];
+      const modalidades = ['Orientaci%C3%B3n%20Psicosocial','Sistema%20de%20Vigilancia%20Epidemiol%C3%B3gica'];
+      const creditosFetch = await Promise.allSettled(
+        meses.flatMap(m => modalidades.map(mod =>
+          fetch(`${API_CREDITOS_BASE}/api/creditos?anio=${anioActual}&mes=${m}&modalidad_programa=${mod}`, {
+            headers: { "Authorization": `Bearer ${getAuthToken()}` }
+          }).then(r => r.ok ? r.json() : { data: [] })
+        ))
+      );
+      allCreditos = creditosFetch
+        .filter(r => r.status === 'fulfilled')
+        .flatMap(r => Array.isArray(r.value?.data) ? r.value.data : []);
+      console.log(`✅ Créditos cargados para trazabilidad: ${allCreditos.length}`);
+    } catch(_) {
+      allCreditos = [];
+    }
 
     if (!Array.isArray(clients) || clients.length === 0) {
       showNoData();
@@ -220,6 +284,41 @@ function toggleObs(id) {
   const expandido = completo.style.display !== 'none';
   corto.style.display    = expandido ? 'block' : 'none';
   completo.style.display = expandido ? 'none'  : 'block';
+}
+
+// ─── Obtener consecutivo de un crédito por su ID ───────────────────────────
+function getConsecutivoCredito(creditoId) {
+  if (!creditoId) return null;
+  const credito = allCreditos.find(c => String(c.id) === String(creditoId));
+  return credito ? credito.consecutivo : `#${creditoId}`;
+}
+
+/**
+ * Obtiene el consecutivo del formato asignado a una sesión.
+ * Clave: profesionalId_clienteId_consultaId
+ */
+function getFormatoDeConsulta(consulta, client) {
+  if (!consulta || !client) return null;
+  const profId = consulta.profesional_id || client.profesional_id;
+  if (!profId) return null;
+  const clave  = `${profId}_${client.id}_${consulta.id}`;
+  const asig   = _asignacionesMap.get(clave);
+  if (!asig?.credito_id) return null;
+  return {
+    consecutivo:    getConsecutivoCredito(asig.credito_id),
+    horas_asignadas: asig.horas_asignadas || 1
+  };
+}
+
+function buildFormatoBadge(formatoInfo) {
+  if (!formatoInfo) return '<span style="color:#9ca3af;font-size:12px;">—</span>';
+  const { consecutivo, horas_asignadas } = formatoInfo;
+  const horas = parseInt(horas_asignadas) || 1;
+  const labelHoras = horas === 1 ? '1 hora' : `${horas} horas`;
+  return `<span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;
+          font-weight:700;padding:3px 10px;border-radius:20px;font-size:12px;">
+    📄 ${escapeHtml(consecutivo)} (${labelHoras})
+  </span>`;
 }
 
 // ─── Badge de modalidad de la consulta ───────────────────────────────────────
@@ -374,6 +473,7 @@ function renderRows(rows) {
       <td class="col-obs">${buildObsCell(consulta, index)}</td>
       <td class="col-profesional">${profesionalNombre}</td>
       <td class="col-estado">${buildEstadoBadge(consulta)}</td>
+      <td class="col-formato">${buildFormatoBadge(getFormatoDeConsulta(consulta, client))}</td>
     `;
 
     tbody.appendChild(tr);
@@ -777,7 +877,13 @@ function exportarExcel() {
       'Sesiones Sugeridas':  sesionessugeridas,
       'Observaciones':       observaciones,
       'Profesional':         profesional,
-      'Estado':              consulta ? (consulta.estado || '-') : '-'
+      'Estado':              consulta ? (consulta.estado || '-') : '-',
+      'Formato':             (() => {
+        const f = getFormatoDeConsulta(consulta, client);
+        if (!f) return '-';
+        const h = parseInt(f.horas_asignadas) || 1;
+        return `${f.consecutivo} (${h === 1 ? '1 hora' : h + ' horas'})`;
+      })()
     };
   });
 
@@ -802,6 +908,7 @@ function exportarExcel() {
     { wch: 40 }, // Observaciones
     { wch: 24 }, // Profesional
     { wch: 10 }, // Estado
+    { wch: 14 }, // Formato
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Trazabilidad');

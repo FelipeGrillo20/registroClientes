@@ -942,7 +942,7 @@ form.addEventListener("submit", async (e) => {
   email = email.toLowerCase();
 
   // === VALIDACIONES ===
-  if (!cedula || !nombre || !vinculo || !sede || !tipoEntidadPagadora || !empresaId || !telefono) {
+  if (!cedula || !nombre || !vinculo || !sede || !tipoEntidadPagadora || !empresaId) {
     alert("Todos los campos obligatorios deben estar completos.");
     return;
   }

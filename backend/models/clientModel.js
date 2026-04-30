@@ -294,7 +294,8 @@ exports.updateDocumento = async (clienteId, campoDocumento, rutaDocumento) => {
   const camposPermitidos = [
     'consentimiento_informado',
     'historia_clinica',
-    'documentos_adicionales'
+    'documentos_adicionales',
+    'perfil_estres'
   ];
   
   if (!camposPermitidos.includes(campoDocumento)) {

@@ -435,7 +435,7 @@ exports.uploadDocumento = async (req, res) => {
     }
     
     // Validar tipo de documento
-    const tiposValidos = ['consentimiento', 'historia', 'adicionales'];
+    const tiposValidos = ['consentimiento', 'historia', 'adicionales', 'perfil_estres'];
     if (!tiposValidos.includes(tipo)) {
       // Eliminar archivo subido si el tipo no es válido
       const fs = require('fs');
@@ -449,8 +449,9 @@ exports.uploadDocumento = async (req, res) => {
     // Mapear tipo a campo de base de datos
     const campoDocumento = {
       'consentimiento': 'consentimiento_informado',
-      'historia': 'historia_clinica',
-      'adicionales': 'documentos_adicionales'
+      'historia':       'historia_clinica',
+      'adicionales':    'documentos_adicionales',
+      'perfil_estres':  'perfil_estres'
     }[tipo];
     
     // Obtener el cliente para verificar si ya tiene un documento anterior
@@ -536,8 +537,9 @@ exports.getDocumentos = async (req, res) => {
     
     res.json({
       consentimiento_informado: cliente.consentimiento_informado,
-      historia_clinica: cliente.historia_clinica,
-      documentos_adicionales: cliente.documentos_adicionales
+      historia_clinica:         cliente.historia_clinica,
+      documentos_adicionales:   cliente.documentos_adicionales,
+      perfil_estres:            cliente.perfil_estres
     });
     
   } catch (err) {
@@ -552,7 +554,7 @@ exports.deleteDocumento = async (req, res) => {
     const { id, tipo } = req.params;
     
     // Validar tipo de documento
-    const tiposValidos = ['consentimiento', 'historia', 'adicionales'];
+    const tiposValidos = ['consentimiento', 'historia', 'adicionales', 'perfil_estres'];
     if (!tiposValidos.includes(tipo)) {
       return res.status(400).json({ message: "Tipo de documento inválido" });
     }
@@ -560,8 +562,9 @@ exports.deleteDocumento = async (req, res) => {
     // Mapear tipo a campo de base de datos
     const campoDocumento = {
       'consentimiento': 'consentimiento_informado',
-      'historia': 'historia_clinica',
-      'adicionales': 'documentos_adicionales'
+      'historia':       'historia_clinica',
+      'adicionales':    'documentos_adicionales',
+      'perfil_estres':  'perfil_estres'
     }[tipo];
     
     // Obtener la ruta del documento antes de eliminarlo

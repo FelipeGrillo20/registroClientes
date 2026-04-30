@@ -19,6 +19,7 @@ const mesaTrabajoSveRoutes = require("./routes/mesaTrabajoSve");
 const consultasSveRoutes = require("./routes/consultasSve");
 const citasRoutes = require("./routes/citas");
 const creditosRoutes = require("./routes/creditos");
+const entregaResultadosRoutes = require("./routes/entregaResultados");
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use("/api/mesa-trabajo-sve", authMiddleware.verifyToken, mesaTrabajoSveRoute
 app.use("/api/consultas-sve", authMiddleware.verifyToken, consultasSveRoutes);
 app.use("/api/citas", authMiddleware.verifyToken, citasRoutes);
 app.use("/api/creditos", authMiddleware.verifyToken, creditosRoutes);
+app.use("/api/entrega-resultados", authMiddleware.verifyToken, entregaResultadosRoutes);
 
 // Ruta de prueba (pública)
 app.get("/", (req, res) => {
@@ -128,5 +130,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - GET  /api/empresas (Empresas) 🔒`);
   console.log(`   - GET  /api/citas (Agendamiento) 🔒`);
   console.log(`   - GET  /api/creditos (Gestión de Créditos) 🔒`);
+  console.log(`   - GET  /api/entrega-resultados (Entrega Individual de Resultados) 🔒`);
   console.log(`   - GET  /uploads/* (Archivos adjuntos) 📎`);
 });

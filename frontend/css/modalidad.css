@@ -161,9 +161,9 @@ body {
 /* ====== CONTENEDOR DE TARJETAS ====== */
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 25px;
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
   width: 100%;
 }
@@ -205,6 +205,10 @@ body {
   background: linear-gradient(90deg, #56ab2f, #a8e063);
 }
 
+.card-entrega::before {
+  background: linear-gradient(90deg, #f7971e, #ffd200);
+}
+
 .modalidad-card:hover {
   transform: translateY(-10px) scale(1.02);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
@@ -237,6 +241,11 @@ body {
   color: white;
 }
 
+.card-entrega .card-icon {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: white;
+}
+
 .card-icon svg {
   width: 45px;
   height: 45px;
@@ -260,6 +269,10 @@ body {
 
 .card-vigilancia .card-title {
   color: #56ab2f;
+}
+
+.card-entrega .card-title {
+  color: #e07b00;
 }
 
 /* ====== DESCRIPCIÓN ====== */
@@ -298,6 +311,11 @@ body {
   color: #56ab2f;
 }
 
+.card-entrega .card-arrow {
+  background: rgba(247, 151, 30, 0.1);
+  color: #e07b00;
+}
+
 .modalidad-card:hover .card-arrow {
   transform: translateX(5px);
 }
@@ -309,6 +327,11 @@ body {
 
 .card-vigilancia:hover .card-arrow {
   background: #56ab2f;
+  color: white;
+}
+
+.card-entrega:hover .card-arrow {
+  background: #e07b00;
   color: white;
 }
 
@@ -345,36 +368,37 @@ body {
   }
 
   .cards-container {
-    gap: 20px;
-    max-width: 700px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    max-width: 100%;
   }
 
   .modalidad-card {
-    padding: 30px 25px;
-    min-height: 300px;
+    padding: 25px 18px;
+    min-height: 280px;
   }
 
   .card-icon {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 18px;
+    width: 75px;
+    height: 75px;
+    margin-bottom: 15px;
   }
 
   .card-icon svg {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
   }
 
   .card-title {
-    font-size: 1.4em;
+    font-size: 1.2em;
   }
 
   .card-description {
-    font-size: 0.9em;
+    font-size: 0.88em;
   }
 }
 
-/* Móviles */
+/* Tablets medianas - 2 columnas */
 @media (max-width: 768px) {
   body {
     padding: 15px;
@@ -411,32 +435,32 @@ body {
   }
 
   .cards-container {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 
   .modalidad-card {
-    padding: 30px 25px;
-    min-height: 280px;
+    padding: 25px 20px;
+    min-height: 260px;
   }
 
   .card-icon {
-    width: 75px;
-    height: 75px;
-    margin-bottom: 16px;
+    width: 70px;
+    height: 70px;
+    margin-bottom: 14px;
   }
 
   .card-icon svg {
-    width: 38px;
-    height: 38px;
+    width: 35px;
+    height: 35px;
   }
 
   .card-title {
-    font-size: 1.35em;
+    font-size: 1.2em;
   }
 
   .card-description {
-    font-size: 0.9em;
+    font-size: 0.88em;
   }
 
   .card-arrow {
@@ -450,7 +474,7 @@ body {
   }
 }
 
-/* Móviles pequeños */
+/* Móviles pequeños - 1 columna */
 @media (max-width: 480px) {
   body {
     padding: 10px;
@@ -483,9 +507,14 @@ body {
     font-size: 0.9em;
   }
 
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   .modalidad-card {
     padding: 25px 20px;
-    min-height: 260px;
+    min-height: 240px;
   }
 
   .card-icon {
@@ -522,6 +551,6 @@ body {
   }
 
   .modalidades-wrapper {
-    padding: 35px 20px;
+    padding: 30px 15px;
   }
 }

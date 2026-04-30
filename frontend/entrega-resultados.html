@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrega Individual de Resultados</title>
+  <link rel="stylesheet" href="css/entrega-resultados.css" />
+</head>
+<body>
+
+  <!-- Barra de usuario -->
+  <div id="userInfo" class="user-info-bar" style="display: none;"></div>
+
+  <!-- Botón Volver -->
+  <div class="btn-volver-wrapper">
+    <button type="button" class="btn-volver" id="btnVolver" onclick="window.location.href='modalidad.html'">
+      ← Volver
+    </button>
+  </div>
+
+  <div class="page-container">
+    <section class="main-wrapper">
+
+      <!-- Encabezado -->
+      <div class="header-section">
+        <div class="header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="main-title">Entrega Individual de Resultados</h1>
+          <p class="subtitle">Selecciona el profesional y el trabajador para generar la plantilla</p>
+        </div>
+      </div>
+
+      <!-- Formulario de selección -->
+      <div class="form-section">
+
+        <!-- SELECT PROFESIONAL -->
+        <div class="field-group">
+          <label class="field-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profesional
+          </label>
+          <div class="custom-select-wrapper" id="profesionalWrapper">
+            <div class="custom-select-trigger" id="profesionalTrigger" tabindex="0">
+              <span class="trigger-text" id="profesionalText">Seleccionar profesional...</span>
+              <svg class="trigger-arrow" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="custom-select-dropdown" id="profesionalDropdown">
+              <div class="search-box-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-box" id="profesionalSearch" placeholder="Buscar profesional..." autocomplete="off" />
+              </div>
+              <div class="options-list" id="profesionalOptions">
+                <div class="option-loading"><span class="spinner"></span> Cargando profesionales...</div>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="profesionalId" value="" />
+        </div>
+
+        <!-- SELECT TRABAJADOR -->
+        <div class="field-group">
+          <label class="field-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Trabajador
+          </label>
+          <div class="custom-select-wrapper disabled" id="trabajadorWrapper">
+            <div class="custom-select-trigger" id="trabajadorTrigger" tabindex="-1">
+              <span class="trigger-text" id="trabajadorText">Primero selecciona un profesional</span>
+              <svg class="trigger-arrow" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="custom-select-dropdown" id="trabajadorDropdown">
+              <div class="search-box-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-box" id="trabajadorSearch" placeholder="Buscar trabajador..." autocomplete="off" />
+              </div>
+              <div class="options-list" id="trabajadorOptions">
+                <div class="option-empty">Selecciona un profesional primero</div>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="trabajadorId" value="" />
+        </div>
+
+      </div>
+
+      <!-- Tarjeta del trabajador -->
+      <div class="worker-card" id="workerCard" style="display:none;">
+        <div class="worker-card-header">
+          <div class="worker-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div class="worker-header-info">
+            <h3 class="worker-name" id="workerName">—</h3>
+            <span class="worker-badge">Trabajador seleccionado</span>
+          </div>
+        </div>
+        <div class="worker-card-body">
+          <div class="worker-field">
+            <span class="worker-field-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              Cédula
+            </span>
+            <span class="worker-field-value" id="workerCedula">—</span>
+          </div>
+          <div class="worker-field">
+            <span class="worker-field-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.81a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"></path></svg>
+              Teléfono
+            </span>
+            <span class="worker-field-value" id="workerTelefono">—</span>
+          </div>
+        </div>
+        <div class="generate-btn-wrapper">
+          <button type="button" class="btn-generate" id="btnGenerarPlantilla">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            Generar Plantilla
+          </button>
+        </div>
+
+        <!-- Panel de acciones (visible tras guardar) -->
+        <div class="actions-panel" id="actionsPanel" style="display:none;">
+          <div class="actions-divider"></div>
+          <div class="actions-row">
+            <button type="button" class="action-btn action-btn--pdf" id="btnDescargaPDF" title="Descargar PDF">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar PDF
+            </button>
+            <button type="button" class="action-btn action-btn--view" id="btnVerDoc" title="Ver documento">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Ver documento
+            </button>
+            <button type="button" class="action-btn action-btn--edit" id="btnEditar" title="Editar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+            <button type="button" class="action-btn action-btn--delete" id="btnEliminar" title="Eliminar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Contenedor independiente: Perfil Estrés -->
+      <div class="perfil-estres-card" id="perfilEstresCard" style="display:none;">
+        <div class="perfil-estres-header">
+          <div class="perfil-estres-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3 class="perfil-estres-title">Perfil Estrés</h3>
+        </div>
+
+        <div class="perfil-estres-body">
+
+          <!-- Estado: sin archivo -->
+          <div class="upload-zone" id="uploadZone">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p class="upload-text">Arrastra el PDF aquí o <span class="upload-link" id="uploadLink">selecciona un archivo</span></p>
+            <p class="upload-hint">Solo archivos PDF · Máximo 10 MB</p>
+          </div>
+
+          <!-- Estado: archivo seleccionado (pendiente de subir) -->
+          <div class="file-preview" id="filePreview" style="display:none;">
+            <div class="file-preview-info">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div>
+                <p class="file-name" id="fileName">—</p>
+                <p class="file-size" id="fileSize">—</p>
+              </div>
+            </div>
+            <button type="button" class="btn-remove-file" id="btnRemoveFile" title="Quitar archivo">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Estado: archivo ya guardado en BD -->
+          <div class="file-saved" id="fileSaved" style="display:none;">
+            <div class="file-saved-info">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div>
+                <p class="file-saved-label">Perfil Estrés cargado</p>
+                <p class="file-saved-name" id="fileSavedName">—</p>
+              </div>
+            </div>
+            <div class="file-saved-actions">
+              <button type="button" class="btn-file-action btn-file-view" id="btnVerPerfil" title="Ver PDF">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Ver
+              </button>
+              <button type="button" class="btn-file-action btn-file-download" id="btnDescargarPerfil" title="Descargar PDF">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar
+              </button>
+              <button type="button" class="btn-file-action btn-file-replace" id="btnReemplazarPerfil" title="Reemplazar PDF">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Reemplazar
+              </button>
+              <button type="button" class="btn-file-action btn-file-delete" id="btnEliminarPerfil" title="Eliminar PDF">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                Eliminar
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón subir -->
+          <div class="upload-btn-wrapper" id="uploadBtnWrapper" style="display:none;">
+            <button type="button" class="btn-upload-perfil" id="btnSubirPerfil">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Subir Perfil Estrés
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    <div class="footer-section">
+      <p class="footer-text">Sistema de Gestión de Trabajadores v2.0</p>
+    </div>
+  </div>
+
+  <!-- Modal Plantilla -->
+  <div class="modal-overlay" id="modalPlantilla" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title">Generar Plantilla de Resultados</h2>
+        <button type="button" class="modal-close" id="modalClose">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-auto-fields">
+          <div class="auto-field">
+            <span class="auto-label">Trabajador</span>
+            <span class="auto-value" id="modalNombre">—</span>
+          </div>
+        </div>
+        <div class="modal-form-row">
+          <div class="modal-field-group">
+            <label class="modal-label">Fecha aplicación perfil del estrés</label>
+            <input type="date" class="modal-input" id="fechaAplicacion" />
+          </div>
+          <div class="modal-field-group">
+            <label class="modal-label">Fecha de retroalimentación</label>
+            <input type="date" class="modal-input" id="fechaRetroalimentacion" />
+          </div>
+        </div>
+        <div class="modal-field-group">
+          <label class="modal-label">Título de la sección</label>
+          <input type="text" class="modal-input" id="tituloSeccion" value="RECOMENDACIONES PARA EL TRABAJADOR" />
+        </div>
+        <div class="modal-field-group">
+          <label class="modal-label">Recomendaciones / Mensaje</label>
+          <div class="editor-wrapper">
+
+            <!-- Barra de herramientas -->
+            <div class="editor-toolbar" id="editorToolbar">
+
+              <!-- Formato básico -->
+              <button type="button" class="toolbar-btn" data-cmd="bold" title="Negrita (Ctrl+B)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="italic" title="Cursiva (Ctrl+I)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="underline" title="Subrayado (Ctrl+U)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/></svg>
+              </button>
+
+              <div class="toolbar-divider"></div>
+
+              <!-- Alineación -->
+              <button type="button" class="toolbar-btn" data-cmd="justifyLeft" title="Alinear izquierda">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="justifyCenter" title="Centrar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="justifyRight" title="Alinear derecha">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="justifyFull" title="Justificar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18v-2H3v2zm0-4h18V7H3v2zm0-6v2h18V3H3z"/></svg>
+              </button>
+
+              <div class="toolbar-divider"></div>
+
+              <!-- Listas -->
+              <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList" title="Lista con viñetas">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" data-cmd="insertOrderedList" title="Lista numerada">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+              </button>
+
+              <div class="toolbar-divider"></div>
+
+              <!-- Limpiar todo -->
+              <button type="button" class="toolbar-btn toolbar-btn--clear" id="btnLimpiarEditor" title="Limpiar todo el texto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              </button>
+
+            </div><!-- /toolbar -->
+
+            <!-- Área editable -->
+            <div class="editor-content"
+                 id="recomendaciones"
+                 contenteditable="true"
+                 spellcheck="true"
+                 data-placeholder="Escribe aquí las recomendaciones personalizadas para el trabajador...">
+            </div>
+
+          </div><!-- /editor-wrapper -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="btnCancelar">Cancelar</button>
+        <button type="button" class="btn-save" id="btnGuardar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/entrega-resultados.js"></script>
+</body>
+</html>

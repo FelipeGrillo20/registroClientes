@@ -87,7 +87,9 @@ exports.login = async (req, res) => {
         cedula: user.cedula,
         nombre: user.nombre,
         email: user.email,
-        rol: user.rol
+        rol: user.rol,
+        licencia: user.licencia || null,
+        telefono: user.telefono || null
       }
     });
 
@@ -132,7 +134,9 @@ exports.verifyToken = async (req, res) => {
         cedula: user.cedula,
         nombre: user.nombre,
         email: user.email,
-        rol: user.rol
+        rol: user.rol,
+        licencia: user.licencia || null,
+        telefono: user.telefono || null
       }
     });
 
@@ -284,7 +288,7 @@ exports.getAllUsers = async (req, res) => {
 // Registrar nuevo usuario (solo admin)
 exports.registerUser = async (req, res) => {
   try {
-    const { cedula, nombre, email, password, rol } = req.body;
+    const { cedula, nombre, email, password, rol, licencia, telefono } = req.body;
 
     console.log("=== REGISTRO DE USUARIO (ADMIN) ===");
     console.log("Cédula:", cedula);
@@ -345,7 +349,9 @@ exports.registerUser = async (req, res) => {
       nombre,
       email: email.toLowerCase(),
       password,
-      rol: rol || 'profesional'
+      rol: rol || 'profesional',
+      licencia: licencia || null,
+      telefono: telefono || null
     });
 
     console.log("Usuario creado exitosamente:", newUser.id);
@@ -377,7 +383,7 @@ exports.registerUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    const { nombre, email, rol } = req.body;
+    const { nombre, email, rol, licencia, telefono } = req.body;
 
     console.log("=== ACTUALIZACIÓN DE USUARIO ===");
     console.log("ID:", userId);
@@ -420,7 +426,9 @@ exports.updateUser = async (req, res) => {
     const updatedUser = await userModel.updateUser(userId, {
       nombre,
       email: email.toLowerCase(),
-      rol
+      rol,
+      licencia: licencia || null,
+      telefono: telefono || null
     });
 
     res.json({

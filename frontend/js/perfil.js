@@ -441,9 +441,11 @@
       
       // Llenar formulario
       document.getElementById('userFormCedula').value = user.cedula;
-      document.getElementById('userFormCedula').readOnly = true; // No permitir cambiar cédula
+      document.getElementById('userFormCedula').readOnly = true;
       document.getElementById('userFormNombre').value = user.nombre;
       document.getElementById('userFormEmail').value = user.email;
+      document.getElementById('userFormLicencia').value = user.licencia || '';
+      document.getElementById('userFormTelefono').value = user.telefono || '';
       document.getElementById('userFormRol').value = user.rol;
       
       // Ocultar campo de contraseña en edición
@@ -468,6 +470,8 @@
     const cedula = document.getElementById('userFormCedula').value.trim();
     const nombre = document.getElementById('userFormNombre').value.trim();
     const email = document.getElementById('userFormEmail').value.trim();
+    const licencia = document.getElementById('userFormLicencia').value.trim();
+    const telefono = document.getElementById('userFormTelefono').value.trim();
     const password = document.getElementById('userFormPassword').value;
     const rol = document.getElementById('userFormRol').value;
     
@@ -502,7 +506,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ nombre, email, rol })
+          body: JSON.stringify({ nombre, email, rol, licencia, telefono })
         });
       } else {
         // Crear nuevo usuario
@@ -512,7 +516,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ cedula, nombre, email, password, rol })
+          body: JSON.stringify({ cedula, nombre, email, password, rol, licencia, telefono })
         });
       }
       

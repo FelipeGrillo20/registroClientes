@@ -391,26 +391,28 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
 
     <!-- Firma -->
     <div class="informe-footer-sve">
-      <div class="firma-seccion-sve">
-        ${rutaFirma ? `
-          <div class="firma-imagen-container-sve">
-            <img src="${rutaFirma}" 
-                 alt="Firma del Profesional" 
-                 class="firma-imagen-sve" 
-                 onerror="this.style.display='none'">
-          </div>
-        ` : ''}
-        <div class="firma-linea-sve"></div>
-        <p class="firma-texto-sve">Firma del Profesional</p>
-        <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
-        ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
-        <p class="firma-datos-sve">
-          Tarjeta Profesional: 142861<br>
-          Licencia SST: 19950
-        </p>
-      </div>
-      <div class="informe-nota-sve">
-        <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos, terapéuticos y de vigilancia epidemiológica ocupacional.
+      <div class="firma-y-nota-sve">
+        <div class="firma-seccion-sve">
+          ${rutaFirma ? `
+            <div class="firma-imagen-container-sve">
+              <img src="${rutaFirma}" 
+                   alt="Firma del Profesional" 
+                   class="firma-imagen-sve" 
+                   onerror="this.style.display='none'">
+            </div>
+          ` : ''}
+          <div class="firma-linea-sve"></div>
+          <p class="firma-texto-sve">Firma del Profesional</p>
+          <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
+          ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
+          <p class="firma-datos-sve">
+            Tarjeta Profesional: 142861<br>
+            Licencia SST: 19950
+          </p>
+        </div>
+        <div class="informe-nota-sve">
+          <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos, terapéuticos y de vigilancia epidemiológica ocupacional.
+        </div>
       </div>
     </div>
 

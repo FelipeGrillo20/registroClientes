@@ -169,13 +169,13 @@
 
       <!-- Cliente Final (Subcontratista) -->
       <div class="form-row">
-        <label for="subcontratista">Cliente Final:</label>
+        <label for="subcontratista">Cliente Final: <span class="required">*</span></label>
         <div class="searchable-select-wrapper">
           <div class="searchable-select-trigger">
             <input type="text" id="subcontratistaSearch" class="searchable-input" placeholder="Buscar subcontratista..." autocomplete="off" readonly />
             <span class="searchable-arrow">▼</span>
           </div>
-          <input type="hidden" id="subcontratista" />
+          <input type="hidden" id="subcontratista" required/>
           <div id="subcontratistaDropdown" class="searchable-dropdown"></div>
         </div>
       </div>

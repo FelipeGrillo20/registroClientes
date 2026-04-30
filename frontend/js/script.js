@@ -937,6 +937,10 @@ form.addEventListener("submit", async (e) => {
 
   const empresaId = document.getElementById("empresaUsuario").value;
   const subcontratistaId = document.getElementById("subcontratista").value;
+  if (!subcontratistaId) {
+  alert("El campo Cliente Final es obligatorio.");
+  return;
+}
   const subcontratistaIdFinal = (subcontratistaId && subcontratistaId !== 'null' && subcontratistaId.trim() !== '') ? parseInt(subcontratistaId) : null;
 
   email = email.toLowerCase();

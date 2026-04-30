@@ -10,23 +10,14 @@
 /* ============================================ */
 .informe-container-sve {
   max-width: 100%;
-  border: 3px solid #2c3e50;
+  border: none;
   padding: 40px;
   background: white;
-  box-shadow: 0 0 0 1px #e0e0e0 inset;
   position: relative;
 }
 
-/* Marco decorativo interno */
 .informe-container-sve::before {
-  content: '';
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  border: 1px solid #95a5a6;
-  pointer-events: none;
+  display: none;
 }
 
 .informe-header-sve {
@@ -266,6 +257,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.sesion-card-sve:last-child {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
 .sesion-card-sve:hover {
   border-color: #56ab2f;
   box-shadow: 0 4px 12px rgba(86, 171, 47, 0.15);
@@ -318,6 +314,8 @@
 
 .sesion-bloque-sve:last-child {
   margin-bottom: 0;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 /* Tabla de Consultas */
@@ -363,20 +361,30 @@
 
 /* Footer del Informe */
 .informe-footer-sve {
-  margin-top: 40px;
+  margin-top: 5px;
   border-top: 2px solid #e9ecef;
-  padding-top: 30px;
+  padding-top: 5px;
+  break-before: avoid;
+  page-break-before: avoid;
 }
 
 .firma-seccion-sve {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* Contenedor que agrupa firma + nota — nunca se parte entre páginas */
+.firma-y-nota-sve {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .firma-imagen-container-sve {
   width: 100%;
   max-width: 300px;
-  margin: 30px auto 15px;
+  margin: 10px auto 5px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -395,29 +403,32 @@
   width: 300px;
   height: 2px;
   background: #2c3e50;
-  margin: 10px auto;
+  margin: 5px auto;
 }
 
 .firma-texto-sve {
   font-size: 14px;
   color: #7f8c8d;
   font-weight: 600;
-  margin-top: 10px;
+  margin-top: 4px;
+  margin-bottom: 0;
 }
 
 .firma-nombre-sve {
   font-size: 13px;
   color: #2c3e50;
   font-weight: 700;
-  margin-top: 5px;
+  margin-top: 2px;
+  margin-bottom: 0;
 }
 
 .firma-datos-sve {
   font-size: 12px;
   color: #7f8c8d;
   font-weight: 600;
-  margin-top: 8px;
-  line-height: 1.6;
+  margin-top: 2px;
+  margin-bottom: 0;
+  line-height: 1.4;
 }
 
 .informe-nota-sve {
@@ -428,6 +439,8 @@
   color: #2c3e50;
   line-height: 1.6;
   border-radius: 8px;
+  break-before: avoid;
+  page-break-before: avoid;
 }
 
 .informe-nota-sve strong {
@@ -473,25 +486,37 @@
     print-color-adjust: exact !important;
   }
 
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
   .sesion-grid-sve {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-   gap: 16px !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
   }
 
   .sesion-bloque-sve {
-  page-break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  html {
+    border: none;
   }
 
   body {
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    box-shadow: none !important;
+    min-height: 100%;
   }
 
   .informe-container-sve {
-    border: 3px solid #2c3e50 !important;
-    padding: 40px !important;
+    border: none !important;
+    outline: none !important;
+    padding: 20px !important;
     box-shadow: none !important;
     background: white !important;
     page-break-after: auto;
@@ -500,14 +525,7 @@
   }
 
   .informe-container-sve::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 10px !important;
-    left: 10px !important;
-    right: 10px !important;
-    bottom: 10px !important;
-    border: 1px solid #95a5a6 !important;
-    pointer-events: none !important;
+    display: none !important;
   }
 
   .informe-header-sve {
@@ -626,7 +644,7 @@
     border-radius: 12px !important;
     padding: 20px !important;
     margin-bottom: 20px !important;
-    page-break-inside: avoid !important;
+    page-break-inside: auto !important;
   }
 
   .sesion-numero-sve {
@@ -661,6 +679,13 @@
     border-top: 2px solid #e9ecef !important;
     padding-top: 30px !important;
     page-break-inside: avoid !important;
+    break-before: avoid !important;
+    page-break-before: avoid !important;
+  }
+
+  .firma-y-nota-sve {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   .firma-linea-sve {
@@ -675,20 +700,16 @@
     padding: 18px !important;
     border-left: 4px solid #ff9800 !important;
     border-radius: 8px !important;
+    break-before: avoid !important;
+    page-break-before: avoid !important;
   }
 
   .informe-section-sve {
     page-break-inside: avoid !important;
   }
 
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
   html, body {
     width: 210mm;
-    height: 297mm;
     background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -697,11 +718,11 @@
   }
 }
 
-/* Grid de dos columnas para historial SVE */
+/* Grid de una columna para historial SVE */
 .sesion-grid-sve {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 /* Cada bloque se comporta como tarjeta */
@@ -714,7 +735,7 @@
 
 /* Si algún bloque debe ocupar todo el ancho */
 .sesion-bloque-sve.full-width {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 /* Eliminar línea verde interna en bloques SVE */
@@ -734,13 +755,11 @@
 @media (max-width: 768px) {
   .informe-container-sve {
     padding: 25px;
+    border: none;
   }
 
   .informe-container-sve::before {
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
+    display: none;
   }
 
   .informe-grid-sve {
@@ -797,14 +816,11 @@
 
   .informe-container-sve {
     padding: 20px;
-    border-width: 2px;
+    border: none;
   }
 
   .informe-container-sve::before {
-    top: 6px;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
+    display: none;
   }
 
   .btn-informe-sve {

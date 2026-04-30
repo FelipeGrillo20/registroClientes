@@ -28,6 +28,7 @@ const MEET_LINKS = {
   // ── ENTORNO PRODUCCIÓN (Hostinger) ─────────────────────────
   // Copia las mismas entradas pero con los IDs del servidor:
   // 5: 'https://meet.google.com/jca-ejwr-tnp',  // Andrés Felipe Buendía en producción
+  4:  'https://meet.google.com/opn-axgr-nrf',
   42: 'https://meet.google.com/mga-xbsq-mhb',
   45: 'https://meet.google.com/yhz-hybz-tqt',
   46: 'https://meet.google.com/vvk-qcxp-uqp',

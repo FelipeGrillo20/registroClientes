@@ -866,11 +866,11 @@ function exportarExcel() {
     let profesional = '-';
 
     if (consulta) {
-      if (consulta.fecha) {
-        const d = new Date(consulta.fecha);
-        fechaConsulta = d.toLocaleDateString('es-CO', {
-          year: 'numeric', month: '2-digit', day: '2-digit'
-        });
+       if (consulta.fecha) {
+       fechaConsulta = consulta.fecha.split('T')[0]
+      .split('-')
+      .reverse()
+      .join('/');
       }
       motivoConsulta = consulta.motivo_consulta || '-';
       numSesion      = sesionNum !== null ? String(sesionNum) : '-';

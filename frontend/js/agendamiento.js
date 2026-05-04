@@ -449,9 +449,12 @@
   async function loadTrabajadores() {
     try {
       const token = window.getAuthToken();
-      // Cargar TODOS los trabajadores de la modalidad sin filtrar por profesional,
-      // para que cualquier profesional pueda agendar primera cita con cualquier trabajador
-      const url = `${API_URL}/api/clients?modalidad=${encodeURIComponent(modalidadPrograma)}`;
+      let url = `${API_URL}/api/clients?modalidad=${encodeURIComponent(modalidadPrograma)}`;
+
+      if (isProfesional) {
+        url += `&profesional_id=${userId}`;
+        console.log('🔒 [ROL] Filtrando trabajadores del profesional:', userId);
+      }
 
       console.log('📡 loadTrabajadores:', url);
       const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -986,28 +989,36 @@
   }
 
   function formatearFecha(fecha) {
-    // Si ya es un objeto Date, usarlo directamente
-    // Si es string, convertirlo
-    let f;
+    // Construir la fecha por partes para evitar conversión de zona horaria.
+    // new Date('YYYY-MM-DD') o new Date('YYYY-MM-DDT00:00:00') son ambiguas
+    // respecto a UTC vs local y producen desfase en servidores fuera de Colombia.
+    let anio, mes, dia;
+
     if (fecha instanceof Date) {
-      f = fecha;
+      // Objeto Date: leer partes locales directamente
+      anio = fecha.getFullYear();
+      mes  = fecha.getMonth() + 1;
+      dia  = fecha.getDate();
     } else if (typeof fecha === 'string') {
-      // Si la fecha viene en formato ISO o similar
-      f = new Date(fecha.includes('T') ? fecha : fecha + 'T00:00:00');
+      // Tomar solo la parte de fecha (antes de 'T') y separar por '-'
+      const soloFecha = fecha.split('T')[0];
+      const partes    = soloFecha.split('-').map(Number);
+      if (partes.length < 3 || partes.some(isNaN)) return 'Fecha inválida';
+      [anio, mes, dia] = partes;
     } else {
       return 'Fecha inválida';
     }
-    
-    // Verificar que sea una fecha válida
-    if (isNaN(f.getTime())) {
-      return 'Fecha inválida';
-    }
-    
-    return f.toLocaleDateString('es-CO', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+
+    // Construir con hora 12:00 local para evitar cualquier desfase por DST
+    const f = new Date(anio, mes - 1, dia, 12, 0, 0);
+
+    if (isNaN(f.getTime())) return 'Fecha inválida';
+
+    return f.toLocaleDateString('es-CO', {
+      weekday: 'long',
+      year:    'numeric',
+      month:   'long',
+      day:     'numeric'
     });
   }
 

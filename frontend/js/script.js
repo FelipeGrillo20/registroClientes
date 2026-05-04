@@ -112,7 +112,6 @@ function setupCamposSVE() {
     form.classList.add('modalidad-sve');
     form.classList.remove('modalidad-op');
     if (sexoInput)  sexoInput.setAttribute('required', 'required');
-    if (cargoInput) cargoInput.setAttribute('required', 'required');
 
   } else {
     // OP: mostrar campos también, pero sin required (opcionales)
@@ -134,15 +133,9 @@ function actualizarObligatoriedadCargo(vinculo) {
   const cargoInput     = document.getElementById('cargo');
   const cargoAsterisco = document.getElementById('cargoAsterisco');
 
-  if (vinculo === 'Familiar Trabajador') {
-    // Opcional: quitar asterisco y required
-    if (cargoInput)     cargoInput.removeAttribute('required');
-    if (cargoAsterisco) cargoAsterisco.style.display = 'none';
-  } else {
-    // Obligatorio: mostrar asterisco y añadir required
-    if (cargoInput)     cargoInput.setAttribute('required', 'required');
-    if (cargoAsterisco) cargoAsterisco.style.display = 'inline';
-  }
+  // Cargo siempre opcional
+  if (cargoInput)     cargoInput.removeAttribute('required');
+  if (cargoAsterisco) cargoAsterisco.style.display = 'none';
 }
 
 // ============================================
@@ -815,7 +808,6 @@ async function loadEmpresas() {
     );
     
     const subcontratistasFormateados = [
-      { value: null, text: 'No Aplica' },
       ...empresas.map(empresa => ({
         value: empresa.id,
         text: empresa.cliente_definitivo || empresa.cliente_final || 'Sin nombre'
@@ -884,12 +876,6 @@ form.addEventListener("submit", async (e) => {
   const estadoCivil     = document.getElementById("estadoCivil")?.value || null;
   const fechaIngreso    = document.getElementById("fechaIngreso")?.value || null;
 
-  // Cargo obligatorio si vínculo es Trabajador (en ambas modalidades)
-  if (vinculo === 'Trabajador' && !cargo) {
-    alert("El campo Cargo es obligatorio para el vínculo Trabajador.");
-    return;
-  }
-
   if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
     if (!sexo) {
       alert("El campo Género es obligatorio para la modalidad SVE.");
@@ -900,23 +886,23 @@ form.addEventListener("submit", async (e) => {
   // ✅ NUEVO: Obtener datos de familiar trabajador si aplica
   let cedulaTrabajador = null;
   let nombreTrabajador = null;
-  
+
   if (vinculo === 'Familiar Trabajador') {
     cedulaTrabajador = document.getElementById("cedulaTrabajador").value.trim();
     nombreTrabajador = toTitleCase(document.getElementById("nombreTrabajador").value.trim()); // ✅ Title Case
-    
+
     // Validar que estos campos estén llenos
     if (!cedulaTrabajador || !nombreTrabajador) {
       alert("Debes completar los datos del trabajador al que está vinculado el familiar");
       return;
     }
-    
+
     // Validar formato de cédula del trabajador
     if (!/^\d+$/.test(cedulaTrabajador)) {
       alert("La cédula del trabajador debe contener solo números.");
       return;
     }
-    
+
     // Validar formato de nombre del trabajador
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ'\s]+$/.test(nombreTrabajador)) {
       alert("El nombre del trabajador solo debe contener letras.");
@@ -1156,7 +1142,7 @@ window.startEdit = async function (id) {
         subcontratistaSelector.setValue(subcontratistaEncontrado.value, subcontratistaEncontrado.text);
       }
     } else if (subcontratistaSelector) {
-      subcontratistaSelector.setValue(null, 'No Aplica');
+      subcontratistaSelector.reset();
     }
     
     document.getElementById("email").value = client.email || "";

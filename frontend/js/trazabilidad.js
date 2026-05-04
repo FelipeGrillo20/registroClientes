@@ -443,11 +443,11 @@ function renderRows(rows) {
     if (consulta) {
       // Fecha consulta formateada
       if (consulta.fecha) {
-        const d = new Date(consulta.fecha);
-        fechaConsulta = d.toLocaleDateString('es-CO', {
-          year: 'numeric', month: '2-digit', day: '2-digit'
-        });
-      }
+      fechaConsulta = consulta.fecha.split('T')[0]
+      .split('-')
+      .reverse()
+      .join('/');
+    }
 
       motivoConsulta = consulta.motivo_consulta
         ? escapeHtml(consulta.motivo_consulta)

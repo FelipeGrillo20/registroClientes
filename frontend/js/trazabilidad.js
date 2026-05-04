@@ -207,7 +207,7 @@ async function loadData() {
 function buildMatrizRows(clients, consultas) {
   const rows = [];
 
-  // Agrupar consultas por cliente_id
+  // ── Mapa de consultas a mostrar (filtradas) agrupadas por cliente
   const consultasPorCliente = {};
   consultas.forEach(c => {
     if (!consultasPorCliente[c.cliente_id]) {
@@ -216,18 +216,39 @@ function buildMatrizRows(clients, consultas) {
     consultasPorCliente[c.cliente_id].push(c);
   });
 
+  // ── Mapa del historial COMPLETO por cliente (para numerar correctamente)
+  // allConsultas siempre contiene todas las sesiones sin filtro de fecha
+  const historialCompleto = {};
+  allConsultas.forEach(c => {
+    if (!historialCompleto[c.cliente_id]) {
+      historialCompleto[c.cliente_id] = [];
+    }
+    historialCompleto[c.cliente_id].push(c);
+  });
+
+  // Pre-calcular el número real de cada consulta por su id
+  const sesionRealPorId = {};
+  Object.values(historialCompleto).forEach(lista => {
+    const ordenadas = [...lista].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    ordenadas.forEach((c, index) => {
+      sesionRealPorId[c.id] = index + 1;
+    });
+  });
+
   clients.forEach(client => {
     const consultasCliente = consultasPorCliente[client.id] || [];
 
     if (consultasCliente.length === 0) {
-      // Cliente sin sesiones → se omite
+      // Cliente sin sesiones en el filtro → se omite
     } else {
-      // Ordenar por fecha ascendente para numerar sesiones 1, 2, 3…
+      // Ordenar las sesiones filtradas por fecha ascendente
       const ordenadas = [...consultasCliente].sort((a, b) =>
         new Date(a.fecha) - new Date(b.fecha)
       );
-      ordenadas.forEach((consulta, index) => {
-        rows.push({ client, consulta, sesionNum: index + 1 });
+      ordenadas.forEach(consulta => {
+        // Usar el número real de sesión del historial completo
+        const sesionNum = sesionRealPorId[consulta.id] ?? null;
+        rows.push({ client, consulta, sesionNum });
       });
     }
   });

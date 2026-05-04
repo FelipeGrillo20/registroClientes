@@ -95,43 +95,9 @@ const CitasController = {
         });
       }
 
-      // ✅ NUEVO: Validación de permisos según reglas de negocio
-      console.log("🔐 [createCita] Verificando permisos...");
-      
-      // Verificar si existe una cita previa entre este trabajador y profesional
-      const existeCitaPrevia = await CitaModel.existeCitaPrevia(
-        citaData.trabajador_id,
-        citaData.profesional_id
-      );
-
-      // REGLA 1: Si es la primera cita, solo administrador puede crearla
-      if (!existeCitaPrevia) {
-        console.log("🆕 [createCita] Primera cita entre trabajador y profesional");
-        
-        if (userRol !== 'admin') {
-          console.log("❌ [createCita] Permiso denegado: Solo administradores pueden crear primera cita");
-          return res.status(403).json({
-            success: false,
-            message: "Solo los administradores pueden crear la primera cita entre un trabajador y un profesional",
-          });
-        }
-        
-        console.log("✅ [createCita] Usuario es administrador, puede crear primera cita");
-      } 
-      // REGLA 2: Si ya existe cita previa, puede crearla administrador O el profesional asignado
-      else {
-        console.log("🔄 [createCita] Ya existe cita previa, validando permisos...");
-        
-        if (userRol !== 'admin' && userId !== citaData.profesional_id) {
-          console.log("❌ [createCita] Permiso denegado: Usuario no es admin ni el profesional asignado");
-          return res.status(403).json({
-            success: false,
-            message: "Solo puedes agendar citas para ti mismo después de la primera cita",
-          });
-        }
-        
-        console.log("✅ [createCita] Permiso concedido para crear cita");
-      }
+      // Cualquier usuario autenticado (admin o profesional) puede crear citas,
+      // incluyendo la primera cita entre un trabajador y un profesional
+      console.log("✅ [createCita] Permiso concedido para crear cita -", userRol);
 
       console.log("🔍 [createCita] Verificando disponibilidad...");
       // Verificar disponibilidad del profesional

@@ -414,6 +414,9 @@
     // Total sesiones
     const totalSesiones = sesiones.length;
 
+    // Total consultas únicas (cliente_id + consulta_number)
+    const totalConsultas = casos.size;
+
     // Casos abiertos: (cliente_id, consulta_number) con al menos 1 sesión abierta
     const casosAbiertos = new Set();
     sesiones.filter(s => s.estado === "Abierto").forEach(s =>
@@ -435,6 +438,7 @@
     sesiones.filter(s => s.consulta_number >= 2).forEach(s => reingresos.add(s.cliente_id));
 
     setText("kpiTrabajadores",  trabConSesion.size); // Solo trabajadores con al menos 1 sesión registrada
+    setText("kpiConsultas",     totalConsultas);
     setText("kpiSesiones",      totalSesiones);
     setText("kpiAbiertos",      casosAbiertos.size);
     setText("kpiConfidenciales",casosConfi.size);
@@ -450,65 +454,43 @@
   // Contamos cada término independiente y ordenamos de mayor a menor.
   function renderMotivos(sesiones) {
     const conteo = {};
-
-    // Agrupar por consulta única (cliente_id + consulta_number).
-    // Solo tomamos UNA sesión por consulta para no duplicar el motivo
-    // cuando hay varias sesiones con el mismo motivo dentro de un caso.
     const consultasVistas = new Set();
 
     sesiones.forEach(s => {
       if (!s.motivo_consulta) return;
-
       const clave = `${s.cliente_id}_${s.consulta_number}`;
-      if (consultasVistas.has(clave)) return; // ya procesamos esta consulta
+      if (consultasVistas.has(clave)) return;
       consultasVistas.add(clave);
-
-      // Separador real en la BD: " | "
-      const partes = s.motivo_consulta
+      s.motivo_consulta
         .split("|")
         .map(m => m.trim().toUpperCase())
-        .filter(m => m.length > 0);
-
-      partes.forEach(m => {
-        conteo[m] = (conteo[m] || 0) + 1;
-      });
+        .filter(m => m.length > 0)
+        .forEach(m => { conteo[m] = (conteo[m] || 0) + 1; });
     });
 
     const container = document.getElementById("tablaMotivos");
     if (!container) return;
 
-    const items = Object.entries(conteo)
-      .sort((a, b) => b[1] - a[1]);   // de mayor a menor
+    const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
 
     if (items.length === 0) {
       container.innerHTML = '<div class="motivos-empty">Sin motivos registrados en el periodo</div>';
       return;
     }
 
-    const maxVal = items[0][1];
+    const TOP = 5;
+    const maxVal         = items[0][1];
     const totalMenciones = items.reduce((s, [, v]) => s + v, 0);
+    const hayMas         = items.length > TOP;
 
-    let html = `
-      <table class="tabla-motivos">
-        <thead>
-          <tr>
-            <th class="td-rank">#</th>
-            <th>Motivo de consulta</th>
-            <th class="td-count">Casos</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-    items.forEach(([motivo, count], idx) => {
+    const filaHTML = ([motivo, count], idx) => {
       const pct    = totalMenciones > 0 ? Math.round((count / totalMenciones) * 100) : 0;
       const barPct = maxVal > 0 ? Math.round((count / maxVal) * 100) : 0;
-      const rankCls = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
-
-      html += `
-        <tr>
-          <td class="td-rank">
-            <span class="rank-badge ${rankCls}">${idx + 1}</span>
-          </td>
+      const rankCls  = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+      const extraCls = idx >= TOP ? "motivo-extra" : "";
+      return `
+        <tr class="${extraCls}">
+          <td class="td-rank"><span class="rank-badge ${rankCls}">${idx + 1}</span></td>
           <td class="td-motivo">
             <div class="motivo-nombre">${motivo}</div>
             <div class="motivo-bar-track">
@@ -520,10 +502,48 @@
             <span class="count-pct">(${pct}%)</span>
           </td>
         </tr>`;
-    });
+    };
 
-    html += "</tbody></table>";
+    let html = `
+      <table class="tabla-motivos" id="tablaMotivosTable">
+        <thead>
+          <tr>
+            <th class="td-rank">#</th>
+            <th>Motivo de consulta</th>
+            <th class="td-count">Casos</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(filaHTML).join("")}
+        </tbody>
+      </table>`;
+
+    // Botón "ver más" solo si hay más de 5
+    if (hayMas) {
+      const restantes = items.length - TOP;
+      html += `
+        <button class="btn-ver-mas-motivos" id="btnVerMasMotivos">
+          Ver ${restantes} motivo${restantes > 1 ? "s" : ""} más
+          <span class="btn-arrow">▼</span>
+        </button>`;
+    }
+
     container.innerHTML = html;
+
+    // Evento del botón ver más
+    if (hayMas) {
+      const btn = document.getElementById("btnVerMasMotivos");
+      btn.addEventListener("click", () => {
+        const expanded = btn.classList.toggle("expanded");
+        document.querySelectorAll(".motivo-extra").forEach(tr =>
+          tr.classList.toggle("visible", expanded)
+        );
+        const restantes = items.length - TOP;
+        btn.childNodes[0].textContent = expanded
+          ? "Ver menos "
+          : `Ver ${restantes} motivo${restantes > 1 ? "s" : ""} más `;
+      });
+    }
   }
 
   // Cuenta consultas únicas (cliente_id + consulta_number), no sesiones individuales.
@@ -1017,6 +1037,7 @@
       esGeneral: !empresaId,
       kpis: {
         trabajadores: trabConSesion.size,
+        consultas: casos.size,
         sesiones: sesiones.length,
         abiertos: casosAbiertos.size,
         confidenciales: casosConfi.size,

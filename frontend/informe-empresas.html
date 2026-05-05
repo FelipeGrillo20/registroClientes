@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informe Empresas · Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/informe-empresas.css" />
+</head>
+<body>
+
+  <!-- Barra de usuario generada por auth-check.js (Mi Perfil / Mapa / Cerrar sesión) -->
+  <div id="userInfo" class="user-info-bar"></div>
+
+  <!-- BARRA SUPERIOR -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <button class="btn-back" id="btnBack">← Volver</button>
+      <div class="page-brand">
+        <span class="brand-icon">🏢</span>
+        <div>
+          <h1 class="brand-title">Informe Empresas</h1>
+          <p class="brand-sub">Panel de seguimiento psicosocial</p>
+        </div>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <span class="last-update" id="lastUpdate">—</span>
+      <button class="btn-refresh" id="btnRefresh" title="Actualizar datos">↻</button>
+    </div>
+  </header>
+
+  <!-- FILTROS -->
+  <section class="filters-bar">
+    <div class="filter-group filter-group-empresa">
+      <label class="filter-label">Empresa</label>
+      <div class="empresa-select-wrapper" id="empresaSelectWrapper">
+        <div class="empresa-trigger" id="empresaTrigger">
+          <span class="empresa-trigger-text" id="empresaTriggerText">Todas las empresas</span>
+          <span class="empresa-arrow">▼</span>
+        </div>
+        <div class="empresa-dropdown" id="empresaDropdown" style="display:none;">
+          <div class="empresa-search-box">
+            <span class="empresa-search-icon">🔍</span>
+            <input type="text" id="empresaSearch" class="empresa-search-input"
+              placeholder="Buscar empresa..." autocomplete="off" />
+            <button type="button" id="empresaSearchClear" class="empresa-search-clear" style="display:none;">✕</button>
+          </div>
+          <div class="empresa-options" id="empresaOptions"></div>
+        </div>
+      </div>
+      <!-- campo oculto que guarda el id seleccionado, lo lee filtrarDatos() -->
+      <input type="hidden" id="filterEmpresa" value="" />
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Sede</label>
+      <select class="filter-select" id="filterSede">
+        <option value="">Todas las sedes</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Modalidad</label>
+      <select class="filter-select" id="filterModalidad">
+        <option value="">Todas</option>
+        <option value="Orientación Psicosocial">Orientación Psicosocial</option>
+        <option value="Sistema de Vigilancia Epidemiológica">SVE</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Año</label>
+      <select class="filter-select" id="filterAnio">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Mes</label>
+      <select class="filter-select" id="filterMes">
+        <option value="">Todo el año</option>
+        <option value="1">Enero</option><option value="2">Febrero</option>
+        <option value="3">Marzo</option><option value="4">Abril</option>
+        <option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option>
+        <option value="9">Septiembre</option><option value="10">Octubre</option>
+        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+    </div>
+    <button class="btn-apply" id="btnApply">Aplicar filtros</button>
+    <button class="btn-clear" id="btnClear">✕ Limpiar filtros</button>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="dashboard-main" id="dashboardMain">
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Cargando datos...</p>
+    </div>
+
+    <!-- SECCIÓN 1: KPIs -->
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">Resumen Ejecutivo</h2>
+        <span class="section-desc">Indicadores clave del periodo seleccionado</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-primary">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Trabajadores atendidos</p>
+            <p class="kpi-value" id="kpiTrabajadores">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon">📋</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Total de sesiones</p>
+            <p class="kpi-value" id="kpiSesiones">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-icon">🔓</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Casos abiertos</p>
+            <p class="kpi-value" id="kpiAbiertos">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-icon">🔒</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Casos confidenciales</p>
+            <p class="kpi-value" id="kpiConfidenciales">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Casos críticos</p>
+            <p class="kpi-value" id="kpiCriticos">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-teal">
+          <div class="kpi-icon">🔁</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Reingresos</p>
+            <p class="kpi-value" id="kpiReingresos">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: TENDENCIA -->
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">Tendencia de Atenciones</h2>
+        <span class="section-desc">Sesiones mensuales y comparación de estados</span>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card chart-wide">
+          <p class="chart-title">Motivos de consulta más frecuentes</p>
+          <div id="tablaMotivos" class="tabla-motivos-wrapper"></div>
+        </div>
+        <div class="chart-card">
+          <p class="chart-title">Abiertos vs Cerrados</p>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartEstados"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: COMPLEJIDAD -->
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">Indicador de Complejidad</h2>
+        <span class="section-desc">Clasificación según sesiones y confidencialidad</span>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <p class="chart-title">Distribución de casos</p>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartComplejidad"></canvas></div>
+        </div>
+        <div class="complexity-legend">
+          <div class="legend-item legend-normal">
+            <div class="legend-dot"></div>
+            <div>
+              <p class="legend-name">Normal</p>
+              <p class="legend-desc">Sin confidencialidad · 1–4 sesiones</p>
+              <p class="legend-count" id="cntNormal">—</p>
+            </div>
+          </div>
+          <div class="legend-item legend-complejo">
+            <div class="legend-dot"></div>
+            <div>
+              <p class="legend-name">Complejo</p>
+              <p class="legend-desc">Sin confidencialidad · 5+ sesiones</p>
+              <p class="legend-count" id="cntComplejo">—</p>
+            </div>
+          </div>
+          <div class="legend-item legend-observacion">
+            <div class="legend-dot"></div>
+            <div>
+              <p class="legend-name">En observación</p>
+              <p class="legend-desc">Con confidencialidad · 1–2 sesiones</p>
+              <p class="legend-count" id="cntObservacion">—</p>
+            </div>
+          </div>
+          <div class="legend-item legend-critico">
+            <div class="legend-dot"></div>
+            <div>
+              <p class="legend-name">Crítico</p>
+              <p class="legend-desc">Con confidencialidad · 3+ sesiones</p>
+              <p class="legend-count" id="cntCritico">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: CASOS CRÍTICOS — DESACTIVADA TEMPORALMENTE
+    <section class="section-block section-alert">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">Casos Críticos <span class="badge-privacy">Sin datos personales</span></h2>
+        <span class="section-desc">Solo conteos y tendencias — no se expone información individual</span>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <p class="chart-title">Evolución mensual</p>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartCriticosEvol"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <p class="chart-title">Distribución por sede</p>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartCriticosSede"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    SECCIÓN 4 FIN -->
+
+    <!-- SECCIÓN 5: CONFIDENCIALIDAD — DESACTIVADA TEMPORALMENTE
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">Indicador de Confidencialidad</h2>
+        <span class="section-desc">Señales de situaciones sensibles sin exponer detalles</span>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card chart-wide">
+          <p class="chart-title">Sesiones confidenciales vs normales por mes</p>
+          <div class="chart-wrap"><canvas id="chartConfiEvol"></canvas></div>
+        </div>
+        <div class="stats-column">
+          <div class="stat-block stat-conf">
+            <p class="stat-label">% Sesiones confidenciales</p>
+            <p class="stat-big" id="pctConfi">—%</p>
+          </div>
+          <div class="stat-block stat-sede">
+            <p class="stat-label">Sede con más casos sensibles</p>
+            <p class="stat-big stat-big-sm" id="sedeMasConfi">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    SECCIÓN 5 FIN -->
+
+    <!-- SECCIÓN 6: COBERTURA -->
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Cobertura del Servicio</h2>
+        <span class="section-desc">Alcance y profundidad de las atenciones</span>
+      </div>
+      <div class="coverage-grid">
+        <div class="cov-card">
+          <p class="cov-label">Trabajadores únicos</p>
+          <p class="cov-value" id="covUnicos">—</p>
+        </div>
+        <div class="cov-card">
+          <p class="cov-label">Promedio sesiones / trabajador</p>
+          <p class="cov-value" id="covPromedio">—</p>
+        </div>
+        <div class="cov-card">
+          <p class="cov-label">Modalidad más frecuente</p>
+          <p class="cov-value cov-value-sm" id="covModalidad">—</p>
+        </div>
+        <div class="cov-card">
+          <p class="cov-label">Sesiones virtuales</p>
+          <p class="cov-value" id="covVirtual">—</p>
+        </div>
+        <div class="cov-card">
+          <p class="cov-label">Sesiones presenciales</p>
+          <p class="cov-value" id="covPresencial">—</p>
+        </div>
+        <div class="cov-card">
+          <p class="cov-label">Sesión más reciente</p>
+          <p class="cov-value cov-value-sm" id="covReciente">—</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 7: ANÁLISIS POR SEDE -->
+    <section class="section-block">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <h2 class="section-title">Análisis por Sede</h2>
+        <span class="section-desc">Distribución de atenciones según ubicación</span>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card chart-wide">
+          <p class="chart-title">Sesiones totales por sede</p>
+          <div class="chart-wrap"><canvas id="chartSedes"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <p class="chart-title">Complejidad por sede</p>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="chartSedesComplejidad"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTÓN IMPRIMIR INFORME -->
+  <div class="print-bar">
+    <button class="btn-print-report" id="btnPrintReport">
+      🖨️ Imprimir informe
+    </button>
+  </div>
+
+  <footer class="dashboard-footer">
+    <p>Dashboard confidencial · Solo para uso interno del equipo profesional</p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="js/informe-empresas.js"></script>
+</body>
+</html>

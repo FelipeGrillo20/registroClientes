@@ -860,6 +860,29 @@ body {
   box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
 
+/* BOTÓN INFORME EMPRESAS */
+.btn-empresas {
+  background: linear-gradient(135deg, #8e44ad, #6c3483);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-empresas:hover {
+  background: linear-gradient(135deg, #6c3483, #5b2c6f);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(142, 68, 173, 0.4);
+}
+
 /* BOTÓN MAPA DE SITIO */
 .btn-sitemap {
   background: rgba(255, 255, 255, 0.25) !important;
@@ -925,6 +948,7 @@ body {
     flex-direction: column;
   }
 
+  .btn-empresas,
   .btn-stats,
   .btn-add-user {
     width: 100%;

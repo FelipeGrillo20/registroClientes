@@ -26,6 +26,7 @@
   const usersManagementSection = document.getElementById("usersManagementSection");
   const btnAddUser = document.getElementById("btnAddUser");
   const btnStats = document.getElementById("btnStats"); // ⭐ NUEVO
+  const btnEmpresas = document.getElementById("btnEmpresas"); // ⭐ NUEVO
   const loadingUsers = document.getElementById("loadingUsers");
   const usersTableContent = document.getElementById("usersTableContent");
   
@@ -298,6 +299,15 @@
       });
     } else {
       console.log("❌ Botón de estadísticas NO encontrado"); // Debug
+    }
+
+    // ⭐ NUEVO: Botón Informe Empresas (solo admin)
+    if (btnEmpresas) {
+      btnEmpresas.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = "informe-empresas.html";
+      });
     }
     
     // Upload de avatar

@@ -8,12 +8,13 @@ exports.createMesaTrabajo = async (req, res) => {
     const {
       cliente_id,
       criterio_inclusion,
+      motivo_evaluacion,
       diagnostico,
       codigo_diagnostico
     } = req.body;
 
     // Validaciones básicas
-    if (!cliente_id || !criterio_inclusion || !diagnostico || !codigo_diagnostico) {
+    if (!cliente_id || !criterio_inclusion || !motivo_evaluacion || !diagnostico || !codigo_diagnostico) {
       return res.status(400).json({ 
         message: "Todos los campos son requeridos" 
       });
@@ -46,6 +47,7 @@ exports.createMesaTrabajo = async (req, res) => {
     const newMesaTrabajo = await mesaTrabajoModel.createMesaTrabajo({
       cliente_id,
       criterio_inclusion,
+      motivo_evaluacion,
       diagnostico,
       codigo_diagnostico
     });
@@ -138,12 +140,13 @@ exports.updateMesaTrabajo = async (req, res) => {
     const { id } = req.params;
     const {
       criterio_inclusion,
+      motivo_evaluacion,
       diagnostico,
       codigo_diagnostico
     } = req.body;
 
     // Validaciones
-    if (!criterio_inclusion || !diagnostico || !codigo_diagnostico) {
+    if (!criterio_inclusion || !motivo_evaluacion || !diagnostico || !codigo_diagnostico) {
       return res.status(400).json({ 
         message: "Todos los campos son requeridos" 
       });
@@ -168,6 +171,7 @@ exports.updateMesaTrabajo = async (req, res) => {
 
     const updatedMesaTrabajo = await mesaTrabajoModel.updateMesaTrabajo(id, {
       criterio_inclusion,
+      motivo_evaluacion,
       diagnostico,
       codigo_diagnostico
     });

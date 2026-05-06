@@ -6,16 +6,17 @@ exports.createMesaTrabajo = async (data) => {
   const {
     cliente_id,
     criterio_inclusion,
+    motivo_evaluacion,
     diagnostico,
     codigo_diagnostico
   } = data;
 
   const result = await pool.query(
     `INSERT INTO mesa_trabajo_sve 
-    (cliente_id, criterio_inclusion, diagnostico, codigo_diagnostico)
-    VALUES ($1, $2, $3, $4)
+    (cliente_id, criterio_inclusion, motivo_evaluacion, diagnostico, codigo_diagnostico)
+    VALUES ($1, $2, $3, $4, $5)
     RETURNING *`,
-    [cliente_id, criterio_inclusion, diagnostico, codigo_diagnostico]
+    [cliente_id, criterio_inclusion, motivo_evaluacion, diagnostico, codigo_diagnostico]
   );
 
   return result.rows[0];
@@ -100,6 +101,7 @@ exports.getMesasTrabajoByProfesional = async (profesionalId) => {
 exports.updateMesaTrabajo = async (id, data) => {
   const {
     criterio_inclusion,
+    motivo_evaluacion,
     diagnostico,
     codigo_diagnostico
   } = data;
@@ -107,12 +109,13 @@ exports.updateMesaTrabajo = async (id, data) => {
   const result = await pool.query(
     `UPDATE mesa_trabajo_sve SET
       criterio_inclusion = $1,
-      diagnostico = $2,
-      codigo_diagnostico = $3,
+      motivo_evaluacion = $2,
+      diagnostico = $3,
+      codigo_diagnostico = $4,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $4
+    WHERE id = $5
     RETURNING *`,
-    [criterio_inclusion, diagnostico, codigo_diagnostico, id]
+    [criterio_inclusion, motivo_evaluacion, diagnostico, codigo_diagnostico, id]
   );
 
   return result.rows[0];

@@ -794,15 +794,10 @@ async function loadEmpresas() {
     
     const empresas = await res.json();
     
-    // Nombre legacy a ocultar (los registros existentes se conservan en BD)
-    const EMPRESAS_OCULTAS = ['Cooperativa Nacional De Droguistas'];
-
-    const empresasFormateadas = empresas
-      .map(empresa => ({
-        value: empresa.id,
-        text: empresa.cliente_final
-      }))
-      .filter(empresa => !EMPRESAS_OCULTAS.includes(empresa.text));
+    const empresasFormateadas = empresas.map(empresa => ({
+      value: empresa.id,
+      text: empresa.cliente_final
+    }));
     
     empresaSelector = new SearchableSelect(
       'empresaUsuarioSearch',
@@ -812,12 +807,12 @@ async function loadEmpresas() {
       (item) => item.text
     );
     
-    const subcontratistasFormateados = empresas
-      .map(empresa => ({
+    const subcontratistasFormateados = [
+      ...empresas.map(empresa => ({
         value: empresa.id,
         text: empresa.cliente_definitivo || empresa.cliente_final || 'Sin nombre'
       }))
-      .filter(empresa => !EMPRESAS_OCULTAS.includes(empresa.text));
+    ];
     
     subcontratistaSelector = new SearchableSelect(
       'subcontratistaSearch',

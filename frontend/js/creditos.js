@@ -32,51 +32,6 @@
     } catch (_) {}
   }
 
-  /**
-   * Limpiar asignaciones huérfanas: entradas cuyo credito_id ya no existe en BD.
-   * Se llama después de cargar los créditos de la página.
-   */
-  async function _limpiarAsignacionesHuerfanas() {
-    try {
-      const token = localStorage.getItem('authToken');
-      // Obtener todos los IDs de créditos existentes en BD (todos los meses del año actual)
-      const now   = new Date();
-      const anio  = now.getFullYear();
-      const meses = [1,2,3,4,5,6,7,8,9,10,11,12];
-      const resultados = await Promise.allSettled(
-        meses.map(m => fetch(
-          `${API_URL}/api/creditos?anio=${anio}&mes=${m}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
-        ).then(r => r.ok ? r.json() : { data: [] }))
-      );
-
-      const idsValidos = new Set();
-      resultados.forEach(r => {
-        if (r.status === 'fulfilled') {
-          const lista = Array.isArray(r.value?.data) ? r.value.data : [];
-          lista.forEach(c => idsValidos.add(String(c.id)));
-        }
-      });
-
-      if (idsValidos.size === 0) return; // No limpiar si no se pudo cargar nada
-
-      let huerfanas = 0;
-      _asignaciones.forEach((valor, clave) => {
-        if (!idsValidos.has(String(valor.credito_id))) {
-          _asignaciones.delete(clave);
-          huerfanas++;
-        }
-      });
-
-      if (huerfanas > 0) {
-        _guardarAsignaciones();
-        console.log(`🧹 Limpiadas ${huerfanas} asignación(es) huérfana(s) del localStorage`);
-      }
-    } catch (err) {
-      console.warn('⚠️ No se pudieron limpiar asignaciones huérfanas:', err);
-    }
-  }
-
   const _asignaciones = _cargarAsignaciones();
 
   // ========== ELEMENTOS DEL DOM ==========
@@ -178,9 +133,6 @@
     elements.filtroAnio.value = now.getFullYear();
     elements.filtroMes.value  = now.getMonth() + 1;
     cargarCreditosFiltrados();
-
-    // Limpiar asignaciones huérfanas en segundo plano (créditos eliminados de BD)
-    setTimeout(() => _limpiarAsignacionesHuerfanas(), 2500);
   }
 
   async function cargarCreditosFiltrados() {
@@ -687,35 +639,17 @@
    * Cargar los créditos disponibles del periodo actual (para el select Formato del modal)
    */
   async function cargarCreditosParaModal() {
-    // Carga TODOS los créditos de todos los meses del año actual y anterior
-    // para que siempre aparezcan disponibles sin importar qué mes esté seleccionado
     try {
-      const token  = localStorage.getItem('authToken');
-      const anio   = new Date().getFullYear();
-      const meses  = [1,2,3,4,5,6,7,8,9,10,11,12];
-      const años   = [anio - 1, anio, anio + 1];
-
-      const resultados = await Promise.allSettled(
-        años.flatMap(a => meses.map(m =>
-          fetch(
-            `${API_URL}/api/creditos?anio=${a}&mes=${m}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
-          ).then(r => r.ok ? r.json() : { data: [] })
-        ))
+      const token = localStorage.getItem('authToken');
+      const anio  = elements.filtroAnio.value || new Date().getFullYear();
+      const mes   = elements.filtroMes.value  || (new Date().getMonth() + 1);
+      const res   = await fetch(
+        `${API_URL}/api/creditos?anio=${anio}&mes=${mes}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
-
-      const todos = resultados
-        .filter(r => r.status === 'fulfilled')
-        .flatMap(r => Array.isArray(r.value?.data) ? r.value.data : []);
-
-      // Deduplicar por id y solo mostrar los que tienen horas disponibles
-      const vistos = new Set();
-      return todos.filter(c => {
-        if (vistos.has(c.id)) return false;
-        vistos.add(c.id);
-        return (c.cantidad_horas - c.horas_consumidas) > 0;
-      });
-
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return (data.success && Array.isArray(data.data)) ? data.data : [];
     } catch (error) {
       console.error('❌ Error al cargar créditos para modal:', error);
       return [];
@@ -1100,17 +1034,6 @@
     // Preseleccionar el profesional de la sesión
     elements.modalProfesional.value = profesionalId;
 
-    // Validar que anio y mes sean valores válidos antes de generar
-    const anioVal = parseInt(elements.modalAnio.value);
-    const mesVal  = parseInt(elements.modalMes.value);
-    if (!anioVal || !mesVal || anioVal < 2026 || mesVal < 1 || mesVal > 12) {
-      // Fallback al mes/año actual si los valores son inválidos
-      const now = new Date();
-      elements.modalAnio.value = now.getFullYear();
-      elements.modalMes.value  = now.getMonth() + 1;
-      console.warn('⚠️ anio/mes inválidos en abrirDetalleDesdeSA, usando fecha actual');
-    }
-
     // Disparar Generar automáticamente
     await generarSesiones();
   }
@@ -1177,12 +1100,9 @@
       }
 
       // Excluir sesiones que ya tienen asignación en el Map _asignaciones
-      // La clave en _asignaciones es: profesionalId_clienteId_sesionId
-      // (igual que como la guarda asignarCreditoFila usando registro.sesion_id)
       const sesionesPendientes = sesiones.filter(s => {
-        const claveDirecta = `${profesionalId}_${s.cliente_id}_${s.id}`;
-        const claveConPref  = `${profesionalId}_${s.cliente_id}_ses_${s.id}`;
-        return !_asignaciones.has(claveDirecta) && !_asignaciones.has(claveConPref);
+        const clave = `${profesionalId}_${s.cliente_id}_${s.id}`;
+        return !_asignaciones.has(clave);
       });
 
       if (sesionesPendientes.length === 0) {

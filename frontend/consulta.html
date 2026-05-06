@@ -1177,20 +1177,6 @@
           </select>
         </div>
 
-        <!-- Motivo de Evaluación y Situación Actual -->
-        <div class="form-group-vigilancia full-width">
-          <label for="motivo_evaluacion_sve">
-            <span class="label-icon">📝</span>
-            Motivo de Evaluación y Situación Actual <span class="required">*</span>
-          </label>
-          <textarea 
-            id="motivo_evaluacion_sve" 
-            rows="4"
-            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
-            required
-          ></textarea>
-        </div>
-
         <!-- Diagnóstico -->
         <div class="form-group-vigilancia">
           <label for="diagnostico">
@@ -1275,6 +1261,21 @@
         <option value="Virtual">Virtual</option>
         <option value="Presencial">Presencial</option>
       </select>
+    </div>
+
+    <!-- Motivo de Evaluación y Situación Actual -->
+    <div class="form-group-vigilancia full-width">
+      <label for="motivo_evaluacion_sve">
+        <span class="label-icon">📝</span>
+        Motivo de Evaluación y Situación Actual <span class="required">*</span>
+      </label>
+      <textarea 
+        id="motivo_evaluacion_sve" 
+        rows="4"
+        placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
+        required
+        disabled
+      ></textarea>
     </div>
 
     <!-- Ajuste a las funciones (ocupa 1 columna) -->

@@ -345,10 +345,6 @@ exports.getSesionesByProfesionalMesAnio = async (profesional_id, anio, mes) => {
 // Se filtra por credito_id IS NULL en tabla citas
 // ============================================
 exports.getSesionesSinAsignacion = async (profesional_id) => {
-  // Devuelve TODAS las sesiones del profesional ordenadas cronológicamente.
-  // El filtro de "sin asignación" se aplica en el frontend usando el Map
-  // _asignaciones del localStorage (las asignaciones van directo a créditos,
-  // no a la tabla citas, por eso no se puede filtrar aquí con NOT EXISTS).
   const result = await pool.query(`
     SELECT
       c.id,
@@ -361,11 +357,17 @@ exports.getSesionesSinAsignacion = async (profesional_id) => {
       c.estado,
       cl.nombre  AS trabajador_nombre,
       cl.cedula  AS trabajador_cedula,
-      EXTRACT(YEAR  FROM c.fecha)::int  AS anio,
-      EXTRACT(MONTH FROM c.fecha)::int  AS mes
+      EXTRACT(YEAR  FROM c.fecha)::int AS anio,
+      EXTRACT(MONTH FROM c.fecha)::int AS mes
     FROM consultas c
     INNER JOIN clients cl ON c.cliente_id = cl.id
     WHERE cl.profesional_id = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM citas ci
+        WHERE ci.trabajador_id = c.cliente_id
+          AND ci.credito_id IS NOT NULL
+          AND DATE_TRUNC('month', ci.fecha) = DATE_TRUNC('month', c.fecha)
+      )
     ORDER BY c.fecha ASC, cl.nombre ASC
   `, [profesional_id]);
   return result.rows;

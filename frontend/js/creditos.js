@@ -641,9 +641,12 @@
   async function cargarCreditosParaModal() {
     try {
       const token = localStorage.getItem('authToken');
-      const anio  = elements.filtroAnio.value || new Date().getFullYear();
-      const mes   = elements.filtroMes.value  || (new Date().getMonth() + 1);
-      const res   = await fetch(
+      // Usar el año/mes seleccionado en los filtros del MODAL (no el de la tabla principal)
+      // Si el modal está abierto usa esos valores; si no, usa los de la tabla como fallback
+      const anio = elements.modalAnio?.value || elements.filtroAnio.value || new Date().getFullYear();
+      const mes  = elements.modalMes?.value  || elements.filtroMes.value  || (new Date().getMonth() + 1);
+
+      const res = await fetch(
         `${API_URL}/api/creditos?anio=${anio}&mes=${mes}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -1034,6 +1037,17 @@
     // Preseleccionar el profesional de la sesión
     elements.modalProfesional.value = profesionalId;
 
+    // Validar que anio y mes sean valores válidos antes de generar
+    const anioVal = parseInt(elements.modalAnio.value);
+    const mesVal  = parseInt(elements.modalMes.value);
+    if (!anioVal || !mesVal || anioVal < 2026 || mesVal < 1 || mesVal > 12) {
+      // Fallback al mes/año actual si los valores son inválidos
+      const now = new Date();
+      elements.modalAnio.value = now.getFullYear();
+      elements.modalMes.value  = now.getMonth() + 1;
+      console.warn('⚠️ anio/mes inválidos en abrirDetalleDesdeSA, usando fecha actual');
+    }
+
     // Disparar Generar automáticamente
     await generarSesiones();
   }
@@ -1100,9 +1114,12 @@
       }
 
       // Excluir sesiones que ya tienen asignación en el Map _asignaciones
+      // La clave en _asignaciones es: profesionalId_clienteId_sesionId
+      // (igual que como la guarda asignarCreditoFila usando registro.sesion_id)
       const sesionesPendientes = sesiones.filter(s => {
-        const clave = `${profesionalId}_${s.cliente_id}_${s.id}`;
-        return !_asignaciones.has(clave);
+        const claveDirecta = `${profesionalId}_${s.cliente_id}_${s.id}`;
+        const claveConPref  = `${profesionalId}_${s.cliente_id}_ses_${s.id}`;
+        return !_asignaciones.has(claveDirecta) && !_asignaciones.has(claveConPref);
       });
 
       if (sesionesPendientes.length === 0) {

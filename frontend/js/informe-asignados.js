@@ -159,7 +159,6 @@
           }
         }
       });
-      console.log('📋 Entradas encontradas para crédito', creditoId, ':', entradas);
 
       loading.style.display = 'none';
 
@@ -229,8 +228,6 @@
         const sesion      = consultas.find(c => String(c.id) === String(entrada.sesion_id));
         // El nombre del trabajador viene de clients, no de consultas
         const cliente     = clientes.find(c => String(c.id) === String(entrada.cliente_id));
-
-        console.log('🔍 Entrada:', entrada, '→ sesion:', sesion?.id, sesion?.fecha, '→ cliente:', cliente?.nombre);
 
         return {
           profesional_nombre: profesional?.nombre || `Profesional #${entrada.profesional_id}`,

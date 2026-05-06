@@ -20,9 +20,7 @@ exports.createConsultaSve = async (req, res) => {
     } = req.body;
 
     // Validaciones
-    if (!cliente_id || !fecha || !modalidad || !motivo_evaluacion || 
-        !ajuste_funciones || !recomendaciones_medicas || !recomendaciones_trabajador || 
-        !recomendaciones_empresa || !estado) {
+    if (!cliente_id || !fecha || !modalidad || !motivo_evaluacion || !estado) {
       return res.status(400).json({ 
         message: "Todos los campos obligatorios deben ser completados" 
       });
@@ -71,10 +69,10 @@ exports.createConsultaSve = async (req, res) => {
       fecha,
       modalidad,
       motivo_evaluacion,
-      ajuste_funciones,
-      recomendaciones_medicas,
-      recomendaciones_trabajador,
-      recomendaciones_empresa,
+      ajuste_funciones: ajuste_funciones || null,
+      recomendaciones_medicas: recomendaciones_medicas || null,
+      recomendaciones_trabajador: recomendaciones_trabajador || null,
+      recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
       estado
     });
@@ -180,9 +178,7 @@ exports.updateConsultaSve = async (req, res) => {
     } = req.body;
 
     // Validaciones
-    if (!fecha || !modalidad || !motivo_evaluacion || 
-        !ajuste_funciones || !recomendaciones_medicas || !recomendaciones_trabajador || 
-        !recomendaciones_empresa || !estado) {
+    if (!fecha || !modalidad || !motivo_evaluacion || !estado) {
       return res.status(400).json({ 
         message: "Todos los campos obligatorios deben ser completados" 
       });
@@ -223,10 +219,10 @@ exports.updateConsultaSve = async (req, res) => {
       fecha,
       modalidad,
       motivo_evaluacion,
-      ajuste_funciones,
-      recomendaciones_medicas,
-      recomendaciones_trabajador,
-      recomendaciones_empresa,
+      ajuste_funciones: ajuste_funciones || null,
+      recomendaciones_medicas: recomendaciones_medicas || null,
+      recomendaciones_trabajador: recomendaciones_trabajador || null,
+      recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
       estado
     });

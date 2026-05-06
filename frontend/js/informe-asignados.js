@@ -138,21 +138,28 @@
       const asignacionesMap = leerAsignaciones();
 
       // 2. Filtrar entradas que corresponden a este creditoId
+      // Clave formato: "profesionalId_clienteId_sesionId"
+      // sesionId puede ser número puro (ej: 42) o con prefijo (ej: ses_42)
       const entradas = [];
       asignacionesMap.forEach((valor, clave) => {
         if (String(valor.credito_id) === String(creditoId)) {
-          // Clave: profesionalId_clienteId_sesionId
-          const partes = clave.split('_');
-          if (partes.length >= 3) {
+          // Separar los 3 segmentos: los IDs son numéricos, la clave es "N_N_N" o "N_N_ses_N"
+          // Usamos una regex para extraer los 3 grupos de forma segura
+          const match = clave.match(/^(\d+)_(\d+)_(.+)$/);
+          if (match) {
+            // sesionId puede ser "42" o "ses_42" — limpiar el prefijo "ses_" si existe
+            const sesionRaw = match[3];
+            const sesionId  = sesionRaw.startsWith('ses_') ? sesionRaw.replace('ses_', '') : sesionRaw;
             entradas.push({
-              profesional_id: partes[0],
-              cliente_id:     partes[1],
-              sesion_id:      partes[2],
+              profesional_id: match[1],
+              cliente_id:     match[2],
+              sesion_id:      sesionId,
               horas:          valor.horas_asignadas || 1
             });
           }
         }
       });
+      console.log('📋 Entradas encontradas para crédito', creditoId, ':', entradas);
 
       loading.style.display = 'none';
 
@@ -220,11 +227,14 @@
       return entradas.map(entrada => {
         const profesional = usuarios.find(u => String(u.id) === String(entrada.profesional_id));
         const sesion      = consultas.find(c => String(c.id) === String(entrada.sesion_id));
+        // El nombre del trabajador viene de clients, no de consultas
         const cliente     = clientes.find(c => String(c.id) === String(entrada.cliente_id));
+
+        console.log('🔍 Entrada:', entrada, '→ sesion:', sesion?.id, sesion?.fecha, '→ cliente:', cliente?.nombre);
 
         return {
           profesional_nombre: profesional?.nombre || `Profesional #${entrada.profesional_id}`,
-          trabajador_nombre:  sesion?.nombre || cliente?.nombre || `Trabajador #${entrada.cliente_id}`,
+          trabajador_nombre:  cliente?.nombre || `Trabajador #${entrada.cliente_id}`,
           fecha_sesion:       sesion?.fecha || null,
           horas:              entrada.horas
         };

@@ -687,20 +687,35 @@
    * Cargar los créditos disponibles del periodo actual (para el select Formato del modal)
    */
   async function cargarCreditosParaModal() {
+    // Carga TODOS los créditos de todos los meses del año actual y anterior
+    // para que siempre aparezcan disponibles sin importar qué mes esté seleccionado
     try {
-      const token = localStorage.getItem('authToken');
-      // Usar el año/mes seleccionado en los filtros del MODAL (no el de la tabla principal)
-      // Si el modal está abierto usa esos valores; si no, usa los de la tabla como fallback
-      const anio = elements.modalAnio?.value || elements.filtroAnio.value || new Date().getFullYear();
-      const mes  = elements.modalMes?.value  || elements.filtroMes.value  || (new Date().getMonth() + 1);
+      const token  = localStorage.getItem('authToken');
+      const anio   = new Date().getFullYear();
+      const meses  = [1,2,3,4,5,6,7,8,9,10,11,12];
+      const años   = [anio - 1, anio, anio + 1];
 
-      const res = await fetch(
-        `${API_URL}/api/creditos?anio=${anio}&mes=${mes}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
+      const resultados = await Promise.allSettled(
+        años.flatMap(a => meses.map(m =>
+          fetch(
+            `${API_URL}/api/creditos?anio=${a}&mes=${m}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          ).then(r => r.ok ? r.json() : { data: [] })
+        ))
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return (data.success && Array.isArray(data.data)) ? data.data : [];
+
+      const todos = resultados
+        .filter(r => r.status === 'fulfilled')
+        .flatMap(r => Array.isArray(r.value?.data) ? r.value.data : []);
+
+      // Deduplicar por id y solo mostrar los que tienen horas disponibles
+      const vistos = new Set();
+      return todos.filter(c => {
+        if (vistos.has(c.id)) return false;
+        vistos.add(c.id);
+        return (c.cantidad_horas - c.horas_consumidas) > 0;
+      });
+
     } catch (error) {
       console.error('❌ Error al cargar créditos para modal:', error);
       return [];

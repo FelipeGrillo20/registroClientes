@@ -108,12 +108,8 @@ exports.createClient = async (req, res) => {
   } catch (err) {
     console.error("Error creando cliente:", err);
 
-    // ✅ Error 23505: violación de unicidad en PostgreSQL (cédula duplicada)
-    if (err.code === '23505' && err.constraint === 'clients_cedula_key') {
-      return res.status(409).json({ 
-        message: "Este trabajador ya fue registrado por otro profesional." 
-      });
-    }
+    // ℹ️ La restricción UNIQUE sobre cédula fue eliminada intencionalmente:
+    //    se permite que distintos profesionales registren el mismo trabajador.
 
     res.status(500).json({ message: "Error al crear cliente" });
   }

@@ -1174,36 +1174,8 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Verificar duplicados
-  if (!editingId) {
-    const duplicadoCedula = cachedClients.some((c) => c.cedula === cedula);
-    if (duplicadoCedula) {
-      alert("⚠️ Ya existe un cliente registrado con esa cédula en esta modalidad");
-      return;
-    }
-    
-    if (email) {
-      const duplicadoEmail = cachedClients.some((c) => c.email === email);
-      if (duplicadoEmail) {
-        alert("⚠️ Ya existe un cliente registrado con ese email en esta modalidad");
-        return;
-      }
-    }
-  } else {
-    const duplicadoCedula = cachedClients.some((c) => c.cedula === cedula && c.id !== editingId);
-    if (duplicadoCedula) {
-      alert("⚠️ Ya existe otro cliente registrado con esa cédula en esta modalidad");
-      return;
-    }
-    
-    if (email) {
-      const duplicadoEmail = cachedClients.some((c) => c.email === email && c.id !== editingId);
-      if (duplicadoEmail) {
-        alert("⚠️ Ya existe otro cliente registrado con ese email en esta modalidad");
-        return;
-      }
-    }
-  }
+  // ℹ️ Validación de cédula duplicada eliminada intencionalmente:
+  //    se permite que distintos profesionales registren el mismo trabajador.
 
   // ✅ NUEVO: Incluir modalidad y datos de familiar trabajador en el objeto
   const nuevoCliente = {

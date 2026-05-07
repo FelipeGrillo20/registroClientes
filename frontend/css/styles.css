@@ -278,6 +278,8 @@ textarea {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   margin-top: -8px;
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 /* Contenedor del input de búsqueda (dentro del dropdown) */
@@ -343,8 +345,7 @@ textarea {
 
 /* Contenedor de la lista de opciones */
 .searchable-options-list {
-  max-height: 250px;
-  overflow-y: auto;
+  /* overflow controlado por .searchable-dropdown */
 }
 
 /* Cada opción en la lista */
@@ -391,6 +392,46 @@ textarea {
 .searchable-options-list::-webkit-scrollbar-thumb:hover {
   background: #95a5a6;
 }
+/* ── Selector agrupado: encabezado de Departamento ── */
+.searchable-group-header {
+  padding: 7px 12px 5px 12px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #2980b9;
+  background: #eef6fb;
+  border-top: 1px solid #d0e8f5;
+  cursor: default;
+  user-select: none;
+  position: sticky;
+  top: 53px; /* altura del .searchable-search-container */
+  z-index: 5;
+}
+.searchable-group-header:first-child {
+  border-top: none;
+}
+
+/* ── Municipio: sangría para diferenciarlo del departamento ── */
+.searchable-option.searchable-option-municipio {
+  padding-left: 22px;
+}
+.searchable-option.searchable-option-municipio::before {
+  content: "›  ";
+  color: #2980b9;
+  opacity: 0.55;
+}
+
+/* Resaltado por teclado */
+.searchable-option.highlighted {
+  background-color: #2980b9 !important;
+  color: #fff !important;
+}
+.searchable-option.highlighted::before {
+  color: #fff;
+  opacity: 1;
+}
+
 /* ============================================ */
 /* ESTILOS PARA EL CAMPO CÉDULA CON BOTÓN */
 /* ============================================ */

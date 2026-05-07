@@ -37,15 +37,42 @@ const ENTIDADES = {
   CCF: ['Colsubsidio', 'Compensar', 'CAFAM', 'Comfama']
 };
 
-// Lista de sedes (todas las capitales de departamento de Colombia)
-const SEDES = [
-  'Neiva', 'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Pereira', 'Leticia',
-  'Arauca', 'Cartagena de Indias', 'Tunja', 'Manizales', 'Florencia', 'Yopal',
-  'Popayán', 'Valledupar', 'Quibdó', 'Montería', 'Inírida', 'San José del Guaviare',
-  'Riohacha', 'Santa Marta', 'Villavicencio', 'San Juan de Pasto', 'Cúcuta',
-  'Mocoa', 'Armenia', 'San Andrés', 'Bucaramanga', 'Sincelejo', 'Ibagué', 'Mitú',
-  'Puerto Carreño'
-].sort();
+// Lista de sedes agrupadas por departamento — Colombia 2026
+const SEDES_POR_DEPARTAMENTO = {
+  "Amazonas": ["El Encanto", "La Chorrera", "La Pedrera", "La Victoria", "Leticia", "Miriti - Paraná", "Puerto Alegria", "Puerto Arica", "Puerto Nariño", "Puerto Santander", "Tarapacá"],
+  "Antioquia": ["Abejorral", "Abriaquí", "Alejandría", "Amaga", "Amalfi", "Andes", "Angelopolis", "Angostura", "Anorí", "Anza", "Apartadó", "Arboletes", "Argelia", "Armenia", "Barbosa", "Bello", "Belmira", "Betania", "Betulia", "Briceño", "Buriticá", "Caicedo", "Caldas", "Campamento", "Caracolí", "Caramanta", "Carepa", "Carmen de Viboral", "Carolina", "Caucasia", "Cañasgordas", "Chigorodó", "Cisneros", "Ciudad Bolívar", "Cocorná", "Concepción", "Concordia", "Copacabana", "Cáceres", "Dabeiba", "Don Matias", "Ebéjico", "El Bagre", "Entrerrios", "Envigado", "Fredonia", "Frontino", "Giraldo", "Girardota", "Granada", "Guadalupe", "Guarne", "Guatape", "Gómez Plata", "Heliconia", "Hispania", "Itagui", "Ituango", "Jardín", "Jericó", "La Ceja", "La Estrella", "La Pintada", "La Unión", "Liborina", "Maceo", "Marinilla", "Medellín", "Montebello", "Murindó", "Mutata", "Nariño", "Nechí", "Necoclí", "Olaya", "Peque", "Peñol", "Pueblorrico", "Puerto Berrio", "Puerto Nare", "Puerto Triunfo", "Remedios", "Retiro", "Rionegro", "Sabanalarga", "Sabaneta", "Salgar", "San Andrés", "San Carlos", "San Francisco", "San Jerónimo", "San José de la Montaña", "San Juan de Uraba", "San Luis", "San Pedro", "San Pedro de Uraba", "San Rafael", "San Roque", "San Vicente", "Santa Barbara", "Santa Rosa de Osos", "Santafé de Antioquia", "Santo Domingo", "Santuario", "Segovia", "Sonson", "Sopetran", "Tarazá", "Tarso", "Titiribí", "Toledo", "Turbo", "Támesis", "Uramita", "Urrao", "Valdivia", "Valparaiso", "Vegachí", "Venecia", "Vigía del Fuerte", "Yalí", "Yarumal", "Yolombó", "Yondó", "Zaragoza"],
+  "Arauca": ["Arauca", "Arauquita", "Cravo Norte", "Fortul", "Puerto Rondón", "Saravena", "Tame"],
+  "Archipielago de San Andres": ["Providencia y Santa Catalina", "San Andrés"],
+  "Atlántico": ["Baranoa", "Barranquilla", "Campo de la Cruz", "Candelaria", "Galapa", "Juan de Acosta", "Luruaco", "Malambo", "Manati", "Palmar de Varela", "Piojó", "Polonuevo", "Ponedera", "Puerto Colombia", "Repelon", "Sabanagrande", "Sabanalarga", "Santa Lucia", "Santo Tomas", "Soledad", "Suan", "Tubara", "Usiacuri"],
+  "Bogotá D.C.": ["Bogotá D.C."],
+  "Bolivar": ["Achí", "Altos del Rosario", "Arenal", "Arjona", "Arroyohondo", "Barranco de Loba", "Calamar", "Cantagallo", "Carmen de Bolívar", "Cartagena", "Cicuco", "Clemencia", "Córdoba", "El Guamo", "El Peñon", "Hatillo de Loba", "Magangué", "Mahates", "Margarita", "María la Baja", "Mompós", "Montecristo", "Morales", "Pinillos", "Regidor", "Río Viejo", "San Cristobal", "San Estanislao", "San Fernando", "San Jacinto", "San Jacinto del Cauca", "San Juan Nepomuceno", "San Martin de Loba", "San Pablo", "Santa Catalina", "Santa Rosa de Lima", "Santa Rosa del Sur", "Simití", "Soplaviento", "Talaigua Nuevo", "Tiquisio", "Turbaco", "Turbana", "Villanueva", "Zambrano"],
+  "Boyacá": ["Almeida", "Aquitania", "Arcabuco", "Belén", "Berbeo", "Betéitiva", "Boavita", "Boyacá", "Briceño", "Buenavista", "Busbanzá", "Caldas", "Campohermoso", "Cerinza", "Chinavita", "Chiquinquirá", "Chiscas", "Chita", "Chitaraque", "Chivatá", "Chivor", "Chíquiza", "Ciénega", "Coper", "Corrales", "Covarachía", "Cubará", "Cucaita", "Cuítiva", "Cómbita", "Duitama", "El Cocuy", "El Espino", "Firavitoba", "Floresta", "Gachantivá", "Gameza", "Garagoa", "Guacamayas", "Guateque", "Guayatá", "Güicán", "Iza", "Jenesano", "Jericó", "La Capilla", "La Uvita", "La Victoria", "Labranzagrande", "Macanal", "Maripí", "Miraflores", "Mongua", "Monguí", "Moniquirá", "Motavita", "Muzo", "Nobsa", "Nuevo Colón", "Oicatá", "Otanche", "Pachavita", "Paipa", "Pajarito", "Panqueba", "Pauna", "Paya", "Paz de Río", "Pesca", "Pisba", "Puerto Boyaca", "Páez", "Quípama", "Ramiriquí", "Rondón", "Ráquira", "Saboyá", "Samacá", "San Eduardo", "San José de Pare", "San Luis de Gaceno", "San Mateo", "San Miguel de Sema", "San Pablo Borbur", "San Rosa Viterbo", "Santa María", "Santa Sofía", "Santana", "Sativanorte", "Sativasur", "Siachoque", "Soatá", "Socha", "Socotá", "Sogamoso", "Somondoco", "Sora", "Soracá", "Sotaquirá", "Susacón", "Sutamarchán", "Sutatenza", "Sáchica", "Tasco", "Tenza", "Tibaná", "Tibasosa", "Tinjacá", "Tipacoque", "Toca", "Togüí", "Tota", "Tunja", "Tununguá", "Turmequé", "Tuta", "Tutazá", "Tópaga", "Umbita", "Ventaquemada", "Villa de Leyva", "Viracachá", "Zetaquira"],
+  "Caldas": ["Aguadas", "Anserma", "Aranzazu", "Belalcázar", "Chinchina", "Filadelfia", "La Dorada", "La Merced", "Manizales", "Manzanares", "Marmato", "Marquetalia", "Marulanda", "Neira", "Norcasia", "Palestina", "Pensilvania", "Pácora", "Riosucio", "Risaralda", "Salamina", "Samaná", "San José", "Supía", "Victoria", "Villamaria", "Viterbo"],
+  "Caqueta": ["Albania", "Belén de los Andaquies", "Cartagena del Chairá", "Currillo", "El Doncello", "El Paujil", "Florencia", "La Montañita", "Milan", "Morelia", "Puerto Rico", "San Jose del Fragua", "San Vicente del Caguán", "Solano", "Solita", "Valparaiso"],
+  "Casanare": ["Aguazul", "Chameza", "Hato Corozal", "La Salina", "Maní", "Monterrey", "Nunchía", "Orocué", "Paz de Ariporo", "Pore", "Recetor", "Sabanalarga", "San Luis de Palenque", "Sácama", "Tauramena", "Trinidad", "Támara", "Villanueva", "Yopal"],
+  "Cauca": ["Almaguer", "Argelia", "Balboa", "Bolívar", "Buenos Aires", "Cajibío", "Caldono", "Caloto", "Corinto", "El Tambo", "Florencia", "Guapi", "Inzá", "Jambalo", "La Sierra", "La Vega", "Lopez", "Mercaderes", "Miranda", "Morales", "Padilla", "Paez", "Patia", "Piamonte", "Piendamo", "Popayán", "Puerto Tejada", "Purace", "Rosas", "San Sebastian", "Santa Rosa", "Santander de Quilichao", "Silvia", "Sotara", "Suarez", "Sucre", "Timbio", "Timbiqui", "Toribio", "Totoro", "Villa Rica"],
+  "Cesar": ["Aguachica", "Agustín Codazzi", "Astrea", "Becerril", "Bosconia", "Chimichagua", "Chiriguana", "Curumaní", "El Copey", "El Paso", "Gamarra", "González", "La Gloria", "La Jagua de Ibirico", "La Paz", "Manaure", "Pailitas", "Pelaya", "Pueblo Bello", "Río de Oro", "San Alberto", "San Diego", "San Martín", "Tamalameque", "Valledupar"],
+  "Choco": ["Acandí", "Alto Baudó", "Atrato", "Bagadó", "Bahía Solano", "Bajo Baudó", "Belén de Bajira", "Bojaya", "Canton de San Pablo", "Carmén del Darién", "Certegui", "Condoto", "El Carmen de Atrato", "El Litoral del San Juan", "Itsmina", "Juradó", "Lloró", "Medio Atrato", "Medio Baudó", "Medio San Juan", "Nuquí", "Nóvita", "Quibdó", "Rio Quito", "Riosucio", "Río Frío", "San José del Palmar", "Sipí", "Tadó", "Unguía", "Union Panamericana"],
+  "Cordoba": ["Ayapel", "Buenavista", "Canalete", "Cereté", "Chimá", "Chinú", "Ciénaga de Oro", "Cotorra", "La Apartada", "Lorica", "Los Córdobas", "Momil", "Montelíbano", "Montería", "Moñitos", "Planeta Rica", "Pueblo Nuevo", "Puerto Escondido", "Puerto Libertador", "Purísima", "Sahagún", "San Andrés Sotavento", "San Antero", "San Bernardo del Viento", "San Carlos", "San Pelayo", "Tierralta", "Valencia"],
+  "Cundinamarca": ["Agua de Dios", "Albán", "Anapoima", "Anolaima", "Apulo", "Arbeláez", "Beltrán", "Bituima", "Bojacá", "Cabrera", "Cachipay", "Cajicá", "Caparrapí", "Caqueza", "Carmen de Carupa", "Chaguaní", "Chipaque", "Choachí", "Chocontá", "Chía", "Cogua", "Cota", "Cucunubá", "El Colegio", "El Peñón", "El Rosal", "Facatativá", "Fomeque", "Fosca", "Funza", "Fusagasugá", "Fúquene", "Gachala", "Gachancipá", "Gacheta", "Gama", "Girardot", "Granada", "Guachetá", "Guaduas", "Guasca", "Guataquí", "Guatavita", "Guayabal de Siquima", "Guayabetal", "Gutiérrez", "Jerusalén", "Junín", "La Calera", "La Mesa", "La Palma", "La Peña", "La Vega", "Lenguazaque", "Macheta", "Madrid", "Manta", "Medina", "Mosquera", "Nariño", "Nemocon", "Nilo", "Nimaima", "Nocaima", "Pacho", "Paime", "Pandi", "Paratebueno", "Pasca", "Puerto Salgar", "Puli", "Quebradanegra", "Quetame", "Quipile", "Ricaurte", "San Antonio de Tequendama", "San Bernardo", "San Cayetano", "San Francisco", "San Juan de Río Seco", "Sasaima", "Sesquilé", "Sibaté", "Silvania", "Simijaca", "Soacha", "Sopó", "Subachoque", "Suesca", "Supatá", "Susa", "Sutatausa", "Tabio", "Tausa", "Tena", "Tenjo", "Tibacuy", "Tibirita", "Tocaima", "Tocancipá", "Topaipi", "Ubalá", "Ubaque", "Ubate", "Une", "Venecia", "Vergara", "Vianí", "Villagomez", "Villapinzón", "Villeta", "Viotá", "Yacopí", "Zipacon", "Zipaquirá", "Útica"],
+  "Guainia": ["Barranco Mina", "Cacahual", "Inírida", "La Guadalupe", "Mapiripan", "Morichal", "Pana Pana", "Puerto Colombia", "San Felipe"],
+  "Guaviare": ["Calamar", "El Retorno", "Miraflores", "San José del Guaviare"],
+  "Huila": ["Acevedo", "Agrado", "Aipe", "Algeciras", "Altamira", "Baraya", "Campoalegre", "Colombia", "Elías", "Garzón", "Gigante", "Guadalupe", "Hobo", "Iquira", "Isnos", "La Argentina", "La Plata", "Neiva", "Nátaga", "Oporapa", "Paicol", "Palermo", "Palestina", "Pital", "Pitalito", "Rivera", "Saladoblanco", "San Agustín", "Santa María", "Suaza", "Tarqui", "Tello", "Teruel", "Tesalia", "Timaná", "Villavieja", "Yaguará"],
+  "La Guajira": ["Albania", "Barrancas", "Dibulla", "Distraccion", "El Molino", "Fonseca", "Hatonuevo", "La Jagua del Pilar", "Maicao", "Manaure", "Riohacha", "San Juan del Cesar", "Uribia", "Urumita", "Villanueva"],
+  "Magdalena": ["Algarrobo", "Aracataca", "Ariguaní", "Cerro San Antonio", "Chibolo", "Ciénaga", "Concordia", "El Banco", "El Piñon", "El Reten", "Fundacion", "Guamal", "Nueva Granada", "Pedraza", "Pijiño del Carmen", "Pivijay", "Plato", "Pueblo Viejo", "Remolino", "Sabanas de San Angel", "Salamina", "San Sebastian de Buenavista", "San Zenon", "Santa Ana", "Santa Barbara de Pinto", "Santa Marta", "Sitionuevo", "Tenerife", "Zapayan", "Zona Bananera"],
+  "Meta": ["Acacias", "Barranca de Upia", "Cabuyaro", "Castilla la Nueva", "Cumaral", "El Calvario", "El Castillo", "El Dorado", "Fuente de Oro", "Granada", "Guamal", "La Macarena", "La Uribe", "Lejanías", "Mapiripan", "Mesetas", "Puerto Concordia", "Puerto Gaitán", "Puerto Lleras", "Puerto Lopez", "Puerto Rico", "Restrepo", "San Carlos Guaroa", "San Juan de Arama", "San Juanito", "San Luis de Cubarral", "San Martín", "Villavicencio", "Vista Hermosa"],
+  "Nariño": ["Alban", "Aldana", "Ancuya", "Arboleda", "Barbacoas", "Belen", "Buesaco", "Chachagui", "Colon", "Consaca", "Contadero", "Cuaspud", "Cumbal", "Cumbitara", "Córdoba", "El Charco", "El Peñol", "El Rosario", "El Tablon de Gomez", "El Tambo", "Francisco Pizarro", "Funes", "Guachucal", "Guaitarilla", "Gualmatan", "Iles", "Imues", "Ipiales", "La Cruz", "La Florida", "La Llanada", "La Tola", "La Union", "Leiva", "Linares", "Los Andes", "Magui", "Mallama", "Mosquera", "Nariño", "Olaya Herrera", "Ospina", "Pasto", "Policarpa", "Potosí", "Providencia", "Puerres", "Pupiales", "Ricaurte", "Roberto Payan", "Samaniego", "San Bernardo", "San Lorenzo", "San Pablo", "San Pedro de Cartago", "Sandoná", "Santa Barbara", "Santa Cruz", "Sapuyes", "Taminango", "Tangua", "Tumaco", "Tuquerres", "Yacuanquer"],
+  "Norte de Santander": ["Abrego", "Arboledas", "Bochalema", "Bucarasica", "Cachirá", "Chinácota", "Chitagá", "Convención", "Cucutilla", "Cácota", "Cúcuta", "Durania", "El Carmen", "El Tarra", "El Zulia", "Gramalote", "Hacarí", "Herrán", "La Esperanza", "La Playa", "Labateca", "Los Patios", "Lourdes", "Mutiscua", "Ocaña", "Pamplona", "Pamplonita", "Puerto Santander", "Ragonvalia", "Salazar", "San Calixto", "San Cayetano", "Santiago", "Sardinata", "Silos", "Teorama", "Tibú", "Toledo", "Villa Caro", "Villa del Rosario"],
+  "Putumayo": ["Colón", "Mocoa", "Orito", "Puerto Asis", "Puerto Caicedo", "Puerto Guzman", "Puerto Leguizamo", "San Francisco", "San Miguel", "Santiago", "Sibundoy", "Valle del Guamuez", "Villa Garzon"],
+  "Quindio": ["Armenia", "Buenavista", "Calarca", "Circasia", "Cordoba", "Filandia", "Genova", "La Tebaida", "Montengro", "Pijao", "Quimbaya", "Salento"],
+  "Risaralda": ["Apía", "Balboa", "Belén de Umbría", "Dosquebradas", "Guática", "La Celia", "La Virginia", "Marsella", "Mistrató", "Pereira", "Pueblo Rico", "Quinchia", "Santa Rosa de Cabal", "Santuario"],
+  "Santander": ["Aguada", "Albania", "Aratoca", "Barbosa", "Barichara", "Barrancabermeja", "Betulia", "Bolívar", "Bucaramanga", "Cabrera", "California", "Capitanejo", "Carcasí", "Cepitá", "Cerrito", "Charalá", "Charta", "Chima", "Chipatá", "Cimitarra", "Concepción", "Confines", "Contratación", "Coromoro", "Curití", "El Carmen de Chucurí", "El Guacamayo", "El Peñón", "El Playón", "Encino", "Enciso", "Floridablanca", "Florián", "Galán", "Gambita", "Girón", "Guaca", "Guadalupe", "Guapotá", "Guavatá", "Guepsa", "Hato", "Jesús María", "Jordán", "La Belleza", "La Paz", "Landázuri", "Lebríja", "Los Santos", "Macaravita", "Matanza", "Mogotes", "Molagavita", "Málaga", "Ocamonte", "Oiba", "Onzaga", "Palmar", "Palmas del Socorro", "Piedecuesta", "Pinchote", "Puente Nacional", "Puerto Parra", "Puerto Wilches", "Páramo", "Rionegro", "Sabana de Torres", "San Andrés", "San Benito", "San Gil", "San Joaquín", "San José de Miranda", "San Miguel", "San Vicente de Chucurí", "Santa Bárbara", "Santa Helena del Opón", "Simacota", "Socorro", "Suaita", "Sucre", "Surata", "Tona", "Valle de San José", "Vetas", "Villanueva", "Vélez", "Zapatoca"],
+  "Sucre": ["Buenavista", "Caimito", "Chalán", "Coloso", "Corozal", "Coveñas", "El Roble", "Galeras", "Guaranda", "La Unión", "Los Palmitos", "Majagual", "Morroa", "Ovejas", "Palmito", "Sampués", "San Benito Abad", "San Juan Betulia", "San Marcos", "San Onofre", "San Pedro", "Santiago de Tolú", "Sincelejo", "Sincé", "Sucre", "Tolú Viejo"],
+  "Tolima": ["Alpujarra", "Alvarado", "Ambalema", "Anzoátegui", "Armero", "Ataco", "Cajamarca", "Carmen de Apicalá", "Casabianca", "Chaparral", "Coello", "Coyaima", "Cunday", "Dolores", "Espinal", "Falan", "Flandes", "Fresno", "Guamo", "Herveo", "Honda", "Ibague", "Icononzo", "Lerida", "Libano", "Mariquita", "Melgar", "Murillo", "Natagaima", "Ortega", "Palocabildo", "Piedras", "Planadas", "Prado", "Purificación", "Rioblanco", "Roncesvalles", "Rovira", "Saldaña", "San Antonio", "San Luis", "Santa Isabel", "Suárez", "Valle de San Juan", "Venadillo", "Villahermosa", "Villarrica"],
+  "Valle del Cauca": ["Alcala", "Andalucía", "Ansermanuevo", "Argelia", "Bolívar", "Buenaventura", "Buga", "Bugalagrande", "Caicedonia", "Cali", "Calima", "Candelaria", "Cartago", "Dagua", "El Cairo", "El Cerrito", "El Dovio", "El Águila", "Florida", "Ginebra", "Guacarí", "Jamundí", "La Cumbre", "La Unión", "La Victoria", "Obando", "Palmira", "Pradera", "Restrepo", "Riofrio", "Roldanillo", "San Pedro", "Sevilla", "Toro", "Trujillo", "Tuluá", "Ulloa", "Versalles", "Vijes", "Yotoco", "Yumbo", "Zarzal"],
+  "Vaupes": ["Caruru", "Mitú", "Pacoa", "Papunahua", "Taraira", "Yavaraté"],
+  "Vichada": ["Cumaribo", "La Primavera", "Puerto Carreño", "Santa Rosalía"],
+};
 
 // Función para obtener el token de autenticación
 function getAuthToken() {
@@ -302,8 +329,194 @@ function cerrarModalFamiliar() {
   modalOverlay.style.display = 'none';
 }
 
+// Normaliza texto: quita tildes y convierte a minúsculas para búsqueda robusta
+function normalizeText(str) {
+  return str.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 // ============================================
-// CLASE PARA SELECT CON BÚSQUEDA
+// CLASE PARA SELECT AGRUPADO POR DEPARTAMENTO
+// ============================================
+class GroupedSearchableSelect {
+  constructor(inputId, hiddenId, dropdownId, groupedData) {
+    this.input       = document.getElementById(inputId);
+    this.hidden      = document.getElementById(hiddenId);
+    this.dropdown    = document.getElementById(dropdownId);
+    this.groupedData = groupedData;
+    this.searchInput = null;
+    this._visibleItems = [];
+    this.selectedIndex = -1;
+
+    this._init();
+  }
+
+  _init() {
+    this.input.setAttribute('readonly', 'readonly');
+    this.input.style.cursor = 'pointer';
+
+    const wrapper = this.input.closest('.searchable-select-wrapper');
+    const trigger = wrapper.querySelector('.searchable-select-trigger');
+
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.dropdown.style.display === 'block') {
+        this._hideDropdown();
+      } else {
+        this._showDropdown();
+        setTimeout(() => { if (this.searchInput) this.searchInput.focus(); }, 50);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target)) this._hideDropdown();
+    });
+
+    this._createSearchInput();
+    this._renderAll('');
+  }
+
+  _createSearchInput() {
+    const container = document.createElement('div');
+    container.className = 'searchable-search-container';
+
+    this.searchInput = document.createElement('input');
+    this.searchInput.type = 'text';
+    this.searchInput.className = 'searchable-search-input';
+    this.searchInput.placeholder = 'Buscar municipio o departamento...';
+    this.searchInput.autocomplete = 'off';
+    this.searchInput.addEventListener('input', () => this._renderAll(this.searchInput.value.trim()));
+    this.searchInput.addEventListener('keydown', (e) => this._handleKeyboard(e));
+
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'searchable-clear-btn';
+    clearBtn.innerHTML = 'x';
+    clearBtn.title = 'Limpiar busqueda';
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.searchInput.value = '';
+      this._renderAll('');
+      this.searchInput.focus();
+    });
+
+    container.appendChild(this.searchInput);
+    container.appendChild(clearBtn);
+    this.dropdown.appendChild(container);
+  }
+
+  _renderAll(term) {
+    const old = this.dropdown.querySelector('.searchable-options-list');
+    if (old) old.remove();
+
+    const list = document.createElement('div');
+    list.className = 'searchable-options-list';
+
+    let visibleItems = [];
+
+    Object.entries(this.groupedData).forEach(([dept, municipios]) => {
+      const munsFiltrados = term
+        ? municipios.filter(m =>
+            normalizeText(m).includes(normalizeText(term)) || normalizeText(dept).includes(normalizeText(term))
+          )
+        : municipios;
+
+      if (munsFiltrados.length === 0) return;
+
+      // Encabezado de departamento (no seleccionable)
+      const header = document.createElement('div');
+      header.className = 'searchable-group-header';
+      header.textContent = dept;
+      list.appendChild(header);
+
+      // Municipios con sangria
+      munsFiltrados.forEach(mun => {
+        const item = document.createElement('div');
+        item.className = 'searchable-option searchable-option-municipio';
+        item.textContent = mun;
+        item.dataset.dept = dept;
+        item.dataset.mun  = mun;
+        item.addEventListener('click', () => this._selectOption(mun, dept));
+        list.appendChild(item);
+        visibleItems.push(item);
+      });
+    });
+
+    if (visibleItems.length === 0) {
+      list.innerHTML = '<div class="searchable-option no-results">No se encontraron resultados</div>';
+    }
+
+    this.dropdown.appendChild(list);
+    this._visibleItems = visibleItems;
+    this.selectedIndex = -1;
+  }
+
+  _selectOption(mun, dept) {
+    this.input.value  = mun;
+    this.hidden.value = mun + ' — ' + dept;
+    if (this.searchInput) this.searchInput.value = '';
+    this._hideDropdown();
+    const event = new Event('change', { bubbles: true });
+    this.hidden.dispatchEvent(event);
+  }
+
+  _handleKeyboard(e) {
+    const items = this._visibleItems || [];
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
+      this._highlightItem(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+      this._highlightItem(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
+        const el = items[this.selectedIndex];
+        this._selectOption(el.dataset.mun, el.dataset.dept);
+      }
+    } else if (e.key === 'Escape') {
+      this._hideDropdown();
+    }
+  }
+
+  _highlightItem(items) {
+    items.forEach((it, idx) => it.classList.toggle('highlighted', idx === this.selectedIndex));
+    if (items[this.selectedIndex]) {
+      items[this.selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  _showDropdown() {
+    this.dropdown.style.display = 'block';
+    this._renderAll(this.searchInput ? this.searchInput.value.trim() : '');
+  }
+
+  _hideDropdown() {
+    this.dropdown.style.display = 'none';
+    this.selectedIndex = -1;
+    if (this.searchInput) this.searchInput.value = '';
+  }
+
+  // Compatibilidad con el resto del codigo existente
+  setValue(value, displayText) {
+    this.hidden.value = value;
+    this.input.value  = displayText;
+  }
+
+  reset() {
+    this.input.value  = '';
+    this.hidden.value = '';
+    if (this.searchInput) this.searchInput.value = '';
+    this._hideDropdown();
+  }
+}
+
+// ============================================
+// CLASE PARA SELECT CON BUSQUEDA
 // ============================================
 class SearchableSelect {
   constructor(inputId, hiddenId, dropdownId, options, displayFn = null) {
@@ -556,11 +769,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function initializeSearchableSelects() {
   // Inicializar selector de Sede
-  sedeSelector = new SearchableSelect(
+  sedeSelector = new GroupedSearchableSelect(
     'sedeSearch',
     'sede',
     'sedeDropdown',
-    SEDES
+    SEDES_POR_DEPARTAMENTO
   );
 }
 

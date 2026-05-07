@@ -94,6 +94,7 @@ async function cargarDatosSVE() {
       document.getElementById('criterio_inclusion').value = mesaTrabajoData.criterio_inclusion;
       document.getElementById('motivo_evaluacion_sve').value = mesaTrabajoData.motivo_evaluacion || '';
       document.getElementById('diagnostico').value = mesaTrabajoData.diagnostico;
+      // motivo_evaluacion_sve vive ahora en Formulario 1 — ya poblado arriba
       document.getElementById('codigo_diagnostico').value = mesaTrabajoData.codigo_diagnostico;
 
       mostrarMesaTrabajoRegistrada();
@@ -351,11 +352,10 @@ async function registrarConsultaSVE(e) {
     cliente_id: parseInt(clienteId),
     fecha: document.getElementById('fecha_consulta_sve').value,
     modalidad: document.getElementById('modalidad_sve').value,
-    motivo_evaluacion: document.getElementById('motivo_evaluacion_sve').value.trim(),
-    ajuste_funciones: document.getElementById('ajuste_funciones_sve').value.trim(),
-    recomendaciones_medicas: document.getElementById('recomendaciones_medicas_sve').value.trim(),
-    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim(),
-    recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim(),
+    ajuste_funciones: document.getElementById('ajuste_funciones_sve').value.trim() || null,
+    recomendaciones_medicas: document.getElementById('recomendaciones_medicas_sve').value.trim() || null,
+    recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim() || null,
+    recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim() || null,
     observaciones: document.getElementById('observaciones_consulta_sve').value.trim() || null,
     estado: estado
   };
@@ -540,26 +540,26 @@ function mostrarConsultasSVE() {
           <strong>📅 Fecha:</strong>
           <span>${formatDate(consulta.fecha)}</span>
         </div>
-        <div class="consulta-sve-item">
-          <strong>📝 Motivo de Evaluación:</strong>
-          <p>${escapeHtml(consulta.motivo_evaluacion)}</p>
-        </div>
+        ${consulta.ajuste_funciones ? `
         <div class="consulta-sve-item">
           <strong>⚙️ Ajuste a las Funciones:</strong>
           <p>${escapeHtml(consulta.ajuste_funciones)}</p>
-        </div>
+        </div>` : ''}
+        ${consulta.recomendaciones_medicas ? `
         <div class="consulta-sve-item">
           <strong>💊 Recomendaciones Médicas:</strong>
           <p>${escapeHtml(consulta.recomendaciones_medicas)}</p>
-        </div>
+        </div>` : ''}
+        ${consulta.recomendaciones_trabajador ? `
         <div class="consulta-sve-item">
           <strong>👤 Recomendaciones al Trabajador:</strong>
           <p>${escapeHtml(consulta.recomendaciones_trabajador)}</p>
-        </div>
+        </div>` : ''}
+        ${consulta.recomendaciones_empresa ? `
         <div class="consulta-sve-item">
           <strong>🏢 Recomendaciones a la Empresa:</strong>
           <p>${escapeHtml(consulta.recomendaciones_empresa)}</p>
-        </div>
+        </div>` : ''}
         ${consulta.observaciones ? `
           <div class="consulta-sve-item">
             <strong>📄 Observaciones:</strong>
@@ -644,11 +644,10 @@ window.editarConsultaSVE = async function(id) {
 
     document.getElementById('fecha_consulta_sve').value = consulta.fecha.split('T')[0];
     document.getElementById('modalidad_sve').value = consulta.modalidad;
-    document.getElementById('motivo_evaluacion_sve').value = consulta.motivo_evaluacion;
-    document.getElementById('ajuste_funciones_sve').value = consulta.ajuste_funciones;
-    document.getElementById('recomendaciones_medicas_sve').value = consulta.recomendaciones_medicas;
-    document.getElementById('recomendaciones_trabajador_sve').value = consulta.recomendaciones_trabajador;
-    document.getElementById('recomendaciones_empresa_sve').value = consulta.recomendaciones_empresa;
+    document.getElementById('ajuste_funciones_sve').value = consulta.ajuste_funciones || '';
+    document.getElementById('recomendaciones_medicas_sve').value = consulta.recomendaciones_medicas || '';
+    document.getElementById('recomendaciones_trabajador_sve').value = consulta.recomendaciones_trabajador || '';
+    document.getElementById('recomendaciones_empresa_sve').value = consulta.recomendaciones_empresa || '';
     document.getElementById('observaciones_consulta_sve').value = consulta.observaciones || '';
     document.getElementById('estado_sve').value = consulta.estado;
 

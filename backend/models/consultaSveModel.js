@@ -1,14 +1,6 @@
 // backend/models/consultaSveModel.js
 const pool = require("../config/db");
 
-// ⚠️ MIGRACIÓN REQUERIDA EN BD: Los 4 campos ahora son opcionales (nullable).
-// Ejecutar en PostgreSQL si las columnas tienen NOT NULL:
-//
-//   ALTER TABLE consultas_sve ALTER COLUMN ajuste_funciones DROP NOT NULL;
-//   ALTER TABLE consultas_sve ALTER COLUMN recomendaciones_medicas DROP NOT NULL;
-//   ALTER TABLE consultas_sve ALTER COLUMN recomendaciones_trabajador DROP NOT NULL;
-//   ALTER TABLE consultas_sve ALTER COLUMN recomendaciones_empresa DROP NOT NULL;
-
 // Crear una nueva consulta SVE
 exports.createConsultaSve = async (data) => {
   const {

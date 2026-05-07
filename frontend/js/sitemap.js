@@ -9,36 +9,33 @@ document.addEventListener('DOMContentLoaded', function() {
     item.addEventListener('click', function() {
       const url = this.getAttribute('data-url');
       const modalidad = this.getAttribute('data-modalidad');
-      
+      const itemContent = this.querySelector('.wheel-item-content');
+
       // ✅ Si tiene atributo data-modalidad, guardar y redirigir a index.html
       if (modalidad) {
         console.log('🔄 Seleccionando modalidad:', modalidad);
-        
-        // Guardar modalidad en localStorage
         localStorage.setItem('modalidadSeleccionada', modalidad);
-        
-        // Animación de salida
-        this.style.transform = 'scale(0.9)';
-        
-        // Mostrar feedback visual
-        const itemContent = this.querySelector('.wheel-item-content');
+
+        // Animación solo sobre el content interior, sin tocar el transform del item
         if (itemContent) {
-          itemContent.style.transform = 'scale(1.1)';
+          itemContent.style.transform = 'scale(0.9)';
           itemContent.style.borderWidth = '6px';
         }
-        
+
         setTimeout(() => {
           window.location.href = 'index.html';
         }, 300);
-        
+
         return;
       }
-      
+
       // ✅ Si tiene URL normal, navegar directamente
       if (url) {
-        // Animación de salida antes de navegar
-        this.style.transform = 'scale(0.9)';
-        
+        // Animación solo sobre el content interior
+        if (itemContent) {
+          itemContent.style.transform = 'scale(0.9)';
+        }
+
         setTimeout(() => {
           window.location.href = url;
         }, 200);

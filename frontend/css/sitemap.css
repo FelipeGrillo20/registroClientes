@@ -35,7 +35,7 @@
   color: #7f8c8d;
   font-size: 1em;
   margin-top: -5px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
   font-weight: 500;
   align-self: center; /* Centra solo el subtítulo */
 }
@@ -45,7 +45,7 @@
   position: relative;
   width: 750px;
   height: 750px;
-  margin: 30px auto;
+  margin: 5px auto;
   animation: fadeIn 0.8s ease-in-out;
   align-self: center; /* Centra la rueda */
 }
@@ -134,18 +134,26 @@
 }
 
 /* ✅ ESTILOS ESPECIALES PARA MODALIDADES */
-.modalidad-psicosocial .wheel-item-content {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-  box-shadow: 0 8px 25px rgba(155, 89, 182, 0.4);
-  border-color: #f1c40f;
+.modalidad-orden-servicio .wheel-item-content {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4);
+  border-color: #f9ca24;
   border-width: 5px;
 }
 
-.modalidad-sve .wheel-item-content {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-  box-shadow: 0 8px 25px rgba(86, 171, 47, 0.4);
-  border-color: #27ae60;
+.modalidad-agendamiento .wheel-item-content {
+  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+  box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4);
+  border-color: #81ecec;
   border-width: 5px;
+}
+
+.modalidad-orden-servicio .item-icon,
+.modalidad-agendamiento .item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
 }
 
 .wheel-item-content::before {
@@ -174,8 +182,8 @@
 }
 
 .item-icon {
-  font-size: 42px;
-  margin-bottom: 8px;
+  font-size: 32px;
+  margin-bottom: 2px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
   transition: all 0.3s ease;
   position: relative;
@@ -207,17 +215,17 @@
   border-width: 5px;
 }
 
-/* ✅ HOVER ESPECIAL PARA MODALIDAD PSICOSOCIAL */
-.modalidad-psicosocial:hover .wheel-item-content {
-  background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
-  box-shadow: 0 15px 45px rgba(155, 89, 182, 0.7);
-  border-color: #f39c12;
+/* ✅ HOVER ESPECIAL PARA ORDEN DE SERVICIO */
+.modalidad-orden-servicio:hover .wheel-item-content {
+  background: linear-gradient(135deg, #d35400 0%, #b7440a 100%);
+  box-shadow: 0 15px 45px rgba(230, 126, 34, 0.7);
+  border-color: #f9ca24;
 }
 
-/* ✅ HOVER ESPECIAL PARA MODALIDAD SVE */
-.modalidad-sve:hover .wheel-item-content {
-  background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
-  box-shadow: 0 15px 45px rgba(86, 171, 47, 0.7);
+/* ✅ HOVER ESPECIAL PARA AGENDAMIENTO */
+.modalidad-agendamiento:hover .wheel-item-content {
+  background: linear-gradient(135deg, #00cec9 0%, #00b894 100%);
+  box-shadow: 0 15px 45px rgba(0, 184, 148, 0.7);
   border-color: #f1c40f;
 }
 
@@ -331,7 +339,7 @@
   }
 
   .item-icon {
-    font-size: 36px;
+    font-size: 27px;
   }
 
   .item-text {
@@ -380,7 +388,7 @@
   }
 
   .item-icon {
-    font-size: 32px;
+    font-size: 24px;
   }
 
   .item-text {
@@ -439,7 +447,7 @@
   }
 
   .item-icon {
-    font-size: 26px;
+    font-size: 20px;
     margin-bottom: 4px;
   }
 
@@ -453,8 +461,8 @@
     border: 3px solid white;
   }
 
-  .modalidad-psicosocial .wheel-item-content,
-  .modalidad-sve .wheel-item-content {
+  .modalidad-orden-servicio .wheel-item-content,
+  .modalidad-agendamiento .wheel-item-content {
     border-width: 4px;
   }
 
@@ -490,7 +498,7 @@
   }
 
   .item-icon {
-    font-size: 22px;
+    font-size: 17px;
   }
 
   .item-text {

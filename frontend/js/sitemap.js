@@ -80,14 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ✅ Mostrar en consola la modalidad actual seleccionada
-  const modalidadActual = localStorage.getItem('modalidadSeleccionada');
-  if (modalidadActual) {
-    console.log('✅ Modalidad actual:', modalidadActual);
-  } else {
-    console.log('ℹ️ No hay modalidad seleccionada');
-  }
-
+  // ✅ Mostrar en consola info de navegación
   console.log('✅ Mapa de sitio cargado correctamente');
 });
 

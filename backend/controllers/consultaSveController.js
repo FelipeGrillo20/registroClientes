@@ -10,7 +10,6 @@ exports.createConsultaSve = async (req, res) => {
       cliente_id,
       fecha,
       modalidad,
-      motivo_evaluacion,
       ajuste_funciones,
       recomendaciones_medicas,
       recomendaciones_trabajador,
@@ -20,7 +19,7 @@ exports.createConsultaSve = async (req, res) => {
     } = req.body;
 
     // Validaciones
-    if (!cliente_id || !fecha || !modalidad || !motivo_evaluacion || !estado) {
+    if (!cliente_id || !fecha || !modalidad || !estado) {
       return res.status(400).json({ 
         message: "Todos los campos obligatorios deben ser completados" 
       });
@@ -68,7 +67,6 @@ exports.createConsultaSve = async (req, res) => {
       cliente_id,
       fecha,
       modalidad,
-      motivo_evaluacion,
       ajuste_funciones: ajuste_funciones || null,
       recomendaciones_medicas: recomendaciones_medicas || null,
       recomendaciones_trabajador: recomendaciones_trabajador || null,
@@ -168,7 +166,6 @@ exports.updateConsultaSve = async (req, res) => {
     const {
       fecha,
       modalidad,
-      motivo_evaluacion,
       ajuste_funciones,
       recomendaciones_medicas,
       recomendaciones_trabajador,
@@ -178,7 +175,7 @@ exports.updateConsultaSve = async (req, res) => {
     } = req.body;
 
     // Validaciones
-    if (!fecha || !modalidad || !motivo_evaluacion || !estado) {
+    if (!fecha || !modalidad || !estado) {
       return res.status(400).json({ 
         message: "Todos los campos obligatorios deben ser completados" 
       });
@@ -218,7 +215,6 @@ exports.updateConsultaSve = async (req, res) => {
     const updatedConsulta = await consultaSveModel.updateConsultaSve(id, {
       fecha,
       modalidad,
-      motivo_evaluacion,
       ajuste_funciones: ajuste_funciones || null,
       recomendaciones_medicas: recomendaciones_medicas || null,
       recomendaciones_trabajador: recomendaciones_trabajador || null,

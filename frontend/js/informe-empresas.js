@@ -1030,7 +1030,9 @@
       filtros: {
         empresa: empresaNombre,
         sede: sedeVal || "Todas",
-        modalidad: modalidad || "Todas",
+        modalidad: modalidad === "orientacion" ? "Orientación Psicosocial"
+               : modalidad === "vigilancia"  ? "Sistema de Vigilancia Epidemiológica"
+               : "Todas",
         anio: anio || "Todos",
         mes: mes ? MESES_FULL[parseInt(mes)-1] : "Todo el año",
       },

@@ -1,374 +1,405 @@
-// backend/models/consultaModel.js
+// backend/models/consultaSveModel.js
 const pool = require("../config/db");
 
-// ============================================
-// UTILIDAD: Calcular el próximo consulta_number
-// para un cliente dado. Si no tiene registros → 1
-// Si ya tiene → MAX(consulta_number) + 1
-// ============================================
-exports.getNextConsultaNumber = async (cliente_id) => {
-  const result = await pool.query(
-    `SELECT COALESCE(MAX(consulta_number), 0) AS max_num
-     FROM consultas
-     WHERE cliente_id = $1`,
-    [cliente_id]
-  );
-  return parseInt(result.rows[0].max_num) + 1;
-};
-
-// ============================================
-// UTILIDAD: Verificar si el cliente tiene alguna
-// consulta abierta en un consulta_number DISTINTO
-// al que se está intentando registrar.
-//
-// Esto permite:
-//   - Agregar sesiones a una consulta ya abierta (mismo consulta_number) ✅
-//   - Bloquear abrir una NUEVA consulta si hay una abierta (distinto número) ❌
-// ============================================
-exports.tieneConsultaAbiertaEnOtroNumero = async (cliente_id, consulta_number) => {
-  const result = await pool.query(
-    `SELECT COUNT(*) AS total
-     FROM consultas
-     WHERE cliente_id = $1
-       AND estado = 'Abierto'
-       AND consulta_number != $2`,
-    [cliente_id, consulta_number]
-  );
-  return parseInt(result.rows[0].total) > 0;
-};
-
-// ============================================
-// Crear una nueva consulta
-// consulta_number se calcula antes de llamar
-// a esta función (desde el controller)
-// ============================================
-exports.createConsulta = async (data) => {
+// Crear una nueva consulta SVE
+exports.createConsultaSve = async (data) => {
   const {
     cliente_id,
-    consulta_number,
-    motivo_consulta,
-    actividad,
-    modalidad,
     fecha,
-    columna1,
-    estado,
-    observaciones_confidenciales,
-    consultas_sugeridas
+    modalidad,
+    ajuste_funciones,
+    recomendaciones_medicas,
+    recomendaciones_trabajador,
+    recomendaciones_empresa,
+    observaciones,
+    estado
   } = data;
 
   const result = await pool.query(
-    `INSERT INTO consultas
-    (cliente_id, consulta_number, motivo_consulta, actividad, modalidad, fecha,
-     columna1, estado, observaciones_confidenciales, consultas_sugeridas)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `INSERT INTO consultas_sve 
+    (cliente_id, fecha, modalidad, ajuste_funciones, 
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
+     observaciones, estado)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *`,
-    [cliente_id, consulta_number, motivo_consulta, actividad, modalidad, fecha,
-     columna1, estado, observaciones_confidenciales, consultas_sugeridas || null]
+    [cliente_id, fecha, modalidad, ajuste_funciones, 
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
+     observaciones, estado]
   );
 
   return result.rows[0];
 };
 
-// ============================================
-// Obtener todas las consultas
-// ============================================
-exports.getAllConsultas = async () => {
+// Obtener todas las consultas SVE
+exports.getAllConsultasSve = async () => {
   const result = await pool.query(`
-    SELECT
-      c.*,
-      cl.cedula,
-      cl.nombre,
-      cl.sede
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    ORDER BY c.fecha DESC, c.created_at DESC
+    SELECT 
+      cs.*,
+      c.cedula,
+      c.nombre,
+      c.sede,
+      c.email,
+      c.telefono,
+      u.nombre AS profesional_nombre
+    FROM consultas_sve cs
+    INNER JOIN clients c ON cs.cliente_id = c.id
+    LEFT JOIN users u ON c.profesional_id = u.id
+    ORDER BY cs.fecha DESC, cs.created_at DESC
   `);
   return result.rows;
 };
 
-// Obtener consultas filtradas por profesional
-exports.getConsultasByProfesional = async (profesionalId) => {
+// Obtener consultas SVE filtradas por profesional
+exports.getConsultasSveByProfesional = async (profesionalId) => {
   const result = await pool.query(`
-    SELECT
-      c.*,
-      cl.cedula,
-      cl.nombre,
-      cl.sede
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE cl.profesional_id = $1
-    ORDER BY c.fecha DESC, c.created_at DESC
+    SELECT 
+      cs.*,
+      c.cedula,
+      c.nombre,
+      c.sede,
+      c.email,
+      c.telefono,
+      u.nombre AS profesional_nombre
+    FROM consultas_sve cs
+    INNER JOIN clients c ON cs.cliente_id = c.id
+    LEFT JOIN users u ON c.profesional_id = u.id
+    WHERE c.profesional_id = $1
+    ORDER BY cs.fecha DESC, cs.created_at DESC
   `, [profesionalId]);
   return result.rows;
 };
 
-// ============================================
-// Obtener consultas de un cliente específico
-// Ordenadas por consulta_number ASC, fecha ASC
-// para que el historial salga en orden correcto
-// ============================================
-exports.getConsultasByCliente = async (cliente_id) => {
+// Obtener consultas SVE de un cliente específico
+exports.getConsultasSveByCliente = async (cliente_id) => {
   const result = await pool.query(
-    `SELECT * FROM consultas
-     WHERE cliente_id = $1
-     ORDER BY consulta_number ASC, fecha ASC, created_at ASC`,
+    `SELECT * FROM consultas_sve 
+     WHERE cliente_id = $1 
+     ORDER BY fecha DESC, created_at DESC`,
     [cliente_id]
   );
   return result.rows;
 };
 
-// ============================================
-// Obtener una consulta por ID
-// ============================================
-exports.getConsultaById = async (id) => {
+// Obtener una consulta SVE por ID
+exports.getConsultaSveById = async (id) => {
   const result = await pool.query(
-    `SELECT
-      c.*,
-      cl.cedula,
-      cl.nombre,
-      cl.sede,
-      cl.email,
-      cl.telefono
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE c.id = $1`,
+    `SELECT 
+      cs.*,
+      c.cedula,
+      c.nombre,
+      c.sede,
+      c.email,
+      c.telefono,
+      u.nombre AS profesional_nombre
+    FROM consultas_sve cs
+    INNER JOIN clients c ON cs.cliente_id = c.id
+    LEFT JOIN users u ON c.profesional_id = u.id
+    WHERE cs.id = $1`,
     [id]
   );
   return result.rows[0];
 };
 
-// ============================================
-// Actualizar una consulta (sesión individual)
-// consulta_number NO se modifica en el UPDATE
-// ============================================
-exports.updateConsulta = async (id, data) => {
+// Actualizar una consulta SVE
+exports.updateConsultaSve = async (id, data) => {
   const {
-    motivo_consulta,
-    actividad,
-    modalidad,
     fecha,
-    columna1,
-    estado,
-    observaciones_confidenciales
+    modalidad,
+    ajuste_funciones,
+    recomendaciones_medicas,
+    recomendaciones_trabajador,
+    recomendaciones_empresa,
+    observaciones,
+    estado
   } = data;
 
   const result = await pool.query(
-    `UPDATE consultas SET
-      motivo_consulta = $1,
-      actividad = $2,
-      modalidad = $3,
-      fecha = $4,
-      columna1 = $5,
-      estado = $6,
-      observaciones_confidenciales = $7,
+    `UPDATE consultas_sve SET
+      fecha = $1,
+      modalidad = $2,
+      ajuste_funciones = $3,
+      recomendaciones_medicas = $4,
+      recomendaciones_trabajador = $5,
+      recomendaciones_empresa = $6,
+      observaciones = $7,
+      estado = $8,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $8
+    WHERE id = $9
     RETURNING *`,
-    [motivo_consulta, actividad, modalidad, fecha, columna1, estado, observaciones_confidenciales, id]
+    [fecha, modalidad, ajuste_funciones, 
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
+     observaciones, estado, id]
   );
 
   return result.rows[0];
 };
 
-// ============================================
-// Cerrar una consulta completa:
-// Escribe fecha_cierre y recomendaciones_finales
-// en TODOS los registros del mismo consulta_number.
-// Se usa al hacer "Cerrar caso".
-// ============================================
-exports.cerrarConsulta = async (cliente_id, consulta_number, fecha_cierre, recomendaciones_finales) => {
+// Eliminar una consulta SVE
+exports.deleteConsultaSve = async (id) => {
   const result = await pool.query(
-    `UPDATE consultas SET
-      estado = 'Cerrado',
-      fecha_cierre = $1,
-      recomendaciones_finales = $2,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE cliente_id = $3
-      AND consulta_number = $4
-    RETURNING *`,
-    [fecha_cierre, recomendaciones_finales, cliente_id, consulta_number]
-  );
-  return result.rows;
-};
-
-// ============================================
-// Reabrir una consulta:
-// Limpia fecha_cierre y recomendaciones_finales
-// y vuelve el estado a 'Abierto' para ese
-// consulta_number.
-// ============================================
-exports.reabrirConsulta = async (cliente_id, consulta_number) => {
-  const result = await pool.query(
-    `UPDATE consultas SET
-      estado = 'Abierto',
-      fecha_cierre = NULL,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE cliente_id = $1
-      AND consulta_number = $2
-    RETURNING *`,
-    [cliente_id, consulta_number]
-  );
-  return result.rows;
-};
-
-// ============================================
-// Guardar consultas_sugeridas en la primera
-// sesión de una consulta (consulta_number dado).
-// Se llama solo al registrar la sesión 1.
-// ============================================
-exports.guardarConsultasSugeridas = async (cliente_id, consulta_number, consultas_sugeridas) => {
-  const result = await pool.query(
-    `UPDATE consultas SET
-      consultas_sugeridas = $1,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE cliente_id = $2
-      AND consulta_number = $3
-    RETURNING *`,
-    [consultas_sugeridas, cliente_id, consulta_number]
-  );
-  return result.rows;
-};
-
-// ============================================
-// Obtener los datos de cierre de una consulta
-// (fecha_cierre y recomendaciones_finales)
-// Busca en la primera sesión del consulta_number
-// donde fecha_cierre no sea NULL.
-// ============================================
-exports.getDatosCierreConsulta = async (cliente_id, consulta_number) => {
-  const result = await pool.query(
-    `SELECT fecha_cierre, recomendaciones_finales, consultas_sugeridas
-     FROM consultas
-     WHERE cliente_id = $1
-       AND consulta_number = $2
-       AND fecha_cierre IS NOT NULL
-     LIMIT 1`,
-    [cliente_id, consulta_number]
-  );
-  return result.rows[0] || null;
-};
-
-// ============================================
-// Eliminar una consulta
-// ============================================
-exports.deleteConsulta = async (id) => {
-  const result = await pool.query(
-    "DELETE FROM consultas WHERE id = $1 RETURNING *",
+    "DELETE FROM consultas_sve WHERE id = $1 RETURNING *",
     [id]
   );
   return result.rows[0];
 };
 
-// ============================================
-// Estadísticas globales (admin)
-// ============================================
-exports.getEstadisticas = async () => {
+// Obtener estadísticas de consultas SVE
+exports.getEstadisticasSve = async () => {
   const result = await pool.query(`
-    SELECT
-      COUNT(*) as total_consultas,
-      COUNT(CASE WHEN estado = 'Abierto' THEN 1 END) as casos_abiertos,
-      COUNT(CASE WHEN estado = 'Cerrado' THEN 1 END) as casos_cerrados,
-      COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
-      COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
-    FROM consultas
+    SELECT 
+      COUNT(*) as total_consultas_sve,
+      COUNT(CASE WHEN estado = 'Abierto' THEN 1 END) as casos_abiertos_sve,
+      COUNT(CASE WHEN estado = 'Cerrado' THEN 1 END) as casos_cerrados_sve,
+      COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as consultas_virtuales_sve,
+      COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as consultas_presenciales_sve
+    FROM consultas_sve
   `);
   return result.rows[0];
 };
 
-// Estadísticas filtradas por profesional
-exports.getEstadisticasByProfesional = async (profesionalId) => {
+// Obtener estadísticas SVE filtradas por profesional
+exports.getEstadisticasSveByProfesional = async (profesionalId) => {
   const result = await pool.query(`
-    SELECT
-      COUNT(*) as total_consultas,
-      COUNT(CASE WHEN c.estado = 'Abierto' THEN 1 END) as casos_abiertos,
-      COUNT(CASE WHEN c.estado = 'Cerrado' THEN 1 END) as casos_cerrados,
-      COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
-      COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE cl.profesional_id = $1
+    SELECT 
+      COUNT(*) as total_consultas_sve,
+      COUNT(CASE WHEN cs.estado = 'Abierto' THEN 1 END) as casos_abiertos_sve,
+      COUNT(CASE WHEN cs.estado = 'Cerrado' THEN 1 END) as casos_cerrados_sve,
+      COUNT(CASE WHEN cs.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales_sve,
+      COUNT(CASE WHEN cs.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales_sve
+    FROM consultas_sve cs
+    INNER JOIN clients c ON cs.cliente_id = c.id
+    WHERE c.profesional_id = $1
   `, [profesionalId]);
   return result.rows[0];
 };
 
-// Estadísticas detalladas por profesional (solo admin)
-exports.getEstadisticasDetalladasByProfesional = async (profesionalId) => {
+// ✅ FUNCIÓN CORREGIDA: Estadísticas completas del Dashboard SVE
+exports.getEstadisticasDashboardSVE = async () => {
   const result = await pool.query(`
-    SELECT
-      COUNT(c.id) as total_consultas,
-      COUNT(DISTINCT c.cliente_id) as pacientes_atendidos,
-      COUNT(DISTINCT CASE
-        WHEN c.fecha_cierre IS NOT NULL THEN c.cliente_id || '-' || c.consulta_number
-      END) as casos_cerrados,
-      COUNT(CASE WHEN c.estado = 'Abierto' THEN 1 END) as consultas_abiertas,
-      COUNT(CASE WHEN c.estado = 'Cerrado' THEN 1 END) as consultas_cerradas,
-      COUNT(CASE WHEN c.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
-      COUNT(CASE WHEN c.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE cl.profesional_id = $1
-  `, [profesionalId]);
-
+    WITH mesa_trabajo_stats AS (
+      SELECT 
+        COUNT(DISTINCT mt.cliente_id) as total_casos_sve,
+        COUNT(DISTINCT CASE WHEN mt.created_at >= NOW() - INTERVAL '30 days' THEN mt.cliente_id END) as casos_nuevos_mes
+      FROM mesa_trabajo_sve mt
+    ),
+    consultas_stats AS (
+      SELECT 
+        COUNT(*) as total_sesiones_sve,
+        COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
+        COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as consultas_presenciales,
+        COUNT(DISTINCT CASE WHEN fecha >= NOW() - INTERVAL '30 days' THEN cliente_id END) as consultas_mes_actual
+      FROM consultas_sve
+    ),
+    clientes_stats AS (
+      SELECT 
+        -- ✅ CASOS CERRADOS: Clientes con Mesa de Trabajo Y fecha_cierre_sve
+        COUNT(DISTINCT CASE 
+          WHEN c.fecha_cierre_sve IS NOT NULL 
+          AND EXISTS(SELECT 1 FROM mesa_trabajo_sve mt WHERE mt.cliente_id = c.id) 
+          THEN c.id 
+        END) as casos_cerrados,
+        
+        -- ✅ CASOS ABIERTOS: Clientes con Mesa de Trabajo pero SIN fecha_cierre_sve
+        COUNT(DISTINCT CASE 
+          WHEN c.fecha_cierre_sve IS NULL 
+          AND EXISTS(SELECT 1 FROM mesa_trabajo_sve mt WHERE mt.cliente_id = c.id) 
+          THEN c.id 
+        END) as casos_abiertos,
+        
+        COUNT(DISTINCT CASE WHEN fecha_cierre_sve IS NOT NULL THEN id END) as trabajadores_casos_cerrados,
+        COUNT(DISTINCT CASE WHEN fecha_cierre_sve IS NULL AND EXISTS(
+          SELECT 1 FROM mesa_trabajo_sve WHERE cliente_id = c.id
+        ) THEN id END) as trabajadores_seguimiento_activo
+      FROM clients c
+    ),
+    promedio_consultas AS (
+      SELECT 
+        COALESCE(ROUND(AVG(num_consultas), 2), 0) as promedio_consultas_por_caso
+      FROM (
+        SELECT cs.cliente_id, COUNT(*) as num_consultas
+        FROM consultas_sve cs
+        INNER JOIN mesa_trabajo_sve mt ON cs.cliente_id = mt.cliente_id
+        GROUP BY cs.cliente_id
+      ) sub
+    ),
+    tasa_cierre_calc AS (
+      SELECT 
+        CASE 
+          WHEN (SELECT total_casos_sve FROM mesa_trabajo_stats) > 0 
+          THEN ROUND(
+            (SELECT casos_cerrados FROM clientes_stats)::numeric * 100.0 / 
+            (SELECT total_casos_sve FROM mesa_trabajo_stats)::numeric, 
+            2
+          )
+          ELSE 0 
+        END as tasa_cierre
+    )
+    SELECT 
+      mt.*,
+      cs.*,
+      cl.*,
+      pc.*,
+      tc.tasa_cierre
+    FROM mesa_trabajo_stats mt
+    CROSS JOIN consultas_stats cs
+    CROSS JOIN clientes_stats cl
+    CROSS JOIN promedio_consultas pc
+    CROSS JOIN tasa_cierre_calc tc
+  `);
+  
   return result.rows[0];
 };
-// ============================================
-// Obtener sesiones de un profesional filtradas
-// por año y mes (para asignación de créditos)
-// Devuelve cada sesión como fila independiente
-// ============================================
-exports.getSesionesByProfesionalMesAnio = async (profesional_id, anio, mes) => {
+
+// ✅ FUNCIÓN CORREGIDA: Estadísticas Dashboard SVE por profesional
+exports.getEstadisticasDashboardSVEByProfesional = async (profesionalId) => {
   const result = await pool.query(`
-    SELECT
-      c.id,
-      c.cliente_id,
-      c.consulta_number,
-      c.fecha,
-      c.motivo_consulta,
-      c.actividad,
-      c.modalidad,
-      c.estado,
-      cl.nombre  AS trabajador_nombre,
-      cl.cedula  AS trabajador_cedula
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE cl.profesional_id = $1
-      AND EXTRACT(YEAR  FROM c.fecha) = $2
-      AND EXTRACT(MONTH FROM c.fecha) = $3
-    ORDER BY cl.nombre ASC, c.fecha ASC, c.consulta_number ASC
-  `, [profesional_id, anio, mes]);
+    WITH mesa_trabajo_stats AS (
+      SELECT 
+        COUNT(DISTINCT mt.cliente_id) as total_casos_sve,
+        COUNT(DISTINCT CASE WHEN mt.created_at >= NOW() - INTERVAL '30 days' THEN mt.cliente_id END) as casos_nuevos_mes
+      FROM mesa_trabajo_sve mt
+      INNER JOIN clients c ON mt.cliente_id = c.id
+      WHERE c.profesional_id = $1
+    ),
+    consultas_stats AS (
+      SELECT 
+        COUNT(*) as total_sesiones_sve,
+        COUNT(CASE WHEN cs.modalidad = 'Virtual' THEN 1 END) as consultas_virtuales,
+        COUNT(CASE WHEN cs.modalidad = 'Presencial' THEN 1 END) as consultas_presenciales,
+        COUNT(DISTINCT CASE WHEN cs.fecha >= NOW() - INTERVAL '30 days' THEN cs.cliente_id END) as consultas_mes_actual
+      FROM consultas_sve cs
+      INNER JOIN clients c ON cs.cliente_id = c.id
+      WHERE c.profesional_id = $1
+    ),
+    clientes_stats AS (
+      SELECT 
+        -- ✅ CASOS CERRADOS: Clientes con Mesa de Trabajo Y fecha_cierre_sve
+        COUNT(DISTINCT CASE 
+          WHEN c.fecha_cierre_sve IS NOT NULL 
+          AND EXISTS(SELECT 1 FROM mesa_trabajo_sve mt WHERE mt.cliente_id = c.id) 
+          THEN c.id 
+        END) as casos_cerrados,
+        
+        -- ✅ CASOS ABIERTOS: Clientes con Mesa de Trabajo pero SIN fecha_cierre_sve
+        COUNT(DISTINCT CASE 
+          WHEN c.fecha_cierre_sve IS NULL 
+          AND EXISTS(SELECT 1 FROM mesa_trabajo_sve mt WHERE mt.cliente_id = c.id) 
+          THEN c.id 
+        END) as casos_abiertos,
+        
+        COUNT(DISTINCT CASE WHEN fecha_cierre_sve IS NOT NULL THEN id END) as trabajadores_casos_cerrados,
+        COUNT(DISTINCT CASE WHEN fecha_cierre_sve IS NULL AND EXISTS(
+          SELECT 1 FROM mesa_trabajo_sve WHERE cliente_id = c.id
+        ) THEN id END) as trabajadores_seguimiento_activo
+      FROM clients c
+      WHERE profesional_id = $1
+    ),
+    promedio_consultas AS (
+      SELECT 
+        COALESCE(ROUND(AVG(num_consultas), 2), 0) as promedio_consultas_por_caso
+      FROM (
+        SELECT cs.cliente_id, COUNT(*) as num_consultas
+        FROM consultas_sve cs
+        INNER JOIN clients c ON cs.cliente_id = c.id
+        INNER JOIN mesa_trabajo_sve mt ON cs.cliente_id = mt.cliente_id
+        WHERE c.profesional_id = $1
+        GROUP BY cs.cliente_id
+      ) sub
+    ),
+    tasa_cierre_calc AS (
+      SELECT 
+        CASE 
+          WHEN (SELECT total_casos_sve FROM mesa_trabajo_stats) > 0 
+          THEN ROUND(
+            (SELECT casos_cerrados FROM clientes_stats)::numeric * 100.0 / 
+            (SELECT total_casos_sve FROM mesa_trabajo_stats)::numeric, 
+            2
+          )
+          ELSE 0 
+        END as tasa_cierre
+    )
+    SELECT 
+      mt.*,
+      cs.*,
+      cl.*,
+      pc.*,
+      tc.tasa_cierre
+    FROM mesa_trabajo_stats mt
+    CROSS JOIN consultas_stats cs
+    CROSS JOIN clientes_stats cl
+    CROSS JOIN promedio_consultas pc
+    CROSS JOIN tasa_cierre_calc tc
+  `, [profesionalId]);
+  
+  return result.rows[0];
+};
+
+// ✅ NUEVA FUNCIÓN: Estadísticas por criterios de inclusión
+exports.getEstadisticasCriteriosInclusion = async () => {
+  const result = await pool.query(`
+    SELECT 
+      criterio_inclusion,
+      COUNT(*) as cantidad,
+      ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ()), 2) as porcentaje
+    FROM mesa_trabajo_sve
+    GROUP BY criterio_inclusion
+    ORDER BY cantidad DESC
+  `);
+  
   return result.rows;
 };
 
-// ============================================
-// Sesiones SIN crédito asignado de un profesional
-// Todas las fechas, ordenadas cronológicamente
-// Se filtra por credito_id IS NULL en tabla citas
-// ============================================
-exports.getSesionesSinAsignacion = async (profesional_id) => {
+// ✅ NUEVA FUNCIÓN: Estadísticas por criterios de inclusión (por profesional)
+exports.getEstadisticasCriteriosInclusionByProfesional = async (profesionalId) => {
   const result = await pool.query(`
-    SELECT
-      c.id,
-      c.cliente_id,
-      c.consulta_number,
-      c.fecha,
-      c.motivo_consulta,
-      c.actividad,
-      c.modalidad,
-      c.estado,
-      cl.nombre  AS trabajador_nombre,
-      cl.cedula  AS trabajador_cedula,
-      EXTRACT(YEAR  FROM c.fecha)::int AS anio,
-      EXTRACT(MONTH FROM c.fecha)::int AS mes
-    FROM consultas c
-    INNER JOIN clients cl ON c.cliente_id = cl.id
-    WHERE cl.profesional_id = $1
-      AND NOT EXISTS (
-        SELECT 1 FROM citas ci
-        WHERE ci.trabajador_id = c.cliente_id
-          AND ci.credito_id IS NOT NULL
-          AND DATE_TRUNC('month', ci.fecha) = DATE_TRUNC('month', c.fecha)
-      )
-    ORDER BY c.fecha ASC, cl.nombre ASC
-  `, [profesional_id]);
+    SELECT 
+      mt.criterio_inclusion,
+      COUNT(*) as cantidad,
+      ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ()), 2) as porcentaje
+    FROM mesa_trabajo_sve mt
+    INNER JOIN clients c ON mt.cliente_id = c.id
+    WHERE c.profesional_id = $1
+    GROUP BY mt.criterio_inclusion
+    ORDER BY cantidad DESC
+  `, [profesionalId]);
+  
+  return result.rows;
+};
+
+// ✅ NUEVA FUNCIÓN: Evolución temporal de consultas SVE
+exports.getEvolucionConsultasSVE = async () => {
+  const result = await pool.query(`
+    SELECT 
+      TO_CHAR(fecha, 'YYYY-MM') as mes,
+      COUNT(*) as total_consultas,
+      COUNT(CASE WHEN modalidad = 'Virtual' THEN 1 END) as virtuales,
+      COUNT(CASE WHEN modalidad = 'Presencial' THEN 1 END) as presenciales
+    FROM consultas_sve
+    WHERE fecha >= NOW() - INTERVAL '12 months'
+    GROUP BY TO_CHAR(fecha, 'YYYY-MM'), DATE_TRUNC('month', fecha)
+    ORDER BY DATE_TRUNC('month', fecha) ASC
+    LIMIT 12
+  `);
+  
+  return result.rows;
+};
+
+// ✅ NUEVA FUNCIÓN: Evolución temporal de consultas SVE (por profesional)
+exports.getEvolucionConsultasSVEByProfesional = async (profesionalId) => {
+  const result = await pool.query(`
+    SELECT 
+      TO_CHAR(cs.fecha, 'YYYY-MM') as mes,
+      COUNT(*) as total_consultas,
+      COUNT(CASE WHEN cs.modalidad = 'Virtual' THEN 1 END) as virtuales,
+      COUNT(CASE WHEN cs.modalidad = 'Presencial' THEN 1 END) as presenciales
+    FROM consultas_sve cs
+    INNER JOIN clients c ON cs.cliente_id = c.id
+    WHERE cs.fecha >= NOW() - INTERVAL '12 months'
+      AND c.profesional_id = $1
+    GROUP BY TO_CHAR(cs.fecha, 'YYYY-MM'), DATE_TRUNC('month', cs.fecha)
+    ORDER BY DATE_TRUNC('month', cs.fecha) ASC
+    LIMIT 12
+  `, [profesionalId]);
+  
   return result.rows;
 };

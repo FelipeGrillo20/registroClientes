@@ -194,7 +194,274 @@
     }
 
     /* ============================================================ */
-    /* ⭐ NUEVO: ANTECEDENTES DE SALUD                              */
+    /* SOPORTE MESA DE TRABAJO - File Upload                        */
+    /* ============================================================ */
+    .soporte-upload-container {
+      border: 2px dashed #b0bec5;
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: #f8fafc;
+      transition: all 0.3s ease;
+    }
+    .soporte-upload-container:hover {
+      border-color: #5c6bc0;
+      background: #f0f2ff;
+    }
+    .soporte-upload-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #37474f;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .soporte-upload-label .label-icon { font-size: 18px; }
+
+    .btn-soporte-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: linear-gradient(135deg, #5c6bc0, #3949ab);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(57, 73, 171, 0.3);
+      font-family: inherit;
+    }
+    .btn-soporte-upload:hover {
+      background: linear-gradient(135deg, #3949ab, #283593);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(57, 73, 171, 0.4);
+    }
+    .btn-soporte-upload:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-guardar-soporte {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: linear-gradient(135deg, #43a047, #2e7d32);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+      font-family: inherit;
+      margin-left: 8px;
+    }
+    .btn-guardar-soporte:hover {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+    }
+    .btn-guardar-soporte:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .soporte-file-info {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #e8eaf6;
+      border-radius: 8px;
+      border-left: 4px solid #5c6bc0;
+      font-size: 13px;
+      color: #37474f;
+    }
+    .soporte-file-info.show { display: flex; }
+    .soporte-file-icon { font-size: 20px; flex-shrink: 0; }
+    .soporte-file-name {
+      font-weight: 600;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .soporte-file-size { color: #78909c; font-size: 12px; flex-shrink: 0; }
+    .btn-quitar-soporte {
+      background: none;
+      border: none;
+      color: #e53935;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .btn-quitar-soporte:hover { transform: scale(1.2); }
+
+    .soporte-existente {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      border-left: 4px solid #43a047;
+      font-size: 13px;
+      color: #2e7d32;
+    }
+    .soporte-existente.show { display: flex; }
+    .btn-ver-soporte {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: #43a047;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn-ver-soporte:hover { background: #2e7d32; }
+    .btn-eliminar-soporte {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn-eliminar-soporte:hover { background: #b71c1c; }
+    .soporte-hint {
+      font-size: 11px;
+      color: #90a4ae;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ============================================================ */
+    /* SOPORTE MESA DE TRABAJO — Contenedor independiente           */
+    /* ============================================================ */
+    .soporte-mesa-independiente { margin-top: 16px; }
+    .soporte-mesa-body { padding: 20px 24px 16px; }
+    .soporte-estado {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .soporte-estado-icono { font-size: 28px; }
+    .soporte-estado-texto { color: #90a4ae; font-style: italic; font-size: 14px; margin: 0; }
+
+    .soporte-guardado-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      border-left: 4px solid #43a047;
+      flex: 1;
+      min-width: 0;
+    }
+    .soporte-guardado-info .soporte-file-icon { font-size: 22px; flex-shrink: 0; }
+    .soporte-guardado-info .soporte-file-name {
+      font-weight: 600;
+      color: #2e7d32;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .soporte-acciones-guardado { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-accion-soporte {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .btn-accion-soporte.btn-ver     { background: #e3f2fd; color: #1565c0; }
+    .btn-accion-soporte.btn-ver:hover { background: #bbdefb; }
+    .btn-accion-soporte.btn-descargar { background: #e8f5e9; color: #2e7d32; }
+    .btn-accion-soporte.btn-descargar:hover { background: #c8e6c9; }
+    .btn-accion-soporte.btn-eliminar-soporte { background: #ffebee; color: #c62828; }
+    .btn-accion-soporte.btn-eliminar-soporte:hover { background: #ffcdd2; }
+
+    .soporte-acciones-pendiente { display: flex; align-items: center; gap: 8px; }
+    .btn-reemplazar-soporte {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #f5f5f5;
+      color: #546e7a;
+      border: 1px solid #cfd8dc;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+      font-family: inherit;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-reemplazar-soporte:hover { background: #eceff1; border-color: #b0bec5; }
+
+    /* Mesa de Trabajo — acciones header */
+    .mesa-trabajo-acciones {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-delete-mesa {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .btn-delete-mesa:hover {
+      background: #ffcdd2;
+      border-color: #e57373;
+    }
     /* ============================================================ */
 
     .btn-antecedentes-salud {
@@ -1233,6 +1500,85 @@
   </div>
 
   <!-- ========================================
+       SOPORTE MESA DE TRABAJO — Contenedor independiente
+       Se habilita automáticamente al registrar la Mesa de Trabajo
+       ======================================== -->
+  <div id="contenedorSoporteMesa" class="formulario-vigilancia-container soporte-mesa-independiente">
+    <div class="formulario-vigilancia-header">
+      <span class="formulario-icon">📎</span>
+      <div>
+        <h3 class="formulario-titulo">Soporte Mesa de Trabajo</h3>
+        <p class="formulario-descripcion">Adjunte documentos de soporte (PDF, Word, Excel — máx. 10 MB)</p>
+      </div>
+      <div class="bloqueo-badge" id="bloqueoSoporte" style="display:none;">
+        🔒 Registre primero la Mesa de Trabajo
+      </div>
+    </div>
+
+    <div class="soporte-mesa-body">
+
+      <!-- Input oculto -->
+      <input
+        type="file"
+        id="soporte_mesa_trabajo"
+        accept=".pdf,.doc,.docx,.xls,.xlsx"
+        style="display:none;"
+      />
+
+      <!-- Estado: sin archivo guardado -->
+      <div id="soporteEstadoVacio" class="soporte-estado">
+        <span class="soporte-estado-icono">📂</span>
+        <p class="soporte-estado-texto">No hay soporte adjunto</p>
+        <button type="button" class="btn-soporte-upload" id="btnAbrirSoporte"
+          onclick="document.getElementById('soporte_mesa_trabajo').click()">
+          📂 Seleccionar archivo
+        </button>
+      </div>
+
+      <!-- Estado: archivo seleccionado pero aún no guardado -->
+      <div id="soporteEstadoPendiente" class="soporte-estado" style="display:none;">
+        <div class="soporte-file-info show">
+          <span class="soporte-file-icon" id="soporteFileIconNuevo">📄</span>
+          <span class="soporte-file-name" id="soporteFileName">—</span>
+          <span class="soporte-file-size" id="soporteFileSize"></span>
+          <button type="button" class="btn-quitar-soporte" id="btnQuitarSoporte" title="Quitar archivo">✕</button>
+        </div>
+        <div class="soporte-acciones-pendiente">
+          <button type="button" class="btn-guardar-soporte" id="btnGuardarSoporte" onclick="guardarSoporte()">
+            💾 Guardar soporte
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado: archivo ya guardado — Ver / Descargar / Eliminar -->
+      <div id="soporteEstadoGuardado" class="soporte-estado" style="display:none;">
+        <div class="soporte-guardado-info">
+          <span class="soporte-file-icon" id="soporteGuardadoIcon">📄</span>
+          <span class="soporte-file-name" id="soporteGuardadoNombre">—</span>
+        </div>
+        <div class="soporte-acciones-guardado">
+          <a class="btn-accion-soporte btn-ver" id="btnVerSoporte" href="#" target="_blank">
+            👁 Ver
+          </a>
+          <button type="button" class="btn-accion-soporte btn-descargar" id="btnDescargarSoporte">
+            ⬇️ Descargar
+          </button>
+          <button type="button" class="btn-accion-soporte btn-eliminar-soporte" onclick="eliminarSoporteHistorial()">
+            🗑 Eliminar
+          </button>
+        </div>
+        <!-- Opción para reemplazar el archivo -->
+        <button type="button" class="btn-reemplazar-soporte" id="btnReemplazarSoporte"
+          onclick="document.getElementById('soporte_mesa_trabajo').click()">
+          🔄 Reemplazar archivo
+        </button>
+      </div>
+
+      <p class="soporte-hint">Formatos permitidos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) — máx. 10 MB</p>
+    </div>
+  </div>
+
+  <!-- ========================================
        FORMULARIO 2: REGISTRO DE CONSULTA (Bloqueado hasta completar Formulario 1)
        ======================================== -->
   <div id="contenedorConsulta" class="formulario-vigilancia-container bloqueado">
@@ -1250,7 +1596,8 @@
     <form id="formConsultaVigilancia" class="form-vigilancia">
   <div class="form-grid-vigilancia">
     
-    <!-- Fecha de Consulta -->    <div class="form-group-vigilancia">
+    <!-- Fecha de Consulta -->
+    <div class="form-group-vigilancia">
       <label for="fecha_consulta_sve">
         <span class="label-icon">📅</span>
         Fecha de Consulta <span class="required">*</span>
@@ -1280,13 +1627,12 @@
     <div class="form-group-vigilancia">
       <label for="ajuste_funciones_sve">
         <span class="label-icon">⚙️</span>
-        Ajuste a las Funciones <span class="required">*</span>
+        Ajuste a las Funciones
       </label>
       <textarea 
         id="ajuste_funciones_sve" 
         rows="3"
         placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
-        required
         disabled
       ></textarea>
     </div>
@@ -1295,13 +1641,12 @@
     <div class="form-group-vigilancia">
       <label for="recomendaciones_medicas_sve">
         <span class="label-icon">💊</span>
-        Implementar las Siguientes Recomendaciones Médicas <span class="required">*</span>
+        Implementar las Siguientes Recomendaciones Médicas
       </label>
       <textarea 
         id="recomendaciones_medicas_sve" 
         rows="3"
         placeholder="Describa las recomendaciones médicas a implementar..."
-        required
         disabled
       ></textarea>
     </div>
@@ -1310,13 +1655,12 @@
     <div class="form-group-vigilancia">
       <label for="recomendaciones_trabajador_sve">
         <span class="label-icon">👤</span>
-        Recomendaciones al Trabajador <span class="required">*</span>
+        Recomendaciones al Trabajador
       </label>
       <textarea 
         id="recomendaciones_trabajador_sve" 
         rows="3"
         placeholder="Describa las recomendaciones dirigidas al trabajador..."
-        required
         disabled
       ></textarea>
     </div>
@@ -1325,13 +1669,12 @@
     <div class="form-group-vigilancia">
       <label for="recomendaciones_empresa_sve">
         <span class="label-icon">🏢</span>
-        Recomendaciones a la Empresa <span class="required">*</span>
+        Recomendaciones a la Empresa
       </label>
       <textarea 
         id="recomendaciones_empresa_sve" 
         rows="3"
         placeholder="Describa las recomendaciones dirigidas a la empresa..."
-        required
         disabled
       ></textarea>
     </div>
@@ -1423,9 +1766,14 @@
           <span class="mesa-icon">📋</span>
           <strong>Mesa de Trabajo</strong>
         </div>
-        <button type="button" class="btn-edit-mesa" id="btnEditarMesaTrabajo">
-          ✏️ Editar
-        </button>
+        <div class="mesa-trabajo-acciones">
+          <button type="button" class="btn-edit-mesa" id="btnEditarMesaTrabajo">
+            ✏️ Editar
+          </button>
+          <button type="button" class="btn-delete-mesa" id="btnEliminarMesaTrabajo">
+            🗑️ Eliminar
+          </button>
+        </div>
       </div>
       <div class="mesa-trabajo-body" id="mesaTrabajoContenido">
         <!-- Contenido dinámico -->

@@ -27,6 +27,10 @@ exports.getMesaTrabajoByClienteId = async (cliente_id) => {
   const result = await pool.query(
     `SELECT 
       mt.*,
+      CASE WHEN mt.soporte_ruta IS NOT NULL 
+        THEN '/uploads/soporte-mesa-trabajo/' || mt.soporte_ruta 
+        ELSE NULL 
+      END AS soporte_url,
       c.cedula,
       c.nombre,
       c.sede,
@@ -45,6 +49,10 @@ exports.getMesaTrabajoById = async (id) => {
   const result = await pool.query(
     `SELECT 
       mt.*,
+      CASE WHEN mt.soporte_ruta IS NOT NULL 
+        THEN '/uploads/soporte-mesa-trabajo/' || mt.soporte_ruta 
+        ELSE NULL 
+      END AS soporte_url,
       c.cedula,
       c.nombre,
       c.sede,
@@ -109,10 +117,10 @@ exports.updateMesaTrabajo = async (id, data) => {
   const result = await pool.query(
     `UPDATE mesa_trabajo_sve SET
       criterio_inclusion = $1,
-      motivo_evaluacion = $2,
-      diagnostico = $3,
+      motivo_evaluacion  = $2,
+      diagnostico        = $3,
       codigo_diagnostico = $4,
-      updated_at = CURRENT_TIMESTAMP
+      updated_at         = CURRENT_TIMESTAMP
     WHERE id = $5
     RETURNING *`,
     [criterio_inclusion, motivo_evaluacion, diagnostico, codigo_diagnostico, id]
@@ -137,4 +145,29 @@ exports.clienteTieneMesaTrabajo = async (cliente_id) => {
     [cliente_id]
   );
   return result.rows.length > 0;
+};
+
+// Verificar si un cliente tiene sesiones SVE registradas
+// (impide eliminar la Mesa de Trabajo si hay sesiones)
+exports.clienteTieneSesionesSVE = async (cliente_id) => {
+  const result = await pool.query(
+    "SELECT id FROM consultas_sve WHERE cliente_id = $1 LIMIT 1",
+    [cliente_id]
+  );
+  return result.rows.length > 0;
+};
+// ============================================================
+// Actualizar solo los campos de soporte (nombre y ruta)
+// ============================================================
+exports.updateSoporteMesaTrabajo = async (id, { soporte_nombre, soporte_ruta }) => {
+  const result = await pool.query(
+    `UPDATE mesa_trabajo_sve SET
+      soporte_nombre = $1,
+      soporte_ruta   = $2,
+      updated_at     = CURRENT_TIMESTAMP
+    WHERE id = $3
+    RETURNING *`,
+    [soporte_nombre, soporte_ruta, id]
+  );
+  return result.rows[0];
 };

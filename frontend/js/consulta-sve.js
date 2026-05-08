@@ -54,6 +54,11 @@ function inicializarSVE() {
     btnEditarMesa.addEventListener('click', habilitarEdicionMesaTrabajo);
   }
 
+  const btnEliminarMesa = document.getElementById('btnEliminarMesaTrabajo');
+  if (btnEliminarMesa) {
+    btnEliminarMesa.addEventListener('click', eliminarMesaTrabajo);
+  }
+
   // Botón refrescar historial SVE
   const btnRefreshSVE = document.getElementById('btnRefreshSVE');
   if (btnRefreshSVE) {
@@ -94,9 +99,9 @@ async function cargarDatosSVE() {
       document.getElementById('criterio_inclusion').value = mesaTrabajoData.criterio_inclusion;
       document.getElementById('motivo_evaluacion_sve').value = mesaTrabajoData.motivo_evaluacion || '';
       document.getElementById('diagnostico').value = mesaTrabajoData.diagnostico;
-      // motivo_evaluacion_sve vive ahora en Formulario 1 — ya poblado arriba
       document.getElementById('codigo_diagnostico').value = mesaTrabajoData.codigo_diagnostico;
 
+      mostrarSoporteExistente(mesaTrabajoData);
       mostrarMesaTrabajoRegistrada();
       deshabilitarFormularioMesaTrabajo();
       desbloquearFormularioConsulta();
@@ -192,6 +197,19 @@ async function registrarMesaTrabajo(e) {
     }
 
     mesaTrabajoData = await response.json();
+
+    // Subir soporte si el usuario seleccionó un archivo
+    try {
+      const soporteResult = await subirSoporteMesaTrabajo(mesaTrabajoData.id);
+      if (soporteResult) {
+        mesaTrabajoData.soporte_nombre = soporteResult.soporte_nombre;
+        mesaTrabajoData.soporte_ruta   = soporteResult.soporte_ruta;
+      }
+    } catch (errSoporte) {
+      console.warn('⚠️ Mesa de Trabajo guardada, pero hubo un error al subir el soporte:', errSoporte.message);
+      alert('⚠️ La Mesa de Trabajo se guardó correctamente, pero no se pudo subir el soporte: ' + errSoporte.message);
+    }
+
     mesaTrabajoRegistrada = true;
     editandoMesaTrabajo = false;
 
@@ -213,7 +231,6 @@ async function registrarMesaTrabajo(e) {
 function deshabilitarFormularioMesaTrabajo() {
   const form = document.getElementById('formMesaTrabajo');
   const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"], button[type="reset"]');
-
   inputs.forEach(input => { input.disabled = true; });
 
   const contenedor = document.getElementById('contenedorMesaTrabajo');
@@ -231,7 +248,6 @@ function habilitarEdicionMesaTrabajo() {
 
   const form = document.getElementById('formMesaTrabajo');
   const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"], button[type="reset"]');
-
   inputs.forEach(input => { input.disabled = false; });
 
   const contenedor = document.getElementById('contenedorMesaTrabajo');
@@ -242,6 +258,63 @@ function habilitarEdicionMesaTrabajo() {
   btnSubmit.innerHTML = '💾 Actualizar Mesa de Trabajo';
 
   contenedor.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function eliminarMesaTrabajo() {
+  if (!mesaTrabajoData) return;
+
+  if (!confirm('¿Está seguro que desea eliminar la Mesa de Trabajo?\nEsta acción no se puede deshacer.')) return;
+
+  try {
+    const res = await fetch(
+      `${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoData.id}`,
+      { method: 'DELETE', headers: getAuthHeaders() }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // El backend devuelve 409 si hay sesiones registradas
+      if (res.status === 409) {
+        alert(`⚠️ ${data.message}`);
+      } else {
+        alert(`❌ ${data.message || 'Error al eliminar la Mesa de Trabajo'}`);
+      }
+      return;
+    }
+
+    // Limpiar estado local
+    mesaTrabajoData       = null;
+    mesaTrabajoRegistrada = false;
+    editandoMesaTrabajo   = false;
+
+    // Ocultar la card del historial
+    document.getElementById('mesaTrabajoRegistrada').style.display = 'none';
+
+    // Limpiar el formulario y habilitarlo de nuevo
+    const form = document.getElementById('formMesaTrabajo');
+    form.reset();
+    const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"], button[type="reset"]');
+    inputs.forEach(input => { input.disabled = false; });
+
+    const contenedor = document.getElementById('contenedorMesaTrabajo');
+    contenedor.style.opacity = '1';
+    contenedor.style.background = 'white';
+
+    document.getElementById('btnRegistrarMesaTrabajo').innerHTML = '💾 Registrar Mesa de Trabajo';
+
+    // Bloquear el formulario de consulta SVE (requiere mesa de trabajo)
+    const contenedorConsulta = document.getElementById('contenedorConsulta');
+    if (contenedorConsulta) contenedorConsulta.classList.add('bloqueado');
+
+    // Resetear el contenedor de soporte
+    mostrarEstadoSoporte('vacio');
+
+    alert('✅ Mesa de Trabajo eliminada correctamente');
+  } catch (err) {
+    console.error('❌ Error eliminando Mesa de Trabajo:', err);
+    alert('❌ No se pudo eliminar la Mesa de Trabajo');
+  }
 }
 
 function mostrarMesaTrabajoRegistrada() {
@@ -766,3 +839,200 @@ window.reabrirCasoSVE = async function() {
 };
 
 console.log('✅ Módulo consulta-sve.js cargado');
+
+
+console.log('✅ Módulo consulta-sve.js cargado');
+
+// ============================================================
+// SOPORTE MESA DE TRABAJO — lógica de archivo (contenedor independiente)
+// Estados: vacío | pendiente (seleccionado sin guardar) | guardado
+// ============================================================
+
+function getFileIcon(nombre) {
+  if (!nombre) return '📄';
+  const ext = nombre.split('.').pop().toLowerCase();
+  if (ext === 'pdf') return '📕';
+  if (['doc', 'docx'].includes(ext)) return '📘';
+  if (['xls', 'xlsx'].includes(ext)) return '📗';
+  return '📄';
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function mostrarEstadoSoporte(estado) {
+  document.getElementById('soporteEstadoVacio').style.display     = estado === 'vacio'     ? 'flex' : 'none';
+  document.getElementById('soporteEstadoPendiente').style.display  = estado === 'pendiente' ? 'flex' : 'none';
+  document.getElementById('soporteEstadoGuardado').style.display   = estado === 'guardado'  ? 'flex' : 'none';
+}
+
+function actualizarContenedorSoporte() {
+  if (!mesaTrabajoData) return;
+
+  if (mesaTrabajoData.soporte_nombre && mesaTrabajoData.soporte_url) {
+    const baseUrl   = window.API_CONFIG?.ENDPOINTS?.BASE || 'http://localhost:5000';
+    // URL pública — igual que entrega-resultados.js: BASE_URL + ruta relativa
+    const urlPublica = `${baseUrl}${mesaTrabajoData.soporte_url}`;
+
+    document.getElementById('soporteGuardadoIcon').textContent   = getFileIcon(mesaTrabajoData.soporte_nombre);
+    document.getElementById('soporteGuardadoNombre').textContent = mesaTrabajoData.soporte_nombre;
+
+    // Ver: abre en nueva pestaña con URL pública (sin token)
+    document.getElementById('btnVerSoporte').href = urlPublica;
+
+    // Descargar: guarda la URL para el handler fetch+blob
+    document.getElementById('btnDescargarSoporte').dataset.url  = urlPublica;
+    document.getElementById('btnDescargarSoporte').dataset.nombre = mesaTrabajoData.soporte_nombre;
+
+    mostrarEstadoSoporte('guardado');
+  } else {
+    mostrarEstadoSoporte('vacio');
+  }
+}
+
+function mostrarSoporteExistente(mesaTrabajo) {
+  document.getElementById('soporte_mesa_trabajo').value = '';
+  actualizarContenedorSoporte();
+}
+
+function initSoporteUploader() {
+  const inputFile = document.getElementById('soporte_mesa_trabajo');
+  const btnQuitar = document.getElementById('btnQuitarSoporte');
+  if (!inputFile) return;
+
+  inputFile.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('⚠️ El archivo supera el tamaño máximo de 10 MB');
+      this.value = '';
+      return;
+    }
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+      alert('⚠️ Formato no permitido. Use PDF, Word o Excel.');
+      this.value = '';
+      return;
+    }
+
+    document.getElementById('soporteFileIconNuevo').textContent = getFileIcon(file.name);
+    document.getElementById('soporteFileName').textContent      = file.name;
+    document.getElementById('soporteFileSize').textContent      = formatBytes(file.size);
+    mostrarEstadoSoporte('pendiente');
+  });
+
+  btnQuitar.addEventListener('click', function () {
+    document.getElementById('soporte_mesa_trabajo').value = '';
+    actualizarContenedorSoporte();
+  });
+
+  // Descargar: fetch con Authorization + blob URL (patrón de entrega-resultados.js)
+  const btnDescargar = document.getElementById('btnDescargarSoporte');
+  if (btnDescargar) {
+    btnDescargar.addEventListener('click', async function (e) {
+      e.preventDefault();
+      const url    = this.dataset.url;
+      const nombre = this.dataset.nombre || 'soporte_mesa_trabajo';
+      if (!url) return;
+      try {
+        const res = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+        if (!res.ok) throw new Error('Error al descargar');
+        const blob    = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a       = document.createElement('a');
+        a.href        = blobUrl;
+        a.download    = nombre;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      } catch (err) {
+        console.error('Error descargando soporte:', err);
+        alert('❌ No se pudo descargar el soporte');
+      }
+    });
+  }
+}
+
+async function subirSoporteMesaTrabajo(mesaTrabajoId) {
+  const inputFile = document.getElementById('soporte_mesa_trabajo');
+  if (!inputFile || !inputFile.files[0]) return null;
+
+  const formData = new FormData();
+  formData.append('soporte', inputFile.files[0]);
+
+  const token = getAuthToken();
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+  const res = await fetch(`${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoId}/soporte`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Error al subir el soporte');
+  }
+  return await res.json();
+}
+
+async function guardarSoporte() {
+  if (!mesaTrabajoData || !mesaTrabajoData.id) {
+    alert('⚠️ Primero debe registrar la Mesa de Trabajo antes de subir el soporte.');
+    return;
+  }
+
+  const btnGuardar = document.getElementById('btnGuardarSoporte');
+  btnGuardar.disabled = true;
+  btnGuardar.innerHTML = '⏳ Guardando...';
+
+  try {
+    const resultado = await subirSoporteMesaTrabajo(mesaTrabajoData.id);
+    if (resultado) {
+      mesaTrabajoData.soporte_nombre = resultado.soporte_nombre;
+      mesaTrabajoData.soporte_ruta   = resultado.soporte_ruta;
+      mesaTrabajoData.soporte_url    = resultado.soporte_url;
+    }
+    document.getElementById('soporte_mesa_trabajo').value = '';
+    actualizarContenedorSoporte();
+    mostrarMesaTrabajoRegistrada();
+    alert('✅ Soporte guardado correctamente');
+  } catch (err) {
+    console.error('❌ Error guardando soporte:', err);
+    alert('❌ No se pudo guardar el soporte: ' + err.message);
+  } finally {
+    btnGuardar.disabled = false;
+    btnGuardar.innerHTML = '💾 Guardar soporte';
+  }
+}
+
+async function eliminarSoporteHistorial() {
+  if (!mesaTrabajoData) return;
+  if (!confirm('¿Desea eliminar el soporte adjunto? Esta acción no se puede deshacer.')) return;
+
+  try {
+    const res = await fetch(
+      `${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoData.id}/soporte`,
+      { method: 'DELETE', headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw new Error('Error al eliminar soporte');
+
+    mesaTrabajoData.soporte_nombre = null;
+    mesaTrabajoData.soporte_ruta   = null;
+    actualizarContenedorSoporte();
+    mostrarMesaTrabajoRegistrada();
+    alert('✅ Soporte eliminado correctamente');
+  } catch (err) {
+    console.error('❌ Error eliminando soporte:', err);
+    alert('❌ No se pudo eliminar el soporte');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initSoporteUploader);

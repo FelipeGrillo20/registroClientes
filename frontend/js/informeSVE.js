@@ -264,17 +264,6 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario) {
       </div>
     </div>
 
-    <!-- Motivo de Evaluación (Primera Sesión) -->
-    <div class="informe-section-sve">
-      <h2 class="informe-section-title-sve">
-        <span class="section-icon-sve">📝</span>
-        Motivo de Evaluación y Situación Actual
-      </h2>
-      <div class="texto-completo-sve">
-        <div class="texto-contenido-sve">${escapeHtmlSVE(primeraConsulta.motivo_evaluacion)}</div>
-      </div>
-    </div>
-
     <!-- Metodología y Técnica -->
     <div class="informe-section-sve">
       <h2 class="informe-section-title-sve">

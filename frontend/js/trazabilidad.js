@@ -457,8 +457,8 @@ function renderRows(rows) {
         ? `<span class="badge badge-sesion">${sesionNum}</span>`
         : '-';
 
-      // Cada sesión = 1 hora
-      horasSesion = '1';
+      // Horas reales de la sesión (campo horas_sesion, por defecto 1)
+      horasSesion = String(parseInt(consulta.horas_sesion) || 1);
 
       // Sesiones sugeridas del cliente
       sesionessugeridas = client.consultas_sugeridas
@@ -738,12 +738,17 @@ function updateStats(rows) {
   const arl        = new Set(rows.filter(r => r.client.tipo_entidad_pagadora === 'ARL').map(r => r.client.id)).size;
   const ccf        = new Set(rows.filter(r => r.client.tipo_entidad_pagadora === 'CCF').map(r => r.client.id)).size;
 
-  document.getElementById("statTotal").textContent    = clientesUnicos.size;
+  // Sumar horas reales de cada sesión (campo horas_sesion, por defecto 1)
+  const totalHoras = rows
+    .filter(r => r.consulta !== null)
+    .reduce((sum, r) => sum + (parseInt(r.consulta.horas_sesion) || 1), 0);
+
+  document.getElementById("statTotal").textContent      = clientesUnicos.size;
   document.getElementById("statParticular").textContent = particular;
-  document.getElementById("statARL").textContent      = arl;
-  document.getElementById("statCCF").textContent      = ccf;
-  document.getElementById("statSesiones").textContent = totalSesiones;
-  document.getElementById("statHoras").textContent    = totalSesiones; // 1 sesión = 1 hora
+  document.getElementById("statARL").textContent        = arl;
+  document.getElementById("statCCF").textContent        = ccf;
+  document.getElementById("statSesiones").textContent   = totalSesiones;
+  document.getElementById("statHoras").textContent      = totalHoras;
 }
 
 // ─── Mostrar / Ocultar mensaje sin datos ──────────────────────────────────────
@@ -874,7 +879,7 @@ function exportarExcel() {
       }
       motivoConsulta = consulta.motivo_consulta || '-';
       numSesion      = sesionNum !== null ? String(sesionNum) : '-';
-      horasSesion    = '1';
+      horasSesion    = String(parseInt(consulta.horas_sesion) || 1);
       observaciones  = consulta.columna1 || '-';
 
       const profId   = consulta.profesional_id || client.profesional_id;

@@ -7,7 +7,6 @@ exports.createConsultaSve = async (data) => {
     cliente_id,
     fecha,
     modalidad,
-    motivo_evaluacion,
     ajuste_funciones,
     recomendaciones_medicas,
     recomendaciones_trabajador,
@@ -18,12 +17,12 @@ exports.createConsultaSve = async (data) => {
 
   const result = await pool.query(
     `INSERT INTO consultas_sve 
-    (cliente_id, fecha, modalidad, motivo_evaluacion, ajuste_funciones, 
+    (cliente_id, fecha, modalidad, ajuste_funciones, 
      recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
      observaciones, estado)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *`,
-    [cliente_id, fecha, modalidad, motivo_evaluacion, ajuste_funciones, 
+    [cliente_id, fecha, modalidad, ajuste_funciones, 
      recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
      observaciones, estado]
   );
@@ -106,7 +105,6 @@ exports.updateConsultaSve = async (id, data) => {
   const {
     fecha,
     modalidad,
-    motivo_evaluacion,
     ajuste_funciones,
     recomendaciones_medicas,
     recomendaciones_trabajador,
@@ -119,17 +117,16 @@ exports.updateConsultaSve = async (id, data) => {
     `UPDATE consultas_sve SET
       fecha = $1,
       modalidad = $2,
-      motivo_evaluacion = $3,
-      ajuste_funciones = $4,
-      recomendaciones_medicas = $5,
-      recomendaciones_trabajador = $6,
-      recomendaciones_empresa = $7,
-      observaciones = $8,
-      estado = $9,
+      ajuste_funciones = $3,
+      recomendaciones_medicas = $4,
+      recomendaciones_trabajador = $5,
+      recomendaciones_empresa = $6,
+      observaciones = $7,
+      estado = $8,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $10
+    WHERE id = $9
     RETURNING *`,
-    [fecha, modalidad, motivo_evaluacion, ajuste_funciones, 
+    [fecha, modalidad, ajuste_funciones, 
      recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
      observaciones, estado, id]
   );

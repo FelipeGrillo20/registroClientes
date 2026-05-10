@@ -120,7 +120,10 @@ window.generarInformePaciente = async function() {
   console.log("✅ Generando informe para Consulta", consultaNumberActual);
 
   const numeroSesiones = sesionesConsulta.length;
-  const numeroHoras = numeroSesiones;
+  // Sumar las horas reales de cada sesión (campo horas_sesion, por defecto 1)
+  const numeroHoras = sesionesConsulta.reduce(
+    (total, s) => total + (parseInt(s.horas_sesion) || 1), 0
+  );
 
   const fechaInicial = new Date(sesionesConsulta[0].fecha);
   const fechaCierre = new Date(fechaCierreConsulta);

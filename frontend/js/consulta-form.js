@@ -134,6 +134,44 @@ function getMotivosValor() {
 }
 
 // ============================================
+// WIDGET HORAS SESIÓN
+// Valor por defecto: 1. Mínimo: 1 (no acepta 0 ni negativos)
+// ============================================
+
+window.cambiarHorasSesion = function(delta) {
+  const hiddenInput = document.getElementById("horas_sesion");
+  const valorSpan   = document.getElementById("horasSesionValor");
+  const btnDec      = document.getElementById("btnDecHoras");
+
+  if (!hiddenInput || !valorSpan) return;
+
+  let actual = parseInt(hiddenInput.value) || 1;
+  actual += delta;
+  if (actual < 1) actual = 1;   // nunca cero ni negativo
+
+  hiddenInput.value    = actual;
+  valorSpan.textContent = actual;
+
+  // Deshabilitar botón de decrementar cuando llegue a 1
+  if (btnDec) btnDec.disabled = actual <= 1;
+};
+
+function resetHorasSesion() {
+  const hiddenInput = document.getElementById("horas_sesion");
+  const valorSpan   = document.getElementById("horasSesionValor");
+  const btnDec      = document.getElementById("btnDecHoras");
+  if (hiddenInput) hiddenInput.value = "1";
+  if (valorSpan)   valorSpan.textContent = "1";
+  if (btnDec)      btnDec.disabled = true;
+}
+
+// Inicializar botón decrementar como deshabilitado (valor inicial = 1)
+document.addEventListener("DOMContentLoaded", () => {
+  const btnDec = document.getElementById("btnDecHoras");
+  if (btnDec) btnDec.disabled = true;
+});
+
+// ============================================
 // CAMPO FECHA DE CIERRE - TOGGLE
 // ============================================
 
@@ -297,6 +335,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
   const recomendaciones_finales = document.getElementById("recomendaciones_finales").value.trim();
   const observaciones_confidenciales = document.getElementById("observaciones_confidenciales").value === "true";
   const consultas_sugeridas = document.getElementById("consultas_sugeridas").value;
+  const horas_sesion = parseInt(document.getElementById("horas_sesion")?.value) || 1;
 
   if (!motivo_consulta || !modalidad || !fecha || !estado) {
     if (!motivo_consulta) {
@@ -414,7 +453,8 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     columna1: columna1 || null,
     estado,
     fecha_cierre: estado === "Cerrado" ? fecha_cierre : null,
-    observaciones_confidenciales
+    observaciones_confidenciales,
+    horas_sesion
   };
 
   // Incluir consulta_number solo cuando es sesión adicional de consulta existente.
@@ -475,6 +515,7 @@ document.getElementById("formConsulta")?.addEventListener("submit", async (e) =>
     // Reset del formulario
     document.getElementById("formConsulta").reset();
     limpiarMotivos();
+    resetHorasSesion();
     editandoConsultaId = null;
 
     document.getElementById("observaciones_confidenciales").value = "false";
@@ -527,6 +568,15 @@ window.editarConsulta = async function(id) {
     document.getElementById("fecha").value = consulta.fecha.split('T')[0];
     document.getElementById("columna1").value = consulta.columna1 || "";
     document.getElementById("estado").value = consulta.estado;
+
+    // Cargar horas de sesión guardadas (o 1 por defecto)
+    const horasGuardadas = parseInt(consulta.horas_sesion) || 1;
+    const hiddenHoras = document.getElementById("horas_sesion");
+    const valorSpan   = document.getElementById("horasSesionValor");
+    const btnDec      = document.getElementById("btnDecHoras");
+    if (hiddenHoras) hiddenHoras.value = horasGuardadas;
+    if (valorSpan)   valorSpan.textContent = horasGuardadas;
+    if (btnDec)      btnDec.disabled = horasGuardadas <= 1;
 
     const esConfidencial = consulta.observaciones_confidenciales || false;
     document.getElementById("observaciones_confidenciales").value = esConfidencial.toString();
@@ -662,6 +712,7 @@ document.getElementById("formConsulta")?.addEventListener("reset", () => {
   document.querySelector(".btn-submit-consulta").innerHTML = "💾 Registrar Consulta";
   document.getElementById("fechaCierreContainer").classList.remove("show");
   limpiarMotivos();
+  resetHorasSesion();
 
   const recomendacionesActuales = document.getElementById("recomendaciones_finales").value;
 

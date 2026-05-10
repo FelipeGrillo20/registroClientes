@@ -486,6 +486,65 @@
     }
     .btn-antecedentes-salud:active { transform: translateY(0); }
 
+    /* ============================================================ */
+    /* WIDGET HORAS SESIÓN                                          */
+    /* ============================================================ */
+    .horas-sesion-widget {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0f2ff;
+      border: 1.5px solid #c5cae9;
+      border-radius: 10px;
+      padding: 6px 12px;
+    }
+    .horas-sesion-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3949ab;
+      white-space: nowrap;
+    }
+    .horas-sesion-control {
+      display: inline-flex;
+      align-items: center;
+      border: 1.5px solid #9fa8da;
+      border-radius: 7px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .horas-btn {
+      background: #e8eaf6;
+      border: none;
+      color: #3949ab;
+      font-size: 11px;
+      width: 26px;
+      height: 30px;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1;
+      transition: background 0.2s;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .horas-btn:hover:not(:disabled) { background: #c5cae9; }
+    .horas-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .horas-sesion-valor {
+      min-width: 28px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #283593;
+      padding: 0 4px;
+      user-select: none;
+    }
+    .horas-sesion-unidad {
+      font-size: 12px;
+      color: #5c6bc0;
+      font-weight: 500;
+    }
+
     .info-icon-antecedentes {
       background: linear-gradient(135deg, #1abc9c, #16a085) !important;
     }
@@ -1127,20 +1186,35 @@
               <input type="date" id="fecha" required />
             </div>
 
-            <!-- Observaciones -->
-            <div class="form-group full-width">
+            <!-- Observaciones + Horas Sesión (ocupa toda la fila) -->
+            <div class="form-group full-width" style="position: relative;">
               <label for="columna1">
                 <span class="label-icon">📄</span>
                 Observaciones
               </label>
               
-              <!-- ⭐ NUEVO: Toggle de confidencialidad -->
-              <div class="confidencialidad-toggle">
-                <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
-                  <span class="candado-icon" id="candadoIcon">🔓</span>
-                  <span class="candado-texto" id="candadoTexto">Visible en informe</span>
-                </button>
-                <input type="hidden" id="observaciones_confidenciales" value="false">
+              <!-- Fila: toggle confidencialidad + contador horas sesión -->
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;">
+                <!-- Toggle de confidencialidad -->
+                <div class="confidencialidad-toggle" style="margin-bottom: 0;">
+                  <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
+                    <span class="candado-icon" id="candadoIcon">🔓</span>
+                    <span class="candado-texto" id="candadoTexto">Visible en informe</span>
+                  </button>
+                  <input type="hidden" id="observaciones_confidenciales" value="false">
+                </div>
+
+                <!-- ⭐ NUEVO: Widget Horas Sesión -->
+                <div class="horas-sesion-widget">
+                  <span class="horas-sesion-label">⏱️ Horas sesión</span>
+                  <div class="horas-sesion-control">
+                    <button type="button" class="horas-btn horas-btn-dec" id="btnDecHoras" onclick="cambiarHorasSesion(-1)" title="Disminuir horas">▼</button>
+                    <span class="horas-sesion-valor" id="horasSesionValor">1</span>
+                    <button type="button" class="horas-btn horas-btn-inc" id="btnIncHoras" onclick="cambiarHorasSesion(1)" title="Aumentar horas">▲</button>
+                  </div>
+                  <span class="horas-sesion-unidad">hora(s)</span>
+                  <input type="hidden" id="horas_sesion" value="1" />
+                </div>
               </div>
               
               <textarea 

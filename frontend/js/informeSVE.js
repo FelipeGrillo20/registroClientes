@@ -1,4 +1,4 @@
-// frontend/js/informeSVE.js - Sistema de Generación de Informes SVE
+// frontend/js/informeSVE.js - Sistema de Generación de Informes SVE.
 
 const MESA_TRABAJO_API = window.API_CONFIG.ENDPOINTS.MESA_TRABAJO_SVE;
 const CONSULTAS_SVE_API = window.API_CONFIG.ENDPOINTS.CONSULTAS_SVE;

@@ -23,11 +23,12 @@
   Chart.defaults.font.family = "'DM Sans', sans-serif";
 
   // ─── ESTADO ────────────────────────────────────────
-  let rawClients  = [];   // todos los clientes de la empresa/filtro
-  let rawConsultas = [];  // todas las sesiones de esos clientes
-  let empresas    = [];   // catálogo de empresas
-  let charts      = {};   // instancias Chart.js activas
-  let lastSnapshot = null; // último snapshot de datos para el informe imprimible
+  let rawClients    = [];  // todos los clientes
+  let rawConsultas  = [];  // sesiones de Orientación Psicosocial
+  let rawConsultasSve = []; // sesiones de SVE (/api/consultas-sve)
+  let empresas      = [];  // catálogo de empresas
+  let charts        = {};  // instancias Chart.js activas
+  let lastSnapshot  = null; // snapshot para el informe imprimible
 
   // ─── HELPERS JWT ───────────────────────────────────
   function getToken() {
@@ -253,38 +254,74 @@
   // Traemos todo sin filtros de URL. El filtro real se hace localmente
   // en filtrarDatos() usando subcontratista_id, sede, etc.
   async function cargarDatos() {
-    const [resClients, resConsultas] = await Promise.all([
-      fetch(`${API}/api/clients`,   { headers: authHeaders() }),
-      fetch(`${API}/api/consultas`, { headers: authHeaders() }),
+    const [resClients, resConsultas, resConsultasSve] = await Promise.all([
+      fetch(`${API}/api/clients`,        { headers: authHeaders() }),
+      fetch(`${API}/api/consultas`,      { headers: authHeaders() }),
+      fetch(`${API}/api/consultas-sve`,  { headers: authHeaders() }),
     ]);
 
-    rawClients   = resClients.ok   ? await resClients.json()   : [];
-    rawConsultas = resConsultas.ok ? await resConsultas.json() : [];
+    rawClients      = resClients.ok      ? await resClients.json()      : [];
+    rawConsultas    = resConsultas.ok    ? await resConsultas.json()    : [];
+    rawConsultasSve = resConsultasSve.ok ? await resConsultasSve.json() : [];
+
+    // Normalizar sesiones SVE para que sean compatibles con la lógica existente:
+    // - Agregar consulta_number = 1 (SVE no lo tiene, cada registro es independiente)
+    // - Agregar motivo_consulta = null (SVE no tiene este campo)
+    // - Agregar observaciones_confidenciales = false
+    rawConsultasSve = rawConsultasSve.map(s => ({
+      ...s,
+      consulta_number:             s.consulta_number             ?? 1,
+      motivo_consulta:             s.motivo_consulta             ?? null,
+      observaciones_confidenciales: s.observaciones_confidenciales ?? false,
+    }));
   }
 
   // ─── FILTRAR DATOS LOCALMENTE ────────────────────────
   function filtrarDatos() {
-    // "Empresa" en el filtro = "Cliente Final" del formulario → guardado en clients.subcontratista_id
     const subcontratistaId = document.getElementById("filterEmpresa").value;
     const sedeVal          = document.getElementById("filterSede").value;
     const modalidad        = document.getElementById("filterModalidad").value;
     const anio             = parseInt(document.getElementById("filterAnio").value) || null;
     const mes              = parseInt(document.getElementById("filterMes").value) || null;
 
-    // Filtrar clientes
+    // El select guarda códigos cortos de localStorage ('orientacion','vigilancia')
+    // pero la BD guarda el texto completo. Mapeamos antes de comparar.
+    const MODALIDAD_MAP = {
+      "orientacion": "Orientación Psicosocial",
+      "vigilancia":  "Sistema de Vigilancia Epidemiológica",
+    };
+    const modalidadBD = MODALIDAD_MAP[modalidad] || modalidad; // si ya es texto completo, lo usa tal cual
+
+    // Filtrar clientes por empresa, sede y modalidad del programa
     let clientes = rawClients.filter(c => {
-      // "Cliente Final" → clients.subcontratista_id
       if (subcontratistaId && String(c.subcontratista_id) !== subcontratistaId) return false;
-      // Sede: solo sedes que los trabajadores realmente tienen registradas
-      if (sedeVal && c.sede !== sedeVal) return false;
-      if (modalidad && c.modalidad !== modalidad) return false;
+      if (sedeVal    && c.sede      !== sedeVal)      return false;
+      if (modalidadBD && c.modalidad !== modalidadBD) return false;
       return true;
     });
 
     const clienteIds = new Set(clientes.map(c => c.id));
 
-    // Filtrar sesiones (consultas) por cliente y fecha
-    let sesiones = rawConsultas.filter(s => {
+    // Seleccionar el pool de sesiones según modalidad del programa:
+    // - "Orientación Psicosocial" → solo rawConsultas
+    // - "Sistema de Vigilancia Epidemiológica" → solo rawConsultasSve
+    // - Sin filtro → ambas combinadas
+    let pool;
+    if (modalidadBD === "Orientación Psicosocial") {
+      pool = rawConsultas;
+    } else if (modalidadBD === "Sistema de Vigilancia Epidemiológica") {
+      pool = rawConsultasSve;
+    } else {
+      // Todos: combinar ambas fuentes, evitando IDs duplicados
+      // (un mismo id puede existir en ambas tablas — usamos prefijo para diferenciar)
+      pool = [
+        ...rawConsultas.map(s    => ({ ...s, _src: "ps"  })),
+        ...rawConsultasSve.map(s => ({ ...s, _src: "sve", id: `sve_${s.id}` })),
+      ];
+    }
+
+    // Filtrar por clienteIds y fecha
+    let sesiones = pool.filter(s => {
       if (!clienteIds.has(s.cliente_id)) return false;
       if (anio || mes) {
         const f = new Date(s.fecha);

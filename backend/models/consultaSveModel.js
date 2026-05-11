@@ -72,9 +72,16 @@ exports.getConsultasSveByProfesional = async (profesionalId) => {
 // Obtener consultas SVE de un cliente específico
 exports.getConsultasSveByCliente = async (cliente_id) => {
   const result = await pool.query(
-    `SELECT * FROM consultas_sve 
-     WHERE cliente_id = $1 
-     ORDER BY fecha DESC, created_at DESC`,
+    `SELECT
+       cs.*,
+       cl.profesional_id,
+       u.nombre AS profesional_nombre,
+       u.cedula AS profesional_cedula
+     FROM consultas_sve cs
+     INNER JOIN clients cl ON cl.id = cs.cliente_id
+     LEFT  JOIN users  u  ON u.id  = cl.profesional_id
+     WHERE cs.cliente_id = $1
+     ORDER BY cs.fecha ASC, cs.created_at ASC`,
     [cliente_id]
   );
   return result.rows;

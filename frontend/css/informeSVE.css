@@ -10,14 +10,23 @@
 /* ============================================ */
 .informe-container-sve {
   max-width: 100%;
-  border: none;
+  border: 3px solid #2c3e50;
   padding: 40px;
   background: white;
+  box-shadow: 0 0 0 1px #e0e0e0 inset;
   position: relative;
 }
 
+/* Marco decorativo interno */
 .informe-container-sve::before {
-  display: none;
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid #95a5a6;
+  pointer-events: none;
 }
 
 .informe-header-sve {
@@ -245,6 +254,15 @@
   padding: 25px;
   border-radius: 12px;
   border: 2px solid #e9ecef;
+  /* Permite saltos entre sesiones, pero no dentro de cada una */
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+/* El título de sesiones nunca queda solo: arrastra la primera sesión */
+.informe-sesiones-sve .informe-section-title-sve {
+  page-break-after: avoid;
+  break-after: avoid;
 }
 
 .sesion-card-sve {
@@ -255,6 +273,9 @@
   margin-bottom: 20px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  /* Cada sesión individual no se parte */
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .sesion-card-sve:last-child {
@@ -486,44 +507,45 @@
     print-color-adjust: exact !important;
   }
 
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
-  .sesion-grid-sve {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-
-  .sesion-bloque-sve {
-    page-break-inside: avoid !important;
-  }
-
-  html {
-    border: none;
-  }
-
-  body {
+  html, body {
+    width: 210mm;
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
-    box-shadow: none !important;
-    min-height: 100%;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
+  @page {
+    size: A4;
+    /* Margen suficiente para que el borde del body quede visible en cada página */
+    margin: 8mm;
+  }
+
+  /* body actúa como el marco que se repite en cada página */
+  body {
+    border: 3px solid #2c3e50 !important;
+    /* Marco decorativo interno como outline */
+    outline: 1px solid #95a5a6 !important;
+    outline-offset: -8px !important;
+    /* Padding vertical para dar espacio al texto en los cortes de página */
+    padding: 6mm 8mm !important;
+    box-sizing: border-box !important;
+  }
+
+  /* El contenedor interior sin borde propio — el borde lo da el body */
   .informe-container-sve {
     border: none !important;
     outline: none !important;
-    padding: 20px !important;
+    padding: 0 !important;
     box-shadow: none !important;
     background: white !important;
-    page-break-after: auto;
     max-width: 100% !important;
     margin: 0 !important;
+    position: relative !important;
   }
 
+  /* Ocultar el ::before posicionado */
   .informe-container-sve::before {
     display: none !important;
   }
@@ -620,6 +642,11 @@
     font-size: 13px !important;
     color: #212529 !important;
     font-weight: 500 !important;
+    text-align: justify !important;
+  }
+
+  .texto-contenido-sve {
+    text-align: justify !important;
   }
 
   .metodologia-box-sve {
@@ -632,19 +659,47 @@
 
   .informe-sesiones-sve {
     background: linear-gradient(to bottom, #f8f9fa, white) !important;
-    padding: 25px !important;
+    padding: 16px !important;
     border-radius: 12px !important;
     border: 2px solid #e9ecef !important;
-    margin-bottom: 30px !important;
+    margin-bottom: 16px !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
+  /* El título de sesiones arrastra la primera sesión */
+  .informe-sesiones-sve .informe-section-title-sve {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Las sesiones fluyen libremente — el texto continúa en la siguiente página */
   .sesion-card-sve {
     background: white !important;
     border: 2px solid #e9ecef !important;
     border-radius: 12px !important;
-    padding: 20px !important;
-    margin-bottom: 20px !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
     page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Los bloques de texto tampoco se fuerzan — fluyen */
+  .sesion-bloque-sve {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .sesion-grid-sve {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Solo el header de cada sesión no se separa de su contenido */
+  .sesion-header-sve {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   .sesion-numero-sve {
@@ -705,7 +760,18 @@
   }
 
   .informe-section-sve {
+    margin-bottom: 16px !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Solo bloques pequeños que nunca deben partirse */
+  .informe-header-sve,
+  .seccion-empresa-sve,
+  .informe-datos-personales-sve,
+  .metodologia-box-sve {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   html, body {
@@ -755,11 +821,14 @@
 @media (max-width: 768px) {
   .informe-container-sve {
     padding: 25px;
-    border: none;
+    border: 2px solid #2c3e50;
   }
 
   .informe-container-sve::before {
-    display: none;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
   }
 
   .informe-grid-sve {
@@ -816,11 +885,14 @@
 
   .informe-container-sve {
     padding: 20px;
-    border: none;
+    border-width: 2px;
   }
 
   .informe-container-sve::before {
-    display: none;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
   }
 
   .btn-informe-sve {

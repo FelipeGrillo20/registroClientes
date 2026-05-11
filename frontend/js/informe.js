@@ -75,9 +75,6 @@ window.generarInformePaciente = async function() {
   console.log("📊 Generando informe para consulta_number:", consultaNumberActual);
 
   const userData = window.getUserData();
-  const profesionalNombre = userData ? userData.nombre : 'No especificado';
-  const profesionalCedula = userData ? userData.cedula : null;
-  const rutaFirma = profesionalCedula ? `img/firmas/firma_${profesionalCedula}.png` : null;
 
   if (!clienteActual || !consultasDelCliente || consultasDelCliente.length === 0) {
     alert("⚠️ No hay información suficiente para generar el informe");
@@ -116,6 +113,23 @@ window.generarInformePaciente = async function() {
     );
     return;
   }
+
+  // ─────────────────────────────────────────────────────────────────
+  // FIRMA: leer directamente desde las sesiones de esta consulta.
+  // getConsultasByCliente ahora incluye profesional_cedula y
+  // profesional_nombre via JOIN con la tabla users, por lo que el
+  // dato llega aquí sin importar quién esté logueado.
+  // Esto garantiza que un admin que revisa un caso ajeno vea siempre
+  // la firma del profesional que lo atendió, no la suya propia.
+  // ─────────────────────────────────────────────────────────────────
+  const sesionRef = sesionesConsulta[0];
+  const profesionalNombre = sesionRef?.profesional_nombre
+                         || (userData ? userData.nombre : 'No especificado');
+  const profesionalCedula = sesionRef?.profesional_cedula
+                         || (userData ? userData.cedula : null);
+  const rutaFirma = profesionalCedula
+    ? `img/firmas/firma_${profesionalCedula}.png`
+    : null;
 
   console.log("✅ Generando informe para Consulta", consultaNumberActual);
 

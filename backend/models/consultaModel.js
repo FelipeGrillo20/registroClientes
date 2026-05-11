@@ -53,17 +53,19 @@ exports.createConsulta = async (data) => {
     columna1,
     estado,
     observaciones_confidenciales,
-    consultas_sugeridas
+    consultas_sugeridas,
+    horas_sesion
   } = data;
 
   const result = await pool.query(
     `INSERT INTO consultas
     (cliente_id, consulta_number, motivo_consulta, actividad, modalidad, fecha,
-     columna1, estado, observaciones_confidenciales, consultas_sugeridas)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     columna1, estado, observaciones_confidenciales, consultas_sugeridas, horas_sesion)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *`,
     [cliente_id, consulta_number, motivo_consulta, actividad, modalidad, fecha,
-     columna1, estado, observaciones_confidenciales, consultas_sugeridas || null]
+     columna1, estado, observaciones_confidenciales, consultas_sugeridas || null,
+     horas_sesion || 1]
   );
 
   return result.rows[0];
@@ -109,16 +111,9 @@ exports.getConsultasByProfesional = async (profesionalId) => {
 // ============================================
 exports.getConsultasByCliente = async (cliente_id) => {
   const result = await pool.query(
-    `SELECT
-       c.*,
-       cl.profesional_id,
-       u.cedula  AS profesional_cedula,
-       u.nombre  AS profesional_nombre
-     FROM consultas c
-     INNER JOIN clients cl ON cl.id = c.cliente_id
-     LEFT  JOIN users  u  ON u.id  = cl.profesional_id
-     WHERE c.cliente_id = $1
-     ORDER BY c.consulta_number ASC, c.fecha ASC, c.created_at ASC`,
+    `SELECT * FROM consultas
+     WHERE cliente_id = $1
+     ORDER BY consulta_number ASC, fecha ASC, created_at ASC`,
     [cliente_id]
   );
   return result.rows;
@@ -156,7 +151,8 @@ exports.updateConsulta = async (id, data) => {
     fecha,
     columna1,
     estado,
-    observaciones_confidenciales
+    observaciones_confidenciales,
+    horas_sesion
   } = data;
 
   const result = await pool.query(
@@ -168,10 +164,12 @@ exports.updateConsulta = async (id, data) => {
       columna1 = $5,
       estado = $6,
       observaciones_confidenciales = $7,
+      horas_sesion = $8,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $8
+    WHERE id = $9
     RETURNING *`,
-    [motivo_consulta, actividad, modalidad, fecha, columna1, estado, observaciones_confidenciales, id]
+    [motivo_consulta, actividad, modalidad, fecha, columna1, estado,
+     observaciones_confidenciales, horas_sesion || 1, id]
   );
 
   return result.rows[0];

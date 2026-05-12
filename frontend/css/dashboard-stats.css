@@ -210,16 +210,24 @@ body {
   background: white;
 }
 
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
 .btn-apply-filters,
+.btn-clear-filters,
 .btn-export {
-  padding: 12px 24px;
+  padding: 12px 20px;
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  align-self: flex-end;
+  white-space: nowrap;
 }
 
 .btn-apply-filters {
@@ -231,6 +239,17 @@ body {
 .btn-apply-filters:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+}
+
+.btn-clear-filters {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-clear-filters:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
 }
 
 .btn-export {
@@ -724,6 +743,15 @@ body {
     width: 100%;
     max-width: 100%;
     min-width: unset;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .btn-apply-filters,
+  .btn-clear-filters {
+    flex: 1;
   }
   
   .btn-apply-filters,

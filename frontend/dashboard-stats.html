@@ -39,7 +39,7 @@
           <option value="last">Mes Anterior</option>
           <option value="last3">Últimos 3 Meses</option>
           <option value="last6">Últimos 6 Meses</option>
-          <option value="year">Año Completo</option>
+          <option value="year" selected>Año Completo</option>
           <option value="custom">Personalizado</option>
         </select>
       </div>
@@ -51,7 +51,7 @@
         <input type="date" id="endDate" class="filter-input">
       </div>
 
-      <div class="filter-group">
+      <div class="filter-group filter-group-sm">
         <label for="filterModalidad">
           <span class="filter-icon">🏥</span>
           Modalidad:
@@ -74,9 +74,14 @@
         </select>
       </div>
 
-      <button class="btn-apply-filters" id="btnApplyFilters">
-        Aplicar Filtros
-      </button>
+      <div class="filter-actions">
+        <button class="btn-apply-filters" id="btnApplyFilters">
+          Aplicar Filtros
+        </button>
+        <button class="btn-clear-filters" id="btnClearFilters">
+          ✕ Limpiar
+        </button>
+      </div>
 
       <!--<button class="btn-export" id="btnExport">
         📥 Exportar PDF

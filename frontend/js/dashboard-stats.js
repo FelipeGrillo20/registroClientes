@@ -7,7 +7,7 @@
   // Variables globales
   let chartsInstances = {};
   let currentFilters = {
-    period: 'current',
+    period: 'year',
     profesional: 'all',
     modalidad: 'all',
     startDate: null,
@@ -17,6 +17,7 @@
   // Elementos del DOM
   const btnBack = document.getElementById("btnBack");
   const btnApplyFilters = document.getElementById("btnApplyFilters");
+  const btnClearFilters = document.getElementById("btnClearFilters");
   const btnExport = document.getElementById("btnExport");
   const filterMonth = document.getElementById("filterMonth");
   const filterModalidad = document.getElementById("filterModalidad");
@@ -91,6 +92,26 @@
     }
     
     // Aplicar filtros
+    // Botón Limpiar filtros
+    if (btnClearFilters) {
+      btnClearFilters.addEventListener("click", () => {
+        // Resetear estado interno
+        currentFilters = { period: 'year', profesional: 'all', modalidad: 'all', startDate: null, endDate: null };
+
+        // Resetear controles visuales
+        if (filterMonth)      filterMonth.value      = 'year';
+        if (filterModalidad)  filterModalidad.value  = 'all';
+        if (filterProfesional) filterProfesional.value = 'all';
+
+        // Ocultar rango personalizado si estaba visible
+        const customDateGroup = document.getElementById('customDateGroup');
+        if (customDateGroup) customDateGroup.style.display = 'none';
+
+        // Recargar estadísticas con filtros limpios
+        loadStats();
+      });
+    }
+
     if (btnApplyFilters) {
       btnApplyFilters.addEventListener("click", () => {
         if (filterMonth.value === 'custom') {

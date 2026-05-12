@@ -172,6 +172,13 @@ body {
   min-width: 200px;
 }
 
+/* Periodo ocupa menos espacio para dar lugar a Modalidad */
+.filter-group-sm {
+  flex: 0 0 auto;
+  min-width: 160px;
+  max-width: 190px;
+}
+
 .filter-group label {
   font-size: 13px;
   font-weight: 600;
@@ -712,8 +719,11 @@ body {
     flex-direction: column;
   }
   
-  .filter-group {
+  .filter-group,
+  .filter-group-sm {
     width: 100%;
+    max-width: 100%;
+    min-width: unset;
   }
   
   .btn-apply-filters,

@@ -29,7 +29,7 @@
 
     <!-- Controles de Filtros -->
     <div class="filters-section">
-      <div class="filter-group">
+      <div class="filter-group filter-group-sm">
         <label for="filterMonth">
           <span class="filter-icon">📅</span>
           Periodo:
@@ -49,6 +49,18 @@
         <input type="date" id="startDate" class="filter-input">
         <label for="endDate">Hasta:</label>
         <input type="date" id="endDate" class="filter-input">
+      </div>
+
+      <div class="filter-group">
+        <label for="filterModalidad">
+          <span class="filter-icon">🏥</span>
+          Modalidad:
+        </label>
+        <select id="filterModalidad" class="filter-select">
+          <option value="all">Todas las Modalidades</option>
+          <option value="psicosocial">Orientación Psicosocial</option>
+          <option value="vigilancia">Sistema de Vigilancia Epidemiológica</option>
+        </select>
       </div>
 
       <div class="filter-group">

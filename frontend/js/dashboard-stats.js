@@ -9,6 +9,7 @@
   let currentFilters = {
     period: 'current',
     profesional: 'all',
+    modalidad: 'all',
     startDate: null,
     endDate: null
   };
@@ -18,6 +19,7 @@
   const btnApplyFilters = document.getElementById("btnApplyFilters");
   const btnExport = document.getElementById("btnExport");
   const filterMonth = document.getElementById("filterMonth");
+  const filterModalidad = document.getElementById("filterModalidad");
   const filterProfesional = document.getElementById("filterProfesional");
   const customDateGroup = document.getElementById("customDateGroup");
   const startDate = document.getElementById("startDate");
@@ -78,6 +80,13 @@
     if (filterProfesional) {
       filterProfesional.addEventListener("change", (e) => {
         currentFilters.profesional = e.target.value;
+      });
+    }
+    
+    // Filtro de modalidad
+    if (filterModalidad) {
+      filterModalidad.addEventListener("change", (e) => {
+        currentFilters.modalidad = e.target.value;
       });
     }
     
@@ -156,7 +165,8 @@
       // Construir parámetros de consulta
       const params = new URLSearchParams({
         period: currentFilters.period,
-        profesionalId: currentFilters.profesional
+        profesionalId: currentFilters.profesional,
+        modalidad: currentFilters.modalidad
       });
       
       if (currentFilters.period === 'custom' && currentFilters.startDate && currentFilters.endDate) {

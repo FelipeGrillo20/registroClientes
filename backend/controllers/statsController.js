@@ -16,45 +16,90 @@ exports.getDashboardStats = async (req, res) => {
     console.log('📊 Iniciando carga de estadísticas...');
     console.log('Usuario:', req.user.nombre, '(', req.user.rol, ')');
     
-    const { period = 'current', profesionalId = 'all', startDate, endDate } = req.query;
-    
-    console.log('Parámetros recibidos:', { period, profesionalId, startDate, endDate });
+    const { period = 'current', profesionalId = 'all', modalidad = 'all', startDate, endDate } = req.query;
+
+    // Mapear código corto → texto completo que usa la BD en clients.modalidad
+    const MODALIDAD_MAP = {
+      'psicosocial': 'Orientación Psicosocial',
+      'vigilancia':  'Sistema de Vigilancia Epidemiológica',
+    };
+    const modalidadBD = MODALIDAD_MAP[modalidad] || null; // null = todas
+
+    console.log('Parámetros recibidos:', { period, profesionalId, modalidad, modalidadBD, startDate, endDate });
     
     // ==========================================
     // OBTENER TODOS LOS DATOS
     // ==========================================
     
-    // 1. Obtener todos los clientes
-    const clientesQuery = profesionalId && profesionalId !== 'all'
-      ? `SELECT * FROM clients WHERE profesional_id = ${profesionalId}`
+    // 1. Obtener todos los clientes (filtrando por profesional y/o modalidad)
+    let clientesWhere = [];
+    let clientesParams = [];
+    if (profesionalId && profesionalId !== 'all') {
+      clientesParams.push(profesionalId);
+      clientesWhere.push(`profesional_id = $${clientesParams.length}`);
+    }
+    if (modalidadBD) {
+      clientesParams.push(modalidadBD);
+      clientesWhere.push(`modalidad = $${clientesParams.length}`);
+    }
+    const clientesQuery = clientesWhere.length > 0
+      ? `SELECT * FROM clients WHERE ${clientesWhere.join(' AND ')}`
       : `SELECT * FROM clients`;
-    
-    const clientesResult = await pool.query(clientesQuery);
+
+    const clientesResult = await pool.query(clientesQuery, clientesParams);
     const todosLosClientes = clientesResult.rows;
     
     console.log('✅ Clientes obtenidos:', todosLosClientes.length);
     
-    // 2. Obtener todas las consultas
-    const consultasQuery = profesionalId && profesionalId !== 'all'
-      ? `SELECT c.*, cl.cedula, cl.nombre, cl.sede, cl.profesional_id, cl.empresa_id, cl.contacto_emergencia_telefono
-         FROM consultas c
-         INNER JOIN clients cl ON c.cliente_id = cl.id
-         WHERE cl.profesional_id = ${profesionalId}`
-      : `SELECT c.*, cl.cedula, cl.nombre, cl.sede, cl.profesional_id, cl.empresa_id, cl.contacto_emergencia_telefono
-         FROM consultas c
-         INNER JOIN clients cl ON c.cliente_id = cl.id`;
-    
-    const consultasResult = await pool.query(consultasQuery);
-    const todasLasConsultas = consultasResult.rows;
-    
-    console.log('✅ Consultas obtenidas:', todasLasConsultas.length);
+    // 2. Obtener sesiones según modalidad seleccionada
+    // - 'Orientación Psicosocial'              → solo tabla consultas
+    // - 'Sistema de Vigilancia Epidemiológica' → solo tabla consultas_sve
+    // - null (todas)                           → ambas tablas combinadas
+    const clienteIds = todosLosClientes.map(c => c.id);
+
+    async function fetchSesiones(tabla) {
+      if (clienteIds.length === 0) return [];
+      const placeholders = clienteIds.map((_, i) => `$${i + 1}`).join(',');
+      const q = `SELECT c.*, cl.cedula, cl.nombre, cl.sede, cl.profesional_id,
+                        cl.empresa_id, cl.contacto_emergencia_telefono
+                 FROM ${tabla} c
+                 INNER JOIN clients cl ON c.cliente_id = cl.id
+                 WHERE c.cliente_id IN (${placeholders})`;
+      const r = await pool.query(q, clienteIds);
+      return r.rows;
+    }
+
+    let todasLasConsultas = [];
+    if (!modalidadBD || modalidadBD === 'Orientación Psicosocial') {
+      const ps = await fetchSesiones('consultas');
+      todasLasConsultas = todasLasConsultas.concat(ps.map(s => ({ ...s, _src: 'ps' })));
+    }
+    if (!modalidadBD || modalidadBD === 'Sistema de Vigilancia Epidemiológica') {
+      const sve = await fetchSesiones('consultas_sve');
+      // Normalizar campos SVE que pueden no existir
+      todasLasConsultas = todasLasConsultas.concat(sve.map(s => ({
+        ...s,
+        _src: 'sve',
+        consulta_number:              s.consulta_number              ?? 1,
+        motivo_consulta:              s.motivo_consulta              ?? null,
+        observaciones_confidenciales: s.observaciones_confidenciales ?? false,
+      })));
+    }
+
+    console.log('✅ Sesiones obtenidas:', todasLasConsultas.length, '| Fuente:', modalidadBD || 'ambas');
     
     // 3. Obtener profesionales y administradores
-    const profesionalesQuery = profesionalId && profesionalId !== 'all'
-      ? `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true AND id = ${profesionalId}`
-      : `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true ORDER BY rol DESC, nombre ASC`;
-    
-    const profesionalesResult = await pool.query(profesionalesQuery);
+    let profesionalesResult;
+    if (profesionalId && profesionalId !== 'all') {
+      profesionalesResult = await pool.query(
+        `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true AND id = $1`,
+        [profesionalId]
+      );
+    } else {
+      profesionalesResult = await pool.query(
+        `SELECT id, nombre, rol FROM users WHERE (rol = 'profesional' OR rol = 'admin') AND activo = true ORDER BY rol DESC, nombre ASC`
+      );
+    }
     const profesionales = profesionalesResult.rows;
     
     console.log('✅ Profesionales y admins obtenidos:', profesionales.length);

@@ -340,16 +340,16 @@ function mostrarMesaTrabajoRegistrada() {
       <p>${escapeHtml(mesaTrabajoData.criterio_inclusion)}</p>
     </div>
     <div class="mesa-trabajo-item">
-      <strong>📝 Motivo de Evaluación y Situación Actual:</strong>
-      <p>${escapeHtml(mesaTrabajoData.motivo_evaluacion || '')}</p>
-    </div>
-    <div class="mesa-trabajo-item">
       <strong>🩺 Diagnóstico:</strong>
       <p>${escapeHtml(mesaTrabajoData.diagnostico)}</p>
     </div>
     <div class="mesa-trabajo-item">
       <strong>🔢 Código de Diagnóstico:</strong>
       <p>${escapeHtml(mesaTrabajoData.codigo_diagnostico)}</p>
+    </div>
+    <div class="mesa-trabajo-item">
+      <strong>📝 Motivo de Evaluación y Situación Actual:</strong>
+      <p>${escapeHtml(mesaTrabajoData.motivo_evaluacion || '')}</p>
     </div>
   `;
 

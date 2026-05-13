@@ -59,6 +59,17 @@ function inicializarSVE() {
     btnEliminarMesa.addEventListener('click', eliminarMesaTrabajo);
   }
 
+  // Botón Contacto de Emergencia en Form 2 SVE
+  const btnContactoSVE = document.getElementById('btnContactoEmergenciaSVE');
+  if (btnContactoSVE) {
+    btnContactoSVE.addEventListener('click', () => {
+      // Reutiliza la misma lógica del botón de Orientación Psicosocial
+      if (typeof verContactoDesdeHistorial === 'function') {
+        verContactoDesdeHistorial();
+      }
+    });
+  }
+
   // Botón refrescar historial SVE
   const btnRefreshSVE = document.getElementById('btnRefreshSVE');
   if (btnRefreshSVE) {

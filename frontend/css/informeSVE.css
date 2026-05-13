@@ -17,7 +17,7 @@
   position: relative;
 }
 
-/* Marco decorativo interno */
+/* Marco decorativo interno — versión pantalla */
 .informe-container-sve::before {
   content: '';
   position: absolute;
@@ -498,6 +498,105 @@
   transform: translateY(-1px);
 }
 
+/* ── Bloque cierre: recomendaciones finales + firma siempre    */
+/* en página nueva — evita el conflicto con break-inside: auto */
+/* de los bloques de sesión                                    */
+.bloque-cierre-sve {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* ============================================================ */
+/* SALTO DE PÁGINA FORZADO — entre pág 1 y pág 2              */
+/* ============================================================ */
+.page-break-before-sve {
+  display: block;
+  page-break-before: always;
+  break-before: page;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================================ */
+/* RESUMEN DEL PROCESO — tarjetas estadísticas                  */
+/* ============================================================ */
+.informe-estadisticas-sve {
+  margin-bottom: 20px;
+}
+
+.estadisticas-grid-sve {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.estadistica-card-sve {
+  background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+  border: 1.5px solid #56ab2f;
+  border-radius: 12px;
+  padding: 16px 10px;
+  text-align: center;
+}
+
+.estadistica-icon-sve  { font-size: 22px; margin-bottom: 6px; }
+
+.estadistica-valor-sve {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.estadistica-label-sve {
+  font-size: 11px;
+  color: #56ab2f;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.informe-cierre-info-sve {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: #f8f9fa;
+  border-left: 4px solid #56ab2f;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.cierre-item-sve { color: #4a5568; }
+.cierre-item-sve strong { color: #2c3e50; }
+
+/* ============================================================ */
+/* RECOMENDACIONES FINALES                                      */
+/* ============================================================ */
+.informe-bloque-final-sve { margin-top: 20px; }
+
+.informe-recomendaciones-finales-sve {
+  background: #fffbf0;
+  border: 1.5px solid #f0a500;
+  border-left: 4px solid #f0a500;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.informe-recomendaciones-finales-sve .informe-section-title-sve {
+  color: #b7791f;
+  border-bottom-color: #f6d860;
+}
+
+.recomendaciones-finales-contenido-sve {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #4a4a4a;
+  text-align: justify;
+}
+
 /* ============================================ */
 /* ESTILOS PARA IMPRESIÓN */
 /* ============================================ */
@@ -518,8 +617,8 @@
 
   @page {
     size: A4;
-    /* Margen suficiente para que el borde del body quede visible en cada página */
-    margin: 8mm;
+    /* Margen generoso: el borde del body (3px) + outline (1px) + espacio visual */
+    margin: 14mm 8mm;
   }
 
   /* body actúa como el marco que se repite en cada página */
@@ -528,8 +627,9 @@
     /* Marco decorativo interno como outline */
     outline: 1px solid #95a5a6 !important;
     outline-offset: -8px !important;
-    /* Padding vertical para dar espacio al texto en los cortes de página */
-    padding: 6mm 8mm !important;
+    /* Padding interno: el top/bottom más generoso para que el contenido
+       no se superponga al borde en los cortes de página */
+    padding: 10mm 8mm !important;
     box-sizing: border-box !important;
   }
 
@@ -685,7 +785,16 @@
   }
 
   /* Los bloques de texto tampoco se fuerzan — fluyen */
+  /* Borde verde en los 4 lados para que se vea el contorno al cortar la página */
   .sesion-bloque-sve {
+    border: 2px solid #56ab2f !important;
+    border-left-width: 4px !important;
+    border-radius: 10px !important;
+    background: #f8f9fa !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    box-decoration-break: clone !important;
+    -webkit-box-decoration-break: clone !important;
     page-break-inside: auto !important;
     break-inside: auto !important;
   }
@@ -796,7 +905,8 @@
   background: #f8f9fa;
   padding: 16px;
   border-radius: 10px;
-  border-left: 4px solid #56ab2f;
+  border: 2px solid #56ab2f;       /* borde verde en los 4 lados */
+  border-left-width: 4px;           /* acento izquierdo más grueso */
 }
 
 /* Si algún bloque debe ocupar todo el ancho */
@@ -898,6 +1008,52 @@
   .btn-informe-sve {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Recomendaciones finales + firma: siempre en página nueva   */
+  /* Solución al conflicto con break-inside: auto de sesiones   */
+  .bloque-cierre-sve {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* Salto de página forzado en print */
+  .page-break-before-sve {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* Resumen del proceso: tarjetas en línea */
+  .estadisticas-grid-sve {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .estadistica-card-sve {
+    background: #f0fff4 !important;
+    border: 1.5px solid #56ab2f !important;
+    border-radius: 8px !important;
+    padding: 10px 6px !important;
+    break-inside: avoid !important;
+  }
+
+  .informe-cierre-info-sve {
+    background: #f8f9fa !important;
+    border-left: 4px solid #56ab2f !important;
+    padding: 8px 14px !important;
+    break-inside: avoid !important;
+  }
+
+  /* Recomendaciones finales */
+  .informe-recomendaciones-finales-sve {
+    background: #fffbf0 !important;
+    border: 1.5px solid #f0a500 !important;
+    border-left: 4px solid #f0a500 !important;
+    border-radius: 8px !important;
+    padding: 14px 18px !important;
+    box-decoration-break: clone !important;
+    -webkit-box-decoration-break: clone !important;
   }
 
   @media (max-width: 768px) {

@@ -1,4 +1,4 @@
-// frontend/js/informeSVE.js - Sistema de Generación de Informes SVE.
+// frontend/js/informeSVE.js - Sistema de Generación de Informes SVE
 
 const MESA_TRABAJO_API = window.API_CONFIG.ENDPOINTS.MESA_TRABAJO_SVE;
 const CONSULTAS_SVE_API = window.API_CONFIG.ENDPOINTS.CONSULTAS_SVE;
@@ -169,28 +169,63 @@ window.generarInformeSVE = async function(clienteId) {
 // ============================================
 function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
   
-  // ✅ La primera consulta (cronológicamente) para obtener datos generales
   const primeraConsulta = todasConsultas[0];
-  
-  // ✅ Usar el sexo real guardado en la BD (campo cliente.sexo)
+  const ultimaConsulta  = todasConsultas[todasConsultas.length - 1];
   const sexo = cliente.sexo || '';
 
-  // Formatear fechas
-  const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+  const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  // Nombre de la empresa (Cliente Final)
-  const nombreEmpresa = cliente.cliente_final || cliente.subcontratista_definitivo || cliente.subcontratista_nombre || 'No especificado';
+  const nombreEmpresa = cliente.cliente_final || cliente.subcontratista_definitivo
+                      || cliente.subcontratista_nombre || 'No especificado';
 
-  // ─────────────────────────────────────────────────────────────────
-  // FIRMA: usar los datos resueltos en generarInformeSVE
-  // (profesional que registró las consultas, no el usuario logueado)
-  // ─────────────────────────────────────────────────────────────────
+  // ── Firma ──────────────────────────────────────────────────────
   const profesionalNombre = usuario ? usuario.nombre : 'No especificado';
   const profesionalCedula = usuario ? usuario.cedula : null;
+  const rutaFirma = profesionalCedula
+    ? `img/firmas/firma_${profesionalCedula}.png`
+    : null;
 
-  // Construir ruta de la firma según la cédula del profesional
-  const rutaFirma = profesionalCedula ? `img/firmas/firma_${profesionalCedula}.png` : null;
+  // ── Resumen del proceso ────────────────────────────────────────
+  const numeroSesiones = todasConsultas.length;
+  const numeroHoras    = todasConsultas.reduce(
+    (t, s) => t + (parseInt(s.horas_sesion) || 1), 0
+  );
+
+  const fechaInicio = new Date(primeraConsulta.fecha);
+  // ── Recomendaciones Finales SVE ────────────────────────────────
+  // Se guardan en la tabla clients (campo recomendaciones_finales_sve),
+  // NO en consultas_sve. Se leen desde window.clienteActual que ya
+  // viene cargado con todos los campos del cliente.
+  const recomendacionesFinales = window.clienteActual?.recomendaciones_finales_sve || null;
+
+  // ── Fecha de cierre SVE — también viene de clients ─────────────
+  const fechaCierreClienteRaw = window.clienteActual?.fecha_cierre_sve || null;
+  const fechaCierreRaw = fechaCierreClienteRaw || ultimaConsulta.fecha;
+  const fechaCierre    = new Date(fechaCierreRaw);
+
+  const diasEnProceso = Math.max(1,
+    Math.floor((fechaCierre - fechaInicio) / (1000 * 60 * 60 * 24))
+  );
+  const mesCierre  = mesesES[fechaCierre.getMonth()];
+  const anioCierre = fechaCierre.getFullYear();
+
+  const fechaInicioFmt = formatDateInformeSVE(primeraConsulta.fecha);
+  const fechaCierreFmt = formatDateInformeSVE(fechaCierreRaw);
+
+  // ── Helper para campos opcionales ─────────────────────────────
+  const campo = (label, valor) => valor
+    ? `<div class="informe-data-item-sve">
+         <span class="data-label-sve">${label}</span>
+         <span class="data-value-sve">${escapeHtmlSVE(valor)}</span>
+       </div>`
+    : '';
+  const campoFull = (label, valor) => valor
+    ? `<div class="informe-data-item-sve full-width">
+         <span class="data-label-sve">${label}</span>
+         <span class="data-value-sve">${escapeHtmlSVE(valor)}</span>
+       </div>`
+    : '';
 
   return `
 <!DOCTYPE html>
@@ -201,9 +236,9 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
   <title>Informe SVE - ${escapeHtmlSVE(cliente.nombre)}</title>
   <link rel="stylesheet" href="css/informeSVE.css">
   <style>
-    body { 
-      font-family: 'Segoe UI', Arial, sans-serif; 
-      padding: 30px; 
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 30px;
       background: white;
       color: #2c3e50;
     }
@@ -211,8 +246,12 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
 </head>
 <body>
   <div class="informe-container-sve">
-    
-    <!-- Encabezado del Informe -->
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PÁGINA 1: Header + Datos trabajador + Resumen + Mesa      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+
+    <!-- Encabezado -->
     <div class="informe-header-sve">
       <div class="informe-logo-sve">
         <div class="logo-circle-sve">🏥</div>
@@ -223,14 +262,14 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
       </div>
     </div>
 
-    <!-- Información de la Empresa -->
+    <!-- Empresa -->
     <div class="seccion-empresa-sve">
       <div class="empresa-nombre-sve">
         <strong>Empresa:</strong> ${escapeHtmlSVE(nombreEmpresa)}
       </div>
     </div>
 
-    <!-- Información del Trabajador -->
+    <!-- Datos del Trabajador -->
     <div class="informe-section-sve informe-datos-personales-sve">
       <h2 class="informe-section-title-sve">
         <span class="section-icon-sve">👤</span>
@@ -238,7 +277,6 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
       </h2>
       <div class="informe-grid-sve">
 
-        <!-- Fila 1: Nombre | Identificación | Sexo — siempre visibles -->
         <div class="informe-data-item-sve">
           <span class="data-label-sve">Nombre y Apellidos:</span>
           <span class="data-value-sve">${escapeHtmlSVE(cliente.nombre)}</span>
@@ -257,75 +295,67 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
           </span>
         </div>
 
-        <!-- Fila 2: Cargo | Vínculo | Sede — solo si tienen valor -->
-        ${cliente.cargo ? `
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Cargo:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.cargo)}</span>
-        </div>` : ''}
-        ${cliente.vinculo ? `
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Vínculo:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.vinculo)}</span>
-        </div>` : ''}
-        ${cliente.sede ? `
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Sede:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.sede)}</span>
-        </div>` : ''}
+        ${campo('Cargo:', cliente.cargo)}
+        ${campo('Vínculo:', cliente.vinculo)}
+        ${campo('Sede:', cliente.sede)}
+        ${campo('Email:', cliente.email)}
+        ${campo('Teléfono:', cliente.telefono)}
 
-        <!-- Fila 3: Email | Teléfono — solo si tienen valor -->
-        ${cliente.email ? `
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Email:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.email)}</span>
-        </div>` : ''}
-        ${cliente.telefono ? `
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Teléfono:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.telefono)}</span>
-        </div>` : ''}
-
-        <!-- Contacto de Emergencia — solo si tiene valor -->
         ${cliente.contacto_emergencia_nombre ? `
         <div class="informe-data-item-sve full-width">
           <span class="data-label-sve">Contacto de Emergencia:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(cliente.contacto_emergencia_nombre)} (${escapeHtmlSVE(cliente.contacto_emergencia_parentesco)}) - ${escapeHtmlSVE(cliente.contacto_emergencia_telefono)}</span>
+          <span class="data-value-sve">
+            ${escapeHtmlSVE(cliente.contacto_emergencia_nombre)}
+            (${escapeHtmlSVE(cliente.contacto_emergencia_parentesco)})
+            — ${escapeHtmlSVE(cliente.contacto_emergencia_telefono)}
+          </span>
         </div>` : ''}
 
       </div>
     </div>
 
-    <!-- Mesa de Trabajo -->
-    ${mesaTrabajo ? `
-    <div class="informe-section-sve">
+    <!-- Resumen del Proceso -->
+    <div class="informe-section-sve informe-estadisticas-sve">
       <h2 class="informe-section-title-sve">
-        <span class="section-icon-sve">📋</span>
-        Mesa de Trabajo
+        <span class="section-icon-sve">📊</span>
+        Resumen del Proceso
       </h2>
-      <div class="informe-grid-sve">
-        <div class="informe-data-item-sve full-width">
-          <span class="data-label-sve">Criterio de Inclusión al SVE:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(mesaTrabajo.criterio_inclusion)}</span>
+      <div class="estadisticas-grid-sve">
+        <div class="estadistica-card-sve">
+          <div class="estadistica-icon-sve">📅</div>
+          <div class="estadistica-valor-sve">${numeroSesiones}</div>
+          <div class="estadistica-label-sve">Sesiones Recibidas</div>
         </div>
-        ${mesaTrabajo.motivo_evaluacion ? `
-        <div class="informe-data-item-sve full-width">
-          <span class="data-label-sve">Motivo de Evaluación y Situación Actual:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(mesaTrabajo.motivo_evaluacion)}</span>
-        </div>` : ''}
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Diagnóstico:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(mesaTrabajo.diagnostico)}</span>
+        <div class="estadistica-card-sve">
+          <div class="estadistica-icon-sve">⏱️</div>
+          <div class="estadistica-valor-sve">${numeroHoras}h</div>
+          <div class="estadistica-label-sve">Horas de Atención</div>
         </div>
-        <div class="informe-data-item-sve">
-          <span class="data-label-sve">Código de Diagnóstico:</span>
-          <span class="data-value-sve">${escapeHtmlSVE(mesaTrabajo.codigo_diagnostico)}</span>
+        <div class="estadistica-card-sve">
+          <div class="estadistica-icon-sve">📆</div>
+          <div class="estadistica-valor-sve">${diasEnProceso}</div>
+          <div class="estadistica-label-sve">Días en Proceso</div>
+        </div>
+        <div class="estadistica-card-sve">
+          <div class="estadistica-icon-sve">✅</div>
+          <div class="estadistica-valor-sve">${mesCierre}</div>
+          <div class="estadistica-label-sve">Mes de Cierre</div>
+        </div>
+      </div>
+      <div class="informe-cierre-info-sve">
+        <div class="cierre-item-sve">
+          <strong>📅 Fecha de Inicio:</strong> ${fechaInicioFmt}
+        </div>
+        <div class="cierre-item-sve">
+          <strong>📅 Fecha de Cierre:</strong> ${fechaCierreFmt}
+        </div>
+        <div class="cierre-item-sve">
+          <strong>📆 Año de Cierre:</strong> ${anioCierre}
         </div>
       </div>
     </div>
-    ` : ''}
 
-    <!-- Metodología y Técnica -->
+    <!-- Metodología — va en página 1, justo antes del salto -->
     <div class="informe-section-sve">
       <h2 class="informe-section-title-sve">
         <span class="section-icon-sve">🔬</span>
@@ -336,135 +366,131 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PÁGINA 2+: Mesa de Trabajo + Historial + Recomendaciones  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="page-break-before-sve"></div>
+
+    <!-- Mesa de Trabajo — inicia página 2 -->
+    ${mesaTrabajo ? `
+    <div class="informe-section-sve">
+      <h2 class="informe-section-title-sve">
+        <span class="section-icon-sve">📋</span>
+        Mesa de Trabajo
+      </h2>
+      <div class="informe-grid-sve">
+        ${campoFull('Criterio de Inclusión al SVE:', mesaTrabajo.criterio_inclusion)}
+        ${campoFull('Motivo de Evaluación y Situación Actual:', mesaTrabajo.motivo_evaluacion)}
+        ${campo('Diagnóstico:', mesaTrabajo.diagnostico)}
+        ${campo('Código de Diagnóstico:', mesaTrabajo.codigo_diagnostico)}
+      </div>
+    </div>
+    ` : ''}
+
     <!-- Historial de Sesiones -->
     <div class="informe-section-sve informe-sesiones-sve">
       <h2 class="informe-section-title-sve">
         <span class="section-icon-sve">📊</span>
         Historial de Sesiones y Recomendaciones
       </h2>
-      
-      ${todasConsultas.map((consulta, index) => {
-        const fechaSesion = new Date(consulta.fecha);
-        const fechaFormateada = formatDateInformeSVE(consulta.fecha);
-        
-        return `
-          <div class="sesion-card-sve">
-            <div class="sesion-header-sve">
-              <span class="sesion-numero-sve">Sesión ${index + 1}</span>
-              <span class="sesion-fecha-sve">📅 ${fechaFormateada}</span>
-              <span class="sesion-modalidad-sve">${escapeHtmlSVE(consulta.modalidad)}</span>
-            </div>
 
-            <div class="sesion-contenido-sve">
-              <div class="sesion-grid-sve">
+      ${todasConsultas.map((consulta, index) => `
+        <div class="sesion-card-sve">
+          <div class="sesion-header-sve">
+            <span class="sesion-numero-sve">Sesión ${index + 1}</span>
+            <span class="sesion-fecha-sve">📅 ${formatDateInformeSVE(consulta.fecha)}</span>
+            <span class="sesion-modalidad-sve">${escapeHtmlSVE(consulta.modalidad)}</span>
+          </div>
+          <div class="sesion-contenido-sve">
+            <div class="sesion-grid-sve">
 
-                    ${consulta.observaciones ? `
-                      <div class="sesion-bloque-sve">
-                        <div class="texto-completo-sve">
-                          <span class="texto-label-sve">📄 Observaciones:</span>
-                          <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.observaciones)}</div>
-                        </div>
-                      </div>
-                    ` : ''}
+              ${consulta.observaciones ? `
+              <div class="sesion-bloque-sve">
+                <div class="texto-completo-sve">
+                  <span class="texto-label-sve">📄 Observaciones:</span>
+                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.observaciones)}</div>
+                </div>
+              </div>` : ''}
 
-                    ${consulta.ajuste_funciones ? `
-                    <div class="sesion-bloque-sve">
-                      <div class="texto-completo-sve">
-                        <span class="texto-label-sve">⚙️ Ajustes a las Funciones:</span>
-                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.ajuste_funciones)}</div>
-                      </div>
-                    </div>
-                    ` : ''}
+              ${consulta.ajuste_funciones ? `
+              <div class="sesion-bloque-sve">
+                <div class="texto-completo-sve">
+                  <span class="texto-label-sve">⚙️ Ajustes a las Funciones:</span>
+                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.ajuste_funciones)}</div>
+                </div>
+              </div>` : ''}
 
-                    ${consulta.recomendaciones_medicas ? `
-                    <div class="sesion-bloque-sve">
-                      <div class="texto-completo-sve">
-                        <span class="texto-label-sve">💊 Recomendaciones Médicas:</span>
-                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_medicas)}</div>
-                      </div>
-                    </div>
-                    ` : ''}
+              ${consulta.recomendaciones_medicas ? `
+              <div class="sesion-bloque-sve">
+                <div class="texto-completo-sve">
+                  <span class="texto-label-sve">💊 Recomendaciones Médicas:</span>
+                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_medicas)}</div>
+                </div>
+              </div>` : ''}
 
-                    ${consulta.recomendaciones_empresa ? `
-                    <div class="sesion-bloque-sve">
-                      <div class="texto-completo-sve">
-                        <span class="texto-label-sve">🏢 Recomendaciones para la Empresa:</span>
-                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_empresa)}</div>
-                      </div>
-                    </div>
-                    ` : ''}
+              ${consulta.recomendaciones_empresa ? `
+              <div class="sesion-bloque-sve">
+                <div class="texto-completo-sve">
+                  <span class="texto-label-sve">🏢 Recomendaciones para la Empresa:</span>
+                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_empresa)}</div>
+                </div>
+              </div>` : ''}
 
-                    ${consulta.recomendaciones_trabajador ? `
-                    <div class="sesion-bloque-sve">
-                      <div class="texto-completo-sve">
-                        <span class="texto-label-sve">👤 Recomendaciones para el Trabajador:</span>
-                        <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_trabajador)}</div>
-                      </div>
-                    </div>
-                    ` : ''}
+              ${consulta.recomendaciones_trabajador ? `
+              <div class="sesion-bloque-sve">
+                <div class="texto-completo-sve">
+                  <span class="texto-label-sve">👤 Recomendaciones para el Trabajador:</span>
+                  <div class="texto-contenido-sve">${escapeHtmlSVE(consulta.recomendaciones_trabajador)}</div>
+                </div>
+              </div>` : ''}
 
-              </div>
             </div>
           </div>
-        `;
-      }).join('')}
+        </div>
+      `).join('')}
     </div>
 
-    <!-- Resumen de Consultas (si hay más de una sesión) -->
-    ${todasConsultas.length > 1 ? `
-      <div class="informe-section-sve">
-        <h2 class="informe-section-title-sve">
-          <span class="section-icon-sve">📋</span>
-          Resumen de Consultas
-        </h2>
-        <table class="tabla-consultas-sve">
-          <thead>
-            <tr>
-              <th>N°</th>
-              <th>Fecha</th>
-              <th>Modalidad</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${todasConsultas.map((consulta, index) => `
-              <tr>
-                <td>${index + 1}</td>
-                <td>${formatDateInformeSVE(consulta.fecha)}</td>
-                <td>${escapeHtmlSVE(consulta.modalidad)}</td>
-                <td>${escapeHtmlSVE(consulta.estado || 'Activo')}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    ` : ''}
+    <!-- Recomendaciones Finales + Firma: agrupadas para evitar corte entre páginas -->
+    <div class="bloque-cierre-sve">
 
-    <!-- Firma -->
-    <div class="informe-footer-sve">
-      <div class="firma-y-nota-sve">
-        <div class="firma-seccion-sve">
-          ${rutaFirma ? `
-            <div class="firma-imagen-container-sve">
-              <img src="${rutaFirma}" 
-                   alt="Firma del Profesional" 
-                   class="firma-imagen-sve" 
-                   onerror="this.style.display='none'">
-            </div>
-          ` : ''}
-          <div class="firma-linea-sve"></div>
-          <p class="firma-texto-sve">Firma del Profesional</p>
-          <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
-          ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
-          <p class="firma-datos-sve">
-            Tarjeta Profesional: 142861<br>
-            Licencia SST: 19950
-          </p>
-        </div>
-        <div class="informe-nota-sve">
-          <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos, terapéuticos y de vigilancia epidemiológica ocupacional.
+      ${recomendacionesFinales ? `
+      <div class="informe-section-sve informe-recomendaciones-finales-sve">
+        <h2 class="informe-section-title-sve">
+          <span class="section-icon-sve">📝</span>
+          Recomendaciones Finales
+        </h2>
+        <div class="recomendaciones-finales-contenido-sve">
+          <p>${escapeHtmlSVE(recomendacionesFinales).replace(/\n/g, '<br>')}</p>
         </div>
       </div>
+      ` : ''}
+
+      <!-- Firma -->
+      <div class="informe-footer-sve">
+        <div class="firma-y-nota-sve">
+          <div class="firma-seccion-sve">
+            ${rutaFirma ? `
+            <div class="firma-imagen-container-sve">
+              <img src="${rutaFirma}"
+                   alt="Firma del Profesional"
+                   class="firma-imagen-sve"
+                   onerror="this.style.display='none'">
+            </div>` : ''}
+            <div class="firma-linea-sve"></div>
+            <p class="firma-texto-sve">Firma del Profesional</p>
+            <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
+            ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
+            <p class="firma-datos-sve">
+              Tarjeta Profesional: 142861<br>
+              Licencia SST: 19950
+            </p>
+          </div>
+          <div class="informe-nota-sve">
+            <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos, terapéuticos y de vigilancia epidemiológica ocupacional.
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>

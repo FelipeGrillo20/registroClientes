@@ -12,19 +12,20 @@ exports.createConsultaSve = async (data) => {
     recomendaciones_trabajador,
     recomendaciones_empresa,
     observaciones,
-    estado
+    estado,
+    nivel_complejidad  // ✅ BUG 1 CORREGIDO: campo faltaba en el destructuring
   } = data;
 
   const result = await pool.query(
     `INSERT INTO consultas_sve 
     (cliente_id, fecha, modalidad, ajuste_funciones, 
      recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
-     observaciones, estado)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     observaciones, estado, nivel_complejidad)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *`,
     [cliente_id, fecha, modalidad, ajuste_funciones, 
      recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
-     observaciones, estado]
+     observaciones, estado, nivel_complejidad || null]
   );
 
   return result.rows[0];
@@ -117,9 +118,36 @@ exports.updateConsultaSve = async (id, data) => {
     recomendaciones_trabajador,
     recomendaciones_empresa,
     observaciones,
-    estado
+    estado,
+    nivel_complejidad  // ✅ BUG 1 CORREGIDO: campo faltaba en el destructuring
   } = data;
 
+  // ✅ BUG 2 CORREGIDO: Si nivel_complejidad es undefined (no es primera sesión),
+  // se excluye del SET para no sobreescribir el valor ya guardado en la BD.
+  if (nivel_complejidad !== undefined) {
+    // Es la primera sesión: actualizar nivel_complejidad también
+    const result = await pool.query(
+      `UPDATE consultas_sve SET
+        fecha = $1,
+        modalidad = $2,
+        ajuste_funciones = $3,
+        recomendaciones_medicas = $4,
+        recomendaciones_trabajador = $5,
+        recomendaciones_empresa = $6,
+        observaciones = $7,
+        estado = $8,
+        nivel_complejidad = $9,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $10
+      RETURNING *`,
+      [fecha, modalidad, ajuste_funciones,
+       recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa,
+       observaciones, estado, nivel_complejidad || null, id]
+    );
+    return result.rows[0];
+  }
+
+  // No es la primera sesión: preservar nivel_complejidad existente
   const result = await pool.query(
     `UPDATE consultas_sve SET
       fecha = $1,

@@ -386,3 +386,92 @@ exports.eliminarSoporte = async (req, res) => {
     res.status(500).json({ message: "Error al eliminar el soporte" });
   }
 };
+// ============================================================
+// SOPORTES ADICIONALES
+// GET    /api/mesa-trabajo-sve/:id/soportes-adicionales
+// POST   /api/mesa-trabajo-sve/:id/soportes-adicionales
+// DELETE /api/mesa-trabajo-sve/:id/soportes-adicionales/:soporte_id
+// ============================================================
+
+exports.listarSoportesAdicionales = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mesa = await mesaTrabajoModel.getMesaTrabajoById(id);
+    if (!mesa) return res.status(404).json({ message: "Mesa de Trabajo no encontrada" });
+
+    const userRole = req.user?.rol;
+    const userId   = req.user?.id;
+    const cliente  = await clientModel.getClientById(mesa.cliente_id);
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "Sin permiso para ver los soportes" });
+    }
+
+    const soportes = await mesaTrabajoModel.getSoportesByMesaId(id);
+    const baseUrl  = `${req.protocol}://${req.get('host')}`;
+    res.json(soportes.map(s => ({ ...s, soporte_url: `${baseUrl}${s.soporte_url}` })));
+  } catch (err) {
+    console.error("Error listando soportes adicionales:", err);
+    res.status(500).json({ message: "Error al obtener soportes adicionales" });
+  }
+};
+
+exports.subirSoporteAdicional = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mesa = await mesaTrabajoModel.getMesaTrabajoById(id);
+    if (!mesa) return res.status(404).json({ message: "Mesa de Trabajo no encontrada" });
+
+    const userRole = req.user?.rol;
+    const userId   = req.user?.id;
+    const cliente  = await clientModel.getClientById(mesa.cliente_id);
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "Sin permiso para agregar soportes" });
+    }
+
+    if (!req.file) return res.status(400).json({ message: "No se recibió ningún archivo" });
+
+    const nuevoSoporte = await mesaTrabajoModel.addSoporteAdicional(id, {
+      soporte_nombre: req.file.originalname,
+      soporte_ruta:   req.file.filename
+    });
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    res.status(201).json({
+      ...nuevoSoporte,
+      soporte_url: `${baseUrl}/uploads/soporte-mesa-trabajo/${req.file.filename}`
+    });
+  } catch (err) {
+    console.error("Error subiendo soporte adicional:", err);
+    res.status(500).json({ message: err.message || "Error al subir soporte adicional" });
+  }
+};
+
+exports.eliminarSoporteAdicional = async (req, res) => {
+  try {
+    const { id, soporte_id } = req.params;
+    const mesa = await mesaTrabajoModel.getMesaTrabajoById(id);
+    if (!mesa) return res.status(404).json({ message: "Mesa de Trabajo no encontrada" });
+
+    const userRole = req.user?.rol;
+    const userId   = req.user?.id;
+    const cliente  = await clientModel.getClientById(mesa.cliente_id);
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "Sin permiso para eliminar este soporte" });
+    }
+
+    const soporte = await mesaTrabajoModel.getSoporteAdicionalById(soporte_id);
+    if (!soporte) return res.status(404).json({ message: "Soporte adicional no encontrado" });
+    if (parseInt(soporte.mesa_trabajo_id) !== parseInt(id)) {
+      return res.status(400).json({ message: "El soporte no pertenece a esta Mesa de Trabajo" });
+    }
+
+    const filePath = path.join(UPLOAD_DIR, soporte.soporte_ruta);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    await mesaTrabajoModel.deleteSoporteAdicional(soporte_id);
+    res.json({ message: "Soporte adicional eliminado correctamente" });
+  } catch (err) {
+    console.error("Error eliminando soporte adicional:", err);
+    res.status(500).json({ message: "Error al eliminar soporte adicional" });
+  }
+};

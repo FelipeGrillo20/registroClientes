@@ -121,6 +121,46 @@
       margin-top: 5px;
       font-style: italic;
     }
+
+    /* ⭐ NUEVO: Badge y estilos para Nivel de Complejidad SVE */
+    .nivel-complejidad-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+    .nivel-badge-bloqueado {
+      background: #f0f0f0;
+      color: #999;
+      border: 1px solid #ddd;
+    }
+    #nivel_complejidad_sve[data-bloqueado="true"] {
+      background-color: #f5f5f5;
+      color: #aaa;
+      cursor: not-allowed;
+      border-color: #e0e0e0;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* Badges de nivel de complejidad en el historial */
+    .badge-nivel-complejidad {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-nivel-alto   { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    .badge-nivel-medio  { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+    .badge-nivel-bajo   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
     
     /* ⭐ NUEVO: Estilos para el toggle de confidencialidad */
     .confidencialidad-toggle {
@@ -436,6 +476,72 @@
       justify-content: center;
     }
     .btn-reemplazar-soporte:hover { background: #eceff1; border-color: #b0bec5; }
+
+    /* ── Soportes adicionales ── */
+    .lista-soportes-adicionales {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+      width: 100%;
+    }
+    .soporte-adicional-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafb;
+      border: 1px solid #e0e7ef;
+      border-radius: 9px;
+      padding: 10px 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .soporte-adicional-item .soporte-file-icon { font-size: 20px; flex-shrink: 0; }
+    .soporte-adicional-item .soporte-file-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: #37474f;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .soporte-adicional-item .soporte-adicional-acciones {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Zona para agregar un nuevo adjunto adicional */
+    .zona-agregar-adicional {
+      margin-top: 12px;
+      padding: 14px;
+      background: #f0f7ff;
+      border: 1.5px dashed #90caf9;
+      border-radius: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Botón principal "Agregar + adjunto" */
+    .btn-agregar-adjunto {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1.5px solid #90caf9;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-agregar-adjunto:hover { background: #bbdefb; border-color: #42a5f5; }
+    .btn-agregar-adjunto.activo { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
+    .btn-agregar-adjunto.activo:hover { background: #ffe0b2; }
 
     /* Mesa de Trabajo — acciones header */
     .mesa-trabajo-acciones {
@@ -1517,14 +1623,10 @@
 
     <div class="soporte-mesa-body">
 
-      <!-- Input oculto -->
-      <input
-        type="file"
-        id="soporte_mesa_trabajo"
-        accept=".pdf,.doc,.docx,.xls,.xlsx"
-        style="display:none;"
-      />
+      <!-- ── Input oculto (soporte principal, se mantiene por compatibilidad) ── -->
+      <input type="file" id="soporte_mesa_trabajo" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
 
+      <!-- ── SOPORTE PRINCIPAL ── -->
       <!-- Estado: sin archivo guardado -->
       <div id="soporteEstadoVacio" class="soporte-estado">
         <span class="soporte-estado-icono">📂</span>
@@ -1567,14 +1669,50 @@
             🗑 Eliminar
           </button>
         </div>
-        <!-- Opción para reemplazar el archivo -->
         <button type="button" class="btn-reemplazar-soporte" id="btnReemplazarSoporte"
           onclick="document.getElementById('soporte_mesa_trabajo').click()">
           🔄 Reemplazar archivo
         </button>
       </div>
 
-      <p class="soporte-hint">Formatos permitidos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) — máx. 10 MB</p>
+      <!-- ── SOPORTES ADICIONALES ── -->
+      <!-- Lista de soportes adicionales ya guardados -->
+      <div id="listaSoportesAdicionales" class="lista-soportes-adicionales" style="display:none;"></div>
+
+      <!-- Zona para agregar un nuevo soporte adicional (oculta hasta pulsar el botón) -->
+      <div id="zonaAgregarAdicional" class="zona-agregar-adicional" style="display:none;">
+        <input type="file" id="inputSoporteAdicional" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
+        <div id="adicionalEstadoPendiente" class="soporte-estado" style="display:none;">
+          <div class="soporte-file-info show">
+            <span class="soporte-file-icon" id="adicionalFileIcon">📄</span>
+            <span class="soporte-file-name" id="adicionalFileName">—</span>
+            <span class="soporte-file-size" id="adicionalFileSize"></span>
+            <button type="button" class="btn-quitar-soporte" id="btnQuitarAdicional" title="Quitar archivo">✕</button>
+          </div>
+          <div class="soporte-acciones-pendiente">
+            <button type="button" class="btn-guardar-soporte" id="btnGuardarAdicional" onclick="guardarSoporteAdicional()">
+              💾 Guardar adjunto
+            </button>
+          </div>
+        </div>
+        <div id="adicionalEstadoVacio" class="soporte-estado">
+          <span class="soporte-estado-icono">📂</span>
+          <p class="soporte-estado-texto">Seleccione un archivo adicional</p>
+          <button type="button" class="btn-soporte-upload"
+            onclick="document.getElementById('inputSoporteAdicional').click()">
+            📂 Seleccionar archivo
+          </button>
+        </div>
+      </div>
+
+      <!-- Botón "Agregar + adjunto" — aparece solo cuando hay al menos un soporte guardado -->
+      <div id="seccionAgregarAdicional" style="display:none; margin-top:14px;">
+        <button type="button" class="btn-agregar-adjunto" id="btnAgregarAdjunto" onclick="toggleZonaAgregarAdicional()">
+          ➕ Agregar + adjunto
+        </button>
+      </div>
+
+      <p class="soporte-hint">Formatos permitidos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) — máx. 10 MB por archivo</p>
     </div>
   </div>
 
@@ -1698,6 +1836,24 @@
       <button type="button" id="btnContactoEmergenciaSVE" class="btn-emergency-contact" disabled>
         👤 Contacto de Emergencia
       </button>
+    </div>
+
+    <!-- Nivel de Complejidad (solo habilitado en la primera sesión) -->
+    <div class="form-group-vigilancia" id="contenedorNivelComplejidad">
+      <label for="nivel_complejidad_sve">
+        <span class="label-icon">⚠️</span>
+        Nivel de Complejidad
+        <span id="nivelComplejidadBadge" class="nivel-complejidad-badge" style="display:none;"></span>
+      </label>
+      <select id="nivel_complejidad_sve" data-bloqueado="true" style="pointer-events:none; opacity:0.6;">
+        <option value="">Seleccione...</option>
+        <option value="Alto">Alto</option>
+        <option value="Medio">Medio</option>
+        <option value="Bajo">Bajo</option>
+      </select>
+      <p class="field-info" id="nivelComplejidadInfo">
+        ℹ️ Este campo solo se registra en la primera sesión del caso SVE.
+      </p>
     </div>
 
     <!-- Estado del Caso -->

@@ -1063,3 +1063,86 @@
 }
 
 }
+
+/* ══════════════════════════════════════════════════════
+   BADGE NIVEL DE COMPLEJIDAD — Informe SVE
+   Aparece al lado derecho del título "Resumen del Proceso"
+   ══════════════════════════════════════════════════════ */
+
+.informe-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-nivel-informe {
+  margin-left: auto;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+}
+
+.badge-nivel-informe-alto {
+  background-color: #fde8e8;
+  color: #c0392b;
+  border-color: #e74c3c;
+}
+
+.badge-nivel-informe-medio {
+  background-color: #fef3cd;
+  color: #b7770d;
+  border-color: #f0a500;
+}
+
+.badge-nivel-informe-bajo {
+  background-color: #e8f8e8;
+  color: #1e7e34;
+  border-color: #28a745;
+}
+
+@media print {
+  .badge-nivel-informe {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   BADGE ESTADO DEL CASO — Informe SVE
+   Aparece al lado izquierdo del badge de nivel de complejidad
+   ══════════════════════════════════════════════════════ */
+
+.badge-estado-caso {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+}
+
+.badge-estado-caso-abierto {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-color: #1976d2;
+}
+
+.badge-estado-caso-cerrado {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+  border-color: #8e24aa;
+}
+
+@media print {
+  .badge-estado-caso {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

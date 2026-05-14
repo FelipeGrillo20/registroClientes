@@ -171,3 +171,57 @@ exports.updateSoporteMesaTrabajo = async (id, { soporte_nombre, soporte_ruta }) 
   );
   return result.rows[0];
 };
+// ============================================================
+// SOPORTES ADICIONALES — tabla mesa_trabajo_soportes
+// Migración requerida:
+//   CREATE TABLE IF NOT EXISTS mesa_trabajo_soportes (
+//     id              SERIAL PRIMARY KEY,
+//     mesa_trabajo_id INTEGER NOT NULL REFERENCES mesa_trabajo_sve(id) ON DELETE CASCADE,
+//     soporte_nombre  VARCHAR(255) NOT NULL,
+//     soporte_ruta    VARCHAR(255) NOT NULL,
+//     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+//   );
+// ============================================================
+
+exports.getSoportesByMesaId = async (mesa_trabajo_id) => {
+  const result = await pool.query(
+    `SELECT id, mesa_trabajo_id, soporte_nombre, soporte_ruta,
+      '/uploads/soporte-mesa-trabajo/' || soporte_ruta AS soporte_url,
+      created_at
+    FROM mesa_trabajo_soportes
+    WHERE mesa_trabajo_id = $1
+    ORDER BY created_at ASC`,
+    [mesa_trabajo_id]
+  );
+  return result.rows;
+};
+
+exports.addSoporteAdicional = async (mesa_trabajo_id, { soporte_nombre, soporte_ruta }) => {
+  const result = await pool.query(
+    `INSERT INTO mesa_trabajo_soportes (mesa_trabajo_id, soporte_nombre, soporte_ruta)
+     VALUES ($1, $2, $3)
+     RETURNING id, mesa_trabajo_id, soporte_nombre, soporte_ruta,
+       '/uploads/soporte-mesa-trabajo/' || soporte_ruta AS soporte_url,
+       created_at`,
+    [mesa_trabajo_id, soporte_nombre, soporte_ruta]
+  );
+  return result.rows[0];
+};
+
+exports.getSoporteAdicionalById = async (soporte_id) => {
+  const result = await pool.query(
+    `SELECT id, mesa_trabajo_id, soporte_nombre, soporte_ruta,
+      '/uploads/soporte-mesa-trabajo/' || soporte_ruta AS soporte_url
+    FROM mesa_trabajo_soportes WHERE id = $1`,
+    [soporte_id]
+  );
+  return result.rows[0];
+};
+
+exports.deleteSoporteAdicional = async (soporte_id) => {
+  const result = await pool.query(
+    `DELETE FROM mesa_trabajo_soportes WHERE id = $1 RETURNING *`,
+    [soporte_id]
+  );
+  return result.rows[0];
+};

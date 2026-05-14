@@ -15,7 +15,8 @@ exports.createConsultaSve = async (req, res) => {
       recomendaciones_trabajador,
       recomendaciones_empresa,
       observaciones,
-      estado
+      estado,
+      nivel_complejidad
     } = req.body;
 
     // Validaciones
@@ -63,6 +64,8 @@ exports.createConsultaSve = async (req, res) => {
       });
     }
 
+    console.log('🛠️ [CTRL CREATE] req.body recibido:', JSON.stringify(req.body, null, 2));
+    console.log('🛠️ [CTRL CREATE] nivel_complejidad del body:', nivel_complejidad);
     const newConsultaSve = await consultaSveModel.createConsultaSve({
       cliente_id,
       fecha,
@@ -72,7 +75,8 @@ exports.createConsultaSve = async (req, res) => {
       recomendaciones_trabajador: recomendaciones_trabajador || null,
       recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
-      estado
+      estado,
+      nivel_complejidad: nivel_complejidad || null  // ✅ YA ESTABA — requería fix en el modelo
     });
 
     res.status(201).json(newConsultaSve);
@@ -171,7 +175,9 @@ exports.updateConsultaSve = async (req, res) => {
       recomendaciones_trabajador,
       recomendaciones_empresa,
       observaciones,
-      estado
+      estado,
+      nivel_complejidad,
+      es_primera_sesion
     } = req.body;
 
     // Validaciones
@@ -212,6 +218,13 @@ exports.updateConsultaSve = async (req, res) => {
       });
     }
 
+    console.log('🛠️ [CTRL UPDATE] req.body recibido:', JSON.stringify(req.body, null, 2));
+    console.log('🛠️ [CTRL UPDATE] nivel_complejidad:', nivel_complejidad, '| es_primera_sesion:', es_primera_sesion);
+
+    // ✅ BUG 3 CORREGIDO: Si es_primera_sesion, se pasa nivel_complejidad (puede ser null).
+    // Si NO es primera sesión, se pasa undefined para que el modelo preserve el valor existente en BD.
+    const nivelParaModelo = es_primera_sesion ? (nivel_complejidad || null) : undefined;
+
     const updatedConsulta = await consultaSveModel.updateConsultaSve(id, {
       fecha,
       modalidad,
@@ -220,7 +233,8 @@ exports.updateConsultaSve = async (req, res) => {
       recomendaciones_trabajador: recomendaciones_trabajador || null,
       recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
-      estado
+      estado,
+      nivel_complejidad: nivelParaModelo
     });
 
     res.json(updatedConsulta);

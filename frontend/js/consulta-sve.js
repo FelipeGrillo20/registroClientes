@@ -20,7 +20,7 @@ let casoSVECerrado = false;
 // INICIALIZACIÓN SVE
 // ============================================
 
-function inicializarSVE() {
+async function inicializarSVE() {
   const modalidad = localStorage.getItem('modalidadSeleccionada');
 
   if (modalidad !== 'Sistema de Vigilancia Epidemiológica') return;
@@ -33,8 +33,9 @@ function inicializarSVE() {
     historialSection.remove();
   }
 
-  // Cargar datos desde el backend
-  cargarDatosSVE();
+  // Cargar datos desde el backend — await garantiza que mesaTrabajoData
+  // esté disponible antes de que el usuario pueda interactuar con el soporte
+  await cargarDatosSVE();
 
   // Eventos Formulario 1: Mesa de Trabajo
   const formMesaTrabajo = document.getElementById('formMesaTrabajo');
@@ -115,7 +116,8 @@ async function cargarDatosSVE() {
       mostrarSoporteExistente(mesaTrabajoData);
       mostrarMesaTrabajoRegistrada();
       deshabilitarFormularioMesaTrabajo();
-      desbloquearFormularioConsulta();
+      // Cargar soportes adicionales ya guardados
+      cargarSoportesAdicionales(mesaTrabajoData.id);
     } else if (resMesa.status === 404) {
       mesaTrabajoRegistrada = false;
       mesaTrabajoData = null;
@@ -138,6 +140,16 @@ async function cargarDatosSVE() {
 
       console.log('✅ Consultas SVE cargadas y ordenadas:', consultasSVE);
       mostrarConsultasSVE();
+    }
+
+    // ✅ BUG RAIZ CORREGIDO: desbloquear DESPUES de tener consultasSVE cargado.
+    // Antes se llamaba desbloquearFormularioConsulta() justo despues de cargar
+    // la Mesa de Trabajo, cuando consultasSVE aun era [] (vacio). Por eso
+    // actualizarNivelComplejidad() siempre veia consultasSVE.length === 0 y
+    // dejaba el select habilitado en sesiones 2+ (o lo bloqueaba mal en sesion 1).
+    // Ahora se llama aqui, con el array ya poblado.
+    if (mesaTrabajoRegistrada) {
+      desbloquearFormularioConsulta();
     }
 
     // 3. Mostrar historial si hay datos
@@ -229,6 +241,7 @@ async function registrarMesaTrabajo(e) {
     deshabilitarFormularioMesaTrabajo();
     mostrarMesaTrabajoRegistrada();
     desbloquearFormularioConsulta();
+    cargarSoportesAdicionales(mesaTrabajoData.id);
 
     document.getElementById('historialSVE').style.display = 'block';
     document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
@@ -366,11 +379,73 @@ function desbloquearFormularioConsulta() {
   bloqueoBadge.style.display = 'none';
 
   inputs.forEach(input => { input.disabled = false; });
+
+  // Aplicar lógica de Nivel de Complejidad después de desbloquear
+  actualizarNivelComplejidad();
 }
 
 // ============================================
-// CAMPO FECHA DE CIERRE SVE - TOGGLE
+// NIVEL DE COMPLEJIDAD — Solo habilitado en la 1ª sesión
 // ============================================
+
+function actualizarNivelComplejidad() {
+  const select = document.getElementById('nivel_complejidad_sve');
+  const info   = document.getElementById('nivelComplejidadInfo');
+  const badge  = document.getElementById('nivelComplejidadBadge');
+
+  if (!select) return;
+
+  const esPrimeraSesion         = consultasSVE.length === 0 && !editandoConsultaSVE;
+  const editandoPrimeraConsulta = !!(editandoConsultaSVE && consultasSVE.length > 0 && consultasSVE[0].id === editandoConsultaSVE);
+
+  // Helpers para habilitar / bloquear el select visualmente
+  function habilitarSelect() {
+    select.disabled = false;
+    select.removeAttribute('data-bloqueado');
+    select.style.pointerEvents = '';
+    select.style.opacity = '';
+  }
+  function bloquearSelect() {
+    select.disabled = false; // NUNCA disabled: el valor debe viajar en el fetch
+    select.setAttribute('data-bloqueado', 'true');
+    select.style.pointerEvents = 'none';
+    select.style.opacity = '0.6';
+  }
+
+  if (esPrimeraSesion) {
+    // CASO 1: Primera consulta nueva — campo editable y vacío
+    habilitarSelect();
+    if (info) info.textContent = 'ℹ️ Este campo solo se registra en la primera sesión del caso SVE.';
+    if (badge) badge.style.display = 'none';
+
+  } else if (editandoPrimeraConsulta) {
+    // CASO 2: Editando la primera consulta — campo editable con su valor actual
+    habilitarSelect();
+    const nivelActual = consultasSVE[0].nivel_complejidad || '';
+    select.value = nivelActual;
+    if (info) info.textContent = '✏️ Puedes modificar el nivel de complejidad de la primera sesión.';
+    if (badge) badge.style.display = 'none';
+
+  } else {
+    // CASO 3: Sesión 2+ o editando otra sesión — campo bloqueado, muestra valor de la 1ª
+    bloquearSelect();
+    const nivelRegistrado = consultasSVE.length > 0 ? (consultasSVE[0].nivel_complejidad || null) : null;
+
+    if (nivelRegistrado) {
+      select.value = nivelRegistrado;
+      if (info) info.textContent = `🔒 El nivel de complejidad fue registrado en la primera sesión: "${nivelRegistrado}". Solo puede modificarse editando esa sesión.`;
+      if (badge) {
+        badge.textContent = nivelRegistrado;
+        badge.className = 'nivel-complejidad-badge nivel-badge-bloqueado';
+        badge.style.display = 'inline-block';
+      }
+    } else {
+      select.value = '';
+      if (info) info.textContent = '🔒 El nivel de complejidad solo se registra en la primera sesión.';
+      if (badge) badge.style.display = 'none';
+    }
+  }
+}
 
 function toggleFechaCierreSVE() {
   const estadoSelect = document.getElementById("estado_sve");
@@ -432,6 +507,63 @@ async function registrarConsultaSVE(e) {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // 🔬 DIAGNÓSTICO NIVEL COMPLEJIDAD — copiar estos logs al reporte
+  // ══════════════════════════════════════════════════════════════════
+  const selectNivel = document.getElementById('nivel_complejidad_sve');
+
+  console.group('🔬 DIAGNÓSTICO nivel_complejidad');
+
+  // PASO 1 — Estado del elemento en el DOM al momento de guardar
+  console.group('PASO 1 — Estado del <select> en el DOM');
+  console.log('¿Existe el elemento?       :', !!selectNivel);
+  console.log('disabled                   :', selectNivel?.disabled);
+  console.log('data-bloqueado             :', selectNivel?.getAttribute('data-bloqueado'));
+  console.log('pointer-events (style)     :', selectNivel?.style.pointerEvents);
+  console.log('value crudo                :', selectNivel?.value);
+  console.log('selectedIndex              :', selectNivel?.selectedIndex);
+  console.log('opción seleccionada (text) :', selectNivel?.options[selectNivel?.selectedIndex]?.text);
+  console.groupEnd();
+
+  // PASO 2 — Estado del array consultasSVE (determina si es 1ª sesión)
+  console.group('PASO 2 — Array consultasSVE');
+  console.log('consultasSVE.length        :', consultasSVE.length);
+  console.log('editandoConsultaSVE        :', editandoConsultaSVE);
+  if (consultasSVE.length > 0) {
+    console.log('Primera consulta (id)      :', consultasSVE[0].id);
+    console.log('Primera consulta nivel_c   :', consultasSVE[0].nivel_complejidad);
+  }
+  console.groupEnd();
+
+  // PASO 3 — Cálculo de flags
+  const esPrimeraSesion = consultasSVE.length === 0 && !editandoConsultaSVE;
+  const editandoPrimeraConsulta = !!(editandoConsultaSVE && consultasSVE.length > 0 && consultasSVE[0].id === editandoConsultaSVE);
+
+  console.group('PASO 3 — Flags calculados');
+  console.log('esPrimeraSesion            :', esPrimeraSesion);
+  console.log('editandoPrimeraConsulta    :', editandoPrimeraConsulta);
+  console.log('¿Se guardará el nivel?     :', esPrimeraSesion || editandoPrimeraConsulta);
+  console.groupEnd();
+
+  // PASO 4 — Valor final que irá en el payload
+  const nivelComplejidadValor = (esPrimeraSesion || editandoPrimeraConsulta)
+    ? (selectNivel ? selectNivel.value || null : null)
+    : null;
+
+  console.group('PASO 4 — Valor final para el payload');
+  console.log('nivelComplejidadValor      :', nivelComplejidadValor);
+  if (!nivelComplejidadValor) {
+    if (!esPrimeraSesion && !editandoPrimeraConsulta) {
+      console.warn('  ⚠ No es primera sesión ni edición de ella → se envía null a propósito');
+    } else if (!selectNivel?.value) {
+      console.error('  ❌ ES primera sesión pero el select está vacío → el usuario no eligió opción');
+    }
+  }
+  console.groupEnd();
+
+  console.groupEnd(); // cierra 🔬 DIAGNÓSTICO
+  // ══════════════════════════════════════════════════════════════════
+
   const consulta = {
     cliente_id: parseInt(clienteId),
     fecha: document.getElementById('fecha_consulta_sve').value,
@@ -441,10 +573,12 @@ async function registrarConsultaSVE(e) {
     recomendaciones_trabajador: document.getElementById('recomendaciones_trabajador_sve').value.trim() || null,
     recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim() || null,
     observaciones: document.getElementById('observaciones_consulta_sve').value.trim() || null,
-    estado: estado
+    estado: estado,
+    nivel_complejidad: nivelComplejidadValor,
+    es_primera_sesion: esPrimeraSesion || editandoPrimeraConsulta
   };
 
-  console.log('📤 Enviando consulta SVE:', consulta);
+  console.log('📤 Payload completo enviado al backend:', JSON.stringify(consulta, null, 2));
 
   try {
     let response;
@@ -471,7 +605,8 @@ async function registrarConsultaSVE(e) {
     }
 
     const consultaGuardada = await response.json();
-    console.log('✅ Consulta SVE guardada:', consultaGuardada);
+    console.log('✅ [NIVEL] Respuesta del backend - consulta guardada:', JSON.stringify(consultaGuardada, null, 2));
+    console.log('✅ [NIVEL] nivel_complejidad en respuesta:', consultaGuardada.nivel_complejidad);
 
     // Si el estado es "Cerrado", actualizar el cliente
     if (estado === 'Cerrado') {
@@ -496,6 +631,8 @@ async function registrarConsultaSVE(e) {
 
     await loadClientData();
     await cargarDatosSVE();
+    // Actualizar estado del campo Nivel de Complejidad después de recargar datos
+    actualizarNivelComplejidad();
 
   } catch (err) {
     console.error('❌ Error registrando consulta SVE:', err);
@@ -612,12 +749,18 @@ function mostrarConsultasSVE() {
     const botonesDeshabilitados = esCerrado ? 'disabled' : '';
     const tituloDeshabilitado = esCerrado ? 'title="No se puede editar/eliminar una consulta cerrada"' : '';
 
+    // Badge de nivel de complejidad en el HEADER (solo sesión #1 y si tiene valor)
+    const nivelBadgeHeader = (index === 0 && consulta.nivel_complejidad)
+      ? `<span class="badge badge-nivel-complejidad badge-nivel-${consulta.nivel_complejidad.toLowerCase()}">Complejidad: ${consulta.nivel_complejidad}</span>`
+      : '';
+
     return `
     <div class="consulta-sve-card ${esCerrado ? 'consulta-cerrada' : ''}">
       <div class="consulta-sve-header">
         <div class="sesion-sve-numero">Sesión #${index + 1}</div>
         <span class="badge badge-modalidad">${consulta.modalidad}</span>
         <span class="badge badge-estado ${consulta.estado.toLowerCase()}">${consulta.estado}</span>
+        ${nivelBadgeHeader}
       </div>
       <div class="consulta-sve-body">
         <div class="consulta-sve-item">
@@ -705,6 +848,9 @@ function mostrarConsultasSVE() {
   ` : '';
 
   contenedor.innerHTML = html + recomendacionesHTML + botonesAccionHTML;
+
+  // Actualizar estado del campo Nivel de Complejidad según número de sesiones
+  actualizarNivelComplejidad();
 }
 
 // ============================================
@@ -735,8 +881,12 @@ window.editarConsultaSVE = async function(id) {
     document.getElementById('observaciones_consulta_sve').value = consulta.observaciones || '';
     document.getElementById('estado_sve').value = consulta.estado;
 
-    toggleFechaCierreSVE();
+    // Nivel de complejidad: asignar id primero, luego actualizarNivelComplejidad
+    // que ya maneja los 3 casos (nueva, editando 1ª, editando otra)
     editandoConsultaSVE = id;
+    actualizarNivelComplejidad();
+
+    toggleFechaCierreSVE();
     document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Actualizar Consulta';
 
     document.getElementById('contenedorConsulta').scrollIntoView({ behavior: 'smooth' });
@@ -1014,6 +1164,7 @@ async function guardarSoporte() {
     document.getElementById('soporte_mesa_trabajo').value = '';
     actualizarContenedorSoporte();
     mostrarMesaTrabajoRegistrada();
+    cargarSoportesAdicionales(mesaTrabajoData.id);
     alert('✅ Soporte guardado correctamente');
   } catch (err) {
     console.error('❌ Error guardando soporte:', err);
@@ -1039,6 +1190,7 @@ async function eliminarSoporteHistorial() {
     mesaTrabajoData.soporte_ruta   = null;
     actualizarContenedorSoporte();
     mostrarMesaTrabajoRegistrada();
+    cargarSoportesAdicionales(mesaTrabajoData.id);
     alert('✅ Soporte eliminado correctamente');
   } catch (err) {
     console.error('❌ Error eliminando soporte:', err);
@@ -1046,4 +1198,220 @@ async function eliminarSoporteHistorial() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initSoporteUploader);
+// ============================================================
+// SOPORTES ADICIONALES
+// ============================================================
+
+let soportesAdicionales = [];
+
+function hayAlgunSoporteGuardado() {
+  const tienePrincipal = !!(mesaTrabajoData?.soporte_nombre && mesaTrabajoData?.soporte_url);
+  return tienePrincipal || soportesAdicionales.length > 0;
+}
+
+function actualizarBtnAgregarAdicional() {
+  const seccion = document.getElementById('seccionAgregarAdicional');
+  if (!seccion) return;
+  seccion.style.display = hayAlgunSoporteGuardado() ? 'block' : 'none';
+}
+
+async function cargarSoportesAdicionales(mesaTrabajoId) {
+  if (!mesaTrabajoId) return;
+  try {
+    const res = await fetch(
+      `${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoId}/soportes-adicionales`,
+      { headers: { 'Authorization': `Bearer ${getAuthToken()}` } }
+    );
+    if (!res.ok) throw new Error('Error al cargar soportes adicionales');
+    soportesAdicionales = await res.json();
+  } catch (err) {
+    console.warn('No se pudieron cargar soportes adicionales:', err.message);
+    soportesAdicionales = [];
+  }
+  renderizarListaSoportesAdicionales();
+  actualizarBtnAgregarAdicional();
+}
+
+function renderizarListaSoportesAdicionales() {
+  const lista = document.getElementById('listaSoportesAdicionales');
+  if (!lista) return;
+
+  if (soportesAdicionales.length === 0) {
+    lista.style.display = 'none';
+    lista.innerHTML = '';
+    return;
+  }
+
+  lista.style.display = 'flex';
+  lista.innerHTML = soportesAdicionales.map(s => `
+    <div class="soporte-adicional-item" id="soporteAdicional_${s.id}">
+      <span class="soporte-file-icon">${getFileIcon(s.soporte_nombre)}</span>
+      <span class="soporte-file-name" title="${escapeHtml(s.soporte_nombre)}">${escapeHtml(s.soporte_nombre)}</span>
+      <div class="soporte-adicional-acciones">
+        <a class="btn-accion-soporte btn-ver"
+           href="${s.soporte_url}" target="_blank">👁 Ver</a>
+        <button type="button"
+          class="btn-accion-soporte btn-descargar"
+          onclick="descargarSoporteAdicional('${s.soporte_url}', '${escapeHtml(s.soporte_nombre)}')">
+          ⬇️ Descargar
+        </button>
+        <button type="button"
+          class="btn-accion-soporte btn-eliminar-soporte"
+          onclick="eliminarSoporteAdicional(${s.id})">
+          🗑 Eliminar
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function descargarSoporteAdicional(url, nombre) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    });
+    if (!res.ok) throw new Error('Error al descargar');
+    const blob    = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a       = document.createElement('a');
+    a.href        = blobUrl;
+    a.download    = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch (err) {
+    console.error('Error descargando soporte adicional:', err);
+    alert('❌ No se pudo descargar el archivo');
+  }
+}
+
+async function eliminarSoporteAdicional(soporteId) {
+  if (!mesaTrabajoData?.id) return;
+  if (!confirm('¿Desea eliminar este adjunto? Esta acción no se puede deshacer.')) return;
+
+  try {
+    const res = await fetch(
+      `${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoData.id}/soportes-adicionales/${soporteId}`,
+      { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAuthToken()}` } }
+    );
+    if (!res.ok) throw new Error('Error al eliminar');
+    await cargarSoportesAdicionales(mesaTrabajoData.id);
+    alert('✅ Adjunto eliminado correctamente');
+  } catch (err) {
+    console.error('Error eliminando soporte adicional:', err);
+    alert('❌ No se pudo eliminar el adjunto');
+  }
+}
+
+function toggleZonaAgregarAdicional() {
+  const zona = document.getElementById('zonaAgregarAdicional');
+  const btn  = document.getElementById('btnAgregarAdjunto');
+  if (!zona || !btn) return;
+
+  const visible = zona.style.display !== 'none';
+  if (visible) {
+    zona.style.display = 'none';
+    btn.classList.remove('activo');
+    btn.textContent = '➕ Agregar + adjunto';
+    resetZonaAdicional();
+  } else {
+    zona.style.display = 'block';
+    btn.classList.add('activo');
+    btn.textContent = '✕ Cancelar';
+  }
+}
+
+function resetZonaAdicional() {
+  const input = document.getElementById('inputSoporteAdicional');
+  if (input) input.value = '';
+  const pendiente = document.getElementById('adicionalEstadoPendiente');
+  const vacio     = document.getElementById('adicionalEstadoVacio');
+  if (pendiente) pendiente.style.display = 'none';
+  if (vacio)     vacio.style.display     = 'flex';
+}
+
+function initSoporteAdicionalUploader() {
+  const inputAdicional = document.getElementById('inputSoporteAdicional');
+  const btnQuitar      = document.getElementById('btnQuitarAdicional');
+  if (!inputAdicional) return;
+
+  inputAdicional.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('⚠️ El archivo supera el tamaño máximo de 10 MB');
+      this.value = '';
+      return;
+    }
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+      alert('⚠️ Formato no permitido. Use PDF, Word o Excel.');
+      this.value = '';
+      return;
+    }
+
+    document.getElementById('adicionalFileIcon').textContent = getFileIcon(file.name);
+    document.getElementById('adicionalFileName').textContent = file.name;
+    document.getElementById('adicionalFileSize').textContent = formatBytes(file.size);
+    document.getElementById('adicionalEstadoVacio').style.display     = 'none';
+    document.getElementById('adicionalEstadoPendiente').style.display = 'flex';
+  });
+
+  if (btnQuitar) {
+    btnQuitar.addEventListener('click', resetZonaAdicional);
+  }
+}
+
+async function guardarSoporteAdicional() {
+  if (!mesaTrabajoData?.id) {
+    alert('⚠️ Primero debe registrar la Mesa de Trabajo.');
+    return;
+  }
+
+  const input = document.getElementById('inputSoporteAdicional');
+  if (!input || !input.files[0]) {
+    alert('⚠️ Seleccione un archivo antes de guardar.');
+    return;
+  }
+
+  const btnGuardar = document.getElementById('btnGuardarAdicional');
+  btnGuardar.disabled = true;
+  btnGuardar.innerHTML = '⏳ Guardando...';
+
+  try {
+    const formData = new FormData();
+    formData.append('soporte', input.files[0]);
+
+    const res = await fetch(
+      `${MESA_TRABAJO_SVE_API_URL}/${mesaTrabajoData.id}/soportes-adicionales`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+        body: formData
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Error al subir el adjunto');
+    }
+
+    toggleZonaAgregarAdicional();
+    await cargarSoportesAdicionales(mesaTrabajoData.id);
+    alert('✅ Adjunto guardado correctamente');
+  } catch (err) {
+    console.error('Error guardando soporte adicional:', err);
+    alert('❌ No se pudo guardar el adjunto: ' + err.message);
+  } finally {
+    btnGuardar.disabled = false;
+    btnGuardar.innerHTML = '💾 Guardar adjunto';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await inicializarSVE();
+  initSoporteUploader();
+  initSoporteAdicionalUploader();
+});

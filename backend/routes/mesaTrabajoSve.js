@@ -7,7 +7,10 @@ const {
   uploadSoporte,
   subirSoporte,
   descargarSoporte,
-  eliminarSoporte
+  eliminarSoporte,
+  listarSoportesAdicionales,
+  subirSoporteAdicional,
+  eliminarSoporteAdicional
 } = require("../controllers/mesaTrabajoSveController");
 
 // ⭐ NOTA: El middleware de autenticación se aplica en server.js
@@ -41,6 +44,11 @@ router.get("/cliente/:cliente_id", mesaTrabajoSveController.getMesaTrabajoByClie
 router.post("/:id/soporte", uploadSoporte, subirSoporte);
 router.get("/:id/soporte", verifyTokenFlexible, descargarSoporte);
 router.delete("/:id/soporte", eliminarSoporte);
+
+// ── Soportes adicionales ─────────────────────────────────────
+router.get("/:id/soportes-adicionales", listarSoportesAdicionales);
+router.post("/:id/soportes-adicionales", uploadSoporte, subirSoporteAdicional);
+router.delete("/:id/soportes-adicionales/:soporte_id", eliminarSoporteAdicional);
 
 // Obtener Mesa de Trabajo por ID
 router.get("/:id", mesaTrabajoSveController.getMesaTrabajoById);

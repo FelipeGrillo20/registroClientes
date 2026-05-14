@@ -123,7 +123,9 @@ window.generarInformeSVE = async function(clienteId) {
     // Fallback al usuario logueado solo si los campos no vienen en BD.
     // ─────────────────────────────────────────────────────────────────
     const usuarioLogueado = JSON.parse(localStorage.getItem('userData'));
-    const sesionRefSVE    = consultasOrdenadas[0];
+    const sesionRefSVE      = consultasOrdenadas[0];
+    const nivelComplejidad  = sesionRefSVE?.nivel_complejidad || null;
+    const estadoCaso        = window.clienteActual?.fecha_cierre_sve ? 'Cerrado' : 'Abierto';
 
     const profesionalDatos = {
       nombre : sesionRefSVE?.profesional_nombre || (usuarioLogueado ? usuarioLogueado.nombre : null),
@@ -135,7 +137,9 @@ window.generarInformeSVE = async function(clienteId) {
       window.clienteActual, 
       consultasOrdenadas,
       profesionalDatos,
-      mesaTrabajo
+      mesaTrabajo,
+      nivelComplejidad,
+      estadoCaso
     );
 
     // Abrir en nueva ventana para imprimir
@@ -167,7 +171,7 @@ window.generarInformeSVE = async function(clienteId) {
 // GENERAR HTML DEL INFORME SVE
 // ✅ ACTUALIZADO: Diseño moderno similar a informe.js
 // ============================================
-function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
+function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, nivelComplejidad, estadoCaso) {
   
   const primeraConsulta = todasConsultas[0];
   const ultimaConsulta  = todasConsultas[todasConsultas.length - 1];
@@ -319,6 +323,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo) {
       <h2 class="informe-section-title-sve">
         <span class="section-icon-sve">📊</span>
         Resumen del Proceso
+        ${estadoCaso ? `<span class="badge-estado-caso badge-estado-caso-${estadoCaso.toLowerCase()}">Caso: ${estadoCaso}</span>` : ''}
+        ${nivelComplejidad ? `<span class="badge-nivel-informe badge-nivel-informe-${nivelComplejidad.toLowerCase()}">Nivel de complejidad: ${nivelComplejidad}</span>` : ''}
       </h2>
       <div class="estadisticas-grid-sve">
         <div class="estadistica-card-sve">

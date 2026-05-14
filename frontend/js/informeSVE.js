@@ -10,10 +10,18 @@ function getAuthToken() {
 
 // Formatear fecha para el informe
 function formatDateInformeSVE(dateString) {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+  // Parseo manual para evitar desfase UTC vs Colombia (UTC-5):
+  // new Date('2026-05-14') interpreta como UTC medianoche y al
+  // convertir a hora local en Hostinger (UTC) baja un día.
+  // Tomamos los componentes directamente del string sin conversión.
+  if (!dateString) return '';
+  const str = String(dateString).substring(0, 10); // 'YYYY-MM-DD'
+  const [year, month, day] = str.split('-');
+  if (!year || !month || !day) {
+    // Fallback: si el formato no es ISO fecha pura, usar Date local
+    const date = new Date(dateString);
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+  }
   return `${day}/${month}/${year}`;
 }
 
@@ -196,7 +204,14 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
     (t, s) => t + (parseInt(s.horas_sesion) || 1), 0
   );
 
-  const fechaInicio = new Date(primeraConsulta.fecha);
+  // Parseo seguro de fecha ISO 'YYYY-MM-DD' sin conversión de zona horaria
+  function parseFechaLocal(str) {
+    const s = String(str).substring(0, 10);
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d); // fecha en hora local, sin UTC
+  }
+
+  const fechaInicio = parseFechaLocal(primeraConsulta.fecha);
   // ── Recomendaciones Finales SVE ────────────────────────────────
   // Se guardan en la tabla clients (campo recomendaciones_finales_sve),
   // NO en consultas_sve. Se leen desde window.clienteActual que ya
@@ -206,7 +221,7 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
   // ── Fecha de cierre SVE — también viene de clients ─────────────
   const fechaCierreClienteRaw = window.clienteActual?.fecha_cierre_sve || null;
   const fechaCierreRaw = fechaCierreClienteRaw || ultimaConsulta.fecha;
-  const fechaCierre    = new Date(fechaCierreRaw);
+  const fechaCierre    = parseFechaLocal(fechaCierreRaw);
 
   const diasEnProceso = Math.max(1,
     Math.floor((fechaCierre - fechaInicio) / (1000 * 60 * 60 * 24))

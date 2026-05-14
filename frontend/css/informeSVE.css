@@ -893,7 +893,41 @@
   }
 }
 
-/* Grid de una columna para historial SVE */
+/* Grid específico para Mesa de Trabajo — 3 columnas en fila 1, fila completa para motivo */
+.informe-grid-mesa-sve {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.informe-grid-mesa-sve .informe-data-item-sve {
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.informe-grid-mesa-sve .informe-data-item-sve:nth-child(3n) {
+  border-right: none;
+}
+
+.informe-grid-mesa-sve .informe-data-item-sve.full-width {
+  grid-column: span 3;
+  border-right: none;
+  border-bottom: none;
+}
+
+@media print {
+  .informe-grid-mesa-sve {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .informe-grid-mesa-sve .informe-data-item-sve.full-width {
+    grid-column: span 3 !important;
+  }
+}
+
+
 .sesion-grid-sve {
   display: grid;
   grid-template-columns: 1fr;
@@ -1142,6 +1176,37 @@
 
 @media print {
   .badge-estado-caso {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.mes-cierre-footer-sve {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.mes-cierre-footer-sve .estadistica-label-sve {
+  margin: 0;
+  text-align: left;
+  flex-shrink: 1;
+  font-size: 8px;
+}
+
+.mes-cierre-footer-sve .badge-estado-caso {
+  font-size: 7px;
+  padding: 2px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+@media print {
+  .mes-cierre-footer-sve .badge-estado-caso {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

@@ -323,7 +323,6 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
       <h2 class="informe-section-title-sve">
         <span class="section-icon-sve">📊</span>
         Resumen del Proceso
-        ${estadoCaso ? `<span class="badge-estado-caso badge-estado-caso-${estadoCaso.toLowerCase()}">Caso: ${estadoCaso}</span>` : ''}
         ${nivelComplejidad ? `<span class="badge-nivel-informe badge-nivel-informe-${nivelComplejidad.toLowerCase()}">Nivel de complejidad: ${nivelComplejidad}</span>` : ''}
       </h2>
       <div class="estadisticas-grid-sve">
@@ -342,11 +341,14 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
           <div class="estadistica-valor-sve">${diasEnProceso}</div>
           <div class="estadistica-label-sve">Días en Proceso</div>
         </div>
-        <div class="estadistica-card-sve">
-          <div class="estadistica-icon-sve">✅</div>
-          <div class="estadistica-valor-sve">${mesCierre}</div>
-          <div class="estadistica-label-sve">Mes de Cierre</div>
-        </div>
+       <div class="estadistica-card-sve">
+  <div class="estadistica-icon-sve">✅</div>
+  <div class="estadistica-valor-sve">${mesCierre}</div>
+  <div class="mes-cierre-footer-sve">
+    <span class="estadistica-label-sve">Mes de Cierre</span>
+    ${estadoCaso ? `<span class="badge-estado-caso badge-estado-caso-${estadoCaso.toLowerCase()}">Caso: ${estadoCaso}</span>` : ''}
+  </div>
+</div>
       </div>
       <div class="informe-cierre-info-sve">
         <div class="cierre-item-sve">
@@ -384,11 +386,11 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
         <span class="section-icon-sve">📋</span>
         Mesa de Trabajo
       </h2>
-      <div class="informe-grid-sve">
-        ${campoFull('Criterio de Inclusión al SVE:', mesaTrabajo.criterio_inclusion)}
-        ${campoFull('Motivo de Evaluación y Situación Actual:', mesaTrabajo.motivo_evaluacion)}
+      <div class="informe-grid-mesa-sve">
+        ${campo('Criterio de Inclusión al SVE:', mesaTrabajo.criterio_inclusion)}
         ${campo('Diagnóstico:', mesaTrabajo.diagnostico)}
         ${campo('Código de Diagnóstico:', mesaTrabajo.codigo_diagnostico)}
+        ${campoFull('Motivo de Evaluación y Situación Actual:', mesaTrabajo.motivo_evaluacion)}
       </div>
     </div>
     ` : ''}

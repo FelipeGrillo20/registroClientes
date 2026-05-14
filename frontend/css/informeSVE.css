@@ -498,12 +498,14 @@
   transform: translateY(-1px);
 }
 
-/* ── Bloque cierre: recomendaciones finales + firma siempre    */
-/* en página nueva — evita el conflicto con break-inside: auto */
-/* de los bloques de sesión                                    */
+/* ── Bloque cierre: recomendaciones finales + firma            */
+/* No forzar salto de página; si cabe en la misma hoja que la  */
+/* última sesión se queda ahí. break-inside: avoid garantiza   */
+/* que firma y nota no se corten entre dos páginas.            */
 .bloque-cierre-sve {
-  break-before: page;
-  page-break-before: always;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-top: 24px;
 }
 
 /* ============================================================ */
@@ -1044,11 +1046,14 @@
     justify-content: center;
   }
 
-  /* Recomendaciones finales + firma: siempre en página nueva   */
-  /* Solución al conflicto con break-inside: auto de sesiones   */
+  /* Recomendaciones finales + firma: fluyen junto a la última   */
+  /* sesión si hay espacio; solo saltan si no caben.             */
   .bloque-cierre-sve {
-    break-before: page !important;
-    page-break-before: always !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: auto !important;
+    page-break-before: auto !important;
+    margin-top: 24px !important;
   }
 
   /* Salto de página forzado en print */

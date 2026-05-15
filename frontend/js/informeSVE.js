@@ -357,10 +357,10 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
           <div class="estadistica-label-sve">Días en Proceso</div>
         </div>
        <div class="estadistica-card-sve">
-  <div class="estadistica-icon-sve">✅</div>
+  <div class="estadistica-icon-sve">${estadoCaso === 'Cerrado' ? '✅' : '📌'}</div>
   <div class="estadistica-valor-sve">${mesCierre}</div>
   <div class="mes-cierre-footer-sve">
-    <span class="estadistica-label-sve">Mes de Cierre</span>
+    <span class="estadistica-label-sve">${estadoCaso === 'Cerrado' ? 'Mes de Cierre' : 'Mes Última Sesión'}</span>
     ${estadoCaso ? `<span class="badge-estado-caso badge-estado-caso-${estadoCaso.toLowerCase()}">Caso: ${estadoCaso}</span>` : ''}
   </div>
 </div>

@@ -459,7 +459,10 @@ function toggleFechaCierreSVE() {
     recomendacionesSVEInput.required = true;
 
     if (!fechaCierreSVEInput.value) {
-      fechaCierreSVEInput.value = getFechaLocalHoy();
+      // Usar la fecha seleccionada en el campo "Fecha de Consulta".
+      // Solo si ese campo está vacío, caer al día de hoy como respaldo.
+      const fechaConsulta = document.getElementById('fecha_consulta_sve')?.value;
+      fechaCierreSVEInput.value = fechaConsulta || getFechaLocalHoy();
     }
 
     if (clienteActual && clienteActual.recomendaciones_finales_sve && !recomendacionesSVEInput.value) {

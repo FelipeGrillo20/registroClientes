@@ -728,6 +728,78 @@ ESTILOS PARA CIERRE DE CASO SVE
   }
 }
 
+/* ============================================ */
+/* BOTONES EDITAR / ELIMINAR — SESIONES SVE     */
+/* ============================================ */
+
+.consulta-sve-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 16px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+}
+
+.btn-edit-consulta-sve,
+.btn-delete-consulta-sve {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Botón Editar — azul profesional */
+.btn-edit-consulta-sve {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+}
+.btn-edit-consulta-sve:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+.btn-edit-consulta-sve:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+/* Botón Eliminar — rojo suave */
+.btn-delete-consulta-sve {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  color: #fff;
+}
+.btn-delete-consulta-sve:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+.btn-delete-consulta-sve:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* Estado deshabilitado (caso cerrado) */
+.btn-edit-consulta-sve:disabled,
+.btn-delete-consulta-sve:disabled {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  color: #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.65;
+}
+
 @media (max-width: 480px) {
   .formulario-vigilancia-container {
     padding: 20px 15px;
@@ -782,5 +854,17 @@ ESTILOS PARA CIERRE DE CASO SVE
   
   .mesa-trabajo-card {
     padding: 15px;
+  }
+
+  .consulta-sve-actions {
+    justify-content: stretch;
+  }
+
+  .btn-edit-consulta-sve,
+  .btn-delete-consulta-sve {
+    flex: 1;
+    justify-content: center;
+    font-size: 12px;
+    padding: 9px 12px;
   }
 }

@@ -1734,7 +1734,7 @@
     <form id="formConsultaVigilancia" class="form-vigilancia">
   <div class="form-grid-vigilancia">
     
-    <!-- Fecha de Consulta -->
+    <!-- Fila 1: Fecha de Consulta | Nivel de Complejidad -->
     <div class="form-group-vigilancia">
       <label for="fecha_consulta_sve">
         <span class="label-icon">📅</span>
@@ -1746,96 +1746,6 @@
         required
         disabled
       />
-    </div>
-
-    <!-- Modalidad -->
-    <div class="form-group-vigilancia">
-      <label for="modalidad_sve">
-        <span class="label-icon">💻</span>
-        Modalidad <span class="required">*</span>
-      </label>
-      <select id="modalidad_sve" required disabled>
-        <option value="">Seleccione...</option>
-        <option value="Virtual">Virtual</option>
-        <option value="Presencial">Presencial</option>
-      </select>
-    </div>
-
-    <!-- Ajuste a las funciones (ocupa 1 columna) -->
-    <div class="form-group-vigilancia">
-      <label for="ajuste_funciones_sve">
-        <span class="label-icon">⚙️</span>
-        Ajuste a las Funciones
-      </label>
-      <textarea 
-        id="ajuste_funciones_sve" 
-        rows="3"
-        placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
-        disabled
-      ></textarea>
-    </div>
-
-    <!-- Implementar las siguientes recomendaciones médicas (ocupa 1 columna) -->
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_medicas_sve">
-        <span class="label-icon">💊</span>
-        Implementar las Siguientes Recomendaciones Médicas
-      </label>
-      <textarea 
-        id="recomendaciones_medicas_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones médicas a implementar..."
-        disabled
-      ></textarea>
-    </div>
-
-    <!-- Recomendaciones al trabajador (ocupa 1 columna) -->
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_trabajador_sve">
-        <span class="label-icon">👤</span>
-        Recomendaciones al Trabajador
-      </label>
-      <textarea 
-        id="recomendaciones_trabajador_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones dirigidas al trabajador..."
-        disabled
-      ></textarea>
-    </div>
-
-    <!-- Recomendaciones a la Empresa (ocupa 1 columna) -->
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_empresa_sve">
-        <span class="label-icon">🏢</span>
-        Recomendaciones a la Empresa
-      </label>
-      <textarea 
-        id="recomendaciones_empresa_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones dirigidas a la empresa..."
-        disabled
-      ></textarea>
-    </div>
-
-    <!-- Observaciones de la Consulta (ocupa 1 columna, para balance visual) -->
-    <div class="form-group-vigilancia">
-      <label for="observaciones_consulta_sve">
-        <span class="label-icon">📄</span>
-        Observaciones de la Consulta
-      </label>
-      <textarea 
-        id="observaciones_consulta_sve" 
-        rows="3"
-        placeholder="Registre observaciones adicionales de la consulta..."
-        disabled
-      ></textarea>
-    </div>
-
-    <!-- Contacto de Emergencia SVE + Estado del Caso — misma fila -->
-    <div class="form-group-vigilancia" style="display:flex; align-items:flex-end;">
-      <button type="button" id="btnContactoEmergenciaSVE" class="btn-emergency-contact" disabled>
-        👤 Contacto de Emergencia
-      </button>
     </div>
 
     <!-- Nivel de Complejidad (solo habilitado en la primera sesión) -->
@@ -1856,7 +1766,93 @@
       </p>
     </div>
 
-    <!-- Estado del Caso -->
+    <!-- Fila 2: Modalidad | Ajuste a las Funciones -->
+    <div class="form-group-vigilancia">
+      <label for="modalidad_sve">
+        <span class="label-icon">💻</span>
+        Modalidad <span class="required">*</span>
+      </label>
+      <select id="modalidad_sve" required disabled>
+        <option value="">Seleccione...</option>
+        <option value="Virtual">Virtual</option>
+        <option value="Presencial">Presencial</option>
+      </select>
+    </div>
+
+    <div class="form-group-vigilancia">
+      <label for="ajuste_funciones_sve">
+        <span class="label-icon">⚙️</span>
+        Ajuste a las Funciones
+      </label>
+      <textarea 
+        id="ajuste_funciones_sve" 
+        rows="3"
+        placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
+        disabled
+      ></textarea>
+    </div>
+
+    <!-- Fila 3: Rec. Médicas | Rec. al Trabajador -->
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_medicas_sve">
+        <span class="label-icon">💊</span>
+        Implementar las Siguientes Recomendaciones Médicas
+      </label>
+      <textarea 
+        id="recomendaciones_medicas_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones médicas a implementar..."
+        disabled
+      ></textarea>
+    </div>
+
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_trabajador_sve">
+        <span class="label-icon">👤</span>
+        Recomendaciones al Trabajador
+      </label>
+      <textarea 
+        id="recomendaciones_trabajador_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones dirigidas al trabajador..."
+        disabled
+      ></textarea>
+    </div>
+
+    <!-- Fila 4: Rec. a la Empresa | Observaciones -->
+    <div class="form-group-vigilancia">
+      <label for="recomendaciones_empresa_sve">
+        <span class="label-icon">🏢</span>
+        Recomendaciones a la Empresa
+      </label>
+      <textarea 
+        id="recomendaciones_empresa_sve" 
+        rows="3"
+        placeholder="Describa las recomendaciones dirigidas a la empresa..."
+        disabled
+      ></textarea>
+    </div>
+
+    <div class="form-group-vigilancia">
+      <label for="observaciones_consulta_sve">
+        <span class="label-icon">📄</span>
+        Observaciones de la Consulta
+      </label>
+      <textarea 
+        id="observaciones_consulta_sve" 
+        rows="3"
+        placeholder="Registre observaciones adicionales de la consulta..."
+        disabled
+      ></textarea>
+    </div>
+
+    <!-- Fila 5: Contacto de Emergencia | Estado del Caso -->
+    <div class="form-group-vigilancia" style="display:flex; flex-direction:column; justify-content:flex-end;">
+      <button type="button" id="btnContactoEmergenciaSVE" class="btn-emergency-contact" disabled>
+        👤 Contacto de Emergencia
+      </button>
+    </div>
+
     <div class="form-group-vigilancia">
       <label for="estado_sve">
         <span class="label-icon">✅</span>

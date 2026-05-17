@@ -167,6 +167,10 @@ async function cargarDatosSVE() {
             }
           }, 500);
         }
+      } else {
+        // Sin sesiones: eliminar el botón del DOM si estaba visible
+        const contenedorBoton = document.getElementById('contenedorBotonInformeSVE');
+        if (contenedorBoton) contenedorBoton.remove();
       }
     }
 
@@ -459,10 +463,7 @@ function toggleFechaCierreSVE() {
     recomendacionesSVEInput.required = true;
 
     if (!fechaCierreSVEInput.value) {
-      // Usar la fecha seleccionada en el campo "Fecha de Consulta".
-      // Solo si ese campo está vacío, caer al día de hoy como respaldo.
-      const fechaConsulta = document.getElementById('fecha_consulta_sve')?.value;
-      fechaCierreSVEInput.value = fechaConsulta || getFechaLocalHoy();
+      fechaCierreSVEInput.value = getFechaLocalHoy();
     }
 
     if (clienteActual && clienteActual.recomendaciones_finales_sve && !recomendacionesSVEInput.value) {

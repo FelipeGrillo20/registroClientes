@@ -3,20 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Consulta y Seguimiento</title>
-  <!-- Estilos principales de consulta -->
+  <title>Consulta SVE — Sistema de Vigilancia Epidemiológica</title>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ESTILOS — Sistema de Vigilancia Epidemiológica
+       ═══════════════════════════════════════════════════════════ -->
+  <!-- Estilos base compartidos (layout, tarjeta cliente, historial) -->
   <link rel="stylesheet" href="css/consulta.css" />
-  <!-- Estilos exclusivos para informes -->
+  <!-- Estilos exclusivos SVE (formularios, historial SVE, badges nivel) -->
+  <link rel="stylesheet" href="css/epidemiologica.css" />
+  <!-- Estilos para el bloque de informes SVE -->
   <link rel="stylesheet" href="css/informe.css" />
-  <!-- [SVE] <link rel="stylesheet" href="css/epidemiologica.css" /> -->
+
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <!-- Select2 Bootstrap Theme -->
   <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
-  
+
 </head>
 <body>
-  
+
   <div class="consulta-container">
     <!-- Barra de usuario -->
     <div id="userInfo" class="user-info-bar" style="display: none;"></div>
@@ -244,7 +250,9 @@
       <div class="card-decoration"></div>
     </div>
 
-    <!-- ⭐ CONTENEDOR DINÁMICO SEGÚN MODALIDAD -->
+
+
+    <!-- ⭐ CONTENEDOR DINÁMICO — VIGILANCIA EPIDEMIOLÓGICA -->
     <div class="consulta-section">
       <div class="consulta-section-header">
         <div class="consulta-section-title-group">
@@ -255,456 +263,21 @@
           type="button"
           id="btnNuevaConsulta"
           class="btn-nueva-consulta"
-          onclick="abrirNuevaConsulta()"
+          onclick="abrirNuevaConsultaSVE()"
           style="display: none;"
           title="Debe cerrar la consulta activa antes de abrir una nueva"
           disabled
         >
-          ➕ Nueva Consulta
+          ➕ Nueva Consulta SVE
         </button>
       </div>
 
-      <!-- ⭐ FORMULARIO ORIENTACIÓN PSICOSOCIAL (Por defecto) -->
-      <div id="formOrientacionPsicosocial" style="display: none;">
-        <form id="formConsulta" class="form-consulta">
-          <div class="form-grid">
-            <!-- Motivos de Consulta — múltiple selección -->
-            <div class="form-group full-width">
-              <label>
-                <span class="label-icon">📋</span>
-                Motivos de Consulta <span class="required">*</span>
-                <span class="motivos-badge" id="motivosBadge">0 / 5</span>
-              </label>
-
-              <div class="motivos-selector-row">
-                <select id="motivo_consulta" class="select2-motivo" style="width: 100%;">
-                  <option value="">Seleccione un motivo...</option>
-                  <option value="ACCIDENTE LABORAL">ACCIDENTE LABORAL</option>
-                  <option value="ACOMPAÑAMIENTO CASO COVID">ACOMPAÑAMIENTO CASO COVID</option>
-                  <option value="ACOMPAÑAMIENTO JUBILACIÓN">ACOMPAÑAMIENTO JUBILACIÓN</option>
-                  <option value="ACOMPAÑAMIENTO PROCESO DE JUBILACIÓN">ACOMPAÑAMIENTO PROCESO DE JUBILACIÓN</option>
-                  <option value="AISLAMIENTO SOCIAL">AISLAMIENTO SOCIAL</option>
-                  <option value="ANSIEDAD">ANSIEDAD</option>
-                  <option value="ANSIEDAD Y DEPRESIÓN">ANSIEDAD Y DEPRESIÓN</option>
-                  <option value="ANSIEDAD Y PROBLEMÁTICA FAMILIAR">ANSIEDAD Y PROBLEMÁTICA FAMILIAR</option>
-                  <option value="ANSIEDAD Y PROBLEMÁTICA PERSONAL">ANSIEDAD Y PROBLEMÁTICA PERSONAL</option>
-                  <option value="AUTOEXIGENCIA EXCESIVA / PERFECCIONISMO">AUTOEXIGENCIA EXCESIVA / PERFECCIONISMO</option>
-                  <option value="AUTOLESIONES">AUTOLESIONES</option>
-                  <option value="BAJA AUTOESTIMA">BAJA AUTOESTIMA</option>
-                  <option value="BAJA TOLERANCIA A LA FRUSTRACIÓN">BAJA TOLERANCIA A LA FRUSTRACIÓN</option>
-                  <option value="BÚSQUEDA DE CRECIMIENTO PERSONAL">BÚSQUEDA DE CRECIMIENTO PERSONAL</option>
-                  <option value="CANCELA A ULTIMA HORA">CANCELA A ULTIMA HORA</option>
-                  <option value="CELOS Y CONTROL">CELOS Y CONTROL</option>
-                  <option value="COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL">COMUNICACIÓN LIDERAZGO Y PROYECCIÓN LABORAL</option>
-                  <option value="COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL">COMUNICACIÓN LIDERAZGO Y SOBRECARGA LABORAL</option>
-                  <option value="COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, LIDERAZGO, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-                  <option value="COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL">COMUNICACIÓN, PROYECCIÓN LABORAL, PROBLEMÁTICA PERSONAL</option>
-                  <option value="CONDUCTAS AGRESIVAS">CONDUCTAS AGRESIVAS</option>
-                  <option value="CONFLICTOS DE PAREJA">CONFLICTOS DE PAREJA</option>
-                  <option value="CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS">CONSUMO DE ALCOHOL Y/O SUSTANCIAS PSICOACTIVAS</option>
-                  <option value="CRISIS EXISTENCIALES">CRISIS EXISTENCIALES</option>
-                  <option value="DEPENDENCIA EMOCIONAL">DEPENDENCIA EMOCIONAL</option>
-                  <option value="DEPRESIÓN">DEPRESIÓN</option>
-                  <option value="DEPRESIÓN Y PROBLEMÁTICA PERSONAL">DEPRESIÓN Y PROBLEMÁTICA PERSONAL</option>
-                  <option value="DESMOTIVACIÓN CRÓNICA / VACÍO EMOCIONAL">DESMOTIVACIÓN CRÓNICA / VACÍO EMOCIONAL</option>
-                  <option value="DESMOTIVACIÓN LABORAL">DESMOTIVACIÓN LABORAL</option>
-                  <option value="DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO">DIAGNOSTICO DESORDEN EMOCIONAL Y/0 PSIQUIATRICO</option>
-                  <option value="DIFICULTAD PARA ADAPTARSE A CAMBIOS ORGANIZACIONALES">DIFICULTAD PARA ADAPTARSE A CAMBIOS ORGANIZACIONALES</option>
-                  <option value="DIFICULTAD PARA MANEJAR LA IRA">DIFICULTAD PARA MANEJAR LA IRA</option>
-                  <option value="DIFICULTAD PARA TOMAR DECISIONES">DIFICULTAD PARA TOMAR DECISIONES</option>
-                  <option value="DIFICULTAD PARA TOMAR DECISIONES IMPORTANTES">DIFICULTAD PARA TOMAR DECISIONES IMPORTANTES</option>
-                  <option value="DIFICULTADES DE ADAPTACIÓN A CAMBIOS (EJ: CAMBIOS ORGANIZACIONALES, MIGRACIÓN)">DIFICULTADES DE ADAPTACIÓN A CAMBIOS (EJ: CAMBIOS ORGANIZACIONALES, MIGRACIÓN)</option>
-                  <option value="DIFICULTADES DE COMUNICACIÓN">DIFICULTADES DE COMUNICACIÓN</option>
-                  <option value="DIFICULTADES EN HABILIDADES SOCIALES">DIFICULTADES EN HABILIDADES SOCIALES</option>
-                  <option value="DIFICULTADES EN LA IDENTIDAD PERSONAL">DIFICULTADES EN LA IDENTIDAD PERSONAL</option>
-                  <option value="DUELO">DUELO</option>
-                  <option value="DUELO GESTACIONAL O PERINATAL">DUELO GESTACIONAL O PERINATAL</option>
-                  <option value="DUELO MIGRATORIO">DUELO MIGRATORIO</option>
-                  <option value="DUELO POR CAMBIOS VITALES (SALUD, TRABAJO, ROL)">DUELO POR CAMBIOS VITALES (SALUD, TRABAJO, ROL)</option>
-                  <option value="DUELO POR FALLECIMIENTO">DUELO POR FALLECIMIENTO</option>
-                  <option value="DUELO POR RUPTURA DE PAREJA">DUELO POR RUPTURA DE PAREJA</option>
-                  <option value="DUELO Y ANSIEDAD">DUELO Y ANSIEDAD</option>
-                  <option value="DUELO Y ESTRÉS POSTRAUMATICO">DUELO Y ESTRÉS POSTRAUMATICO</option>
-                  <option value="DUELO Y PROBLEMÁTICA FAMILIAR">DUELO Y PROBLEMÁTICA FAMILIAR</option>
-                  <option value="DUELO Y PROBLEMÁTICA PERSONAL">DUELO Y PROBLEMÁTICA PERSONAL</option>
-                  <option value="ESTABILIDAD EMOCIONAL">ESTABILIDAD EMOCIONAL</option>
-                  <option value="ESTRÉS AGUDO">ESTRÉS AGUDO</option>
-                  <option value="ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR">ESTRÉS AGUDO Y PROBLEMÁTICA FAMILIAR</option>
-                  <option value="ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL">ESTRÉS AGUDO Y PROBLEMÁTICA PERSONAL</option>
-                  <option value="EXPLOSIONES EMOCIONALES">EXPLOSIONES EMOCIONALES</option>
-                  <option value="FALTA DE PROPÓSITO">FALTA DE PROPÓSITO</option>
-                  <option value="FORTALECIMIENTO DE HABILIDADES PERSONALES">FORTALECIMIENTO DE HABILIDADES PERSONALES</option>
-                  <option value="IMPACTO POR PRESUNTO ACCIDENTE DE TRABAJO">IMPACTO POR PRESUNTO ACCIDENTE DE TRABAJO</option>
-                  <option value="IMPULSIVIDAD">IMPULSIVIDAD</option>
-                  <option value="INESTABILIDAD EMOCIONAL">INESTABILIDAD EMOCIONAL</option>
-                  <option value="INSEGURIDAD CONSTANTE">INSEGURIDAD CONSTANTE</option>
-                  <option value="MANEJO DE CAMBIOS">MANEJO DE CAMBIOS</option>
-                  <option value="NO HABIA PACIENTE PROGRAMADO">NO HABIA PACIENTE PROGRAMADO</option>
-                  <option value="NO SE PRESENTA A CONSULTA">NO SE PRESENTA A CONSULTA</option>
-                  <option value="NO SE PRESENTA A CONSULTA PRESENCIAL">NO SE PRESENTA A CONSULTA PRESENCIAL</option>
-                  <option value="POSIBLE CRISIS DE PÁNICO">POSIBLE CRISIS DE PÁNICO</option>
-                  <option value="POSIBLE CUADRO DE ANSIEDAD">POSIBLE CUADRO DE ANSIEDAD</option>
-                  <option value="POSIBLE CUADRO DE ANSIEDAD GENERALIZADA">POSIBLE CUADRO DE ANSIEDAD GENERALIZADA</option>
-                  <option value="POSIBLE CUADRO DE ANSIEDAD LABORAL / BURNOUT">POSIBLE CUADRO DE ANSIEDAD LABORAL / BURNOUT</option>
-                  <option value="POSIBLE CUADRO DE ANSIEDAD POR SEPARACIÓN">POSIBLE CUADRO DE ANSIEDAD POR SEPARACIÓN</option>
-                  <option value="POSIBLE CUADRO DE ESTRÉS AGUDO">POSIBLE CUADRO DE ESTRÉS AGUDO</option>
-                  <option value="POSIBLE CUADRO DE ESTRÉS CRÓNICO">POSIBLE CUADRO DE ESTRÉS CRÓNICO</option>
-                  <option value="POSIBLE CUADRO DE HIPOCONDRÍA">POSIBLE CUADRO DE HIPOCONDRÍA</option>
-                  <option value="POSIBLE CUADRO DEPRESIVO">POSIBLE CUADRO DEPRESIVO</option>
-                  <option value="POSIBLE CUADRO DEPRESIÓN PERSISTENTE">POSIBLE CUADRO DEPRESIÓN PERSISTENTE</option>
-                  <option value="POSIBLE CUADRO TRASTORNO BIPOLAR">POSIBLE CUADRO TRASTORNO BIPOLAR</option>
-                  <option value="POSIBLE DESORDEN PSIQUIATRICO">POSIBLE DESORDEN PSIQUIATRICO</option>
-                  <option value="POSIBLE FOBIAS ESPECÍFICAS (ALTURA, ANIMALES, ENFERMEDAD, ETC.)">POSIBLE FOBIAS ESPECÍFICAS (ALTURA, ANIMALES, ENFERMEDAD, ETC.)</option>
-                  <option value="POSIBLE TRASTORNO DE ANSIEDAD SOCIAL">POSIBLE TRASTORNO DE ANSIEDAD SOCIAL</option>
-                  <option value="POSIBLE TRASTORNO DE ESTRÉS POSTRAUMÁTICO (TEPT)">POSIBLE TRASTORNO DE ESTRÉS POSTRAUMÁTICO (TEPT)</option>
-                  <option value="POSIBLE TRASTORNO EVITATIVO">POSIBLE TRASTORNO EVITATIVO</option>
-                  <option value="POSIBLE TRASTORNO LÍMITE DE LA PERSONALIDAD">POSIBLE TRASTORNO LÍMITE DE LA PERSONALIDAD</option>
-                  <option value="POSIBLE TRASTORNO NARCISISTA">POSIBLE TRASTORNO NARCISISTA</option>
-                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: BULIMIA">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: BULIMIA</option>
-                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: ANOREXIA">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: ANOREXIA</option>
-                  <option value="POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: TRASTORNO POR ATRACÓN">POSIBLE TRASTORNOS DE LA CONDUCTA ALIMENTARIA: TRASTORNO POR ATRACÓN</option>
-                  <option value="POSIBLE TRAUMA COMPLEJO (HISTORIA PROLONGADA DE EXPERIENCIAS ADVERSAS)">POSIBLE TRAUMA COMPLEJO (HISTORIA PROLONGADA DE EXPERIENCIAS ADVERSAS)</option>
-                  <option value="PRESUNTO ACOSO LABORAL">PRESUNTO ACOSO LABORAL</option>
-                  <option value="PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL">PRESUNTO ACOSO LABORAL Y PROBLEMÁTICA PERSONAL</option>
-                  <option value="PROBLEMAS FAMILIARES">PROBLEMAS FAMILIARES</option>
-                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: CONFLICTOS CON JEFES O EQUIPOS">PROBLEMAS RELACIONADOS CON EL TRABAJO: CONFLICTOS CON JEFES O EQUIPOS</option>
-                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: ESTRÉS LABORAL">PROBLEMAS RELACIONADOS CON EL TRABAJO: ESTRÉS LABORAL</option>
-                  <option value="PROBLEMAS RELACIONADOS CON EL TRABAJO: SÍNDROME DE BURNOUT">PROBLEMAS RELACIONADOS CON EL TRABAJO: SÍNDROME DE BURNOUT</option>
-                  <option value="PROBLEMÁTICA FAMILIAR">PROBLEMÁTICA FAMILIAR</option>
-                  <option value="PROBLEMÁTICA FAMILIAR Y PERSONAL">PROBLEMÁTICA FAMILIAR Y PERSONAL</option>
-                  <option value="PROBLEMÁTICA PERSONAL">PROBLEMÁTICA PERSONAL</option>
-                  <option value="PROBLEMÁTICA SOCIAL">PROBLEMÁTICA SOCIAL</option>
-                  <option value="PROCESO DE CALIFICACIÓN">PROCESO DE CALIFICACIÓN</option>
-                  <option value="PROCESO DE CALIFICACIÓN PERDIDA DE CAPACIDAD">PROCESO DE CALIFICACIÓN PERDIDA DE CAPACIDAD</option>
-                  <option value="PROYECCIÓN LABORAL">PROYECCIÓN LABORAL</option>
-                  <option value="RELACIÓN CONFLICTIVA CON LA COMIDA">RELACIÓN CONFLICTIVA CON LA COMIDA</option>
-                  <option value="SEGUIMIENTO CASO SOSPECHOSO">SEGUIMIENTO CASO SOSPECHOSO</option>
-                  <option value="SENSACIÓN DE NO SABER QUÉ HACER CON LA VIDA">SENSACIÓN DE NO SABER QUÉ HACER CON LA VIDA</option>
-                  <option value="SINDROME DE BURNOUT">SINDROME DE BURNOUT</option>
-                  <option value="SITUACIÓN TRAUMÁTICA">SITUACIÓN TRAUMÁTICA</option>
-                  <option value="SOBRECARGA / FALTA DE LÍMITES">SOBRECARGA / FALTA DE LÍMITES</option>
-                  <option value="TRASTORNO DEPENDIENTE">TRASTORNO DEPENDIENTE</option>
-                </select>
-                <button type="button" id="btnAgregarMotivo" class="btn-agregar-motivo" onclick="agregarMotivo()">
-                  + Agregar
-                </button>
-              </div>
-
-              <div id="motivosSeleccionados" class="motivos-seleccionados"></div>
-              <p class="field-info" id="motivosHint">Seleccione un motivo y pulse "Agregar". Puede agregar hasta 5.</p>
-              <input type="hidden" id="motivos_valor_final" />
-            </div>
-
-            <!-- Modalidad -->
-            <div class="form-group">
-              <label for="modalidad">
-                <span class="label-icon">💻</span>
-                Modalidad <span class="required">*</span>
-              </label>
-              <select id="modalidad" required>
-                <option value="">Seleccione...</option>
-                <option value="Virtual">Virtual</option>
-                <option value="Presencial">Presencial</option>
-              </select>
-            </div>
-
-            <!-- Fecha -->
-            <div class="form-group">
-              <label for="fecha">
-                <span class="label-icon">📅</span>
-                Fecha <span class="required">*</span>
-              </label>
-              <input type="date" id="fecha" required />
-            </div>
-
-            <!-- Observaciones -->
-            <div class="form-group full-width">
-              <label for="columna1">
-                <span class="label-icon">📄</span>
-                Observaciones
-              </label>
-              
-              <!-- ⭐ NUEVO: Toggle de confidencialidad -->
-              <div class="confidencialidad-toggle">
-                <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
-                  <span class="candado-icon" id="candadoIcon">🔓</span>
-                  <span class="candado-texto" id="candadoTexto">Visible en informe</span>
-                </button>
-                <input type="hidden" id="observaciones_confidenciales" value="false">
-              </div>
-              
-              <textarea 
-                id="columna1" 
-                rows="3" 
-                placeholder="Notas adicionales, comentarios o seguimiento..."
-              ></textarea>
-              <p class="observaciones-info" id="observacionesInfo">
-                💡 Estas observaciones <strong>se mostrarán</strong> en el informe del trabajador
-              </p>
-            </div>
-
-            <!-- Estado -->
-            <div class="form-group">
-              <label for="estado">
-                <span class="label-icon">✅</span>
-                Estado del Caso <span class="required">*</span>
-              </label>
-              <select id="estado" required>
-                <option value="">Seleccione...</option>
-                <option value="Abierto">Abierto</option>
-                <option value="Cerrado">Cerrado</option>
-              </select>
-            </div>
-
-            <!-- Botón Contacto de Emergencia -->
-            <div class="form-group">
-              <label>&nbsp;</label>
-              <button type="button" id="btnContactoEmergencia" class="btn-emergency-contact">
-                👤 Contacto de Emergencia
-              </button>
-            </div>
-            
-            <!-- ⭐ NUEVO: Consultas Sugeridas (solo primera sesión) -->
-            <div class="form-group" id="consultasSugeridasGroup" style="display: none;">
-              <label for="consultas_sugeridas">
-                <span class="label-icon">📊</span>
-                Consultas Sugeridas <span class="required">*</span>
-              </label>
-              <input 
-                type="number" 
-                id="consultas_sugeridas" 
-                min="1" 
-                max="50" 
-                placeholder="Ej: 5"
-                title="Número de sesiones proyectadas para este trabajador"
-              />
-              <p class="field-info">💡 Proyección de sesiones necesarias</p>
-            </div>
-          </div>
-
-          <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones (se muestra solo cuando estado = "Cerrado") -->
-          <div class="form-group-fecha-cierre" id="fechaCierreContainer">
-            <div class="fecha-cierre-label">
-              <span class="fecha-cierre-icon">🔒</span>
-              <span>Fecha de Cierre del Caso <span class="required">*</span></span>
-            </div>
-            <input type="date" id="fecha_cierre" />
-            <p class="fecha-cierre-info">
-              Esta fecha se guardará como la fecha oficial de cierre del caso del trabajador
-            </p>
-            
-            <!-- ⭐ NUEVO: Campo de Recomendaciones Finales -->
-            <div class="recomendaciones-container">
-              <div class="fecha-cierre-label" style="margin-top: 15px;">
-                <span class="fecha-cierre-icon">📝</span>
-                <span>Recomendaciones Finales <span class="required">*</span></span>
-              </div>
-              <textarea 
-                id="recomendaciones_finales" 
-                rows="6" 
-                placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso. Estas recomendaciones aparecerán en el informe final..."
-                style="width: 100%; padding: 12px; border: 2px solid #ffc107; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
-              ></textarea>
-              <p class="fecha-cierre-info">
-                💡 Estas recomendaciones aparecerán en el informe final del trabajador
-              </p>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-submit-consulta">
-              💾 Registrar Consulta
-            </button>
-            <button type="reset" class="btn-reset-consulta">
-              🔄 Limpiar Formulario
-            </button>
-          </div>
-        </form>
-      </div>
-
-   <!-- ========================================
-       SECCIÓN DE ADJUNTAR DOCUMENTOS (Orientación Psicosocial)
-       ======================================== -->
-  <div id="documentosSection" class="documentos-section" style="display: none;">
-    <div class="documentos-header">
-      <h2 class="section-title">
-        <span class="section-icon">📎</span>
-        Documentos Adjuntos
-      </h2>
-      <p class="documentos-descripcion">
-        Adjunte los documentos en formato PDF o Word (.pdf, .doc, .docx)
-      </p>
-    </div>
-
-    <div class="documentos-grid">
-      <!-- Consentimiento Informado -->
-      <div class="documento-card">
-        <div class="documento-icon-wrapper consentimiento">
-          <span class="documento-icon">📄</span>
-        </div>
-        <h3 class="documento-titulo">Consentimiento Informado</h3>
-        <p class="documento-descripcion">Documento de autorización del trabajador</p>
-        
-        <div class="documento-actions">
-          <input 
-            type="file" 
-            id="consentimientoFile" 
-            accept=".pdf,.doc,.docx" 
-            style="display: none;"
-            onchange="handleFileSelect('consentimiento', this)"
-          />
-          <button 
-            type="button" 
-            class="btn-adjuntar" 
-            onclick="document.getElementById('consentimientoFile').click()"
-          >
-            📎 Adjuntar
-          </button>
-          <button 
-            type="button" 
-            class="btn-ver-documento" 
-            id="btnVerConsentimiento"
-            style="display: none;"
-            onclick="verDocumento('consentimiento')"
-          >
-            👁️ Ver
-          </button>
-          <button 
-            type="button" 
-            class="btn-eliminar-documento" 
-            id="btnEliminarConsentimiento"
-            style="display: none;"
-            onclick="eliminarDocumento('consentimiento')"
-          >
-            🗑️
-          </button>
-        </div>
-        
-        <div class="documento-info" id="consentimientoInfo" style="display: none;">
-          <span class="documento-nombre" id="consentimientoNombre"></span>
-          <span class="documento-estado">✅ Adjuntado</span>
-        </div>
-      </div>
-
-      <!-- Historia Clínica -->
-      <div class="documento-card">
-        <div class="documento-icon-wrapper historia">
-          <span class="documento-icon">📋</span>
-        </div>
-        <h3 class="documento-titulo">Historia Clínica</h3>
-        <p class="documento-descripcion">Historial médico del trabajador</p>
-        
-        <div class="documento-actions">
-          <input 
-            type="file" 
-            id="historiaFile" 
-            accept=".pdf,.doc,.docx" 
-            style="display: none;"
-            onchange="handleFileSelect('historia', this)"
-          />
-          <button 
-            type="button" 
-            class="btn-adjuntar" 
-            onclick="document.getElementById('historiaFile').click()"
-          >
-            📎 Adjuntar
-          </button>
-          <button 
-            type="button" 
-            class="btn-ver-documento" 
-            id="btnVerHistoria"
-            style="display: none;"
-            onclick="verDocumento('historia')"
-          >
-            👁️ Ver
-          </button>
-          <button 
-            type="button" 
-            class="btn-eliminar-documento" 
-            id="btnEliminarHistoria"
-            style="display: none;"
-            onclick="eliminarDocumento('historia')"
-          >
-            🗑️
-          </button>
-        </div>
-        
-        <div class="documento-info" id="historiaInfo" style="display: none;">
-          <span class="documento-nombre" id="historiaNombre"></span>
-          <span class="documento-estado">✅ Adjuntado</span>
-        </div>
-      </div>
-
-      <!-- Documentos Adicionales -->
-      <div class="documento-card">
-        <div class="documento-icon-wrapper adicionales">
-          <span class="documento-icon">📁</span>
-        </div>
-        <h3 class="documento-titulo">Documentos Adicionales</h3>
-        <p class="documento-descripcion">Otros documentos relevantes</p>
-        
-        <div class="documento-actions">
-          <input 
-            type="file" 
-            id="adicionalesFile" 
-            accept=".pdf,.doc,.docx" 
-            style="display: none;"
-            onchange="handleFileSelect('adicionales', this)"
-          />
-          <button 
-            type="button" 
-            class="btn-adjuntar" 
-            onclick="document.getElementById('adicionalesFile').click()"
-          >
-            📎 Adjuntar
-          </button>
-          <button 
-            type="button" 
-            class="btn-ver-documento" 
-            id="btnVerAdicionales"
-            style="display: none;"
-            onclick="verDocumento('adicionales')"
-          >
-            👁️ Ver
-          </button>
-          <button 
-            type="button" 
-            class="btn-eliminar-documento" 
-            id="btnEliminarAdicionales"
-            style="display: none;"
-            onclick="eliminarDocumento('adicionales')"
-          >
-            🗑️
-          </button>
-        </div>
-        
-        <div class="documento-info" id="adicionalesInfo" style="display: none;">
-          <span class="documento-nombre" id="adicionalesNombre"></span>
-          <span class="documento-estado">✅ Adjuntado</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="documentos-nota">
-      <span class="nota-icon">💡</span>
-      <span class="nota-texto">
-        Los documentos se guardan automáticamente al adjuntarlos. Tamaño máximo por archivo: 10MB
-      </span>
-    </div>
-  </div>
-
-
-
-<!-- [SVE INICIO] =====================================================
-< !-- ⭐ REEMPLAZO COMPLETO DEL DIV #formVigilanciaEpidemiologica EN consulta.html - ->
-< !-- IMPORTANTE: Los estilos están en css/epidemiologica.css - ->
-
-< !-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA - ->
-<div id="formVigilanciaEpidemiologica" class="construccion-container">
+      <!-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA -->
+<div id="formVigilanciaEpidemiologica">
   
-  < !-- ========================================
+  <!-- ========================================
        FORMULARIO 1: MESA DE TRABAJO (Solo 3 campos)
-       ======================================== - ->
+       ======================================== -->
   <div id="contenedorMesaTrabajo" class="formulario-vigilancia-container">
     <div class="formulario-vigilancia-header">
       <span class="formulario-icon">📋</span>
@@ -717,7 +290,7 @@
     <form id="formMesaTrabajo" class="form-vigilancia">
       <div class="form-grid-vigilancia">
         
-        < !-- Criterio de Inclusión al SVE - ->
+        <!-- Criterio de Inclusión al SVE -->
         <div class="form-group-vigilancia full-width">
           <label for="criterio_inclusion">
             <span class="label-icon">✓</span>
@@ -736,7 +309,7 @@
           </select>
         </div>
 
-        < !-- Diagnóstico - ->
+        <!-- Diagnóstico -->
         <div class="form-group-vigilancia">
           <label for="diagnostico">
             <span class="label-icon">🩺</span>
@@ -750,7 +323,7 @@
           />
         </div>
 
-        < !-- Código de diagnóstico - ->
+        <!-- Código de diagnóstico -->
         <div class="form-group-vigilancia">
           <label for="codigo_diagnostico">
             <span class="label-icon">🔢</span>
@@ -764,7 +337,7 @@
           />
         </div>
 
-        < !-- Motivo de Evaluación y Situación Actual - ->
+        <!-- Motivo de Evaluación y Situación Actual -->
         <div class="form-group-vigilancia full-width">
           <label for="motivo_evaluacion_sve">
             <span class="label-icon">📝</span>
@@ -791,10 +364,10 @@
     </form>
   </div>
 
-  < !-- ========================================
+  <!-- ========================================
        SOPORTE MESA DE TRABAJO — Contenedor independiente
        Se habilita automáticamente al registrar la Mesa de Trabajo
-       ======================================== - ->
+       ======================================== -->
   <div id="contenedorSoporteMesa" class="formulario-vigilancia-container soporte-mesa-independiente">
     <div class="formulario-vigilancia-header">
       <span class="formulario-icon">📎</span>
@@ -809,11 +382,11 @@
 
     <div class="soporte-mesa-body">
 
-      < !-- ── Input oculto (soporte principal, se mantiene por compatibilidad) ── - ->
+      <!-- ── Input oculto (soporte principal, se mantiene por compatibilidad) ── -->
       <input type="file" id="soporte_mesa_trabajo" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
 
-      < !-- ── SOPORTE PRINCIPAL ── - ->
-      < !-- Estado: sin archivo guardado - ->
+      <!-- ── SOPORTE PRINCIPAL ── -->
+      <!-- Estado: sin archivo guardado -->
       <div id="soporteEstadoVacio" class="soporte-estado">
         <span class="soporte-estado-icono">📂</span>
         <p class="soporte-estado-texto">No hay soporte adjunto</p>
@@ -823,7 +396,7 @@
         </button>
       </div>
 
-      < !-- Estado: archivo seleccionado pero aún no guardado - ->
+      <!-- Estado: archivo seleccionado pero aún no guardado -->
       <div id="soporteEstadoPendiente" class="soporte-estado" style="display:none;">
         <div class="soporte-file-info show">
           <span class="soporte-file-icon" id="soporteFileIconNuevo">📄</span>
@@ -838,7 +411,7 @@
         </div>
       </div>
 
-      < !-- Estado: archivo ya guardado — Ver / Descargar / Eliminar - ->
+      <!-- Estado: archivo ya guardado — Ver / Descargar / Eliminar -->
       <div id="soporteEstadoGuardado" class="soporte-estado" style="display:none;">
         <div class="soporte-guardado-info">
           <span class="soporte-file-icon" id="soporteGuardadoIcon">📄</span>
@@ -861,11 +434,11 @@
         </button>
       </div>
 
-      < !-- ── SOPORTES ADICIONALES ── - ->
-      < !-- Lista de soportes adicionales ya guardados - ->
+      <!-- ── SOPORTES ADICIONALES ── -->
+      <!-- Lista de soportes adicionales ya guardados -->
       <div id="listaSoportesAdicionales" class="lista-soportes-adicionales" style="display:none;"></div>
 
-      < !-- Zona para agregar un nuevo soporte adicional (oculta hasta pulsar el botón) - ->
+      <!-- Zona para agregar un nuevo soporte adicional (oculta hasta pulsar el botón) -->
       <div id="zonaAgregarAdicional" class="zona-agregar-adicional" style="display:none;">
         <input type="file" id="inputSoporteAdicional" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
         <div id="adicionalEstadoPendiente" class="soporte-estado" style="display:none;">
@@ -891,7 +464,7 @@
         </div>
       </div>
 
-      < !-- Botón "Agregar + adjunto" — aparece solo cuando hay al menos un soporte guardado - ->
+      <!-- Botón "Agregar + adjunto" — aparece solo cuando hay al menos un soporte guardado -->
       <div id="seccionAgregarAdicional" style="display:none; margin-top:14px;">
         <button type="button" class="btn-agregar-adjunto" id="btnAgregarAdjunto" onclick="toggleZonaAgregarAdicional()">
           ➕ Agregar + adjunto
@@ -902,9 +475,9 @@
     </div>
   </div>
 
-  < !-- ========================================
+  <!-- ========================================
        FORMULARIO 2: REGISTRO DE CONSULTA (Bloqueado hasta completar Formulario 1)
-       ======================================== - ->
+       ======================================== -->
   <div id="contenedorConsulta" class="formulario-vigilancia-container bloqueado">
     <div class="formulario-vigilancia-header">
       <span class="formulario-icon">📝</span>
@@ -920,7 +493,7 @@
     <form id="formConsultaVigilancia" class="form-vigilancia">
   <div class="form-grid-vigilancia">
     
-    < !-- Fila 1: Fecha de Consulta | Nivel de Complejidad - ->
+    <!-- Fila 1: Fecha de Consulta | Nivel de Complejidad -->
     <div class="form-group-vigilancia">
       <label for="fecha_consulta_sve">
         <span class="label-icon">📅</span>
@@ -934,7 +507,7 @@
       />
     </div>
 
-    < !-- Nivel de Complejidad (solo habilitado en la primera sesión) - ->
+    <!-- Nivel de Complejidad (solo habilitado en la primera sesión) -->
     <div class="form-group-vigilancia" id="contenedorNivelComplejidad">
       <label for="nivel_complejidad_sve">
         <span class="label-icon">⚠️</span>
@@ -952,7 +525,7 @@
       </p>
     </div>
 
-    < !-- Fila 2: Modalidad | Ajuste a las Funciones - ->
+    <!-- Fila 2: Modalidad | Ajuste a las Funciones -->
     <div class="form-group-vigilancia">
       <label for="modalidad_sve">
         <span class="label-icon">💻</span>
@@ -978,7 +551,7 @@
       ></textarea>
     </div>
 
-    < !-- Fila 3: Rec. Médicas | Rec. al Trabajador - ->
+    <!-- Fila 3: Rec. Médicas | Rec. al Trabajador -->
     <div class="form-group-vigilancia">
       <label for="recomendaciones_medicas_sve">
         <span class="label-icon">💊</span>
@@ -1005,7 +578,7 @@
       ></textarea>
     </div>
 
-    < !-- Fila 4: Rec. a la Empresa | Observaciones - ->
+    <!-- Fila 4: Rec. a la Empresa | Observaciones -->
     <div class="form-group-vigilancia">
       <label for="recomendaciones_empresa_sve">
         <span class="label-icon">🏢</span>
@@ -1032,7 +605,7 @@
       ></textarea>
     </div>
 
-    < !-- Fila 5: Contacto de Emergencia | Estado del Caso - ->
+    <!-- Fila 5: Contacto de Emergencia | Estado del Caso -->
     <div class="form-group-vigilancia" style="display:flex; flex-direction:column; justify-content:flex-end;">
       <button type="button" id="btnContactoEmergenciaSVE" class="btn-emergency-contact" disabled>
         👤 Contacto de Emergencia
@@ -1053,7 +626,7 @@
 
   </div>
 
-  < !-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones Finales SVE - ->
+  <!-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones Finales SVE -->
   <div class="form-group-fecha-cierre-sve" id="fechaCierreSVEContainer">
     <div class="fecha-cierre-label">
       <span class="fecha-cierre-icon">🔒</span>
@@ -1064,7 +637,7 @@
       Esta fecha se guardará como la fecha oficial de cierre del caso SVE del trabajador
     </p>
     
-    < !-- ⭐ NUEVO: Campo de Recomendaciones Finales SVE - ->
+    <!-- ⭐ NUEVO: Campo de Recomendaciones Finales SVE -->
     <div class="recomendaciones-container">
       <div class="fecha-cierre-label" style="margin-top: 15px;">
         <span class="fecha-cierre-icon">📋</span>
@@ -1093,10 +666,10 @@
  </form>
 </div>
 
-  < !-- ========================================
+  <!-- ========================================
        HISTORIAL DE FORMULARIOS SVE
-       ======================================== - ->
-  <div id="historialSVE" class="historial-sve-container" style="display: none;">
+       ======================================== -->
+  <div id="historialSVE" class="historial-sve-container">
     <div class="historial-sve-header">
       <h3 class="historial-sve-titulo">📚 Historial del Caso SVE</h3>
       <button type="button" class="btn-refresh-sve" id="btnRefreshSVE" title="Actualizar historial">
@@ -1104,7 +677,7 @@
       </button>
     </div>
 
-    < !-- Mesa de Trabajo Registrada - ->
+    <!-- Mesa de Trabajo Registrada -->
     <div id="mesaTrabajoRegistrada" class="mesa-trabajo-card" style="display: none;">
       <div class="mesa-trabajo-header">
         <div class="mesa-trabajo-titulo">
@@ -1121,18 +694,21 @@
         </div>
       </div>
       <div class="mesa-trabajo-body" id="mesaTrabajoContenido">
-        < !-- Contenido dinámico - ->
+        <!-- Contenido dinámico -->
       </div>
     </div>
 
-    < !-- Consultas Registradas - ->
+    <!-- Consultas Registradas -->
     <div id="consultasSVERegistradas" class="consultas-sve-lista">
-      < !-- Consultas dinámicas - ->
+      <!-- Consultas dinámicas -->
     </div>
   </div>
 
 </div>
-[SVE FIN] ============================================================ -->
+
+    </div>
+    <!-- fin .consulta-section SVE -->
+
 
     <!-- Modal de Contacto de Emergencia -->
     <div id="modalVerContacto" class="modal-overlay-contacto">
@@ -1343,65 +919,61 @@
   <!-- Select2 JS -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
-  
-  <!-- Scripts de la aplicación -->
-  <script src="js/config.js"></script> 
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCRIPTS — Sistema de Vigilancia Epidemiológica
+       ═══════════════════════════════════════════════════════════ -->
+  <!-- Configuración global de la aplicación -->
+  <script src="js/config.js"></script>
+  <!-- Verificación de sesión/autenticación -->
   <script src="js/auth-check.js"></script>
+  <!-- API base de consultas (endpoints compartidos) -->
   <script src="js/consulta-api.js"></script>
+  <!-- Carga y renderizado de datos del cliente -->
   <script src="js/consulta-cliente.js"></script>
+  <!-- Historial de consultas (compartido) -->
   <script src="js/consulta-historial.js"></script>
+  <!-- Lógica del formulario de consulta (compartido) -->
   <script src="js/consulta-form.js"></script>
-  <!-- [SVE] <script src="js/consulta-sve.js"></script> -->
+  <!-- ⭐ Lógica exclusiva SVE: Mesa de Trabajo, Consulta SVE, Historial SVE -->
+  <script src="js/consulta-sve.js"></script>
+  <!-- Gestión de documentos adjuntos (compartido) -->
   <script src="js/consulta-documentos.js"></script>
+  <!-- Antecedentes de salud del trabajador (compartido) -->
   <script src="js/consulta-antecedentes.js"></script>
+  <!-- Controlador principal de la página (compartido) -->
   <script src="js/consulta.js"></script>
+  <!-- Generación de informes base -->
   <script src="js/informe.js"></script>
-  <!-- [SVE] <script src="js/informeSVE.js"></script> -->
-  
-  <!-- [SVE] Script de detección de modalidad comentado.
-       Contenía lógica para alternar entre OP y SVE.
-       Reemplazado por inicialización exclusiva OP abajo.
-  < !-- ⭐ NUEVO: Script para manejar modalidades - ->
+  <!-- ⭐ Generación de informes exclusiva SVE -->
+  <script src="js/informeSVE.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Script de inicialización — fuerza modalidad SVE
+       ═══════════════════════════════════════════════════════════ -->
   <script>
-    // Detectar modalidad y mostrar formulario correspondiente
     document.addEventListener('DOMContentLoaded', () => {
-      const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
-      
-      // Mostrar indicador de modalidad
+      // Esta página es exclusivamente para SVE: forzamos la modalidad
+      // sin importar lo que haya en localStorage.
+      localStorage.setItem('modalidadSeleccionada', 'Sistema de Vigilancia Epidemiológica');
+
+      // Mostrar indicador de modalidad si existe en el DOM
       const modalidadIndicador = document.getElementById('modalidadIndicadorConsulta');
-      const modalidadNombre = document.getElementById('modalidadNombreConsulta');
-      
+      const modalidadNombre    = document.getElementById('modalidadNombreConsulta');
       if (modalidadIndicador && modalidadNombre) {
-        modalidadNombre.textContent = modalidad;
+        modalidadNombre.textContent = 'Sistema de Vigilancia Epidemiológica';
         modalidadIndicador.style.display = 'flex';
       }
-      
-      // Mostrar formulario correspondiente
-      const formOrientacion = document.getElementById('formOrientacionPsicosocial');
-      const formVigilancia = document.getElementById('formVigilanciaEpidemiologica');
-      
-      if (modalidad === 'Orientación Psicosocial') {
-        formOrientacion.style.display = 'block';
-        formVigilancia.classList.remove('show');
-      } else if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
-        formOrientacion.style.display = 'none';
-        formVigilancia.classList.add('show');
-      }
-      
-      console.log('✅ Modalidad cargada:', modalidad);
-    });
-  </script> -->
 
-  <!-- Script de inicialización exclusivo Orientación Psicosocial -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      localStorage.setItem('modalidadSeleccionada', 'Orientación Psicosocial');
-      const ind = document.getElementById('modalidadIndicadorConsulta');
-      const nom = document.getElementById('modalidadNombreConsulta');
-      if (ind && nom) { nom.textContent = 'Orientación Psicosocial'; ind.style.display = 'flex'; }
+      // Ocultar cualquier sección de Orientación Psicosocial que pudiera
+      // heredarse de scripts compartidos
       const formOP = document.getElementById('formOrientacionPsicosocial');
-      if (formOP) formOP.style.display = 'block';
-      console.log('✅ Modalidad: Orientación Psicosocial');
+      if (formOP) formOP.style.display = 'none';
+
+      const docSection = document.getElementById('documentosSection');
+      if (docSection) docSection.style.display = 'none';
+
+      console.log('✅ consulta-sve.html — Modalidad SVE inicializada');
     });
   </script>
 </body>

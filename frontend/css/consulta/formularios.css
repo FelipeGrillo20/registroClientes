@@ -427,3 +427,50 @@
   color: #95a5a6;
   letter-spacing: 0;
 }
+
+/* ── Fecha de cierre del caso OP ────────────────────────────── */
+.form-group-fecha-cierre {
+  display: none;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+  animation: slideDown 0.3s ease;
+}
+
+.form-group-fecha-cierre.show { display: block; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fecha-cierre-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 8px;
+}
+
+.fecha-cierre-icon { font-size: 18px; }
+
+.fecha-cierre-info {
+  font-size: 12px;
+  color: #856404;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+#fecha_cierre {
+  border: 2px solid #ffc107;
+  background: white;
+}
+
+.recomendaciones-container {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #ffc107;
+}

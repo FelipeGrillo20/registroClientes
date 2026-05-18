@@ -868,3 +868,490 @@ ESTILOS PARA CIERRE DE CASO SVE
     padding: 9px 12px;
   }
 }
+
+/* ============================================================ */
+/* MENSAJE EN CONSTRUCCIÓN (clase usada mientras el módulo      */
+/* SVE estaba en desarrollo; se conserva por compatibilidad)    */
+/* ============================================================ */
+/* ⭐ NUEVO: Estilos para mensaje en construcción */
+.construccion-container {
+  display: none;
+  text-align: center;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: 16px;
+  border: 3px dashed #ff9800;
+  margin: 20px 0;
+}
+
+.construccion-container.show {
+  display: block;
+}
+
+.construccion-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: swing 2s ease-in-out infinite;
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.construccion-titulo {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 15px;
+}
+
+.construccion-descripcion {
+  font-size: 16px;
+  color: #f57c00;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ============================================================ */
+/* SOPORTE MESA DE TRABAJO — File Upload y estados              */
+/* ============================================================ */
+/* ============================================================ */
+/* SOPORTE MESA DE TRABAJO - File Upload                        */
+/* ============================================================ */
+.soporte-upload-container {
+  border: 2px dashed #b0bec5;
+  border-radius: 10px;
+  padding: 16px 18px;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+.soporte-upload-container:hover {
+  border-color: #5c6bc0;
+  background: #f0f2ff;
+}
+.soporte-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #37474f;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.soporte-upload-label .label-icon { font-size: 18px; }
+
+.btn-soporte-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #5c6bc0, #3949ab);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(57, 73, 171, 0.3);
+  font-family: inherit;
+}
+.btn-soporte-upload:hover {
+  background: linear-gradient(135deg, #3949ab, #283593);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(57, 73, 171, 0.4);
+}
+.btn-soporte-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-guardar-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+  font-family: inherit;
+  margin-left: 8px;
+}
+.btn-guardar-soporte:hover {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+}
+.btn-guardar-soporte:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.soporte-file-info {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #e8eaf6;
+  border-radius: 8px;
+  border-left: 4px solid #5c6bc0;
+  font-size: 13px;
+  color: #37474f;
+}
+.soporte-file-info.show { display: flex; }
+.soporte-file-icon { font-size: 20px; flex-shrink: 0; }
+.soporte-file-name {
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.soporte-file-size { color: #78909c; font-size: 12px; flex-shrink: 0; }
+.btn-quitar-soporte {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.btn-quitar-soporte:hover { transform: scale(1.2); }
+
+.soporte-existente {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  border-left: 4px solid #43a047;
+  font-size: 13px;
+  color: #2e7d32;
+}
+.soporte-existente.show { display: flex; }
+.btn-ver-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #43a047;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.btn-ver-soporte:hover { background: #2e7d32; }
+.btn-eliminar-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #e53935;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.btn-eliminar-soporte:hover { background: #b71c1c; }
+.soporte-hint {
+  font-size: 11px;
+  color: #90a4ae;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ============================================================ */
+/* SOPORTE MESA DE TRABAJO — Contenedor independiente           */
+/* ============================================================ */
+.soporte-mesa-independiente { margin-top: 16px; }
+.soporte-mesa-body { padding: 20px 24px 16px; }
+.soporte-estado {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.soporte-estado-icono { font-size: 28px; }
+.soporte-estado-texto { color: #90a4ae; font-style: italic; font-size: 14px; margin: 0; }
+
+.soporte-guardado-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  border-left: 4px solid #43a047;
+  flex: 1;
+  min-width: 0;
+}
+.soporte-guardado-info .soporte-file-icon { font-size: 22px; flex-shrink: 0; }
+.soporte-guardado-info .soporte-file-name {
+  font-weight: 600;
+  color: #2e7d32;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.soporte-acciones-guardado { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-accion-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.btn-accion-soporte.btn-ver     { background: #e3f2fd; color: #1565c0; }
+.btn-accion-soporte.btn-ver:hover { background: #bbdefb; }
+.btn-accion-soporte.btn-descargar { background: #e8f5e9; color: #2e7d32; }
+.btn-accion-soporte.btn-descargar:hover { background: #c8e6c9; }
+.btn-accion-soporte.btn-eliminar-soporte { background: #ffebee; color: #c62828; }
+.btn-accion-soporte.btn-eliminar-soporte:hover { background: #ffcdd2; }
+
+.soporte-acciones-pendiente { display: flex; align-items: center; gap: 8px; }
+.btn-reemplazar-soporte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  color: #546e7a;
+  border: 1px solid #cfd8dc;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s;
+  font-family: inherit;
+  width: 100%;
+  justify-content: center;
+}
+.btn-reemplazar-soporte:hover { background: #eceff1; border-color: #b0bec5; }
+
+/* ── Soportes adicionales ── */
+.lista-soportes-adicionales {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+}
+.soporte-adicional-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafb;
+  border: 1px solid #e0e7ef;
+  border-radius: 9px;
+  padding: 10px 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.soporte-adicional-item .soporte-file-icon { font-size: 20px; flex-shrink: 0; }
+.soporte-adicional-item .soporte-file-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #37474f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.soporte-adicional-item .soporte-adicional-acciones {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Zona para agregar un nuevo adjunto adicional */
+.zona-agregar-adicional {
+  margin-top: 12px;
+  padding: 14px;
+  background: #f0f7ff;
+  border: 1.5px dashed #90caf9;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Botón principal "Agregar + adjunto" */
+.btn-agregar-adjunto {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1.5px solid #90caf9;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-agregar-adjunto:hover { background: #bbdefb; border-color: #42a5f5; }
+.btn-agregar-adjunto.activo { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
+.btn-agregar-adjunto.activo:hover { background: #ffe0b2; }
+
+/* Mesa de Trabajo — acciones header */
+.mesa-trabajo-acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-delete-mesa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.btn-delete-mesa:hover {
+  background: #ffcdd2;
+  border-color: #e57373;
+}
+
+/* ============================================================ */
+/* WRAPPER PRINCIPAL DEL MÓDULO SVE                             */
+/* Contenedor naranja con borde punteado que envuelve los 3     */
+/* formularios (Mesa de Trabajo, Soporte, Consulta SVE).        */
+/* En consulta.html original era .construccion-container.show   */
+/* En consulta-sve.html se usa la clase propia sve-wrapper      */
+/* ============================================================ */
+
+#formVigilanciaEpidemiologica {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: 16px;
+  border: 3px dashed #ff9800;
+  margin: 20px 0;
+  padding: 24px;
+}
+
+/* ============================================================ */
+/* SEPARACIÓN ENTRE FORMULARIOS DENTRO DEL WRAPPER              */
+/* ============================================================ */
+
+#formVigilanciaEpidemiologica .formulario-vigilancia-container {
+  margin-bottom: 20px;
+}
+
+#formVigilanciaEpidemiologica .formulario-vigilancia-container:last-of-type {
+  margin-bottom: 0;
+}
+
+/* ============================================================ */
+/* FORMULARIO 2 BLOQUEADO — el fondo naranja lo cubre           */
+/* mientras esté deshabilitado, mantiene visual coherente        */
+/* ============================================================ */
+
+#contenedorConsulta.bloqueado {
+  opacity: 0.65;
+  pointer-events: none;
+  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+  border: 2px dashed #b0bec5;
+}
+
+/* ============================================================ */
+/* BADGES NIVEL DE COMPLEJIDAD — FORMULARIO SVE                 */
+/* ============================================================ */
+
+.nivel-complejidad-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.nivel-badge-bloqueado {
+  background: #f0f0f0;
+  color: #999;
+  border: 1px solid #ddd;
+}
+
+#nivel_complejidad_sve[data-bloqueado="true"] {
+  background-color: #f5f5f5;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ============================================================ */
+/* BADGES NIVEL DE COMPLEJIDAD — HISTORIAL SVE (imagen 3)       */
+/* Texto "COMPLEJIDAD: ALTO/MEDIO/BAJO" en la card de sesión    */
+/* ============================================================ */
+
+.badge-nivel-complejidad {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-nivel-alto  { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+.badge-nivel-medio { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.badge-nivel-bajo  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+
+/* Texto plano de complejidad en el header de la sesión SVE     */
+/* (cuando se renderiza como "COMPLEJIDAD: ALTO" sin badge)     */
+.consulta-sve-complejidad-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

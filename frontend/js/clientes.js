@@ -951,7 +951,12 @@ function onEdit(id) {
 
 // Función para ir a Consulta/Seguimiento
 window.onConsulta = function(id) {
-  window.location.href = `consulta.html?cliente=${id}`;
+  const modalidad = window.currentModalidad || localStorage.getItem('modalidadSeleccionada');
+  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+    window.location.href = `consulta-sve.html?cliente=${id}`;
+  } else {
+    window.location.href = `consulta.html?cliente=${id}`;
+  }
 };
 
 // ============================================

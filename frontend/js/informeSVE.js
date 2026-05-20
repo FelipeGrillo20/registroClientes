@@ -385,7 +385,7 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
         Metodología y Técnica de Recolección de Información
       </h2>
       <div class="metodologia-box-sve">
-        Observación y entrevista semiestructurada. Lo anterior con el objetivo de preservar el estado de salud y funcionalidad, de conformidad con los artículos 2, 4 y 8 de la Ley 776 de 2002. Además de estar soportado como acción preventiva de riesgos; con la Resolución 2646 de 2008 del Ministerio de la Protección Social y Resolución 2764 de 2022 del Ministerio del Trabajo bajo los artículos 6 y 8. Lo anterior soportado de la metodología las guías técnicas y protocolos para la promoción, prevención e intervención de los factores psicosociales, aplicando protocolo de prevención y actuación de depresión.
+        Observación y entrevista semiestructurada. Lo anterior con el objetivo de preservar el estado de salud y funcionalidad, de conformidad con los artículos 2, 4 y 8 de la Ley 776 de 2002. Además de estar soportado como acción preventiva de riesgos; con la Resolución 2646 de 2008 del Ministerio de la Protección Social y Resolución 2764 de 2022 del Ministerio del Trabajo bajo los artículos 6 y 8. Lo anterior soportado de la metodología las guías técnicas y protocolos para la promoción, prevención e intervención de los factores psicosociales, aplicando protocolo según el caso.
       </div>
     </div>
 

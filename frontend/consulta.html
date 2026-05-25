@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="css/consulta.css" />
   <!-- Estilos exclusivos para informes -->
   <link rel="stylesheet" href="css/informe.css" />
-  <!-- [SVE] <link rel="stylesheet" href="css/epidemiologica.css" /> -->
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <!-- Select2 Bootstrap Theme -->
@@ -693,447 +692,6 @@
     </div>
   </div>
 
-
-
-<!-- [SVE INICIO] =====================================================
-< !-- ⭐ REEMPLAZO COMPLETO DEL DIV #formVigilanciaEpidemiologica EN consulta.html - ->
-< !-- IMPORTANTE: Los estilos están en css/epidemiologica.css - ->
-
-< !-- FORMULARIOS SISTEMA DE VIGILANCIA EPIDEMIOLÓGICA - ->
-<div id="formVigilanciaEpidemiologica" class="construccion-container">
-  
-  < !-- ========================================
-       FORMULARIO 1: MESA DE TRABAJO (Solo 3 campos)
-       ======================================== - ->
-  <div id="contenedorMesaTrabajo" class="formulario-vigilancia-container">
-    <div class="formulario-vigilancia-header">
-      <span class="formulario-icon">📋</span>
-      <div>
-        <h3 class="formulario-titulo">Formulario 1: Registro Mesa de Trabajo</h3>
-        <p class="formulario-descripcion">Complete este formulario para iniciar el seguimiento epidemiológico</p>
-      </div>
-    </div>
-
-    <form id="formMesaTrabajo" class="form-vigilancia">
-      <div class="form-grid-vigilancia">
-        
-        < !-- Criterio de Inclusión al SVE - ->
-        <div class="form-group-vigilancia full-width">
-          <label for="criterio_inclusion">
-            <span class="label-icon">✓</span>
-            Criterio de Inclusión al SVE <span class="required">*</span>
-          </label>
-          <select id="criterio_inclusion" required>
-            <option value="">Seleccione un criterio...</option>
-            <option value="Casos o eventos identificados por quejas de acoso laboral">Casos o eventos identificados por quejas de acoso laboral</option>
-            <option value="Consumo problemático de alcohol y sustancias psicoactivas">Consumo problemático de alcohol y sustancias psicoactivas</option>
-            <option value="Trabajadores accidentados de forma reincidente">Trabajadores accidentados de forma reincidente</option>
-            <option value="Patologías comunes o laborales por exposición a factores psicosociales calificadas o en proceso de calificación">Patologías comunes o laborales por exposición a factores psicosociales calificadas o en proceso de calificación</option>
-            <option value="Casos que reporten incapacidades con diagnósticos relacionados con riesgo psicosocial">Casos que reporten incapacidades con diagnósticos relacionados con riesgo psicosocial</option>
-            <option value="Eventos vitales estresantes o significativos como muerte de seres queridos y eventos familiares o personales">Eventos vitales estresantes o significativos como muerte de seres queridos y eventos familiares o personales</option>
-            <option value="Casos de estrés postraumático">Casos de estrés postraumático</option>
-            <option value="Trabajadores con efectos en la salud mental derivados de las situaciones de emergencia sanitaria, ambiental y social">Trabajadores con efectos en la salud mental derivados de las situaciones de emergencia sanitaria, ambiental y social</option>
-          </select>
-        </div>
-
-        < !-- Diagnóstico - ->
-        <div class="form-group-vigilancia">
-          <label for="diagnostico">
-            <span class="label-icon">🩺</span>
-            Diagnóstico <span class="required">*</span>
-          </label>
-          <input 
-            type="text" 
-            id="diagnostico" 
-            placeholder="Ingrese el diagnóstico"
-            required
-          />
-        </div>
-
-        < !-- Código de diagnóstico - ->
-        <div class="form-group-vigilancia">
-          <label for="codigo_diagnostico">
-            <span class="label-icon">🔢</span>
-            Código de Diagnóstico <span class="required">*</span>
-          </label>
-          <input 
-            type="text" 
-            id="codigo_diagnostico" 
-            placeholder="Ej: F41.1"
-            required
-          />
-        </div>
-
-        < !-- Motivo de Evaluación y Situación Actual - ->
-        <div class="form-group-vigilancia full-width">
-          <label for="motivo_evaluacion_sve">
-            <span class="label-icon">📝</span>
-            Motivo de Evaluación y Situación Actual <span class="required">*</span>
-          </label>
-          <textarea 
-            id="motivo_evaluacion_sve" 
-            rows="4"
-            placeholder="Describa el motivo de evaluación y la situación actual del trabajador..."
-            required
-          ></textarea>
-        </div>
-
-      </div>
-
-      <div class="form-actions-vigilancia">
-        <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarMesaTrabajo">
-          💾 Registrar Mesa de Trabajo
-        </button>
-        <button type="reset" class="btn-reset-vigilancia">
-          🔄 Limpiar Formulario
-        </button>
-      </div>
-    </form>
-  </div>
-
-  < !-- ========================================
-       SOPORTE MESA DE TRABAJO — Contenedor independiente
-       Se habilita automáticamente al registrar la Mesa de Trabajo
-       ======================================== - ->
-  <div id="contenedorSoporteMesa" class="formulario-vigilancia-container soporte-mesa-independiente">
-    <div class="formulario-vigilancia-header">
-      <span class="formulario-icon">📎</span>
-      <div>
-        <h3 class="formulario-titulo">Soporte Mesa de Trabajo</h3>
-        <p class="formulario-descripcion">Adjunte documentos de soporte (PDF, Word, Excel — máx. 10 MB)</p>
-      </div>
-      <div class="bloqueo-badge" id="bloqueoSoporte" style="display:none;">
-        🔒 Registre primero la Mesa de Trabajo
-      </div>
-    </div>
-
-    <div class="soporte-mesa-body">
-
-      < !-- ── Input oculto (soporte principal, se mantiene por compatibilidad) ── - ->
-      <input type="file" id="soporte_mesa_trabajo" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
-
-      < !-- ── SOPORTE PRINCIPAL ── - ->
-      < !-- Estado: sin archivo guardado - ->
-      <div id="soporteEstadoVacio" class="soporte-estado">
-        <span class="soporte-estado-icono">📂</span>
-        <p class="soporte-estado-texto">No hay soporte adjunto</p>
-        <button type="button" class="btn-soporte-upload" id="btnAbrirSoporte"
-          onclick="document.getElementById('soporte_mesa_trabajo').click()">
-          📂 Seleccionar archivo
-        </button>
-      </div>
-
-      < !-- Estado: archivo seleccionado pero aún no guardado - ->
-      <div id="soporteEstadoPendiente" class="soporte-estado" style="display:none;">
-        <div class="soporte-file-info show">
-          <span class="soporte-file-icon" id="soporteFileIconNuevo">📄</span>
-          <span class="soporte-file-name" id="soporteFileName">—</span>
-          <span class="soporte-file-size" id="soporteFileSize"></span>
-          <button type="button" class="btn-quitar-soporte" id="btnQuitarSoporte" title="Quitar archivo">✕</button>
-        </div>
-        <div class="soporte-acciones-pendiente">
-          <button type="button" class="btn-guardar-soporte" id="btnGuardarSoporte" onclick="guardarSoporte()">
-            💾 Guardar soporte
-          </button>
-        </div>
-      </div>
-
-      < !-- Estado: archivo ya guardado — Ver / Descargar / Eliminar - ->
-      <div id="soporteEstadoGuardado" class="soporte-estado" style="display:none;">
-        <div class="soporte-guardado-info">
-          <span class="soporte-file-icon" id="soporteGuardadoIcon">📄</span>
-          <span class="soporte-file-name" id="soporteGuardadoNombre">—</span>
-        </div>
-        <div class="soporte-acciones-guardado">
-          <a class="btn-accion-soporte btn-ver" id="btnVerSoporte" href="#" target="_blank">
-            👁 Ver
-          </a>
-          <button type="button" class="btn-accion-soporte btn-descargar" id="btnDescargarSoporte">
-            ⬇️ Descargar
-          </button>
-          <button type="button" class="btn-accion-soporte btn-eliminar-soporte" onclick="eliminarSoporteHistorial()">
-            🗑 Eliminar
-          </button>
-        </div>
-        <button type="button" class="btn-reemplazar-soporte" id="btnReemplazarSoporte"
-          onclick="document.getElementById('soporte_mesa_trabajo').click()">
-          🔄 Reemplazar archivo
-        </button>
-      </div>
-
-      < !-- ── SOPORTES ADICIONALES ── - ->
-      < !-- Lista de soportes adicionales ya guardados - ->
-      <div id="listaSoportesAdicionales" class="lista-soportes-adicionales" style="display:none;"></div>
-
-      < !-- Zona para agregar un nuevo soporte adicional (oculta hasta pulsar el botón) - ->
-      <div id="zonaAgregarAdicional" class="zona-agregar-adicional" style="display:none;">
-        <input type="file" id="inputSoporteAdicional" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none;" />
-        <div id="adicionalEstadoPendiente" class="soporte-estado" style="display:none;">
-          <div class="soporte-file-info show">
-            <span class="soporte-file-icon" id="adicionalFileIcon">📄</span>
-            <span class="soporte-file-name" id="adicionalFileName">—</span>
-            <span class="soporte-file-size" id="adicionalFileSize"></span>
-            <button type="button" class="btn-quitar-soporte" id="btnQuitarAdicional" title="Quitar archivo">✕</button>
-          </div>
-          <div class="soporte-acciones-pendiente">
-            <button type="button" class="btn-guardar-soporte" id="btnGuardarAdicional" onclick="guardarSoporteAdicional()">
-              💾 Guardar adjunto
-            </button>
-          </div>
-        </div>
-        <div id="adicionalEstadoVacio" class="soporte-estado">
-          <span class="soporte-estado-icono">📂</span>
-          <p class="soporte-estado-texto">Seleccione un archivo adicional</p>
-          <button type="button" class="btn-soporte-upload"
-            onclick="document.getElementById('inputSoporteAdicional').click()">
-            📂 Seleccionar archivo
-          </button>
-        </div>
-      </div>
-
-      < !-- Botón "Agregar + adjunto" — aparece solo cuando hay al menos un soporte guardado - ->
-      <div id="seccionAgregarAdicional" style="display:none; margin-top:14px;">
-        <button type="button" class="btn-agregar-adjunto" id="btnAgregarAdjunto" onclick="toggleZonaAgregarAdicional()">
-          ➕ Agregar + adjunto
-        </button>
-      </div>
-
-      <p class="soporte-hint">Formatos permitidos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) — máx. 10 MB por archivo</p>
-    </div>
-  </div>
-
-  < !-- ========================================
-       FORMULARIO 2: REGISTRO DE CONSULTA (Bloqueado hasta completar Formulario 1)
-       ======================================== - ->
-  <div id="contenedorConsulta" class="formulario-vigilancia-container bloqueado">
-    <div class="formulario-vigilancia-header">
-      <span class="formulario-icon">📝</span>
-      <div>
-        <h3 class="formulario-titulo">Formulario 2: Registro de Consulta</h3>
-        <p class="formulario-descripcion">Registre las consultas de seguimiento epidemiológico</p>
-      </div>
-      <div class="bloqueo-badge" id="bloqueoConsulta">
-        🔒 Complete primero la Mesa de Trabajo
-      </div>
-    </div>
-
-    <form id="formConsultaVigilancia" class="form-vigilancia">
-  <div class="form-grid-vigilancia">
-    
-    < !-- Fila 1: Fecha de Consulta | Nivel de Complejidad - ->
-    <div class="form-group-vigilancia">
-      <label for="fecha_consulta_sve">
-        <span class="label-icon">📅</span>
-        Fecha de Consulta <span class="required">*</span>
-      </label>
-      <input 
-        type="date" 
-        id="fecha_consulta_sve" 
-        required
-        disabled
-      />
-    </div>
-
-    < !-- Nivel de Complejidad (solo habilitado en la primera sesión) - ->
-    <div class="form-group-vigilancia" id="contenedorNivelComplejidad">
-      <label for="nivel_complejidad_sve">
-        <span class="label-icon">⚠️</span>
-        Nivel de Complejidad
-        <span id="nivelComplejidadBadge" class="nivel-complejidad-badge" style="display:none;"></span>
-      </label>
-      <select id="nivel_complejidad_sve" data-bloqueado="true" style="pointer-events:none; opacity:0.6;">
-        <option value="">Seleccione...</option>
-        <option value="Alto">Alto</option>
-        <option value="Medio">Medio</option>
-        <option value="Bajo">Bajo</option>
-      </select>
-      <p class="field-info" id="nivelComplejidadInfo">
-        ℹ️ Este campo solo se registra en la primera sesión del caso SVE.
-      </p>
-    </div>
-
-    < !-- Fila 2: Modalidad | Ajuste a las Funciones - ->
-    <div class="form-group-vigilancia">
-      <label for="modalidad_sve">
-        <span class="label-icon">💻</span>
-        Modalidad <span class="required">*</span>
-      </label>
-      <select id="modalidad_sve" required disabled>
-        <option value="">Seleccione...</option>
-        <option value="Virtual">Virtual</option>
-        <option value="Presencial">Presencial</option>
-      </select>
-    </div>
-
-    <div class="form-group-vigilancia">
-      <label for="ajuste_funciones_sve">
-        <span class="label-icon">⚙️</span>
-        Ajuste a las Funciones
-      </label>
-      <textarea 
-        id="ajuste_funciones_sve" 
-        rows="3"
-        placeholder="Describa los ajustes necesarios a las funciones del trabajador..."
-        disabled
-      ></textarea>
-    </div>
-
-    < !-- Fila 3: Rec. Médicas | Rec. al Trabajador - ->
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_medicas_sve">
-        <span class="label-icon">💊</span>
-        Implementar las Siguientes Recomendaciones Médicas
-      </label>
-      <textarea 
-        id="recomendaciones_medicas_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones médicas a implementar..."
-        disabled
-      ></textarea>
-    </div>
-
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_trabajador_sve">
-        <span class="label-icon">👤</span>
-        Recomendaciones al Trabajador
-      </label>
-      <textarea 
-        id="recomendaciones_trabajador_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones dirigidas al trabajador..."
-        disabled
-      ></textarea>
-    </div>
-
-    < !-- Fila 4: Rec. a la Empresa | Observaciones - ->
-    <div class="form-group-vigilancia">
-      <label for="recomendaciones_empresa_sve">
-        <span class="label-icon">🏢</span>
-        Recomendaciones a la Empresa
-      </label>
-      <textarea 
-        id="recomendaciones_empresa_sve" 
-        rows="3"
-        placeholder="Describa las recomendaciones dirigidas a la empresa..."
-        disabled
-      ></textarea>
-    </div>
-
-    <div class="form-group-vigilancia">
-      <label for="observaciones_consulta_sve">
-        <span class="label-icon">📄</span>
-        Observaciones de la Consulta
-      </label>
-      <textarea 
-        id="observaciones_consulta_sve" 
-        rows="3"
-        placeholder="Registre observaciones adicionales de la consulta..."
-        disabled
-      ></textarea>
-    </div>
-
-    < !-- Fila 5: Contacto de Emergencia | Estado del Caso - ->
-    <div class="form-group-vigilancia" style="display:flex; flex-direction:column; justify-content:flex-end;">
-      <button type="button" id="btnContactoEmergenciaSVE" class="btn-emergency-contact" disabled>
-        👤 Contacto de Emergencia
-      </button>
-    </div>
-
-    <div class="form-group-vigilancia">
-      <label for="estado_sve">
-        <span class="label-icon">✅</span>
-        Estado del Caso <span class="required">*</span>
-      </label>
-      <select id="estado_sve" required disabled>
-        <option value="">Seleccione...</option>
-        <option value="Abierto">Abierto</option>
-        <option value="Cerrado">Cerrado</option>
-      </select>
-    </div>
-
-  </div>
-
-  < !-- ⭐ NUEVO: Campo de Fecha de Cierre y Recomendaciones Finales SVE - ->
-  <div class="form-group-fecha-cierre-sve" id="fechaCierreSVEContainer">
-    <div class="fecha-cierre-label">
-      <span class="fecha-cierre-icon">🔒</span>
-      <span>Fecha de Cierre del Caso SVE <span class="required">*</span></span>
-    </div>
-    <input type="date" id="fecha_cierre_sve" />
-    <p class="fecha-cierre-info">
-      Esta fecha se guardará como la fecha oficial de cierre del caso SVE del trabajador
-    </p>
-    
-    < !-- ⭐ NUEVO: Campo de Recomendaciones Finales SVE - ->
-    <div class="recomendaciones-container">
-      <div class="fecha-cierre-label" style="margin-top: 15px;">
-        <span class="fecha-cierre-icon">📋</span>
-        <span>Recomendaciones Finales SVE <span class="required">*</span></span>
-      </div>
-      <textarea 
-        id="recomendaciones_finales_sve" 
-        rows="6" 
-        placeholder="Escriba aquí las recomendaciones finales para el trabajador al cerrar el caso SVE. Estas recomendaciones aparecerán en el informe final..."
-        style="width: 100%; padding: 12px; border: 2px solid #56ab2f; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; background: white;"
-      ></textarea>
-      <p class="fecha-cierre-info">
-        💡 Estas recomendaciones aparecerán en el informe final del trabajador
-      </p>
-    </div>
-  </div>
-
-  <div class="form-actions-vigilancia">
-    <button type="submit" class="btn-submit-vigilancia" id="btnRegistrarConsultaSVE" disabled>
-      💾 Registrar Consulta
-    </button>
-    <button type="reset" class="btn-reset-vigilancia" disabled>
-      🔄 Limpiar Formulario
-    </button>
-  </div>
- </form>
-</div>
-
-  < !-- ========================================
-       HISTORIAL DE FORMULARIOS SVE
-       ======================================== - ->
-  <div id="historialSVE" class="historial-sve-container" style="display: none;">
-    <div class="historial-sve-header">
-      <h3 class="historial-sve-titulo">📚 Historial del Caso SVE</h3>
-      <button type="button" class="btn-refresh-sve" id="btnRefreshSVE" title="Actualizar historial">
-        🔄
-      </button>
-    </div>
-
-    < !-- Mesa de Trabajo Registrada - ->
-    <div id="mesaTrabajoRegistrada" class="mesa-trabajo-card" style="display: none;">
-      <div class="mesa-trabajo-header">
-        <div class="mesa-trabajo-titulo">
-          <span class="mesa-icon">📋</span>
-          <strong>Mesa de Trabajo</strong>
-        </div>
-        <div class="mesa-trabajo-acciones">
-          <button type="button" class="btn-edit-mesa" id="btnEditarMesaTrabajo">
-            ✏️ Editar
-          </button>
-          <button type="button" class="btn-delete-mesa" id="btnEliminarMesaTrabajo">
-            🗑️ Eliminar
-          </button>
-        </div>
-      </div>
-      <div class="mesa-trabajo-body" id="mesaTrabajoContenido">
-        < !-- Contenido dinámico - ->
-      </div>
-    </div>
-
-    < !-- Consultas Registradas - ->
-    <div id="consultasSVERegistradas" class="consultas-sve-lista">
-      < !-- Consultas dinámicas - ->
-    </div>
-  </div>
-
-</div>
-[SVE FIN] ============================================================ -->
-
     <!-- Modal de Contacto de Emergencia -->
     <div id="modalVerContacto" class="modal-overlay-contacto">
       <div class="modal-content-contacto">
@@ -1321,6 +879,38 @@
       </div>
     </div>
 
+  <!-- =====================================================  -->
+  <!-- 📌 Modal SEGUIMIENTO POST-CIERRE                      -->
+  <!-- Orientación Psicosocial — solo visible cuando el      -->
+  <!-- caso está cerrado; no reabre el expediente.           -->
+  <!-- =====================================================  -->
+  <div id="modalSeguimiento" class="modal-seguimiento-overlay">
+    <div class="modal-seguimiento-content">
+
+      <div class="modal-seguimiento-header">
+        <div class="modal-seguimiento-titulo-wrapper">
+          <span class="modal-seguimiento-icono">📌</span>
+          <!-- El título cambia dinámicamente según la vista -->
+          <h2 class="modal-seguimiento-titulo" id="seguimientoModalTitulo">Seguimientos</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-seguimiento-close"
+          onclick="cerrarModalSeguimiento()"
+          title="Cerrar"
+        >&times;</button>
+      </div>
+
+      <!-- Body dinámico: lo pinta JS según modo 'ver' o 'nuevo' -->
+      <div class="modal-seguimiento-body" id="seguimientoModalBody">
+        <div class="seguimiento-cargando">
+          <span class="spinner-sm"></span> Cargando...
+        </div>
+      </div>
+
+    </div>
+  </div>
+
    <!-- Historial de Consultas -->
     <div class="historial-section" style="display: none;">
       <div class="historial-header">
@@ -1356,41 +946,67 @@
   <script src="js/consulta-antecedentes.js"></script>
   <script src="js/consulta.js"></script>
   <script src="js/informe.js"></script>
-  <!-- [SVE] <script src="js/informeSVE.js"></script> -->
-  
-  <!-- [SVE] Script de detección de modalidad comentado.
-       Contenía lógica para alternar entre OP y SVE.
-       Reemplazado por inicialización exclusiva OP abajo.
-  < !-- ⭐ NUEVO: Script para manejar modalidades - ->
+
+  <!-- Script: guardar seguimiento — llama al backend y actualiza la vista del modal -->
   <script>
-    // Detectar modalidad y mostrar formulario correspondiente
-    document.addEventListener('DOMContentLoaded', () => {
-      const modalidad = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
-      
-      // Mostrar indicador de modalidad
-      const modalidadIndicador = document.getElementById('modalidadIndicadorConsulta');
-      const modalidadNombre = document.getElementById('modalidadNombreConsulta');
-      
-      if (modalidadIndicador && modalidadNombre) {
-        modalidadNombre.textContent = modalidad;
-        modalidadIndicador.style.display = 'flex';
+    window.guardarSeguimiento = async function() {
+      const fecha  = document.getElementById('seguimientoFecha')?.value?.trim();
+      const obs    = document.getElementById('seguimientoObservaciones')?.value?.trim();
+      const error  = document.getElementById('seguimientoError');
+      const btn    = document.getElementById('btnGuardarSeguimiento');
+
+      // Validación frontend
+      if (!fecha || !obs) {
+        if (error) { error.textContent = '⚠️ Por favor completa todos los campos obligatorios.'; error.style.display = 'block'; }
+        return;
       }
-      
-      // Mostrar formulario correspondiente
-      const formOrientacion = document.getElementById('formOrientacionPsicosocial');
-      const formVigilancia = document.getElementById('formVigilanciaEpidemiologica');
-      
-      if (modalidad === 'Orientación Psicosocial') {
-        formOrientacion.style.display = 'block';
-        formVigilancia.classList.remove('show');
-      } else if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
-        formOrientacion.style.display = 'none';
-        formVigilancia.classList.add('show');
+      if (error) error.style.display = 'none';
+
+      const clienteId   = getClienteIdFromURL ? getClienteIdFromURL() : null;
+      const modal       = document.getElementById('modalSeguimiento');
+      const consultaNum = modal ? parseInt(modal.dataset.consultaNum) : null;
+
+      if (!clienteId || !consultaNum) {
+        if (error) { error.textContent = '⚠️ No se pudo identificar la consulta. Recarga la página.'; error.style.display = 'block'; }
+        return;
       }
-      
-      console.log('✅ Modalidad cargada:', modalidad);
-    });
-  </script> -->
+
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+
+      try {
+        const res = await fetch(`${SEGUIMIENTOS_API_URL}`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            cliente_id:                parseInt(clienteId),
+            consulta_number:           consultaNum,
+            fecha_seguimiento:         fecha,
+            observaciones_seguimiento: obs
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || 'Error al guardar el seguimiento');
+        }
+
+        // Recargar la vista de historial dentro del modal (sin cerrarlo)
+        if (typeof cargarSeguimientos === 'function') {
+          await cargarSeguimientos(clienteId, consultaNum);
+        }
+        if (typeof mostrarHistorialSeguimientos === 'function') {
+          mostrarHistorialSeguimientos();
+          const title = document.getElementById('seguimientoModalTitulo');
+          if (title) title.textContent = 'Seguimientos Registrados';
+        }
+
+      } catch (err) {
+        console.error('Error guardando seguimiento:', err);
+        if (error) { error.textContent = `❌ ${err.message}`; error.style.display = 'block'; }
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar Seguimiento'; }
+      }
+    };
+  </script>
 
   <!-- Script de inicialización exclusivo Orientación Psicosocial -->
   <script>

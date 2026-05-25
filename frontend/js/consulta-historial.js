@@ -2,6 +2,12 @@
 // MÓDULO 3: Lógica del historial de consultas (Orientación Psicosocial)
 // Depende de: consulta-api.js, consulta-cliente.js
 
+// URL base del módulo de seguimientos (tabla independiente)
+// Se deriva de la misma base que CONSULTAS_API_URL
+const SEGUIMIENTOS_API_URL = (typeof CONSULTAS_API_URL !== 'undefined')
+  ? CONSULTAS_API_URL.replace('/consultas', '/seguimientos')
+  : '/api/seguimientos';
+
 // ============================================
 // CACHÉ DE DATOS DE CIERRE POR CONSULTA
 // Guarda fecha_cierre y recomendaciones_finales
@@ -572,6 +578,14 @@ function renderSesiones(sesiones, consultaNum) {
         <button class="btn-reabrir-caso" onclick="reabrirCaso()">
           🔓 Reabrir Caso
         </button>
+        <div class="btn-seguimiento-group">
+          <button class="btn-seguimiento" onclick="abrirModalSeguimiento(${consultaNum}, 'ver')">
+            📌 Seguimiento
+          </button>
+          <button class="btn-seguimiento-add" onclick="abrirModalSeguimiento(${consultaNum}, 'nuevo')" title="Registrar nuevo seguimiento">
+            +
+          </button>
+        </div>
       </div>
       <p class="acciones-caso-info">
         Al reabrir el caso, todas las sesiones estarán disponibles para editar o eliminar
@@ -671,5 +685,375 @@ window.abrirNuevaConsulta = function() {
   const consultaSection = document.querySelector(".consulta-section");
   if (consultaSection) consultaSection.scrollIntoView({ behavior: "smooth" });
 };
+
+// ============================================
+// MODAL DE SEGUIMIENTO (multi-registro)
+// - modo 'ver'   → historial de seguimientos
+//                  con botón "Nuevo Seguimiento"
+// - modo 'nuevo' → formulario directo con consecutivo
+// ============================================
+
+// Caché de seguimientos para la consulta activa
+let cacheSeguimientos = [];
+
+window.abrirModalSeguimiento = async function(consultaNum, modo = 'ver') {
+  const modal = document.getElementById('modalSeguimiento');
+  if (!modal) return;
+
+  modal.dataset.consultaNum = consultaNum;
+
+  // Cargar seguimientos existentes desde el backend
+  const clienteId = getClienteIdFromURL ? getClienteIdFromURL() : null;
+  if (clienteId) {
+    await cargarSeguimientos(clienteId, consultaNum);
+  }
+
+  if (modo === 'nuevo') {
+    mostrarFormularioSeguimiento();
+  } else {
+    mostrarHistorialSeguimientos();
+  }
+
+  modal.classList.add('modal-seguimiento-visible');
+  document.body.style.overflow = 'hidden';
+};
+
+// Carga los seguimientos del backend
+async function cargarSeguimientos(clienteId, consultaNum) {
+  try {
+    const res = await fetch(
+      `${SEGUIMIENTOS_API_URL}/${clienteId}/${consultaNum}`,
+      { headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    cacheSeguimientos = Array.isArray(data) ? data : [];
+  } catch {
+    cacheSeguimientos = [];
+  }
+}
+
+// Vista: historial de seguimientos registrados
+function mostrarHistorialSeguimientos() {
+  const body  = document.getElementById('seguimientoModalBody');
+  const title = document.getElementById('seguimientoModalTitulo');
+  if (!body) return;
+
+  if (title) title.textContent = 'Seguimientos Registrados';
+
+  if (cacheSeguimientos.length === 0) {
+    body.innerHTML = `
+      <div class="seguimiento-vacio">
+        <span class="seguimiento-vacio-icono">📋</span>
+        <p>No hay seguimientos registrados para esta consulta.</p>
+        <button class="btn-seguimiento-nuevo-inline" onclick="mostrarFormularioSeguimiento()">
+          + Registrar primer seguimiento
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const ultimoIndice = cacheSeguimientos.length - 1;
+
+  const listaHTML = cacheSeguimientos.map((s, i) => `
+    <div class="seguimiento-item seguimiento-item-clickable" onclick="mostrarFormularioEdicion(${i})" title="Clic para ver o editar">
+      <div class="seguimiento-item-header">
+        <span class="seguimiento-consecutivo">Seguimiento #${i + 1}</span>
+        <div class="seguimiento-item-acciones">
+          <span class="seguimiento-fecha-badge">📅 ${formatDate(s.fecha_seguimiento)}</span>
+          <button
+            type="button"
+            class="btn-seguimiento-eliminar ${i !== ultimoIndice ? 'btn-seguimiento-eliminar--disabled' : ''}"
+            onclick="eliminarSeguimiento(event, ${s.id}, ${i})"
+            title="${i !== ultimoIndice ? 'Solo se puede eliminar el último seguimiento primero' : 'Eliminar seguimiento'}"
+            ${i !== ultimoIndice ? 'disabled' : ''}
+          >🗑️</button>
+        </div>
+      </div>
+      <div class="seguimiento-item-editar-hint">✏️ Clic para ver o editar</div>
+    </div>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="seguimiento-lista">
+      ${listaHTML}
+    </div>
+    <div class="seguimiento-lista-footer">
+      <button class="btn-seguimiento-nuevo-inline" onclick="mostrarFormularioSeguimiento()">
+        + Registrar nuevo seguimiento
+      </button>
+    </div>
+  `;
+}
+
+// Vista: formulario de nuevo seguimiento
+window.mostrarFormularioSeguimiento = function() {
+  const body  = document.getElementById('seguimientoModalBody');
+  const title = document.getElementById('seguimientoModalTitulo');
+  if (!body) return;
+
+  const consecutivo = cacheSeguimientos.length + 1;
+  if (title) title.textContent = `Seguimiento #${consecutivo}`;
+
+  body.innerHTML = `
+    <p class="modal-seguimiento-descripcion">
+      Verifica si el trabajador está cumpliendo con las recomendaciones de la consulta.
+      <strong>No reabre el caso.</strong>
+    </p>
+
+    <div class="modal-seguimiento-field">
+      <label for="seguimientoFecha" class="modal-seguimiento-label">
+        📅 Fecha de Seguimiento <span class="required">*</span>
+      </label>
+      <input type="date" id="seguimientoFecha" class="modal-seguimiento-input" required />
+    </div>
+
+    <div class="modal-seguimiento-field">
+      <label for="seguimientoObservaciones" class="modal-seguimiento-label">
+        📝 Observaciones <span class="required">*</span>
+      </label>
+      <textarea
+        id="seguimientoObservaciones"
+        class="modal-seguimiento-textarea"
+        rows="7"
+        placeholder="Describa cómo está respondiendo el trabajador a las recomendaciones, cambios observados, compromisos cumplidos o pendientes..."
+        maxlength="2000"
+      ></textarea>
+      <div class="modal-seguimiento-contador">
+        <span id="seguimientoCharCount">0</span>/2000 caracteres
+      </div>
+    </div>
+
+    <div id="seguimientoError" class="modal-seguimiento-error" style="display:none;">
+      ⚠️ Por favor completa todos los campos obligatorios.
+    </div>
+
+    <div class="seguimiento-form-footer">
+      ${cacheSeguimientos.length > 0 ? `
+        <button type="button" class="btn-seguimiento-volver" onclick="mostrarHistorialSeguimientos()">
+          ← Ver historial
+        </button>
+      ` : ''}
+      <button type="button" class="btn-seguimiento-guardar" id="btnGuardarSeguimiento" onclick="guardarSeguimiento()">
+        💾 Guardar Seguimiento
+      </button>
+    </div>
+  `;
+
+  // Contador de caracteres
+  const textarea = document.getElementById('seguimientoObservaciones');
+  const counter  = document.getElementById('seguimientoCharCount');
+  if (textarea && counter) {
+    textarea.addEventListener('input', () => { counter.textContent = textarea.value.length; });
+  }
+  setTimeout(() => { document.getElementById('seguimientoFecha')?.focus(); }, 100);
+};
+
+// Vista: formulario de edición de un seguimiento existente
+// El botón guardar arranca deshabilitado y se habilita
+// solo si el profesional modifica la fecha o las observaciones.
+window.mostrarFormularioEdicion = function(indice) {
+  const s     = cacheSeguimientos[indice];
+  if (!s) return;
+
+  const body  = document.getElementById('seguimientoModalBody');
+  const title = document.getElementById('seguimientoModalTitulo');
+  if (!body) return;
+
+  if (title) title.textContent = `Editar Seguimiento #${indice + 1}`;
+
+  // Convertir fecha ISO (YYYY-MM-DD) al formato del input date
+  const fechaOriginal = s.fecha_seguimiento
+    ? s.fecha_seguimiento.toString().substring(0, 10)
+    : '';
+  const obsOriginal = s.observaciones_seguimiento || '';
+
+  body.innerHTML = `
+    <p class="modal-seguimiento-descripcion modal-seguimiento-descripcion--edicion">
+      ✏️ Editando <strong>Seguimiento #${indice + 1}</strong>.
+      Modifica los campos y presiona guardar para actualizar.
+    </p>
+
+    <div class="modal-seguimiento-field">
+      <label for="seguimientoFecha" class="modal-seguimiento-label">
+        📅 Fecha de Seguimiento <span class="required">*</span>
+      </label>
+      <input
+        type="date"
+        id="seguimientoFecha"
+        class="modal-seguimiento-input"
+        value="${fechaOriginal}"
+        required
+      />
+    </div>
+
+    <div class="modal-seguimiento-field">
+      <label for="seguimientoObservaciones" class="modal-seguimiento-label">
+        📝 Observaciones <span class="required">*</span>
+      </label>
+      <textarea
+        id="seguimientoObservaciones"
+        class="modal-seguimiento-textarea"
+        rows="7"
+        maxlength="2000"
+      >${escapeHtml(obsOriginal)}</textarea>
+      <div class="modal-seguimiento-contador">
+        <span id="seguimientoCharCount">${obsOriginal.length}</span>/2000 caracteres
+      </div>
+    </div>
+
+    <div id="seguimientoError" class="modal-seguimiento-error" style="display:none;">
+      ⚠️ Por favor completa todos los campos obligatorios.
+    </div>
+
+    <div class="seguimiento-form-footer">
+      <button type="button" class="btn-seguimiento-volver" onclick="mostrarHistorialSeguimientos()">
+        ← Ver historial
+      </button>
+      <button
+        type="button"
+        class="btn-seguimiento-guardar"
+        id="btnGuardarSeguimiento"
+        onclick="actualizarSeguimiento(${s.id})"
+        disabled
+      >
+        💾 Guardar Cambios
+      </button>
+    </div>
+  `;
+
+  // Detectar cambios para habilitar el botón
+  const fechaInput  = document.getElementById('seguimientoFecha');
+  const obsTextarea = document.getElementById('seguimientoObservaciones');
+  const btn         = document.getElementById('btnGuardarSeguimiento');
+  const counter     = document.getElementById('seguimientoCharCount');
+
+  function detectarCambios() {
+    const fechaCambio = fechaInput.value !== fechaOriginal;
+    const obsCambio   = obsTextarea.value !== obsOriginal;
+    btn.disabled = !(fechaCambio || obsCambio);
+  }
+
+  fechaInput.addEventListener('change', detectarCambios);
+  obsTextarea.addEventListener('input', () => {
+    counter.textContent = obsTextarea.value.length;
+    detectarCambios();
+  });
+};
+
+// Actualizar un seguimiento existente por su ID
+window.actualizarSeguimiento = async function(seguimientoId) {
+  const fecha  = document.getElementById('seguimientoFecha')?.value?.trim();
+  const obs    = document.getElementById('seguimientoObservaciones')?.value?.trim();
+  const error  = document.getElementById('seguimientoError');
+  const btn    = document.getElementById('btnGuardarSeguimiento');
+
+  if (!fecha || !obs) {
+    if (error) { error.textContent = '⚠️ Por favor completa todos los campos obligatorios.'; error.style.display = 'block'; }
+    return;
+  }
+  if (error) error.style.display = 'none';
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+
+  try {
+    const res = await fetch(`${SEGUIMIENTOS_API_URL}/${seguimientoId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        fecha_seguimiento:         fecha,
+        observaciones_seguimiento: obs
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.message || 'Error al actualizar el seguimiento');
+    }
+
+    // Recargar historial y volver a la vista de lista
+    const modal       = document.getElementById('modalSeguimiento');
+    const consultaNum = modal ? parseInt(modal.dataset.consultaNum) : null;
+    const clienteId   = getClienteIdFromURL ? getClienteIdFromURL() : null;
+
+    if (clienteId && consultaNum) {
+      await cargarSeguimientos(clienteId, consultaNum);
+    }
+    mostrarHistorialSeguimientos();
+    const title = document.getElementById('seguimientoModalTitulo');
+    if (title) title.textContent = 'Seguimientos Registrados';
+
+  } catch (err) {
+    console.error('Error actualizando seguimiento:', err);
+    if (error) { error.textContent = `❌ ${err.message}`; error.style.display = 'block'; }
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar Cambios'; }
+  }
+};
+
+// Eliminar un seguimiento — solo se permite eliminar el último
+window.eliminarSeguimiento = async function(event, seguimientoId, indice) {
+  // Evitar que el clic se propague al item (que abre el formulario de edición)
+  event.stopPropagation();
+
+  // Doble verificación de la regla: solo se elimina el último
+  if (indice !== cacheSeguimientos.length - 1) return;
+
+  const confirmado = confirm(`¿Estás seguro de que deseas eliminar el Seguimiento #${indice + 1}? Esta acción no se puede deshacer.`);
+  if (!confirmado) return;
+
+  try {
+    const res = await fetch(`${SEGUIMIENTOS_API_URL}/${seguimientoId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.message || 'Error al eliminar el seguimiento');
+    }
+
+    // Recargar caché y refrescar la vista del historial
+    const modal       = document.getElementById('modalSeguimiento');
+    const consultaNum = modal ? parseInt(modal.dataset.consultaNum) : null;
+    const clienteId   = getClienteIdFromURL ? getClienteIdFromURL() : null;
+
+    if (clienteId && consultaNum) {
+      await cargarSeguimientos(clienteId, consultaNum);
+    }
+    mostrarHistorialSeguimientos();
+
+  } catch (err) {
+    console.error('Error eliminando seguimiento:', err);
+    alert(`❌ ${err.message}`);
+  }
+};
+
+window.cerrarModalSeguimiento = function() {
+  const modal = document.getElementById('modalSeguimiento');
+  if (!modal) return;
+  modal.classList.remove('modal-seguimiento-visible');
+  document.body.style.overflow = '';
+  cacheSeguimientos = [];
+};
+
+// Cerrar con clic en overlay o Escape
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modalSeguimiento');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) window.cerrarModalSeguimiento();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const m = document.getElementById('modalSeguimiento');
+      if (m && m.classList.contains('modal-seguimiento-visible')) {
+        window.cerrarModalSeguimiento();
+      }
+    }
+  });
+});
 
 console.log('✅ Módulo consulta-historial.js cargado');

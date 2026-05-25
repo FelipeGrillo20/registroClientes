@@ -1,0 +1,562 @@
+/* ============================================================ */
+/* seguimiento.css                                              */
+/* Estilos del modal de Seguimiento Post-Cierre                 */
+/* Ruta: frontend/css/consulta/seguimiento.css                  */
+/* Importar desde consulta.css con:                             */
+/*   @import url('./consulta/seguimiento.css');                  */
+/* ============================================================ */
+
+/* ── Overlay ────────────────────────────────────────────── */
+.modal-seguimiento-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeInOverlay 0.2s ease;
+}
+
+.modal-seguimiento-overlay.modal-seguimiento-visible {
+  display: flex;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Caja del modal ─────────────────────────────────────── */
+.modal-seguimiento-content {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.25),
+    0 8px 20px  rgba(0, 0, 0, 0.12);
+  animation: slideUpModal 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.modal-seguimiento-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 2px solid #f1f5f9;
+  background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+  border-radius: 18px 18px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-seguimiento-titulo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.modal-seguimiento-icono {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.modal-seguimiento-titulo {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-seguimiento-close {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-seguimiento-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ── Body ──────────────────────────────────────────────── */
+.modal-seguimiento-body {
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  flex: 1;
+}
+
+.modal-seguimiento-descripcion {
+  font-size: 0.875rem;
+  color: #475569;
+  background: #f0f9ff;
+  border-left: 4px solid #38bdf8;
+  border-radius: 0 8px 8px 0;
+  padding: 0.65rem 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Campos del formulario ──────────────────────────────── */
+.modal-seguimiento-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.modal-seguimiento-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.modal-seguimiento-label .required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.modal-seguimiento-input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #f9fafb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.modal-seguimiento-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: #fff;
+}
+
+.modal-seguimiento-textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #f9fafb;
+  resize: vertical;
+  min-height: 150px;
+  font-family: inherit;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.modal-seguimiento-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: #fff;
+}
+.modal-seguimiento-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.modal-seguimiento-contador {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: right;
+  margin-top: -0.15rem;
+}
+
+/* ── Error ─────────────────────────────────────────────── */
+.modal-seguimiento-error {
+  font-size: 0.875rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+}
+
+/* ── Botón guardar ──────────────────────────────────────── */
+.btn-seguimiento-guardar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+.btn-seguimiento-guardar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+}
+.btn-seguimiento-guardar:active {
+  transform: translateY(0);
+}
+
+/* ── Botón cancelar ─────────────────────────────────────── */
+.btn-seguimiento-cancelar {
+  padding: 0.6rem 1.2rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-seguimiento-cancelar:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+/* ── Botón "Seguimiento" en el historial ─────────────────── */
+.btn-seguimiento {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.45);
+}
+.btn-seguimiento:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.55);
+}
+.btn-seguimiento:active {
+  transform: translateY(0);
+}
+
+/* ── Grupo botón Seguimiento + botón "+" ────────────────── */
+.btn-seguimiento-group {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.45);
+}
+
+.btn-seguimiento-group .btn-seguimiento {
+  border-radius: 10px 0 0 10px;
+  box-shadow: none;
+}
+
+.btn-seguimiento-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #fff;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 10px 10px 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  line-height: 1;
+  padding-bottom: 2px;
+}
+.btn-seguimiento-add:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+}
+
+/* ── Spinner carga inicial del modal ────────────────────── */
+.seguimiento-cargando {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.spinner-sm {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Estado vacío ───────────────────────────────────────── */
+.seguimiento-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.seguimiento-vacio-icono {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.seguimiento-vacio p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ── Botón "Registrar nuevo" inline ─────────────────────── */
+.btn-seguimiento-nuevo-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.55rem 1.15rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.35);
+}
+.btn-seguimiento-nuevo-inline:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Lista de seguimientos registrados ──────────────────── */
+.seguimiento-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+.seguimiento-item {
+  background: #f8faff;
+  border: 1.5px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  transition: box-shadow 0.15s;
+}
+.seguimiento-item:hover {
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.1);
+}
+
+.seguimiento-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Agrupa fecha + papelera a la derecha */
+.seguimiento-item-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Botón papelera */
+.btn-seguimiento-eliminar {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background 0.15s, transform 0.1s;
+  color: #ef4444;
+}
+.btn-seguimiento-eliminar:hover:not(:disabled) {
+  background: #fee2e2;
+  transform: scale(1.15);
+}
+/* Papelera deshabilitada: gris y sin interacción */
+.btn-seguimiento-eliminar--disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn-seguimiento-eliminar--disabled:hover {
+  background: none;
+  transform: none;
+}
+
+.seguimiento-consecutivo {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.seguimiento-fecha-badge {
+  font-size: 0.82rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.seguimiento-item-obs {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ── Item clickeable (edición) ──────────────────────────── */
+.seguimiento-item-clickable {
+  cursor: pointer;
+  position: relative;
+}
+.seguimiento-item-clickable:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+  background: #f5f3ff;
+}
+
+/* Hint "✏️ Clic para editar" — visible solo al hacer hover */
+.seguimiento-item-editar-hint {
+  font-size: 0.75rem;
+  color: #6366f1;
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.seguimiento-item-clickable:hover .seguimiento-item-editar-hint {
+  opacity: 1;
+}
+
+/* Descripción variante edición (franja azul → violeta) */
+.modal-seguimiento-descripcion--edicion {
+  background: #f5f3ff;
+  border-left-color: #818cf8;
+  color: #3730a3;
+}
+
+/* Botón guardar deshabilitado */
+.btn-seguimiento-guardar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.seguimiento-lista-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+  border-top: 1.5px solid #f1f5f9;
+  margin-top: 0.5rem;
+}
+
+/* ── Footer del formulario de nuevo seguimiento ─────────── */
+.seguimiento-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1.5px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+/* ── Botón "← Ver historial" ────────────────────────────── */
+.btn-seguimiento-volver {
+  padding: 0.55rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-right: auto;
+}
+.btn-seguimiento-volver:hover {
+  background: #e2e8f0;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .modal-seguimiento-content {
+    border-radius: 14px;
+    max-height: 95vh;
+  }
+  .modal-seguimiento-header,
+  .modal-seguimiento-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .btn-seguimiento-group {
+    width: 100%;
+  }
+  .btn-seguimiento-group .btn-seguimiento {
+    flex: 1;
+  }
+  .seguimiento-form-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .btn-seguimiento-volver {
+    margin-right: 0;
+    text-align: center;
+  }
+  .btn-seguimiento-guardar,
+  .btn-seguimiento-cancelar,
+  .btn-seguimiento-nuevo-inline {
+    width: 100%;
+    justify-content: center;
+  }
+}

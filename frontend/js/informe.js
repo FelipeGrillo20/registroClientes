@@ -166,6 +166,25 @@ window.generarInformePaciente = async function() {
     console.warn('No se pudieron cargar antecedentes:', err);
   }
 
+  // Obtener seguimientos de la consulta activa
+  let seguimientos = [];
+  try {
+    const token = localStorage.getItem('authToken');
+    const seguimientosUrl = (typeof SEGUIMIENTOS_API_URL !== 'undefined')
+      ? SEGUIMIENTOS_API_URL
+      : '/api/seguimientos';
+    const resSeg = await fetch(
+      `${seguimientosUrl}/${clienteActual.id}/${consultaNumberActual}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    if (resSeg.ok) {
+      const data = await resSeg.json();
+      seguimientos = Array.isArray(data) ? data : [];
+    }
+  } catch (err) {
+    console.warn('No se pudieron cargar seguimientos:', err);
+  }
+
   const informeHTML = `
     <!DOCTYPE html>
     <html>
@@ -357,6 +376,36 @@ window.generarInformePaciente = async function() {
         </div>
 
         <div class="informe-bloque-final">
+          ${seguimientos.length > 0 ? `
+          <div class="informe-section informe-seguimientos">
+            <h2 class="informe-section-title">
+              <span class="section-icon">📌</span>
+              Seguimiento Post-Cierre
+            </h2>
+            <div class="seguimientos-informe-lista">
+              ${seguimientos.map((s, i) => `
+                <div class="seguimiento-informe-item">
+                  <div class="seguimiento-informe-header">
+                    <div class="seguimiento-informe-badge">
+                      <span class="seguimiento-informe-num">Seguimiento #${i + 1}</span>
+                    </div>
+                    <div class="seguimiento-informe-fecha">
+                      <span class="seguimiento-informe-fecha-icono">📅</span>
+                      <span>${formatDateInforme(s.fecha_seguimiento)}</span>
+                    </div>
+                  </div>
+                  <div class="seguimiento-informe-obs">
+                    <div class="seguimiento-informe-obs-label">Observaciones del profesional:</div>
+                    <p class="seguimiento-informe-obs-texto">
+                      ${escapeHtmlInforme(s.observaciones_seguimiento).replace(/\n/g, '<br>')}
+                    </p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
           ${recomendacionesConsulta ? `
           <div class="informe-section informe-recomendaciones">
             <h2 class="informe-section-title">

@@ -398,8 +398,7 @@ exports.getEstadisticasDetalladasByProfesional = async (req, res) => {
     res.status(500).json({ message: "Error al obtener estadísticas" });
   }
 };
-// ============================================
-// Obtener sesiones de un profesional por mes/año
+
 // GET /api/consultas/sesiones-creditos?profesional_id=&anio=&mes=
 // Usado desde creditos.html al pulsar "Generar"
 // ============================================

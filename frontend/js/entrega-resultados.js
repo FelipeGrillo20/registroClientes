@@ -18,10 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const userId        = currentUser.id;
   const isProfesional = userRol === 'profesional';
 
-  let todosLosProfesionales = [];
-  let todosLosTrabajadores  = [];
-  let trabajadorSeleccionado = null;
-  let registroGuardadoId     = null;
+  let todosLosProfesionales    = [];
+  let todosLosTrabajadores     = [];
+  let trabajadorSeleccionado   = null;
+  let registroGuardadoId       = null;
+  // ID del profesional actualmente seleccionado en el selector.
+  // Si el usuario ES profesional, es su propio id.
+  // Si es admin, es el id del profesional que eligió en el dropdown.
+  let profesionalSeleccionadoId = isProfesional ? userId : null;
 
   // ============================================================
   // REFERENCIAS DOM — elementos siempre presentes en la página
@@ -149,6 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSelect(profWrapper);
     profSearch.value = '';
     renderProfesionales(todosLosProfesionales);
+    // Guardar el profesional elegido para asignarlo en el registro
+    profesionalSeleccionadoId = id;
     resetTrabajador();
     habilitarTrabajador();
     cargarTrabajadores(id);
@@ -482,8 +488,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGuardar.disabled = true;
     btnGuardar.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;"></span> Guardando...`;
 
+    // Si el usuario es admin, asignar el registro al profesional seleccionado,
+    // no al admin que lo está creando.
     const payload = {
       client_id:               trabajadorSeleccionado.id,
+      profesional_id:          profesionalSeleccionadoId || userId,
       fecha_aplicacion:        fechaAplicacion.value  || null,
       fecha_retroalimentacion: fechaRetro.value       || null,
       titulo_seccion:          tituloSeccion.value.trim() || 'RECOMENDACIONES PARA EL TRABAJADOR',

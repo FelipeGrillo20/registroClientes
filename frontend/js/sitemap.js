@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🔄 Seleccionando modalidad:', modalidad);
         localStorage.setItem('modalidadSeleccionada', modalidad);
 
-        // Animación solo sobre el content interior, sin tocar el transform del item
         if (itemContent) {
           itemContent.style.transform = 'scale(0.9)';
           itemContent.style.borderWidth = '6px';
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // ✅ Si tiene URL normal, navegar directamente
       if (url) {
-        // Animación solo sobre el content interior
         if (itemContent) {
           itemContent.style.transform = 'scale(0.9)';
         }
@@ -42,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // Efecto de sonido visual al hacer hover
+    // Efecto visual al hacer hover
     item.addEventListener('mouseenter', function() {
       this.style.transition = 'all 0.3s ease';
     });
@@ -77,26 +75,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ✅ Mostrar en consola info de navegación
   console.log('✅ Mapa de sitio cargado correctamente');
 });
 
-// 📐 Distribución automática en círculo
-const wheelContainer = document.querySelector('.wheel-container');
-const items = document.querySelectorAll('.wheel-item');
+// 📐 Distribución automática en círculo — adaptada para 11 items
+function distribuirItemsEnCirculo() {
+  const wheelContainer = document.querySelector('.wheel-container');
+  const items = document.querySelectorAll('.wheel-item');
 
-const totalItems = items.length;
-const radius = 275; // distancia desde el centro (ajustable)
-const centerX = wheelContainer.offsetWidth / 2;
-const centerY = wheelContainer.offsetHeight / 2;
+  if (!wheelContainer || items.length === 0) return;
 
-items.forEach((item, index) => {
-  const angle = (2 * Math.PI / totalItems) * index - Math.PI / 2;
+  const totalItems = items.length;
+  const containerSize = wheelContainer.offsetWidth;
+  const centerX = containerSize / 2;
+  const centerY = containerSize / 2;
 
-  const x = centerX + radius * Math.cos(angle);
-  const y = centerY + radius * Math.sin(angle);
+  // Radio dinámico según el tamaño del contenedor
+  // Para 11 items necesitamos un poco más de separación
+  const radius = containerSize * 0.365;
 
-  item.style.left = `${x}px`;
-  item.style.top = `${y}px`;
-  item.style.transform = 'translate(-50%, -50%)';
+  items.forEach((item, index) => {
+    // Empezamos desde arriba (-90°) para que el primer item quede en la cima
+    const angle = (2 * Math.PI / totalItems) * index - Math.PI / 2;
+
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    item.style.left = `${x}px`;
+    item.style.top = `${y}px`;
+    item.style.transform = 'translate(-50%, -50%)';
+  });
+}
+
+// Ejecutar al cargar y al redimensionar
+distribuirItemsEnCirculo();
+
+window.addEventListener('resize', function() {
+  distribuirItemsEnCirculo();
 });

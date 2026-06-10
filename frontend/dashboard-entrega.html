@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Entrega de Resultados</title>
+  <link rel="stylesheet" href="css/dashboard-entrega.css" />
+</head>
+<body>
+
+  <!-- Barra de usuario (la rellena auth-check.js igual que en el resto del proyecto) -->
+  <div id="userInfo" class="user-info-bar" style="display:none;"></div>
+
+  <!-- Botón Volver -->
+  <div class="btn-volver-wrapper">
+    <button type="button" class="btn-volver" onclick="window.location.href='entrega-resultados.html'">
+      ← Volver
+    </button>
+  </div>
+
+  <div class="page-container">
+    <section class="main-wrapper">
+
+      <!-- ── Encabezado ── -->
+      <div class="header-section">
+        <div class="header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1 class="main-title">Dashboard — Entrega de Resultados</h1>
+          <p class="subtitle">Resumen de actividad, cobertura y seguimiento por profesional</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-refresh" id="btnRefresh" title="Actualizar datos">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Filtro por profesional ── -->
+      <div class="prof-filter-bar" id="filtroProfWrapper">
+        <div class="prof-filter-inner">
+          <div class="prof-filter-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <span class="prof-filter-label">Ver estadísticas de:</span>
+          <div class="custom-select-wrap">
+            <select id="filtroProfesional" class="prof-select">
+              <option value="todos">Todos los profesionales</option>
+            </select>
+            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          <span class="prof-filter-hint" id="profFilterHint"></span>
+        </div>
+      </div>
+
+      <!-- ── Loader global ── -->
+      <div class="global-loader" id="globalLoader">
+        <div class="spinner-lg"></div>
+        <p>Cargando datos del dashboard…</p>
+      </div>
+
+      <!-- ── Contenido (oculto hasta cargar) ── -->
+      <div id="dashContent" style="display:none;">
+
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <!-- Estados -->
+        <div class="section-label">Estado de registros por trabajador</div>
+        <div class="status-grid" id="statusGrid"></div>
+
+        <!-- Filtro de período -->
+        <div class="period-filter">
+          <span class="period-label">Ver período:</span>
+          <div class="chip-group" id="chipGroup">
+            <button class="chip active" data-period="all">Todo el año</button>
+            <button class="chip" data-period="q1">Ene–Mar</button>
+            <button class="chip" data-period="q2">Abr–Jun</button>
+            <button class="chip" data-period="q3">Jul–Sep</button>
+            <button class="chip" data-period="q4">Oct–Dic</button>
+          </div>
+        </div>
+
+        <!-- Gráficas -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+              </svg>
+              Entregas por mes
+            </div>
+            <div class="legend-row">
+              <span class="legend-item"><span class="legend-dot" style="background:#5B8AF0"></span>Nuevas</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#52b788"></span>Editadas</span>
+            </div>
+            <div class="chart-wrap" style="height:210px">
+              <canvas id="cBarras" role="img" aria-label="Entregas nuevas y editadas por mes"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+              </svg>
+              Tipos de recomendaciones
+            </div>
+            <div class="donut-wrap">
+              <div style="position:relative;width:140px;height:140px;flex-shrink:0">
+                <canvas id="cDonut" role="img" aria-label="Distribución de tipos de recomendaciones"></canvas>
+              </div>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Línea tendencia -->
+        <div class="chart-card full-width">
+          <div class="chart-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Días promedio entre aplicación y retroalimentación
+          </div>
+          <div class="legend-row">
+            <span class="legend-item"><span class="legend-dot" style="background:#5B8AF0"></span>Promedio mensual</span>
+            <span class="legend-item"><span class="legend-dot legend-dash" style="background:#e05252"></span>Promedio global</span>
+          </div>
+          <div class="chart-wrap" style="height:210px">
+            <canvas id="cLinea" role="img" aria-label="Tendencia de días promedio entre aplicación y retroalimentación"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabla + Timeline -->
+        <div class="bottom-row">
+          <div class="chart-card">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Profesionales — entregas y cobertura
+            </div>
+            <table class="prof-table">
+              <thead>
+                <tr>
+                  <th>Profesional</th>
+                  <th class="text-right">Entregas</th>
+                  <th class="text-right">Cobertura</th>
+                </tr>
+              </thead>
+              <tbody id="profTableBody">
+                <tr><td colspan="3" class="table-loading">
+                  <span class="spinner-sm"></span> Cargando…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Actividad reciente
+            </div>
+            <div class="timeline" id="timeline">
+              <div class="tl-empty"><span class="spinner-sm"></span> Cargando…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barras de cobertura -->
+        <div class="chart-card full-width" style="margin-bottom:0">
+          <div class="chart-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Cobertura de perfiles estrés por profesional
+          </div>
+          <div class="bar-list" id="barList"></div>
+        </div>
+
+      </div><!-- /dashContent -->
+
+    </section>
+
+    <div class="footer-section">
+      <p class="footer-text">Sistema de Gestión de Trabajadores v2.0</p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth-check.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="js/dashboard-entrega.js"></script>
+</body>
+</html>

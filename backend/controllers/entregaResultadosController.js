@@ -4,13 +4,15 @@ const entregaModel = require("../models/entregaResultadosModel");
 // POST /api/entrega-resultados
 exports.createEntrega = async (req, res) => {
   try {
-    const profesional_id = req.user?.id;
-    if (!profesional_id) {
+    const usuarioId  = req.user?.id;
+    const usuarioRol = req.user?.rol;
+    if (!usuarioId) {
       return res.status(401).json({ message: "No autorizado" });
     }
 
     const {
       client_id,
+      profesional_id: profesional_id_body,
       fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
@@ -20,6 +22,14 @@ exports.createEntrega = async (req, res) => {
     if (!client_id) {
       return res.status(400).json({ message: "El trabajador es requerido" });
     }
+
+    // Si quien guarda es admin y envió un profesional_id en el body, usarlo.
+    // Así el registro queda atribuido al profesional dueño del trabajador,
+    // no al admin que ejecutó la acción.
+    const esAdmin      = usuarioRol === 'admin' || usuarioRol === 'administrador';
+    const profesional_id = (esAdmin && profesional_id_body)
+      ? profesional_id_body
+      : usuarioId;
 
     const nueva = await entregaModel.createEntrega({
       client_id,
@@ -87,13 +97,21 @@ exports.updateEntrega = async (req, res) => {
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      profesional_id: profesional_id_body,
     } = req.body;
+
+    // Si el editor es admin y envió profesional_id, reasignar la autoría al profesional correcto
+    const esAdmin = userRole === 'admin' || userRole === 'administrador';
+    const profesional_id_actualizado = (esAdmin && profesional_id_body)
+      ? profesional_id_body
+      : existente.profesional_id;
 
     const actualizado = await entregaModel.updateEntrega(id, {
       fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      profesional_id: profesional_id_actualizado,
     });
 
     res.json({ message: "Actualizado exitosamente", data: actualizado });

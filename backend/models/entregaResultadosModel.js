@@ -74,7 +74,31 @@ exports.updateEntrega = async (id, data) => {
     fecha_retroalimentacion,
     titulo_seccion,
     recomendaciones_html,
+    profesional_id,       // opcional: si viene, reatribuir autoría al profesional correcto
   } = data;
+
+  // Construir la query dinámicamente según si se debe actualizar profesional_id
+  if (profesional_id) {
+    const result = await pool.query(
+      `UPDATE entrega_resultados SET
+         fecha_aplicacion        = $1,
+         fecha_retroalimentacion = $2,
+         titulo_seccion          = $3,
+         recomendaciones_html    = $4,
+         profesional_id          = $5
+       WHERE id = $6
+       RETURNING *`,
+      [
+        fecha_aplicacion || null,
+        fecha_retroalimentacion || null,
+        titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR',
+        recomendaciones_html || null,
+        profesional_id,
+        id,
+      ]
+    );
+    return result.rows[0];
+  }
 
   const result = await pool.query(
     `UPDATE entrega_resultados SET

@@ -91,8 +91,8 @@ function distribuirItemsEnCirculo() {
   const centerY = containerSize / 2;
 
   // Radio dinámico según el tamaño del contenedor
-  // Con 7 items hay más espacio entre ellos, radio un poco mayor
-  const radius = containerSize * 0.375;
+  // Radio más corto para círculos más juntos al centro
+  const radius = containerSize * 0.34;
 
   items.forEach((item, index) => {
     // Empezamos desde arriba (-90°) para que el primer item quede en la cima

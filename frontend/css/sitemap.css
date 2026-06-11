@@ -40,11 +40,11 @@
   align-self: center;
 }
 
-/* ====== CONTENEDOR DE LA RUEDA — ajustado para 7 items ====== */
+/* ====== CONTENEDOR DE LA RUEDA — compacto para 7 items ====== */
 .wheel-container {
   position: relative;
-  width: 760px;
-  height: 760px;
+  width: 640px;
+  height: 640px;
   margin: 5px auto;
   animation: fadeIn 0.8s ease-in-out;
   align-self: center;
@@ -107,11 +107,11 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* ====== ITEMS DE LA RUEDA — más grandes para 7 items ====== */
+/* ====== ITEMS DE LA RUEDA — compactos para 7 items ====== */
 .wheel-item {
   position: absolute;
-  width: 155px;
-  height: 155px;
+  width: 132px;
+  height: 132px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 5;
@@ -205,8 +205,8 @@
 }
 
 .item-icon {
-  font-size: 34px;
-  margin-bottom: 4px;
+  font-size: 29px;
+  margin-bottom: 3px;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
   transition: all 0.3s ease;
   position: relative;
@@ -216,10 +216,10 @@
 .item-text {
   color: white;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 11.5px;
   text-align: center;
   line-height: 1.3;
-  padding: 0 12px;
+  padding: 0 10px;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 2;
@@ -333,44 +333,44 @@
 /* Pantallas grandes */
 @media (max-width: 1400px) {
   .wheel-container {
-    width: 680px;
-    height: 680px;
+    width: 580px;
+    height: 580px;
   }
   .wheel-center {
-    width: 175px;
-    height: 175px;
+    width: 165px;
+    height: 165px;
   }
   .wheel-item {
-    width: 140px;
-    height: 140px;
+    width: 120px;
+    height: 120px;
   }
 }
 
 /* Tablets */
 @media (max-width: 1024px) {
   .wheel-container {
-    width: 570px;
-    height: 570px;
+    width: 500px;
+    height: 500px;
   }
   .wheel-center {
-    width: 155px;
-    height: 155px;
+    width: 148px;
+    height: 148px;
   }
   .center-icon {
-    font-size: 44px;
+    font-size: 42px;
   }
   .center-text {
     font-size: 15px;
   }
   .wheel-item {
-    width: 120px;
-    height: 120px;
+    width: 106px;
+    height: 106px;
   }
   .item-icon {
-    font-size: 28px;
+    font-size: 24px;
   }
   .item-text {
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 
@@ -388,30 +388,30 @@
     margin-bottom: 25px;
   }
   .wheel-container {
-    width: 470px;
-    height: 470px;
+    width: 420px;
+    height: 420px;
     margin: 20px auto;
   }
   .wheel-center {
-    width: 135px;
-    height: 135px;
+    width: 128px;
+    height: 128px;
   }
   .center-icon {
-    font-size: 37px;
+    font-size: 35px;
   }
   .center-text {
     font-size: 13px;
   }
   .wheel-item {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
   }
   .item-icon {
-    font-size: 23px;
+    font-size: 20px;
   }
   .item-text {
-    font-size: 11px;
-    padding: 0 7px;
+    font-size: 10px;
+    padding: 0 6px;
   }
   .wheel-item-content {
     border: 3px solid white;
@@ -434,17 +434,17 @@
     margin-bottom: 20px;
   }
   .wheel-container {
-    width: 380px;
-    height: 380px;
+    width: 340px;
+    height: 340px;
     margin: 15px auto;
   }
   .wheel-center {
-    width: 110px;
-    height: 110px;
+    width: 104px;
+    height: 104px;
     border: 4px solid white;
   }
   .center-icon {
-    font-size: 32px;
+    font-size: 30px;
     margin-bottom: 5px;
   }
   .center-text {
@@ -452,16 +452,16 @@
     line-height: 1.2;
   }
   .wheel-item {
-    width: 82px;
-    height: 82px;
+    width: 74px;
+    height: 74px;
   }
   .item-icon {
-    font-size: 19px;
+    font-size: 17px;
     margin-bottom: 2px;
   }
   .item-text {
     font-size: 9px;
-    padding: 0 5px;
+    padding: 0 4px;
     line-height: 1.2;
   }
   .wheel-item-content {
@@ -482,25 +482,25 @@
 /* Móviles muy pequeños */
 @media (max-width: 360px) {
   .wheel-container {
-    width: 320px;
-    height: 320px;
+    width: 290px;
+    height: 290px;
   }
   .wheel-center {
-    width: 93px;
-    height: 93px;
+    width: 88px;
+    height: 88px;
   }
   .center-icon {
-    font-size: 27px;
+    font-size: 25px;
   }
   .center-text {
     font-size: 10px;
   }
   .wheel-item {
-    width: 68px;
-    height: 68px;
+    width: 62px;
+    height: 62px;
   }
   .item-icon {
-    font-size: 16px;
+    font-size: 14px;
   }
   .item-text {
     font-size: 8px;

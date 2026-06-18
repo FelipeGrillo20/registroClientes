@@ -227,6 +227,7 @@
   letter-spacing: 0.5px;
 }
 
+.badge-horas     { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
 .badge-modalidad { background: #e3f2fd; color: #1976d2; }
 .badge-estado    { color: white; }
 .badge-estado.abierto  { background: linear-gradient(135deg, #27ae60, #229954); }

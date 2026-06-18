@@ -493,6 +493,7 @@ function renderSesiones(sesiones, consultaNum) {
             <div class="consulta-fecha">📅 ${fecha}</div>
           </div>
           <div class="consulta-badges">
+            <span class="badge badge-horas">&#9200; Sesión: ${c.horas_sesion || 1} hora(s)</span>
             <span class="badge badge-modalidad">${c.modalidad}</span>
             <span class="badge badge-estado ${estadoClass}">${c.estado}</span>
             ${c.numeroSesion === 1 && c.consultas_sugeridas ? `

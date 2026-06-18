@@ -424,13 +424,23 @@
                 Observaciones
               </label>
               
-              <!-- ⭐ NUEVO: Toggle de confidencialidad -->
+              <!-- ⭐ NUEVO: Toggle de confidencialidad + Widget Horas Sesión -->
               <div class="confidencialidad-toggle">
                 <button type="button" class="btn-candado" id="btnCandado" onclick="toggleConfidencialidad()" title="Clic para cambiar visibilidad en el informe">
                   <span class="candado-icon" id="candadoIcon">🔓</span>
                   <span class="candado-texto" id="candadoTexto">Visible en informe</span>
                 </button>
                 <input type="hidden" id="observaciones_confidenciales" value="false">
+
+                <!-- Widget Horas Sesión -->
+                <div class="horas-sesion-widget">
+                  <span class="horas-sesion-label">⏱ Horas sesión</span>
+                  <button type="button" class="btn-horas btn-horas-dec" id="btnDecHoras" onclick="cambiarHorasSesion(-1)" title="Disminuir horas" disabled>▼</button>
+                  <span class="horas-sesion-valor" id="horasSesionValor">1</span>
+                  <button type="button" class="btn-horas btn-horas-inc" id="btnIncHoras" onclick="cambiarHorasSesion(1)" title="Aumentar horas">▲</button>
+                  <span class="horas-sesion-unidad">hora(s)</span>
+                  <input type="hidden" id="horas_sesion" value="1">
+                </div>
               </div>
               
               <textarea 

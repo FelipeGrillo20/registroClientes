@@ -428,6 +428,69 @@
   letter-spacing: 0;
 }
 
+/* ── Widget Horas Sesión ────────────────────────────────────── */
+.horas-sesion-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #f4f3ff;
+  border: 1.5px solid #c5c0f0;
+  border-radius: 8px;
+  margin-left: 8px;
+}
+
+.horas-sesion-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3C3489;
+  white-space: nowrap;
+}
+
+.btn-horas {
+  background: white;
+  border: 1.5px solid #c5c0f0;
+  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #534AB7;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-horas:hover:not(:disabled) {
+  background: #534AB7;
+  color: white;
+  border-color: #534AB7;
+}
+
+.btn-horas:disabled {
+  color: #bbb;
+  border-color: #e0e0e0;
+  cursor: not-allowed;
+  background: #f9f9f9;
+}
+
+.horas-sesion-valor {
+  font-size: 15px;
+  font-weight: 700;
+  color: #26215C;
+  min-width: 18px;
+  text-align: center;
+}
+
+.horas-sesion-unidad {
+  font-size: 12px;
+  color: #7f8c8d;
+  white-space: nowrap;
+}
+
 /* ── Fecha de cierre del caso OP ────────────────────────────── */
 .form-group-fecha-cierre {
   display: none;

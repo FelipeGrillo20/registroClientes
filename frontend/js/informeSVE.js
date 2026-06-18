@@ -504,8 +504,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
             <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
             ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
             <p class="firma-datos-sve">
-              Tarjeta Profesional: 142861<br>
-              Licencia SST: 19950
+              Tarjeta Profesional: 141623<br>
+              Licencia SST: 10064
             </p>
           </div>
           <div class="informe-nota-sve">

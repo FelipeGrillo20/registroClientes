@@ -455,6 +455,7 @@
       document.getElementById('userFormNombre').value = user.nombre;
       document.getElementById('userFormEmail').value = user.email;
       document.getElementById('userFormLicencia').value = user.licencia || '';
+      document.getElementById('userFormTarjeta').value  = user.tarjeta  || '';
       document.getElementById('userFormTelefono').value = user.telefono || '';
       document.getElementById('userFormRol').value = user.rol;
       
@@ -481,6 +482,7 @@
     const nombre = document.getElementById('userFormNombre').value.trim();
     const email = document.getElementById('userFormEmail').value.trim();
     const licencia = document.getElementById('userFormLicencia').value.trim();
+    const tarjeta  = document.getElementById('userFormTarjeta').value.trim();
     const telefono = document.getElementById('userFormTelefono').value.trim();
     const password = document.getElementById('userFormPassword').value;
     const rol = document.getElementById('userFormRol').value;
@@ -516,7 +518,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ nombre, email, rol, licencia, telefono })
+          body: JSON.stringify({ nombre, email, rol, licencia, tarjeta, telefono })
         });
       } else {
         // Crear nuevo usuario
@@ -526,7 +528,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ cedula, nombre, email, password, rol, licencia, telefono })
+          body: JSON.stringify({ cedula, nombre, email, password, rol, licencia, tarjeta, telefono })
         });
       }
       

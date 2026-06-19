@@ -89,6 +89,7 @@ exports.login = async (req, res) => {
         email: user.email,
         rol: user.rol,
         licencia: user.licencia || null,
+        tarjeta: user.tarjeta || null,
         telefono: user.telefono || null
       }
     });
@@ -136,6 +137,7 @@ exports.verifyToken = async (req, res) => {
         email: user.email,
         rol: user.rol,
         licencia: user.licencia || null,
+        tarjeta: user.tarjeta || null,
         telefono: user.telefono || null
       }
     });
@@ -288,7 +290,7 @@ exports.getAllUsers = async (req, res) => {
 // Registrar nuevo usuario (solo admin)
 exports.registerUser = async (req, res) => {
   try {
-    const { cedula, nombre, email, password, rol, licencia, telefono } = req.body;
+    const { cedula, nombre, email, password, rol, licencia, tarjeta, telefono } = req.body;
 
     console.log("=== REGISTRO DE USUARIO (ADMIN) ===");
     console.log("Cédula:", cedula);
@@ -351,6 +353,7 @@ exports.registerUser = async (req, res) => {
       password,
       rol: rol || 'profesional',
       licencia: licencia || null,
+      tarjeta: tarjeta || null,
       telefono: telefono || null
     });
 
@@ -383,7 +386,7 @@ exports.registerUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    const { nombre, email, rol, licencia, telefono } = req.body;
+    const { nombre, email, rol, licencia, tarjeta, telefono } = req.body;
 
     console.log("=== ACTUALIZACIÓN DE USUARIO ===");
     console.log("ID:", userId);
@@ -428,6 +431,7 @@ exports.updateUser = async (req, res) => {
       email: email.toLowerCase(),
       rol,
       licencia: licencia || null,
+      tarjeta: tarjeta || null,
       telefono: telefono || null
     });
 

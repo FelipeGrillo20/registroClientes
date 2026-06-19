@@ -78,7 +78,8 @@ exports.getConsultasSveByCliente = async (cliente_id) => {
        cl.profesional_id,
        u.nombre       AS profesional_nombre,
        u.cedula       AS profesional_cedula,
-       u.licencia     AS profesional_licencia
+       u.licencia     AS profesional_licencia,
+       u.tarjeta      AS profesional_tarjeta
      FROM consultas_sve cs
      INNER JOIN clients cl ON cl.id = cs.cliente_id
      LEFT  JOIN users  u  ON u.id  = cl.profesional_id

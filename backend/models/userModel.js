@@ -22,16 +22,16 @@ exports.findById = async (id) => {
 
 // Crear nuevo usuario
 exports.createUser = async (data) => {
-  const { cedula, nombre, email, password, rol, licencia, telefono } = data;
+  const { cedula, nombre, email, password, rol, licencia, tarjeta, telefono } = data;
   
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   const result = await pool.query(
-    `INSERT INTO users (cedula, nombre, email, password, rol, licencia, telefono)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id, cedula, nombre, email, rol, licencia, telefono, activo, created_at`,
-    [cedula, nombre, email, hashedPassword, rol || 'profesional', licencia || null, telefono || null]
+    `INSERT INTO users (cedula, nombre, email, password, rol, licencia, tarjeta, telefono)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id, cedula, nombre, email, rol, licencia, tarjeta, telefono, activo, created_at`,
+    [cedula, nombre, email, hashedPassword, rol || 'profesional', licencia || null, tarjeta || null, telefono || null]
   );
 
   return result.rows[0];
@@ -45,7 +45,7 @@ exports.verifyPassword = async (plainPassword, hashedPassword) => {
 // Obtener todos los usuarios (sin contraseñas)
 exports.getAllUsers = async () => {
   const result = await pool.query(
-    "SELECT id, cedula, nombre, email, rol, licencia, telefono, activo, created_at FROM users ORDER BY id DESC"
+    "SELECT id, cedula, nombre, email, rol, licencia, tarjeta, telefono, activo, created_at FROM users ORDER BY id DESC"
   );
   return result.rows;
 };
@@ -88,14 +88,14 @@ exports.findByEmail = async (email) => {
 
 // Actualizar usuario (sin cambiar contraseña)
 exports.updateUser = async (userId, data) => {
-  const { nombre, email, rol, licencia, telefono } = data;
+  const { nombre, email, rol, licencia, tarjeta, telefono } = data;
   
   const result = await pool.query(
     `UPDATE users 
-     SET nombre = $1, email = $2, rol = $3, licencia = $4, telefono = $5
-     WHERE id = $6
-     RETURNING id, cedula, nombre, email, rol, licencia, telefono, activo, created_at`,
-    [nombre, email, rol, licencia || null, telefono || null, userId]
+     SET nombre = $1, email = $2, rol = $3, licencia = $4, tarjeta = $5, telefono = $6
+     WHERE id = $7
+     RETURNING id, cedula, nombre, email, rol, licencia, tarjeta, telefono, activo, created_at`,
+    [nombre, email, rol, licencia || null, tarjeta || null, telefono || null, userId]
   );
   
   return result.rows[0];

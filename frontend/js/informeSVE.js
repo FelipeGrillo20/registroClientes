@@ -135,11 +135,12 @@ window.generarInformeSVE = async function(clienteId) {
     const nivelComplejidad  = sesionRefSVE?.nivel_complejidad || null;
     const estadoCaso        = window.clienteActual?.fecha_cierre_sve ? 'Cerrado' : 'Abierto';
 
-    // ✅ MODIFICADO: Se agrega licencia al objeto profesionalDatos
+    // ✅ MODIFICADO: Se agrega licencia y tarjeta al objeto profesionalDatos
     const profesionalDatos = {
-      nombre  : sesionRefSVE?.profesional_nombre   || (usuarioLogueado ? usuarioLogueado.nombre      : null),
-      cedula  : sesionRefSVE?.profesional_cedula   || (usuarioLogueado ? usuarioLogueado.cedula      : null),
-      licencia: sesionRefSVE?.profesional_licencia || (usuarioLogueado ? usuarioLogueado.licencia : null)
+      nombre  : sesionRefSVE?.profesional_nombre   || (usuarioLogueado ? usuarioLogueado.nombre   : null),
+      cedula  : sesionRefSVE?.profesional_cedula   || (usuarioLogueado ? usuarioLogueado.cedula   : null),
+      licencia: sesionRefSVE?.profesional_licencia || (usuarioLogueado ? usuarioLogueado.licencia : null),
+      tarjeta : sesionRefSVE?.profesional_tarjeta  || (usuarioLogueado ? usuarioLogueado.tarjeta  : null)
     };
 
     // Generar el HTML del informe
@@ -196,8 +197,9 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
   // ── Firma ──────────────────────────────────────────────────────
   const profesionalNombre   = usuario ? usuario.nombre   : 'No especificado';
   const profesionalCedula   = usuario ? usuario.cedula   : null;
-  // ✅ MODIFICADO: Se lee la licencia SST dinámica del profesional
+  // ✅ MODIFICADO: Se leen licencia y tarjeta dinámicas del profesional
   const profesionalLicencia = usuario ? usuario.licencia : null;
+  const profesionalTarjeta  = usuario ? usuario.tarjeta  : null;
 
   const rutaFirma = profesionalCedula
     ? `img/firmas/firma_${profesionalCedula}.png`
@@ -507,7 +509,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
             <div class="firma-linea-sve"></div>
             <p class="firma-texto-sve">Firma del Profesional</p>
             <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
-            ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${escapeHtmlSVE(profesionalCedula)}</p>` : ''}
+            ${profesionalCedula   ? `<p class="firma-datos-sve">C.C. ${escapeHtmlSVE(profesionalCedula)}</p>` : ''}
+            ${profesionalTarjeta  ? `<p class="firma-datos-sve">Tarjeta Profesional: ${escapeHtmlSVE(profesionalTarjeta)}</p>` : ''}
             ${profesionalLicencia ? `<p class="firma-datos-sve">Licencia SST: ${escapeHtmlSVE(profesionalLicencia)}</p>` : ''}
           </div>
           <div class="informe-nota-sve">

@@ -70,14 +70,15 @@ exports.getConsultasSveByProfesional = async (profesionalId) => {
   return result.rows;
 };
 
-// Obtener consultas SVE de un cliente específico
+// ✅ MODIFICADO: Agregar profesional_licencia al SELECT para el informe SVE
 exports.getConsultasSveByCliente = async (cliente_id) => {
   const result = await pool.query(
     `SELECT
        cs.*,
        cl.profesional_id,
-       u.nombre AS profesional_nombre,
-       u.cedula AS profesional_cedula
+       u.nombre       AS profesional_nombre,
+       u.cedula       AS profesional_cedula,
+       u.licencia     AS profesional_licencia
      FROM consultas_sve cs
      INNER JOIN clients cl ON cl.id = cs.cliente_id
      LEFT  JOIN users  u  ON u.id  = cl.profesional_id

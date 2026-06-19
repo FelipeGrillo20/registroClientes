@@ -125,9 +125,9 @@ window.generarInformeSVE = async function(clienteId) {
 
     // ─────────────────────────────────────────────────────────────────
     // FIRMA: leer directamente desde las consultas SVE del trabajador.
-    // El endpoint SVE incluye profesional_cedula y profesional_nombre
-    // via JOIN con clients y users, por lo que el dato llega aquí sin
-    // importar quién esté logueado.
+    // El endpoint SVE incluye profesional_cedula, profesional_nombre y
+    // profesional_licencia via JOIN con clients y users, por lo que el
+    // dato llega aquí sin importar quién esté logueado.
     // Fallback al usuario logueado solo si los campos no vienen en BD.
     // ─────────────────────────────────────────────────────────────────
     const usuarioLogueado = JSON.parse(localStorage.getItem('userData'));
@@ -135,9 +135,11 @@ window.generarInformeSVE = async function(clienteId) {
     const nivelComplejidad  = sesionRefSVE?.nivel_complejidad || null;
     const estadoCaso        = window.clienteActual?.fecha_cierre_sve ? 'Cerrado' : 'Abierto';
 
+    // ✅ MODIFICADO: Se agrega licencia al objeto profesionalDatos
     const profesionalDatos = {
-      nombre : sesionRefSVE?.profesional_nombre || (usuarioLogueado ? usuarioLogueado.nombre : null),
-      cedula : sesionRefSVE?.profesional_cedula || (usuarioLogueado ? usuarioLogueado.cedula : null)
+      nombre  : sesionRefSVE?.profesional_nombre   || (usuarioLogueado ? usuarioLogueado.nombre      : null),
+      cedula  : sesionRefSVE?.profesional_cedula   || (usuarioLogueado ? usuarioLogueado.cedula      : null),
+      licencia: sesionRefSVE?.profesional_licencia || (usuarioLogueado ? usuarioLogueado.licencia : null)
     };
 
     // Generar el HTML del informe
@@ -192,8 +194,11 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
                       || cliente.subcontratista_nombre || 'No especificado';
 
   // ── Firma ──────────────────────────────────────────────────────
-  const profesionalNombre = usuario ? usuario.nombre : 'No especificado';
-  const profesionalCedula = usuario ? usuario.cedula : null;
+  const profesionalNombre   = usuario ? usuario.nombre   : 'No especificado';
+  const profesionalCedula   = usuario ? usuario.cedula   : null;
+  // ✅ MODIFICADO: Se lee la licencia SST dinámica del profesional
+  const profesionalLicencia = usuario ? usuario.licencia : null;
+
   const rutaFirma = profesionalCedula
     ? `img/firmas/firma_${profesionalCedula}.png`
     : null;
@@ -502,11 +507,8 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
             <div class="firma-linea-sve"></div>
             <p class="firma-texto-sve">Firma del Profesional</p>
             <p class="firma-nombre-sve">${escapeHtmlSVE(profesionalNombre)}</p>
-            ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${profesionalCedula}</p>` : ''}
-            <p class="firma-datos-sve">
-              Tarjeta Profesional: 141623<br>
-              Licencia SST: 10064
-            </p>
+            ${profesionalCedula ? `<p class="firma-datos-sve">C.C. ${escapeHtmlSVE(profesionalCedula)}</p>` : ''}
+            ${profesionalLicencia ? `<p class="firma-datos-sve">Licencia SST: ${escapeHtmlSVE(profesionalLicencia)}</p>` : ''}
           </div>
           <div class="informe-nota-sve">
             <strong>Nota:</strong> Este documento es confidencial y de uso exclusivo para fines médicos, terapéuticos y de vigilancia epidemiológica ocupacional.

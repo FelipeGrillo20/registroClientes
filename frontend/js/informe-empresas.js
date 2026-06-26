@@ -470,17 +470,17 @@
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
 
-    // Reingresos: trabajadores con consulta_number >= 2
-    const reingresos = new Set();
-    sesiones.filter(s => s.consulta_number >= 2).forEach(s => reingresos.add(s.cliente_id));
+    // Casos cerrados: consultas donde todas las sesiones están Cerradas
+    let casosCerrados = 0;
+    casos.forEach(ss => { if (ss.every(s => s.estado === "Cerrado")) casosCerrados++; });
 
-    setText("kpiTrabajadores",  trabConSesion.size); // Solo trabajadores con al menos 1 sesión registrada
+    setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiConsultas",     totalConsultas);
     setText("kpiSesiones",      totalSesiones);
     setText("kpiAbiertos",      casosAbiertos.size);
+    setText("kpiCerrados",      casosCerrados);
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
-    setText("kpiReingresos",    reingresos.size);
   }
 
   // ── SECCIÓN 2: TENDENCIA ────────────────────────────
@@ -996,8 +996,8 @@
     );
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
-    const reingresos = new Set();
-    sesiones.filter(s => s.consulta_number >= 2).forEach(s => reingresos.add(s.cliente_id));
+    let casosCerradosSnap = 0;
+    agruparEnCasos(sesiones).forEach(ss => { if (ss.every(s => s.estado === "Cerrado")) casosCerradosSnap++; });
 
     // Tendencia por mes
     const byMonth = {};
@@ -1081,7 +1081,7 @@
         abiertos: casosAbiertos.size,
         confidenciales: casosConfi.size,
         criticos,
-        reingresos: reingresos.size,
+        cerrados: casosCerradosSnap,
       },
       motivos: motivosOrdenados,
       estados: { abiertos: casosAbCount, cerrados: casosCeCount },

@@ -302,6 +302,7 @@ body {
 .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 
 .kpi-primary::before { background: var(--indigo); }
+.kpi-emerald::before  { background: var(--emerald); }
 .kpi-green::before   { background: var(--emerald); }
 .kpi-blue::before    { background: var(--sky); }
 .kpi-orange::before  { background: var(--amber); }

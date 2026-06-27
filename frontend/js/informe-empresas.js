@@ -457,9 +457,8 @@
     const totalSesiones = sesiones.length;
 
     // ── Total consultas ────────────────────────────────
-    // Consultas únicas (cliente_id + consulta_number) que tienen
-    // al menos 1 sesión en el periodo — independiente de cuándo abrieron.
-    const totalConsultas = casos.size;  // casos ya viene filtrado por sesiones del periodo
+    // Consultas cuya PRIMERA sesión cae en el periodo (misma lógica que casos abiertos).
+    // Se calcula después de construir casoHistorico — ver más abajo.
 
     // Filtros de periodo activos
     const anio = parseInt(document.getElementById("filterAnio").value) || null;
@@ -471,7 +470,7 @@
     const poolHistorico = [
       ...rawConsultas.map(s    => ({ ...s })),
       ...rawConsultasSve.map(s => ({ ...s, id: `sve_${s.id}` })),
-    ].filter(s => clienteIds.has(s.cliente_id));
+    ].filter(s => new Set(clientes.map(c => c.id)).has(s.cliente_id));
 
     // Calcular primera y última sesión de cada caso en el histórico completo
     const casoHistorico = {};
@@ -494,6 +493,10 @@
       if (mes  && p.getMonth() + 1 !== mes)  return;
       casosAbiertos.add(clave);
     });
+
+    // ── Total consultas ────────────────────────────────
+    // Mismo criterio que casos abiertos: primera sesión en el periodo.
+    const totalConsultas = casosAbiertos.size;
 
     // ── Casos cerrados ─────────────────────────────────
     // Regla: caso cuya ÚLTIMA sesión registrada cae en el periodo

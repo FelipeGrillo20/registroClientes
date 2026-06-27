@@ -1020,8 +1020,8 @@
     const empresaId  = document.getElementById("filterEmpresa").value;
     const sedeVal    = document.getElementById("filterSede").value;
     const modalidad  = document.getElementById("filterModalidad").value;
-    const anio       = document.getElementById("filterAnio").value;
-    const mes        = document.getElementById("filterMes").value;
+    const anio       = parseInt(document.getElementById("filterAnio").value) || null;
+    const mes        = parseInt(document.getElementById("filterMes").value) || null;
 
     // Nombre empresa
     let empresaNombre = "Todas las empresas";
@@ -1030,30 +1030,60 @@
       if (emp) empresaNombre = emp.cliente_definitivo || emp.cliente_final || empresaNombre;
     }
 
-    // KPIs
+    // ── KPIs — misma lógica que renderKPIs ──────────────
+
+    // 1. Trabajadores atendidos: únicos con sesión en el periodo
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
+
+    // 2. Histórico completo para casos abiertos y cerrados
+    const clienteIdsSnap = new Set(clientes.map(c => c.id));
+    const poolHistoricoSnap = [
+      ...rawConsultas.map(s => ({ ...s })),
+      ...rawConsultasSve.map(s => ({ ...s, id: `sve_${s.id}` })),
+    ].filter(s => clienteIdsSnap.has(s.cliente_id));
+
+    const casoHistoricoSnap = {};
+    poolHistoricoSnap.forEach(s => {
+      const clave = `${s.cliente_id}_${s.consulta_number}`;
+      const f = new Date(s.fecha);
+      if (!casoHistoricoSnap[clave]) casoHistoricoSnap[clave] = { primera: f, ultima: f, estado: s.estado };
+      else {
+        if (f < casoHistoricoSnap[clave].primera) casoHistoricoSnap[clave].primera = f;
+        if (f > casoHistoricoSnap[clave].ultima)  { casoHistoricoSnap[clave].ultima = f; casoHistoricoSnap[clave].estado = s.estado; }
+      }
+    });
+
+    // 3. Casos abiertos: primera sesión en el periodo
     const casosAbiertos = new Set();
-    sesiones.filter(s => s.estado === "Abierto").forEach(s =>
-      casosAbiertos.add(`${s.cliente_id}_${s.consulta_number}`)
-    );
+    Object.entries(casoHistoricoSnap).forEach(([clave, info]) => {
+      const p = info.primera;
+      if (anio && p.getFullYear() !== anio) return;
+      if (mes  && p.getMonth() + 1 !== mes)  return;
+      casosAbiertos.add(clave);
+    });
+
+    // 4. Total consultas = mismo criterio que casos abiertos
+    const totalConsultas = casosAbiertos.size;
+
+    // 5. Casos cerrados: última sesión en el periodo y estado Cerrado
+    let casosCerradosSnap = 0;
+    Object.values(casoHistoricoSnap).forEach(info => {
+      if (info.estado !== "Cerrado") return;
+      const u = info.ultima;
+      if (anio && u.getFullYear() !== anio) return;
+      if (mes  && u.getMonth() + 1 !== mes)  return;
+      casosCerradosSnap++;
+    });
+
+    // 6. Confidenciales y críticos (sobre sesiones del periodo)
     const casosConfi = new Set();
     sesiones.filter(s => s.observaciones_confidenciales === true).forEach(s =>
       casosConfi.add(`${s.cliente_id}_${s.consulta_number}`)
     );
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
-    let casosCerradosSnap = 0;
-    agruparEnCasos(sesiones).forEach(ss => { if (ss.every(s => s.estado === "Cerrado")) casosCerradosSnap++; });
 
-    // Tendencia por mes
-    const byMonth = {};
-    sesiones.forEach(s => {
-      const f = new Date(s.fecha);
-      const key = `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}`;
-      byMonth[key] = (byMonth[key] || 0) + 1;
-    });
-
-    // Estados (por consulta)
+    // Estados para gráfica dona (sobre sesiones del periodo)
     let casosAbCount = 0, casosCeCount = 0;
     casos.forEach(ss => {
       if (ss.some(s => s.estado === "Abierto")) casosAbCount++;
@@ -1116,18 +1146,18 @@
         modalidad: modalidad === "orientacion" ? "Orientación Psicosocial"
                : modalidad === "vigilancia"  ? "Sistema de Vigilancia Epidemiológica"
                : "Todas",
-        anio: anio || "Todos",
-        mes: mes ? MESES_FULL[parseInt(mes)-1] : "Todo el año",
+        anio: anio ? String(anio) : "Todos",
+        mes: mes ? MESES_FULL[mes-1] : "Todo el año",
       },
       esGeneral: !empresaId,
       kpis: {
         trabajadores: trabConSesion.size,
-        consultas: casos.size,
+        consultas: totalConsultas,
         sesiones: sesiones.length,
         abiertos: casosAbiertos.size,
+        cerrados: casosCerradosSnap,
         confidenciales: casosConfi.size,
         criticos,
-        cerrados: casosCerradosSnap,
       },
       motivos: motivosOrdenados,
       estados: { abiertos: casosAbCount, cerrados: casosCeCount },

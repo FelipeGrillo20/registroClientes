@@ -461,51 +461,50 @@
     // al menos 1 sesión en el periodo — independiente de cuándo abrieron.
     const totalConsultas = casos.size;  // casos ya viene filtrado por sesiones del periodo
 
-    // ── Casos abiertos ────────────────────────────────
-    // Consultas cuya PRIMERA sesión cae en el periodo filtrado
-    // (es decir, que se iniciaron durante ese periodo).
-    const primerasSesiones = {};   // clave → fecha más antigua
-    sesiones.forEach(s => {
-      const clave = `${s.cliente_id}_${s.consulta_number}`;
-      const f = new Date(s.fecha);
-      if (!primerasSesiones[clave] || f < primerasSesiones[clave]) {
-        primerasSesiones[clave] = f;
-      }
-    });
-    // Adicionalmente verificamos que el caso esté abierto (estado global)
-    const casosAbiertosSet = new Set();
-    sesiones.filter(s => s.estado === "Abierto").forEach(s =>
-      casosAbiertosSet.add(`${s.cliente_id}_${s.consulta_number}`)
-    );
-    // Contamos casos cuya primera sesión cayó en el periodo Y están abiertos
-    const casosAbiertos = new Set(
-      Object.keys(primerasSesiones).filter(k => casosAbiertosSet.has(k))
-    );
-
-    // ── Casos cerrados ─────────────────────────────────
-    // Tomamos la fecha_cierre de la BD. Si no existe ese campo en sesiones,
-    // usamos el estado "Cerrado" de todas las sesiones del caso en el periodo.
-    // Un caso se cuenta como cerrado en el periodo si:
-    //   a) tiene fecha_cierre y cae en el periodo, O
-    //   b) todas sus sesiones en el pool están Cerradas.
+    // Filtros de periodo activos
     const anio = parseInt(document.getElementById("filterAnio").value) || null;
     const mes  = parseInt(document.getElementById("filterMes").value) || null;
 
+    // Pool histórico completo (sin filtro de fecha) — para buscar
+    // la primera y última sesión de cada caso en toda su historia.
+    // Usamos rawConsultas y rawConsultasSve que contienen todo.
+    const poolHistorico = [
+      ...rawConsultas.map(s    => ({ ...s })),
+      ...rawConsultasSve.map(s => ({ ...s, id: `sve_${s.id}` })),
+    ].filter(s => clienteIds.has(s.cliente_id));
+
+    // Calcular primera y última sesión de cada caso en el histórico completo
+    const casoHistorico = {};
+    poolHistorico.forEach(s => {
+      const clave = `${s.cliente_id}_${s.consulta_number}`;
+      const f = new Date(s.fecha);
+      if (!casoHistorico[clave]) casoHistorico[clave] = { primera: f, ultima: f, estado: s.estado };
+      else {
+        if (f < casoHistorico[clave].primera) casoHistorico[clave].primera = f;
+        if (f > casoHistorico[clave].ultima)  { casoHistorico[clave].ultima = f; casoHistorico[clave].estado = s.estado; }
+      }
+    });
+
+    // ── Casos abiertos ────────────────────────────────
+    // Regla: caso cuya PRIMERA sesión (en toda la historia) cae en el periodo.
+    let casosAbiertos = new Set();
+    Object.entries(casoHistorico).forEach(([clave, info]) => {
+      const p = info.primera;
+      if (anio && p.getFullYear() !== anio) return;
+      if (mes  && p.getMonth() + 1 !== mes)  return;
+      casosAbiertos.add(clave);
+    });
+
+    // ── Casos cerrados ─────────────────────────────────
+    // Regla: caso cuya ÚLTIMA sesión registrada cae en el periodo
+    // y tiene estado "Cerrado" (la última sesión cierra el caso).
     let casosCerrados = 0;
-    casos.forEach(ss => {
-      // Verificar si el caso tiene fecha_cierre dentro del periodo
-      const conFechaCierre = ss.find(s => {
-        if (!s.fecha_cierre) return false;
-        if (!anio && !mes) return true;  // sin filtro de periodo → cuenta siempre
-        const fc = new Date(s.fecha_cierre);
-        if (anio && fc.getFullYear() !== anio) return false;
-        if (mes  && fc.getMonth() + 1 !== mes)  return false;
-        return true;
-      });
-      // Si tiene fecha_cierre en el periodo, cuenta como cerrado
-      if (conFechaCierre) { casosCerrados++; return; }
-      // Fallback: si no hay fecha_cierre, usar estado de las sesiones del periodo
-      if (ss.every(s => s.estado === "Cerrado")) casosCerrados++;
+    Object.values(casoHistorico).forEach(info => {
+      if (info.estado !== "Cerrado") return;
+      const u = info.ultima;
+      if (anio && u.getFullYear() !== anio) return;
+      if (mes  && u.getMonth() + 1 !== mes)  return;
+      casosCerrados++;
     });
 
     // ── Casos confidenciales ───────────────────────────

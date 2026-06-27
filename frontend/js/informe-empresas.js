@@ -444,35 +444,79 @@
   }
 
   // ── SECCIÓN 1: KPIs ─────────────────────────────────
+  // Las sesiones recibidas ya están filtradas por el periodo (año/mes) seleccionado.
+  // Todos los KPIs se basan en la FECHA DE SESIÓN, no en la fecha de registro del cliente.
   function renderKPIs(clientes, sesiones, casos) {
-    // Trabajadores únicos con al menos una sesión
+
+    // ── Trabajadores atendidos ─────────────────────────
+    // Trabajadores únicos con al menos 1 sesión en el periodo.
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
 
-    // Total sesiones
+    // ── Total sesiones ─────────────────────────────────
+    // Sesiones registradas en el periodo.
     const totalSesiones = sesiones.length;
 
-    // Total consultas únicas (cliente_id + consulta_number)
-    const totalConsultas = casos.size;
+    // ── Total consultas ────────────────────────────────
+    // Consultas únicas (cliente_id + consulta_number) que tienen
+    // al menos 1 sesión en el periodo — independiente de cuándo abrieron.
+    const totalConsultas = casos.size;  // casos ya viene filtrado por sesiones del periodo
 
-    // Casos abiertos: (cliente_id, consulta_number) con al menos 1 sesión abierta
-    const casosAbiertos = new Set();
+    // ── Casos abiertos ────────────────────────────────
+    // Consultas cuya PRIMERA sesión cae en el periodo filtrado
+    // (es decir, que se iniciaron durante ese periodo).
+    const primerasSesiones = {};   // clave → fecha más antigua
+    sesiones.forEach(s => {
+      const clave = `${s.cliente_id}_${s.consulta_number}`;
+      const f = new Date(s.fecha);
+      if (!primerasSesiones[clave] || f < primerasSesiones[clave]) {
+        primerasSesiones[clave] = f;
+      }
+    });
+    // Adicionalmente verificamos que el caso esté abierto (estado global)
+    const casosAbiertosSet = new Set();
     sesiones.filter(s => s.estado === "Abierto").forEach(s =>
-      casosAbiertos.add(`${s.cliente_id}_${s.consulta_number}`)
+      casosAbiertosSet.add(`${s.cliente_id}_${s.consulta_number}`)
+    );
+    // Contamos casos cuya primera sesión cayó en el periodo Y están abiertos
+    const casosAbiertos = new Set(
+      Object.keys(primerasSesiones).filter(k => casosAbiertosSet.has(k))
     );
 
-    // Casos confidenciales: alguna sesión con observaciones_confidenciales=true
+    // ── Casos cerrados ─────────────────────────────────
+    // Tomamos la fecha_cierre de la BD. Si no existe ese campo en sesiones,
+    // usamos el estado "Cerrado" de todas las sesiones del caso en el periodo.
+    // Un caso se cuenta como cerrado en el periodo si:
+    //   a) tiene fecha_cierre y cae en el periodo, O
+    //   b) todas sus sesiones en el pool están Cerradas.
+    const anio = parseInt(document.getElementById("filterAnio").value) || null;
+    const mes  = parseInt(document.getElementById("filterMes").value) || null;
+
+    let casosCerrados = 0;
+    casos.forEach(ss => {
+      // Verificar si el caso tiene fecha_cierre dentro del periodo
+      const conFechaCierre = ss.find(s => {
+        if (!s.fecha_cierre) return false;
+        if (!anio && !mes) return true;  // sin filtro de periodo → cuenta siempre
+        const fc = new Date(s.fecha_cierre);
+        if (anio && fc.getFullYear() !== anio) return false;
+        if (mes  && fc.getMonth() + 1 !== mes)  return false;
+        return true;
+      });
+      // Si tiene fecha_cierre en el periodo, cuenta como cerrado
+      if (conFechaCierre) { casosCerrados++; return; }
+      // Fallback: si no hay fecha_cierre, usar estado de las sesiones del periodo
+      if (ss.every(s => s.estado === "Cerrado")) casosCerrados++;
+    });
+
+    // ── Casos confidenciales ───────────────────────────
     const casosConfi = new Set();
     sesiones.filter(s => s.observaciones_confidenciales === true).forEach(s =>
       casosConfi.add(`${s.cliente_id}_${s.consulta_number}`)
     );
 
-    // Casos críticos
+    // ── Casos críticos ─────────────────────────────────
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
-
-    // Casos cerrados: consultas donde todas las sesiones están Cerradas
-    let casosCerrados = 0;
-    casos.forEach(ss => { if (ss.every(s => s.estado === "Cerrado")) casosCerrados++; });
 
     setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiConsultas",     totalConsultas);

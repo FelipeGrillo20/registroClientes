@@ -499,7 +499,7 @@
       </div>
       <div class="charts-row">
         <div class="chart-box">
-          <div class="chart-label">Motivos de consulta más frecuentes <span style="background:#4f46e5;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:0.4px;vertical-align:middle;margin-left:4px;">TOP 5</span></div>
+          <div class="chart-label" id="rTituloTabla">Motivos de consulta más frecuentes <span style="background:#4f46e5;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:0.4px;vertical-align:middle;margin-left:4px;">TOP 5</span></div>
           <div id="rTablaMotivos"></div>
         </div>
         <div class="chart-box">
@@ -648,42 +648,55 @@
       </div>`;
   });
 
-  // ─── MOTIVOS DE CONSULTA ────────────────────────
-  const motivos = d.motivos || [];
-  const repMotivosEl = document.getElementById("rTablaMotivos");
-  if (repMotivosEl) {
-    if (motivos.length === 0) {
-      repMotivosEl.innerHTML = '<div class="rep-motivos-empty">Sin motivos registrados en el periodo</div>';
-    } else {
-      const totalMenc = motivos.reduce((s, m) => s + m.count, 0); // % sobre el total real
-      const maxCount  = motivos[0].count;
-      let tbl = `<table class="rep-motivos-table">
-        <thead><tr>
-          <th class="rep-rank">#</th>
-          <th>Motivo de consulta</th>
-          <th style="text-align:right">Casos</th>
-        </tr></thead><tbody>`;
-      // Solo Top 5 en el PDF
-      const top5 = motivos.slice(0, 5);
-      top5.forEach(({ motivo, count }, idx) => {
-        const pct    = totalMenc > 0 ? Math.round(count / totalMenc * 100) : 0;
-        const barPct = maxCount  > 0 ? Math.round(count / maxCount  * 100) : 0;
-        const rCls   = idx === 0 ? "rep-rank-1" : idx === 1 ? "rep-rank-2" : idx === 2 ? "rep-rank-3" : "";
-        tbl += `<tr>
-          <td class="rep-rank"><span class="rep-rank-badge ${rCls}">${idx+1}</span></td>
-          <td>
-            <div class="rep-motivo-nombre">${motivo}</div>
-            <div class="rep-bar-track"><div class="rep-bar-fill" style="width:${barPct}%"></div></div>
-          </td>
-          <td style="text-align:right">
-            <span class="rep-count-num">${count}</span>
-            <span class="rep-count-pct">(${pct}%)</span>
-          </td>
-        </tr>`;
-      });
-      tbl += "</tbody></table>";
-      repMotivosEl.innerHTML = tbl;
+  // ─── MOTIVOS (OP) O CRITERIOS SVE ───────────────────
+  // Función genérica que renderiza Top 5 de cualquier lista { label, count }
+  function renderRepTabla(items, colTitulo, emptyMsg) {
+    const el = document.getElementById("rTablaMotivos");
+    if (!el) return;
+    if (!items || items.length === 0) {
+      el.innerHTML = `<div class="rep-motivos-empty">${emptyMsg}</div>`;
+      return;
     }
+    const top5      = items.slice(0, 5);
+    const totalMenc = items.reduce((s, i) => s + i.count, 0);
+    const maxCount  = items[0].count;
+    let tbl = `<table class="rep-motivos-table">
+      <thead><tr>
+        <th class="rep-rank">#</th>
+        <th>${colTitulo}</th>
+        <th style="text-align:right">Casos</th>
+      </tr></thead><tbody>`;
+    top5.forEach((item, idx) => {
+      const label  = item.motivo || item.criterio || "";
+      const count  = item.count;
+      const pct    = totalMenc > 0 ? Math.round(count / totalMenc * 100) : 0;
+      const barPct = maxCount  > 0 ? Math.round(count / maxCount  * 100) : 0;
+      const rCls   = idx === 0 ? "rep-rank-1" : idx === 1 ? "rep-rank-2" : idx === 2 ? "rep-rank-3" : "";
+      tbl += `<tr>
+        <td class="rep-rank"><span class="rep-rank-badge ${rCls}">${idx+1}</span></td>
+        <td>
+          <div class="rep-motivo-nombre">${label}</div>
+          <div class="rep-bar-track"><div class="rep-bar-fill" style="width:${barPct}%"></div></div>
+        </td>
+        <td style="text-align:right">
+          <span class="rep-count-num">${count}</span>
+          <span class="rep-count-pct">(${pct}%)</span>
+        </td>
+      </tr>`;
+    });
+    tbl += "</tbody></table>";
+    el.innerHTML = tbl;
+  }
+
+  // Alternar según modalidad del snapshot
+  const tituloTablaEl = document.getElementById("rTituloTabla");
+  const badge = `<span style="background:#4f46e5;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:0.4px;vertical-align:middle;margin-left:4px;">TOP 5</span>`;
+  if (d.esSVE) {
+    if (tituloTablaEl) tituloTablaEl.innerHTML = `Criterio de Inclusión al SVE ${badge}`;
+    renderRepTabla(d.criterios, "Criterio de Inclusión al SVE", "Sin criterios de inclusión registrados");
+  } else {
+    if (tituloTablaEl) tituloTablaEl.innerHTML = `Motivos de consulta más frecuentes ${badge}`;
+    renderRepTabla(d.motivos, "Motivo de consulta", "Sin motivos registrados en el periodo");
   }
 
   // Estados
@@ -710,49 +723,59 @@
   });
 
   // ─── COMPLEJIDAD ────────────────────────────────
-  const comp = d.complejidad;
-  const compTotal = comp.normal + comp.complejo + comp.observacion + comp.critico;
-
-  const ctxC = document.getElementById("rChartComp").getContext("2d");
-  new Chart(ctxC, {
-    type: "doughnut",
-    data: {
-      labels: ["Normal","Complejo","En observación","Crítico"],
-      datasets: [{ data:[comp.normal,comp.complejo,comp.observacion,comp.critico],
-        backgroundColor:["#059669","#d97706","#7c3aed","#e11d48"],
-        borderWidth:0, hoverOffset:6 }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false, cutout:"62%",
-      plugins: {
-        legend:{ position:"bottom", labels:{font:{size:11},padding:10,boxWidth:12} },
-        tooltip: tooltipStyle()
+  // ─── COMPLEJIDAD — alterna entre OP y SVE ──────────
+  function renderCompRep(items, colors) {
+    const total = items.reduce((s, i) => s + i.count, 0);
+    const ctxC = document.getElementById("rChartComp").getContext("2d");
+    new Chart(ctxC, {
+      type: "doughnut",
+      data: {
+        labels: items.map(i => `${i.name} (${i.count} — ${total>0?Math.round(i.count/total*100):0}%)`),
+        datasets: [{ data: items.map(i => i.count), backgroundColor: colors, borderWidth:0, hoverOffset:6 }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false, cutout:"62%",
+        plugins: {
+          legend:{ position:"bottom", labels:{font:{size:11},padding:10,boxWidth:12} },
+          tooltip: tooltipStyle()
+        }
       }
-    }
-  });
+    });
+    const legend = document.getElementById("rCompLegend");
+    legend.innerHTML = "";
+    items.forEach((i, idx) => {
+      const pct = total > 0 ? Math.round(i.count/total*100) : 0;
+      legend.innerHTML += `
+        <div class="comp-item" style="border-left-color:${colors[idx]}">
+          <div class="comp-dot" style="background:${colors[idx]}"></div>
+          <div style="flex:1">
+            <div class="comp-name">${i.name}</div>
+            <div class="comp-desc">${i.desc}</div>
+          </div>
+          <div>
+            <div class="comp-count">${i.count}</div>
+            <div style="font-size:10px;color:#94a3b8;text-align:right">${pct}%</div>
+          </div>
+        </div>`;
+    });
+  }
 
-  const compItems = [
-    { cls:"comp-normal",      name:"Normal",         desc:"Sin confidencialidad · 1–4 sesiones", count:comp.normal },
-    { cls:"comp-complejo",    name:"Complejo",        desc:"Sin confidencialidad · 5+ sesiones",  count:comp.complejo },
-    { cls:"comp-observacion", name:"En observación",  desc:"Con confidencialidad · 1–2 sesiones", count:comp.observacion },
-    { cls:"comp-critico",     name:"Crítico",         desc:"Con confidencialidad · 3+ sesiones",  count:comp.critico },
-  ];
-  const legend = document.getElementById("rCompLegend");
-  compItems.forEach(i => {
-    const pct = compTotal > 0 ? Math.round(i.count/compTotal*100) : 0;
-    legend.innerHTML += `
-      <div class="comp-item ${i.cls}">
-        <div class="comp-dot"></div>
-        <div style="flex:1">
-          <div class="comp-name">${i.name}</div>
-          <div class="comp-desc">${i.desc}</div>
-        </div>
-        <div>
-          <div class="comp-count">${i.count}</div>
-          <div style="font-size:10px;color:#94a3b8;text-align:right">${pct}%</div>
-        </div>
-      </div>`;
-  });
+  if (d.esSVE) {
+    const cs = d.complejidadSve || { Alto:0, Medio:0, Bajo:0 };
+    renderCompRep([
+      { name:"Alto",  desc:"Nivel de complejidad alto",  count: cs.Alto  },
+      { name:"Medio", desc:"Nivel de complejidad medio", count: cs.Medio },
+      { name:"Bajo",  desc:"Nivel de complejidad bajo",  count: cs.Bajo  },
+    ], ["#e11d48","#d97706","#059669"]);
+  } else {
+    const comp = d.complejidad;
+    renderCompRep([
+      { name:"Normal",         desc:"Sin confidencialidad · 1–4 sesiones", count: comp.normal },
+      { name:"Complejo",       desc:"Sin confidencialidad · 5+ sesiones",  count: comp.complejo },
+      { name:"En observación", desc:"Con confidencialidad · 1–2 sesiones", count: comp.observacion },
+      { name:"Crítico",        desc:"Con confidencialidad · 3+ sesiones",  count: comp.critico },
+    ], ["#059669","#d97706","#7c3aed","#e11d48"]);
+  }
 
   // ─── COBERTURA ──────────────────────────────────
   const cov = d.cobertura;

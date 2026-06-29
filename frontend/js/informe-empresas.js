@@ -23,12 +23,13 @@
   Chart.defaults.font.family = "'DM Sans', sans-serif";
 
   // ─── ESTADO ────────────────────────────────────────
-  let rawClients    = [];  // todos los clientes
-  let rawConsultas  = [];  // sesiones de Orientación Psicosocial
-  let rawConsultasSve = []; // sesiones de SVE (/api/consultas-sve)
-  let empresas      = [];  // catálogo de empresas
-  let charts        = {};  // instancias Chart.js activas
-  let lastSnapshot  = null; // snapshot para el informe imprimible
+  let rawClients      = [];  // todos los clientes
+  let rawConsultas    = [];  // sesiones de Orientación Psicosocial
+  let rawConsultasSve = [];  // sesiones de SVE (/api/consultas-sve)
+  let rawMesaTrabajoSve = []; // registros mesa de trabajo SVE (criterio_inclusion)
+  let empresas        = [];  // catálogo de empresas
+  let charts          = {};  // instancias Chart.js activas
+  let lastSnapshot    = null; // snapshot para el informe imprimible
 
   // ─── HELPERS JWT ───────────────────────────────────
   function getToken() {
@@ -254,15 +255,17 @@
   // Traemos todo sin filtros de URL. El filtro real se hace localmente
   // en filtrarDatos() usando subcontratista_id, sede, etc.
   async function cargarDatos() {
-    const [resClients, resConsultas, resConsultasSve] = await Promise.all([
-      fetch(`${API}/api/clients`,        { headers: authHeaders() }),
-      fetch(`${API}/api/consultas`,      { headers: authHeaders() }),
-      fetch(`${API}/api/consultas-sve`,  { headers: authHeaders() }),
+    const [resClients, resConsultas, resConsultasSve, resMesa] = await Promise.all([
+      fetch(`${API}/api/clients`,           { headers: authHeaders() }),
+      fetch(`${API}/api/consultas`,         { headers: authHeaders() }),
+      fetch(`${API}/api/consultas-sve`,     { headers: authHeaders() }),
+      fetch(`${API}/api/mesa-trabajo-sve`,  { headers: authHeaders() }),
     ]);
 
-    rawClients      = resClients.ok      ? await resClients.json()      : [];
-    rawConsultas    = resConsultas.ok    ? await resConsultas.json()    : [];
-    rawConsultasSve = resConsultasSve.ok ? await resConsultasSve.json() : [];
+    rawClients        = resClients.ok      ? await resClients.json()      : [];
+    rawConsultas      = resConsultas.ok    ? await resConsultas.json()    : [];
+    rawConsultasSve   = resConsultasSve.ok ? await resConsultasSve.json() : [];
+    rawMesaTrabajoSve = resMesa.ok         ? await resMesa.json()         : [];
 
     // Normalizar sesiones SVE para que sean compatibles con la lógica existente:
     // - Agregar consulta_number = 1 (SVE no lo tiene, cada registro es independiente)
@@ -423,12 +426,31 @@
     // ── KPIs
     renderKPIs(clientes, sesiones, casos);
 
-    // ── Tendencia
-    renderMotivos(sesiones);  // Tabla de motivos de consulta más frecuentes
+    // Actualizar título del panel de tendencia según modalidad
+    const modalidadFiltro = document.getElementById("filterModalidad").value;
+    const tituloPanel = document.querySelector(".chart-title");
+    if (tituloPanel) {
+      if (modalidadFiltro === "vigilancia") {
+        tituloPanel.innerHTML = 'Criterio de Inclusión al SVE <span class="badge-top5">Top 5</span>';
+      } else {
+        tituloPanel.innerHTML = 'Motivos de consulta más frecuentes <span class="badge-top5">Top 5</span>';
+      }
+    }
+
+    // ── Tendencia — alternar motivos (OP) o criterios (SVE) según modalidad
+    if (modalidadFiltro === "vigilancia") {
+      renderCriteriosSve(clientes);
+    } else {
+      renderMotivos(sesiones);
+    }
     renderEstados(casos); // Pasa casos (consultas únicas), no sesiones
 
-    // ── Complejidad
-    renderComplejidad(casos);
+    // ── Complejidad — alternar según modalidad
+    if (modalidadFiltro === "vigilancia") {
+      renderComplejidadSve(sesiones);
+    } else {
+      renderComplejidad(casos);
+    }
 
     // ── Casos críticos — DESACTIVADO TEMPORALMENTE
     // renderCriticos(sesiones, casos);
@@ -527,6 +549,92 @@
     setText("kpiCerrados",      casosCerrados);
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
+  }
+
+  // ── Criterios de Inclusión SVE ──────────────────────
+  // Cuenta criterio_inclusion por trabajador único (un registro por cliente).
+  // El criterio viene de la tabla mesa_trabajo_sve, campo criterio_inclusion.
+  function renderCriteriosSve(clientes) {
+    const container = document.getElementById("tablaMotivos");
+    if (!container) return;
+
+    const clienteIds = new Set(clientes.map(c => c.id));
+    const conteo = {};
+
+    rawMesaTrabajoSve
+      .filter(m => clienteIds.has(m.cliente_id) && m.criterio_inclusion)
+      .forEach(m => {
+        const criterio = m.criterio_inclusion.trim();
+        conteo[criterio] = (conteo[criterio] || 0) + 1;
+      });
+
+    const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+
+    if (items.length === 0) {
+      container.innerHTML = '<div class="motivos-empty">Sin criterios de inclusión registrados</div>';
+      return;
+    }
+
+    const TOP = 5;
+    const maxVal         = items[0][1];
+    const totalMenciones = items.reduce((s, [, v]) => s + v, 0);
+    const hayMas         = items.length > TOP;
+
+    const filaHTML = ([criterio, count], idx) => {
+      const pct    = totalMenciones > 0 ? Math.round((count / totalMenciones) * 100) : 0;
+      const barPct = maxVal > 0 ? Math.round((count / maxVal) * 100) : 0;
+      const rankCls  = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+      const extraCls = idx >= TOP ? "motivo-extra" : "";
+      return `
+        <tr class="${extraCls}">
+          <td class="td-rank"><span class="rank-badge ${rankCls}">${idx + 1}</span></td>
+          <td class="td-motivo">
+            <div class="motivo-nombre">${criterio}</div>
+            <div class="motivo-bar-track">
+              <div class="motivo-bar-fill" style="width:${barPct}%"></div>
+            </div>
+          </td>
+          <td class="td-count">
+            <span class="count-num">${count}</span>
+            <span class="count-pct">(${pct}%)</span>
+          </td>
+        </tr>`;
+    };
+
+    let html = `
+      <table class="tabla-motivos">
+        <thead><tr>
+          <th class="td-rank">#</th>
+          <th>Criterio de Inclusión al SVE</th>
+          <th class="td-count">Casos</th>
+        </tr></thead>
+        <tbody>${items.map(filaHTML).join("")}</tbody>
+      </table>`;
+
+    if (hayMas) {
+      const restantes = items.length - TOP;
+      html += `
+        <button class="btn-ver-mas-motivos" id="btnVerMasMotivos">
+          Ver ${restantes} criterio${restantes > 1 ? "s" : ""} más
+          <span class="btn-arrow">▼</span>
+        </button>`;
+    }
+
+    container.innerHTML = html;
+
+    if (hayMas) {
+      const btn = document.getElementById("btnVerMasMotivos");
+      btn.addEventListener("click", () => {
+        const expanded = btn.classList.toggle("expanded");
+        document.querySelectorAll(".motivo-extra").forEach(tr =>
+          tr.classList.toggle("visible", expanded)
+        );
+        const restantes = items.length - TOP;
+        btn.childNodes[0].textContent = expanded
+          ? "Ver menos "
+          : `Ver ${restantes} criterio${restantes > 1 ? "s" : ""} más `;
+      });
+    }
   }
 
   // ── SECCIÓN 2: TENDENCIA ────────────────────────────
@@ -729,6 +837,84 @@
         }
       }
     });
+  }
+
+  // ── SECCIÓN 3b: COMPLEJIDAD SVE ─────────────────────
+  // Para SVE la complejidad viene del campo nivel_complejidad
+  // (Alto/Medio/Bajo) de la primera sesión de cada caso.
+  function renderComplejidadSve(sesiones) {
+    // Tomar nivel_complejidad de la primera sesión de cada caso
+    const casoNivel = {};
+    sesiones.forEach(s => {
+      if (!s.nivel_complejidad) return;
+      const clave = `${s.cliente_id}_${s.consulta_number}`;
+      if (!casoNivel[clave]) casoNivel[clave] = s.nivel_complejidad;
+    });
+
+    const counts = { Alto: 0, Medio: 0, Bajo: 0 };
+    Object.values(casoNivel).forEach(nivel => {
+      if (counts[nivel] !== undefined) counts[nivel]++;
+    });
+
+    const total = counts.Alto + counts.Medio + counts.Bajo;
+    const pct = v => total > 0 ? Math.round((v / total) * 100) : 0;
+
+    // Reusar el canvas de complejidad con nuevos datos
+    // Orden: Alto → Medio → Bajo (de mayor a menor urgencia)
+    destroyChart("chartComplejidad");
+    const ctx = document.getElementById("chartComplejidad").getContext("2d");
+    const COLORS_SVE = { Alto: "#f43f5e", Medio: "#f59e0b", Bajo: "#10b981" };
+    charts.complejidad = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: [
+          `Alto (${counts.Alto} — ${pct(counts.Alto)}%)`,
+          `Medio (${counts.Medio} — ${pct(counts.Medio)}%)`,
+          `Bajo (${counts.Bajo} — ${pct(counts.Bajo)}%)`,
+        ],
+        datasets: [{
+          data: [counts.Alto, counts.Medio, counts.Bajo],
+          backgroundColor: [COLORS_SVE.Alto, COLORS_SVE.Medio, COLORS_SVE.Bajo],
+          borderWidth: 0,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        ...chartOptionsDoughnut(),
+        plugins: {
+          ...chartOptionsDoughnut().plugins,
+          tooltip: {
+            ...tooltipStyle(),
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.parsed;
+                const p = total > 0 ? Math.round((val / total) * 100) : 0;
+                return ` ${val} caso${val !== 1 ? "s" : ""} (${p}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Reemplazar la leyenda completa con colores y orden correctos (Alto/Medio/Bajo)
+    const legendContainer = document.querySelector(".complexity-legend");
+    if (legendContainer) {
+      const nivelItems = [
+        { name: "Alto",  desc: "Nivel de complejidad alto",  count: counts.Alto,  color: COLORS_SVE.Alto  },
+        { name: "Medio", desc: "Nivel de complejidad medio", count: counts.Medio, color: COLORS_SVE.Medio },
+        { name: "Bajo",  desc: "Nivel de complejidad bajo",  count: counts.Bajo,  color: COLORS_SVE.Bajo  },
+      ];
+      legendContainer.innerHTML = nivelItems.map(item => `
+        <div class="legend-item" style="border-left: 3px solid ${item.color}; background: rgba(255,255,255,0.03);">
+          <div class="legend-dot" style="background: ${item.color};"></div>
+          <div>
+            <p class="legend-name">${item.name}</p>
+            <p class="legend-desc">${item.desc}</p>
+            <p class="legend-count">${item.count}</p>
+          </div>
+        </div>`).join("");
+    }
   }
 
   // ── SECCIÓN 4: CASOS CRÍTICOS ────────────────────────
@@ -1138,6 +1324,31 @@
       .sort((a, b) => b[1] - a[1])
       .map(([motivo, count]) => ({ motivo, count }));
 
+    // Complejidad SVE: nivel_complejidad (Alto/Medio/Bajo) de la primera sesión de cada caso
+    const compSveMap = {};
+    sesiones.forEach(s => {
+      if (!s.nivel_complejidad) return;
+      const clave = `${s.cliente_id}_${s.consulta_number}`;
+      if (!compSveMap[clave]) compSveMap[clave] = s.nivel_complejidad;
+    });
+    const compSve = { Alto: 0, Medio: 0, Bajo: 0 };
+    Object.values(compSveMap).forEach(n => { if (compSve[n] !== undefined) compSve[n]++; });
+
+    // Criterios de inclusión SVE (misma lógica que renderCriteriosSve)
+    const conteoCriterios = {};
+    rawMesaTrabajoSve
+      .filter(m => clienteIdsSnap.has(m.cliente_id) && m.criterio_inclusion)
+      .forEach(m => {
+        const criterio = m.criterio_inclusion.trim();
+        conteoCriterios[criterio] = (conteoCriterios[criterio] || 0) + 1;
+      });
+    const criteriosOrdenados = Object.entries(conteoCriterios)
+      .sort((a, b) => b[1] - a[1])
+      .map(([criterio, count]) => ({ criterio, count }));
+
+    // Modalidad del filtro para saber qué mostrar en el reporte
+    const modalidadFiltroSnap = document.getElementById("filterModalidad").value;
+
     return {
       fechaGeneracion: new Date().toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"}),
       filtros: {
@@ -1160,6 +1371,9 @@
         criticos,
       },
       motivos: motivosOrdenados,
+      criterios: criteriosOrdenados,
+      complejidadSve: compSve,
+      esSVE: modalidadFiltroSnap === "vigilancia",
       estados: { abiertos: casosAbCount, cerrados: casosCeCount },
       complejidad: comp,
       cobertura: { unicos, promedio, virtuales, presenciales, masReciente,

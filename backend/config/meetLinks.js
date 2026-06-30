@@ -34,7 +34,7 @@ const MEET_LINKS = {
   46: 'https://meet.google.com/vvk-qcxp-uqp',
   48: 'https://meet.google.com/kma-shyr-zkr',
   50: 'https://meet.google.com/hzb-saqu-sqw',
-  44: 'https://meet.google.com/ouj-ejxx-mso',
+  44: 'https://meet.google.com/uwo-mywv-qyv',
   47: 'https://meet.google.com/jwp-kuwp-vfs',
   49: 'https://meet.google.com/urf-kbgc-eai',
   51: 'https://meet.google.com/hce-brup-jzi',

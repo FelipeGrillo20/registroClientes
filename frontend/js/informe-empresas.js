@@ -800,19 +800,38 @@
   }
 
   // ── SECCIÓN 3b: COMPLEJIDAD SVE ─────────────────────
-  // Para SVE la complejidad viene del campo nivel_complejidad
-  // (Alto/Medio/Bajo) de la primera sesión de cada caso.
+  // nivel_complejidad se selecciona en la PRIMERA sesión del caso.
+  // Como puede estar fuera del periodo filtrado, buscamos en rawConsultasSve
+  // (histórico completo) pero solo para casos que tienen sesiones en el periodo.
   function renderComplejidadSve(sesiones) {
-    // Tomar nivel_complejidad de la primera sesión de cada caso
+    // Casos con al menos 1 sesión en el periodo filtrado
+    const casosEnPeriodo = new Set(
+      sesiones.map(s => `${s.cliente_id}_${s.consulta_number}`)
+    );
+
+    // Para cada caso del periodo, buscar su primera sesión histórica en rawConsultasSve
+    // y tomar el nivel_complejidad de ahí
     const casoNivel = {};
-    sesiones.forEach(s => {
-      if (!s.nivel_complejidad) return;
-      const clave = `${s.cliente_id}_${s.consulta_number}`;
-      if (!casoNivel[clave]) casoNivel[clave] = s.nivel_complejidad;
-    });
+    rawConsultasSve
+      .filter(s => {
+        const clave = `${s.cliente_id}_${s.consulta_number}`;
+        return casosEnPeriodo.has(clave) && s.nivel_complejidad;
+      })
+      .forEach(s => {
+        const clave = `${s.cliente_id}_${s.consulta_number}`;
+        // Guardar la sesión más antigua (primera sesión del caso)
+        if (!casoNivel[clave]) {
+          casoNivel[clave] = { nivel: s.nivel_complejidad, fecha: new Date(s.fecha) };
+        } else {
+          const f = new Date(s.fecha);
+          if (f < casoNivel[clave].fecha) {
+            casoNivel[clave] = { nivel: s.nivel_complejidad, fecha: f };
+          }
+        }
+      });
 
     const counts = { Alto: 0, Medio: 0, Bajo: 0 };
-    Object.values(casoNivel).forEach(nivel => {
+    Object.values(casoNivel).forEach(({ nivel }) => {
       if (counts[nivel] !== undefined) counts[nivel]++;
     });
 
@@ -1256,15 +1275,28 @@
       .sort((a, b) => b[1] - a[1])
       .map(([motivo, count]) => ({ motivo, count }));
 
-    // Complejidad SVE: nivel_complejidad (Alto/Medio/Bajo) de la primera sesión de cada caso
+    // Complejidad SVE: buscar nivel_complejidad en histórico completo
+    // para casos que tienen sesiones en el periodo filtrado
+    const casosEnPeriodoSnap = new Set(
+      sesiones.map(s => `${s.cliente_id}_${s.consulta_number}`)
+    );
     const compSveMap = {};
-    sesiones.forEach(s => {
-      if (!s.nivel_complejidad) return;
-      const clave = `${s.cliente_id}_${s.consulta_number}`;
-      if (!compSveMap[clave]) compSveMap[clave] = s.nivel_complejidad;
-    });
+    rawConsultasSve
+      .filter(s => {
+        const clave = `${s.cliente_id}_${s.consulta_number}`;
+        return casosEnPeriodoSnap.has(clave) && s.nivel_complejidad;
+      })
+      .forEach(s => {
+        const clave = `${s.cliente_id}_${s.consulta_number}`;
+        if (!compSveMap[clave]) {
+          compSveMap[clave] = { nivel: s.nivel_complejidad, fecha: new Date(s.fecha) };
+        } else {
+          const f = new Date(s.fecha);
+          if (f < compSveMap[clave].fecha) compSveMap[clave] = { nivel: s.nivel_complejidad, fecha: f };
+        }
+      });
     const compSve = { Alto: 0, Medio: 0, Bajo: 0 };
-    Object.values(compSveMap).forEach(n => { if (compSve[n] !== undefined) compSve[n]++; });
+    Object.values(compSveMap).forEach(({ nivel }) => { if (compSve[nivel] !== undefined) compSve[nivel]++; });
 
     // Criterios de inclusión SVE (misma lógica que renderCriteriosSve)
     const conteoCriterios = {};

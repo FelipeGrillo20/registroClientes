@@ -466,70 +466,30 @@
   }
 
   // ── SECCIÓN 1: KPIs ─────────────────────────────────
-  // Las sesiones recibidas ya están filtradas por el periodo (año/mes) seleccionado.
-  // Todos los KPIs se basan en la FECHA DE SESIÓN, no en la fecha de registro del cliente.
+  // Sesiones y casos ya filtrados por el periodo seleccionado.
   function renderKPIs(clientes, sesiones, casos) {
 
     // ── Trabajadores atendidos ─────────────────────────
-    // Trabajadores únicos con al menos 1 sesión en el periodo.
+    // Únicos con al menos 1 sesión en el periodo.
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
 
     // ── Total sesiones ─────────────────────────────────
-    // Sesiones registradas en el periodo.
     const totalSesiones = sesiones.length;
 
     // ── Total consultas ────────────────────────────────
-    // Consultas cuya PRIMERA sesión cae en el periodo (misma lógica que casos abiertos).
-    // Se calcula después de construir casoHistorico — ver más abajo.
+    // Igual a trabajadores atendidos: cada trabajador con sesión en el periodo = 1 consulta.
+    const totalConsultas = trabConSesion.size;
 
-    // Filtros de periodo activos
-    const anio = parseInt(document.getElementById("filterAnio").value) || null;
-    const mes  = parseInt(document.getElementById("filterMes").value) || null;
-
-    // Pool histórico completo (sin filtro de fecha) — para buscar
-    // la primera y última sesión de cada caso en toda su historia.
-    // Usamos rawConsultas y rawConsultasSve que contienen todo.
-    const poolHistorico = [
-      ...rawConsultas.map(s    => ({ ...s })),
-      ...rawConsultasSve.map(s => ({ ...s, id: `sve_${s.id}` })),
-    ].filter(s => new Set(clientes.map(c => c.id)).has(s.cliente_id));
-
-    // Calcular primera y última sesión de cada caso en el histórico completo
-    const casoHistorico = {};
-    poolHistorico.forEach(s => {
-      const clave = `${s.cliente_id}_${s.consulta_number}`;
-      const f = new Date(s.fecha);
-      if (!casoHistorico[clave]) casoHistorico[clave] = { primera: f, ultima: f, estado: s.estado };
-      else {
-        if (f < casoHistorico[clave].primera) casoHistorico[clave].primera = f;
-        if (f > casoHistorico[clave].ultima)  { casoHistorico[clave].ultima = f; casoHistorico[clave].estado = s.estado; }
-      }
-    });
-
-    // ── Casos abiertos ────────────────────────────────
-    // Regla: caso cuya PRIMERA sesión (en toda la historia) cae en el periodo.
-    let casosAbiertos = new Set();
-    Object.entries(casoHistorico).forEach(([clave, info]) => {
-      const p = info.primera;
-      if (anio && p.getFullYear() !== anio) return;
-      if (mes  && p.getMonth() + 1 !== mes)  return;
-      casosAbiertos.add(clave);
-    });
-
-    // ── Total consultas ────────────────────────────────
-    // Mismo criterio que casos abiertos: primera sesión en el periodo.
-    const totalConsultas = casosAbiertos.size;
-
-    // ── Casos cerrados ─────────────────────────────────
-    // Regla: caso cuya ÚLTIMA sesión registrada cae en el periodo
-    // y tiene estado "Cerrado" (la última sesión cierra el caso).
+    // ── Casos abiertos y cerrados ──────────────────────
+    // Misma lógica que la gráfica "Abiertos vs Cerrados" (renderEstados):
+    // sobre casos del periodo — abierto si tiene al menos 1 sesión "Abierto",
+    // cerrado si todas sus sesiones están "Cerrado". Siempre suman = total consultas.
+    let casosAbiertos = 0;
     let casosCerrados = 0;
-    Object.values(casoHistorico).forEach(info => {
-      if (info.estado !== "Cerrado") return;
-      const u = info.ultima;
-      if (anio && u.getFullYear() !== anio) return;
-      if (mes  && u.getMonth() + 1 !== mes)  return;
-      casosCerrados++;
+    casos.forEach(ss => {
+      const tieneAbierta = ss.some(s => s.estado === "Abierto");
+      if (tieneAbierta) casosAbiertos++;
+      else casosCerrados++;
     });
 
     // ── Casos confidenciales ───────────────────────────
@@ -545,7 +505,7 @@
     setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiConsultas",     totalConsultas);
     setText("kpiSesiones",      totalSesiones);
-    setText("kpiAbiertos",      casosAbiertos.size);
+    setText("kpiAbiertos",      casosAbiertos);
     setText("kpiCerrados",      casosCerrados);
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
@@ -1221,44 +1181,16 @@
     // 1. Trabajadores atendidos: únicos con sesión en el periodo
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
 
-    // 2. Histórico completo para casos abiertos y cerrados
+    // 2. Total consultas = trabajadores únicos con sesión en el periodo
     const clienteIdsSnap = new Set(clientes.map(c => c.id));
-    const poolHistoricoSnap = [
-      ...rawConsultas.map(s => ({ ...s })),
-      ...rawConsultasSve.map(s => ({ ...s, id: `sve_${s.id}` })),
-    ].filter(s => clienteIdsSnap.has(s.cliente_id));
+    const totalConsultas = trabConSesion.size;
 
-    const casoHistoricoSnap = {};
-    poolHistoricoSnap.forEach(s => {
-      const clave = `${s.cliente_id}_${s.consulta_number}`;
-      const f = new Date(s.fecha);
-      if (!casoHistoricoSnap[clave]) casoHistoricoSnap[clave] = { primera: f, ultima: f, estado: s.estado };
-      else {
-        if (f < casoHistoricoSnap[clave].primera) casoHistoricoSnap[clave].primera = f;
-        if (f > casoHistoricoSnap[clave].ultima)  { casoHistoricoSnap[clave].ultima = f; casoHistoricoSnap[clave].estado = s.estado; }
-      }
-    });
-
-    // 3. Casos abiertos: primera sesión en el periodo
-    const casosAbiertos = new Set();
-    Object.entries(casoHistoricoSnap).forEach(([clave, info]) => {
-      const p = info.primera;
-      if (anio && p.getFullYear() !== anio) return;
-      if (mes  && p.getMonth() + 1 !== mes)  return;
-      casosAbiertos.add(clave);
-    });
-
-    // 4. Total consultas = mismo criterio que casos abiertos
-    const totalConsultas = casosAbiertos.size;
-
-    // 5. Casos cerrados: última sesión en el periodo y estado Cerrado
+    // 3 & 4. Casos abiertos y cerrados — misma lógica que renderEstados y renderKPIs
+    let casosAbiertosSnap = 0;
     let casosCerradosSnap = 0;
-    Object.values(casoHistoricoSnap).forEach(info => {
-      if (info.estado !== "Cerrado") return;
-      const u = info.ultima;
-      if (anio && u.getFullYear() !== anio) return;
-      if (mes  && u.getMonth() + 1 !== mes)  return;
-      casosCerradosSnap++;
+    agruparEnCasos(sesiones).forEach(ss => {
+      if (ss.some(s => s.estado === "Abierto")) casosAbiertosSnap++;
+      else casosCerradosSnap++;
     });
 
     // 6. Confidenciales y críticos (sobre sesiones del periodo)
@@ -1365,7 +1297,7 @@
         trabajadores: trabConSesion.size,
         consultas: totalConsultas,
         sesiones: sesiones.length,
-        abiertos: casosAbiertos.size,
+        abiertos: casosAbiertosSnap,
         cerrados: casosCerradosSnap,
         confidenciales: casosConfi.size,
         criticos,

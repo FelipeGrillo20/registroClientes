@@ -423,11 +423,25 @@
   function renderDashboard(clientes, sesiones) {
     const casos = agruparEnCasos(sesiones);
 
+    const modalidadFiltro = document.getElementById("filterModalidad").value;
+    const esSVE = modalidadFiltro === "vigilancia";
+
+    // Mostrar/ocultar tarjetas KPI según modalidad
+    const cardConfi   = document.getElementById("cardConfidenciales");
+    const cardCritico = document.getElementById("cardCriticos");
+    const kpiGrid     = document.querySelector(".kpi-grid");
+    if (cardConfi)   cardConfi.style.display   = esSVE ? "none" : "";
+    if (cardCritico) cardCritico.style.display  = esSVE ? "none" : "";
+    if (kpiGrid) {
+      if (esSVE) kpiGrid.classList.add("kpi-grid-sve");
+      else       kpiGrid.classList.remove("kpi-grid-sve");
+    }
+
     // ── KPIs
     renderKPIs(clientes, sesiones, casos);
 
     // Actualizar título del panel de tendencia según modalidad
-    const modalidadFiltro = document.getElementById("filterModalidad").value;
+    // (modalidadFiltro ya declarado arriba)
     const tituloPanel = document.querySelector(".chart-title");
     if (tituloPanel) {
       if (modalidadFiltro === "vigilancia") {
@@ -503,7 +517,6 @@
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
 
     setText("kpiTrabajadores",  trabConSesion.size);
-    setText("kpiConsultas",     totalConsultas);
     setText("kpiSesiones",      totalSesiones);
     setText("kpiAbiertos",      casosAbiertos);
     setText("kpiCerrados",      casosCerrados);

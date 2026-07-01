@@ -188,6 +188,8 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
     }
+    /* SVE: solo 4 KPIs */
+    .kpi-grid-sve { grid-template-columns: repeat(4, 1fr); }
     .kpi-card {
       background: var(--bg-soft);
       border: 1px solid var(--border);
@@ -629,12 +631,14 @@
 
   const kpiDef = [
     { icon: SVG.personas, label:"Trabajadores atendidos", val: d.kpis.trabajadores,  cls:"kpi-c1" },
-    { icon: SVG.carpeta,  label:"Total de consultas",     val: d.kpis.consultas,     cls:"kpi-c7" },
     { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
     { icon: SVG.candadoA, label:"Casos abiertos",         val: d.kpis.abiertos,      cls:"kpi-c3" },
     { icon: SVG.check,    label:"Casos cerrados",         val: d.kpis.cerrados,      cls:"kpi-c6" },
-    { icon: SVG.candadoC, label:"Casos confidenciales",   val: d.kpis.confidenciales,cls:"kpi-c4" },
-    { icon: SVG.alerta,   label:"Casos críticos",         val: d.kpis.criticos,      cls:"kpi-c5" },
+    // Confidenciales y críticos: solo en OP
+    ...(!d.esSVE ? [
+      { icon: SVG.candadoC, label:"Casos confidenciales", val: d.kpis.confidenciales,cls:"kpi-c4" },
+      { icon: SVG.alerta,   label:"Casos críticos",       val: d.kpis.criticos,      cls:"kpi-c5" },
+    ] : []),
   ];
   const kpiGrid = document.getElementById("rKpiGrid");
   kpiDef.forEach(k => {

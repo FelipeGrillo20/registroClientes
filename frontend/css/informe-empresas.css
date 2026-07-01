@@ -275,8 +275,12 @@ body {
 /* ─── KPI GRID ──────────────────────────────────────── */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
+}
+/* SVE: solo 4 tarjetas visibles */
+.kpi-grid.kpi-grid-sve {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .kpi-card {

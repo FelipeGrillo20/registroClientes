@@ -754,6 +754,45 @@
     const counts = { normal: 0, complejo: 0, observacion: 0, critico: 0 };
     casos.forEach(ss => counts[clasificarCaso(ss)]++);
 
+    // Restaurar la leyenda original de OP por si venimos de SVE
+    // (SVE reemplaza el innerHTML de la leyenda con sus propios elementos)
+    const legendContainer = document.querySelector(".complexity-legend");
+    if (legendContainer && !document.getElementById("cntNormal")) {
+      legendContainer.innerHTML = `
+        <div class="legend-item legend-normal">
+          <div class="legend-dot"></div>
+          <div>
+            <p class="legend-name">Normal</p>
+            <p class="legend-desc">Sin confidencialidad · 1–4 sesiones</p>
+            <p class="legend-count" id="cntNormal">—</p>
+          </div>
+        </div>
+        <div class="legend-item legend-complejo">
+          <div class="legend-dot"></div>
+          <div>
+            <p class="legend-name">Complejo</p>
+            <p class="legend-desc">Sin confidencialidad · 5+ sesiones</p>
+            <p class="legend-count" id="cntComplejo">—</p>
+          </div>
+        </div>
+        <div class="legend-item legend-observacion">
+          <div class="legend-dot"></div>
+          <div>
+            <p class="legend-name">En observación</p>
+            <p class="legend-desc">Con confidencialidad · 1–2 sesiones</p>
+            <p class="legend-count" id="cntObservacion">—</p>
+          </div>
+        </div>
+        <div class="legend-item legend-critico">
+          <div class="legend-dot"></div>
+          <div>
+            <p class="legend-name">Crítico</p>
+            <p class="legend-desc">Con confidencialidad · 3+ sesiones</p>
+            <p class="legend-count" id="cntCritico">—</p>
+          </div>
+        </div>`;
+    }
+
     setText("cntNormal",     counts.normal);
     setText("cntComplejo",   counts.complejo);
     setText("cntObservacion",counts.observacion);

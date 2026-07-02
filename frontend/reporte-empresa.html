@@ -257,6 +257,21 @@
     .chart-wrap { position: relative; width: 100%; height: 170px; }
     .chart-wrap-sm { height: 155px; }
 
+    /* ── Tabla vínculo (reporte) ── */
+    #rTablaVinculo { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+    .rep-vinculo-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .rep-vinculo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .rep-vinculo-label { font-size: 12px; font-weight: 600; color: var(--slate); flex: 1; }
+    .rep-vinculo-bar-track { flex: 2; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+    .rep-vinculo-bar-fill  { height: 100%; border-radius: 3px; }
+    .rep-vinculo-stats { text-align: right; min-width: 55px; }
+    .rep-vinculo-count { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 600; color: var(--slate); display: block; }
+    .rep-vinculo-pct   { font-size: 10px; color: var(--slate-l); }
+
     /* ── Tabla motivos (reporte) ── */
     .rep-motivos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .rep-motivos-table thead th {
@@ -444,6 +459,7 @@
       .action-bar { display: none !important; }
       canvas { max-width: 100%; }
       /* Secciones 1+2 en primera hoja, resto en siguientes */
+      #secVinculo { page-break-before: always; }
       #secComplejidad { page-break-before: always; }
       /* Evitar cortes dentro de secciones */
       .section { page-break-inside: avoid; }
@@ -512,9 +528,28 @@
     </div>
 
     <!-- ── SECCIÓN 3: COMPLEJIDAD ────────────────────── -->
-    <div class="section" id="secComplejidad">
+    <!-- Vínculo: solo Orientación Psicosocial -->
+    <div class="section" id="secVinculo">
       <div class="section-head">
         <span class="section-num">03</span>
+        <span class="section-title">Tipo de Vínculo</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box">
+          <div class="chart-label">Distribución por vínculo</div>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="rChartVinculo"></canvas></div>
+        </div>
+        <div class="chart-box chart-box-full">
+          <div class="chart-label">Detalle</div>
+          <div id="rTablaVinculo"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="secComplejidad">
+      <div class="section-head">
+        <span class="section-num">04</span>
         <span class="section-title">Indicador de Complejidad</span>
         <div class="section-line"></div>
       </div>
@@ -530,7 +565,7 @@
     <!-- ── SECCIÓN 4: COBERTURA ──────────────────────── -->
     <div class="section" id="secCobertura">
       <div class="section-head">
-        <span class="section-num">04</span>
+        <span class="section-num">05</span>
         <span class="section-title">Cobertura del Servicio</span>
         <div class="section-line"></div>
       </div>
@@ -540,7 +575,7 @@
     <!-- ── SECCIÓN 5: SEDES ──────────────────────────── -->
     <div class="section" id="secSedes">
       <div class="section-head">
-        <span class="section-num">05</span>
+        <span class="section-num">06</span>
         <span class="section-title">Análisis por Sede</span>
         <div class="section-line"></div>
       </div>
@@ -725,6 +760,67 @@
       }
     }
   });
+
+  // ─── VÍNCULO (solo OP) ─────────────────────────────
+  const secVinculoEl = document.getElementById("secVinculo");
+  if (d.esSVE) {
+    if (secVinculoEl) secVinculoEl.style.display = "none";
+  } else {
+    if (secVinculoEl) secVinculoEl.style.display = "";
+    const vinc      = d.vinculos || { trabajadores: 0, familiares: 0 };
+    const vincTotal = vinc.trabajadores + vinc.familiares;
+    const vincPct   = v => vincTotal > 0 ? Math.round((v / vincTotal) * 100) : 0;
+
+    // Gráfica dona
+    const ctxV = document.getElementById("rChartVinculo");
+    if (ctxV) {
+      new Chart(ctxV.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: [
+            `Trabajador (${vinc.trabajadores} — ${vincPct(vinc.trabajadores)}%)`,
+            `Familiar Trabajador (${vinc.familiares} — ${vincPct(vinc.familiares)}%)`,
+          ],
+          datasets: [{
+            data: [vinc.trabajadores, vinc.familiares],
+            backgroundColor: ["#4f46e5","#0d9488"],
+            borderWidth: 0, hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: "62%",
+          plugins: {
+            legend: { position:"bottom", labels:{ font:{size:11}, padding:10, boxWidth:12 } },
+            tooltip: tooltipStyle()
+          }
+        }
+      });
+    }
+
+    // Tabla de detalle
+    const tablaV = document.getElementById("rTablaVinculo");
+    if (tablaV) {
+      const vincItems = [
+        { label: "Trabajador",          count: vinc.trabajadores, color: "#4f46e5" },
+        { label: "Familiar Trabajador", count: vinc.familiares,   color: "#0d9488" },
+      ];
+      tablaV.innerHTML = vincItems.map(item => {
+        const barPct = vincTotal > 0 ? Math.round((item.count / vincTotal) * 100) : 0;
+        return `
+          <div class="rep-vinculo-row">
+            <div class="rep-vinculo-dot" style="background:${item.color}"></div>
+            <span class="rep-vinculo-label">${item.label}</span>
+            <div class="rep-vinculo-bar-track">
+              <div class="rep-vinculo-bar-fill" style="width:${barPct}%;background:${item.color}"></div>
+            </div>
+            <div class="rep-vinculo-stats">
+              <span class="rep-vinculo-count">${item.count}</span>
+              <span class="rep-vinculo-pct">${vincPct(item.count)}%</span>
+            </div>
+          </div>`;
+      }).join("");
+    }
+  }
 
   // ─── COMPLEJIDAD ────────────────────────────────
   // ─── COMPLEJIDAD — alterna entre OP y SVE ──────────

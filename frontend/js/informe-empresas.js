@@ -436,6 +436,9 @@
       if (esSVE) kpiGrid.classList.add("kpi-grid-sve");
       else       kpiGrid.classList.remove("kpi-grid-sve");
     }
+    // Sección vínculo: solo en Orientación Psicosocial
+    const secVinculo = document.getElementById("secVinculo");
+    if (secVinculo) secVinculo.style.display = esSVE ? "none" : "";
 
     // ── KPIs
     renderKPIs(clientes, sesiones, casos);
@@ -458,6 +461,11 @@
       renderMotivos(sesiones);
     }
     renderEstados(casos); // Pasa casos (consultas únicas), no sesiones
+
+    // ── Vínculo — solo Orientación Psicosocial
+    if (!esSVE) {
+      renderVinculo(clientes, sesiones);
+    }
 
     // ── Complejidad — alternar según modalidad
     if (modalidadFiltro === "vigilancia") {
@@ -760,6 +768,87 @@
         }
       }
     });
+  }
+
+  // ── SECCIÓN 2b: VÍNCULO (solo OP) ───────────────────
+  // Cuenta trabajadores únicos por vínculo (campo clients.vinculo).
+  // "Trabajador" o "Familiar Trabajador"
+  function renderVinculo(clientes, sesiones) {
+    // Solo clientes con sesiones en el periodo
+    const clientesConSesion = new Set(sesiones.map(s => s.cliente_id));
+    const atendidos = clientes.filter(c => clientesConSesion.has(c.id));
+
+    let trabajadores = 0;
+    let familiares   = 0;
+    atendidos.forEach(c => {
+      if (c.vinculo === "Trabajador") trabajadores++;
+      else if (c.vinculo === "Familiar Trabajador") familiares++;
+    });
+
+    const total = trabajadores + familiares;
+    const pct   = v => total > 0 ? Math.round((v / total) * 100) : 0;
+
+    // ── Gráfica dona
+    destroyChart("chartVinculo");
+    const ctx = document.getElementById("chartVinculo");
+    if (ctx) {
+      charts.vinculo = new Chart(ctx.getContext("2d"), {
+        type: "doughnut",
+        data: {
+          labels: [
+            `Trabajador (${trabajadores} — ${pct(trabajadores)}%)`,
+            `Familiar Trabajador (${familiares} — ${pct(familiares)}%)`,
+          ],
+          datasets: [{
+            data: [trabajadores, familiares],
+            backgroundColor: ["#6366f1", "#2dd4bf"],
+            borderWidth: 0,
+            hoverOffset: 8,
+          }]
+        },
+        options: {
+          ...chartOptionsDoughnut(),
+          plugins: {
+            ...chartOptionsDoughnut().plugins,
+            tooltip: {
+              ...tooltipStyle(),
+              callbacks: {
+                label: ctx => {
+                  const val = ctx.parsed;
+                  const p = total > 0 ? Math.round((val / total) * 100) : 0;
+                  return ` ${val} persona${val !== 1 ? "s" : ""} (${p}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Tabla de detalle
+    const tabla = document.getElementById("tablaVinculo");
+    if (!tabla) return;
+
+    const items = [
+      { label: "Trabajador",           count: trabajadores, cls: "trabajador" },
+      { label: "Familiar Trabajador",  count: familiares,   cls: "familiar"   },
+    ];
+
+    tabla.innerHTML = items.map(item => {
+      const barPct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+      return `
+        <div class="vinculo-row">
+          <div class="vinculo-dot vinculo-dot-${item.cls}"></div>
+          <span class="vinculo-label">${item.label}</span>
+          <div class="vinculo-bar-track">
+            <div class="vinculo-bar-fill-${item.cls}" style="width:${barPct}%"></div>
+          </div>
+          <div class="vinculo-stats">
+            <span class="vinculo-count">${item.count}</span>
+            <span class="vinculo-pct">${pct(item.count)}%</span>
+          </div>
+        </div>`;
+    }).join("");
   }
 
   // ── SECCIÓN 3: COMPLEJIDAD ───────────────────────────
@@ -1309,6 +1398,15 @@
 
     const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
+    // Vínculo: solo OP — contar trabajadores únicos con sesión en el periodo por tipo
+    const clientesConSesionSnap = new Set(sesiones.map(s => s.cliente_id));
+    const atendidosSnap = clientes.filter(c => clientesConSesionSnap.has(c.id));
+    const vinculos = { trabajadores: 0, familiares: 0 };
+    atendidosSnap.forEach(c => {
+      if (c.vinculo === "Trabajador") vinculos.trabajadores++;
+      else if (c.vinculo === "Familiar Trabajador") vinculos.familiares++;
+    });
+
     // Motivos de consulta: contar igual que renderMotivos
     // Misma lógica que renderMotivos:
     // 1 sesión por consulta (cliente_id + consulta_number), separador "|"
@@ -1386,6 +1484,7 @@
         confidenciales: casosConfi.size,
         criticos,
       },
+      vinculos,
       motivos: motivosOrdenados,
       criterios: criteriosOrdenados,
       complejidadSve: compSve,

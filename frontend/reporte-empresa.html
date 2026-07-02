@@ -460,7 +460,6 @@
       canvas { max-width: 100%; }
       /* Secciones 1+2 en primera hoja, resto en siguientes */
       #secVinculo { page-break-before: always; }
-      #secComplejidad { page-break-before: always; }
       /* Evitar cortes dentro de secciones */
       .section { page-break-inside: avoid; }
       .kpi-card { page-break-inside: avoid; }
@@ -768,8 +767,11 @@
 
   // ─── VÍNCULO (solo OP) ─────────────────────────────
   const secVinculoEl = document.getElementById("secVinculo");
+  const secComplejidadEl = document.getElementById("secComplejidad");
   if (d.esSVE) {
     if (secVinculoEl) secVinculoEl.style.display = "none";
+    // Sin Vínculo, Complejidad conserva su propio salto de página
+    if (secComplejidadEl) secComplejidadEl.style.pageBreakBefore = "always";
   } else {
     if (secVinculoEl) secVinculoEl.style.display = "";
     const vinc      = d.vinculos || { trabajadores: 0, familiares: 0 };

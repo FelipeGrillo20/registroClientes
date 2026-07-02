@@ -479,8 +479,8 @@
       <div class="header-brand">
         <div class="brand-logo">🧠</div>
         <div>
-          <div class="brand-name">Salud Ocupacional</div>
-          <div class="brand-slogan">Orientación Psicosocial · SVE</div>
+          <div class="brand-name">Medicina Preventiva</div>
+          <div class="brand-slogan" id="rSlogan">Orientación Psicosocial · SVE</div>
         </div>
       </div>
       <div class="header-date">
@@ -628,6 +628,11 @@
   // ─── CABECERA ────────────────────────────────────
   document.getElementById("rFecha").textContent = d.fechaGeneracion;
   document.getElementById("rFooterFecha").textContent = "Generado: " + d.fechaGeneracion;
+
+  // Eslogan: muestra la modalidad filtrada, o el texto por defecto si no hay filtro
+  if (d.filtros.modalidad && d.filtros.modalidad !== "Todas") {
+    document.getElementById("rSlogan").textContent = d.filtros.modalidad;
+  }
 
   if (!d.esGeneral) {
     document.getElementById("rTitulo").textContent = "Informe de Seguimiento Psicosocial";

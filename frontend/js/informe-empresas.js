@@ -1187,6 +1187,36 @@
   }
 
   // ── SECCIÓN 7: SEDES ─────────────────────────────────
+  // ─── Unifica sedes registradas solo como "Ciudad" con su forma completa
+  // "Ciudad - Departamento" cuando ambas existen, sumando sus estadísticas.
+  // Si solo existe la forma "Ciudad", se deja tal cual.
+  function unificarSedes(mapa) {
+    const formaCompleta = {};
+    Object.keys(mapa).forEach(k => {
+      const partes = k.split(/\s+[-–—]\s+/);
+      if (partes.length === 2) {
+        formaCompleta[partes[0].trim().toLowerCase()] = k;
+      }
+    });
+
+    const resultado = {};
+    Object.keys(mapa).forEach(k => {
+      const ciudad = k.split(/\s+[-–—]\s+/)[0].trim().toLowerCase();
+      const claveFinal = formaCompleta[ciudad] || k;
+      const valor = mapa[k];
+
+      if (typeof valor === "number") {
+        resultado[claveFinal] = (resultado[claveFinal] || 0) + valor;
+      } else {
+        if (!resultado[claveFinal]) {
+          resultado[claveFinal] = Object.fromEntries(Object.keys(valor).map(kk => [kk, 0]));
+        }
+        Object.keys(valor).forEach(kk => { resultado[claveFinal][kk] += valor[kk]; });
+      }
+    });
+    return resultado;
+  }
+
   function renderSedes(clientes, sesiones, casos) {
     // Sesiones por sede
     const bySede = {};
@@ -1195,8 +1225,9 @@
       const sede = cliente?.sede || "Sin sede";
       bySede[sede] = (bySede[sede] || 0) + 1;
     });
+    const bySedeUnificado = unificarSedes(bySede);
 
-    const sedeLabels = Object.keys(bySede).sort((a, b) => bySede[b] - bySede[a]);
+    const sedeLabels = Object.keys(bySedeUnificado).sort((a, b) => bySedeUnificado[b] - bySedeUnificado[a]);
 
     destroyChart("chartSedes");
     const ctx1 = document.getElementById("chartSedes").getContext("2d");
@@ -1206,7 +1237,7 @@
         labels: sedeLabels,
         datasets: [{
           label: "Sesiones",
-          data: sedeLabels.map(s => bySede[s]),
+          data: sedeLabels.map(s => bySedeUnificado[s]),
           backgroundColor: sedeLabels.map((_, i) => PALETTE_INDIGO[i % PALETTE_INDIGO.length]),
           borderWidth: 0,
           borderRadius: 6,
@@ -1224,8 +1255,9 @@
       if (!compBySede[sede]) compBySede[sede] = { normal: 0, complejo: 0, observacion: 0, critico: 0 };
       compBySede[sede][clasificarCaso(ss)]++;
     });
+    const compBySedeUnificado = unificarSedes(compBySede);
 
-    const sedes2 = Object.keys(compBySede);
+    const sedes2 = Object.keys(compBySedeUnificado);
     destroyChart("chartSedesComplejidad");
     const ctx2 = document.getElementById("chartSedesComplejidad").getContext("2d");
     charts.sedesComp = new Chart(ctx2, {
@@ -1233,10 +1265,10 @@
       data: {
         labels: sedes2,
         datasets: [
-          { label: "Normal",         data: sedes2.map(s => compBySede[s].normal),     backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
-          { label: "Complejo",       data: sedes2.map(s => compBySede[s].complejo),   backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
-          { label: "En observación", data: sedes2.map(s => compBySede[s].observacion),backgroundColor: "rgba(167,139,250,0.7)", borderRadius: 4 },
-          { label: "Crítico",        data: sedes2.map(s => compBySede[s].critico),    backgroundColor: "rgba(244,63,94,0.7)",  borderRadius: 4 },
+          { label: "Normal",         data: sedes2.map(s => compBySedeUnificado[s].normal),     backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
+          { label: "Complejo",       data: sedes2.map(s => compBySedeUnificado[s].complejo),   backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
+          { label: "En observación", data: sedes2.map(s => compBySedeUnificado[s].observacion),backgroundColor: "rgba(167,139,250,0.7)", borderRadius: 4 },
+          { label: "Crítico",        data: sedes2.map(s => compBySedeUnificado[s].critico),    backgroundColor: "rgba(244,63,94,0.7)",  borderRadius: 4 },
         ]
       },
       options: {
@@ -1395,6 +1427,7 @@
       const sede = cl?.sede || "Sin sede";
       if (bySede[sede]) bySede[sede][clasificarCaso(ss)]++;
     });
+    const bySedeUnificado = unificarSedes(bySede);
 
     const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -1493,7 +1526,7 @@
       complejidad: comp,
       cobertura: { unicos, promedio, virtuales, presenciales, masReciente,
         modFrecuente: virtuales >= presenciales ? "Virtual" : "Presencial" },
-      sedes: bySede,
+      sedes: bySedeUnificado,
     };
   }
 

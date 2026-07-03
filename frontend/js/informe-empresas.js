@@ -484,7 +484,7 @@
     renderCobertura(clientes, sesiones);
 
     // ── Sedes
-    renderSedes(clientes, sesiones, casos);
+    renderSedes(clientes, sesiones, casos, esSVE);
   }
 
   // ── SECCIÓN 1: KPIs ─────────────────────────────────
@@ -1222,7 +1222,7 @@
     return resultado;
   }
 
-  function renderSedes(clientes, sesiones, casos) {
+  function renderSedes(clientes, sesiones, casos, esSVE) {
     // Sesiones por sede
     const bySede = {};
     sesiones.forEach(s => {
@@ -1253,28 +1253,54 @@
 
     // Complejidad por sede (stacked)
     const compBySede = {};
-    casos.forEach(ss => {
-      const clienteId = ss[0]?.cliente_id;
-      const cliente = rawClients.find(c => c.id === clienteId);
-      const sede = cliente?.sede || "Sin sede";
-      if (!compBySede[sede]) compBySede[sede] = { normal: 0, complejo: 0, observacion: 0, critico: 0 };
-      compBySede[sede][clasificarCaso(ss)]++;
-    });
+    if (esSVE) {
+      // SVE: nivel de complejidad (Alto/Medio/Bajo) — el más antiguo por caso, igual que renderComplejidadSve
+      const casosEnPeriodo = new Set(casos.keys());
+      const casoNivelPorSede = {};
+      rawConsultasSve
+        .filter(s => casosEnPeriodo.has(`${s.cliente_id}_${s.consulta_number}`) && s.nivel_complejidad)
+        .forEach(s => {
+          const clave = `${s.cliente_id}_${s.consulta_number}`;
+          const f = new Date(s.fecha);
+          if (!casoNivelPorSede[clave] || f < casoNivelPorSede[clave].fecha) {
+            const cliente = rawClients.find(c => c.id === s.cliente_id);
+            casoNivelPorSede[clave] = { nivel: s.nivel_complejidad, sede: cliente?.sede || "Sin sede", fecha: f };
+          }
+        });
+      Object.values(casoNivelPorSede).forEach(({ nivel, sede }) => {
+        if (!compBySede[sede]) compBySede[sede] = { Alto: 0, Medio: 0, Bajo: 0 };
+        if (compBySede[sede][nivel] !== undefined) compBySede[sede][nivel]++;
+      });
+    } else {
+      casos.forEach(ss => {
+        const clienteId = ss[0]?.cliente_id;
+        const cliente = rawClients.find(c => c.id === clienteId);
+        const sede = cliente?.sede || "Sin sede";
+        if (!compBySede[sede]) compBySede[sede] = { normal: 0, complejo: 0, observacion: 0, critico: 0 };
+        compBySede[sede][clasificarCaso(ss)]++;
+      });
+    }
     const compBySedeUnificado = unificarSedes(compBySede);
 
     const sedes2 = Object.keys(compBySedeUnificado);
+    const datasetsComp = esSVE ? [
+      { label: "Alto",  data: sedes2.map(s => compBySedeUnificado[s].Alto),  backgroundColor: "rgba(244,63,94,0.7)",  borderRadius: 4 },
+      { label: "Medio", data: sedes2.map(s => compBySedeUnificado[s].Medio), backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
+      { label: "Bajo",  data: sedes2.map(s => compBySedeUnificado[s].Bajo),  backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
+    ] : [
+      { label: "Normal",         data: sedes2.map(s => compBySedeUnificado[s].normal),     backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
+      { label: "Complejo",       data: sedes2.map(s => compBySedeUnificado[s].complejo),   backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
+      { label: "En observación", data: sedes2.map(s => compBySedeUnificado[s].observacion),backgroundColor: "rgba(167,139,250,0.7)", borderRadius: 4 },
+      { label: "Crítico",        data: sedes2.map(s => compBySedeUnificado[s].critico),    backgroundColor: "rgba(244,63,94,0.7)",  borderRadius: 4 },
+    ];
+
     destroyChart("chartSedesComplejidad");
     const ctx2 = document.getElementById("chartSedesComplejidad").getContext("2d");
     charts.sedesComp = new Chart(ctx2, {
       type: "bar",
       data: {
         labels: sedes2,
-        datasets: [
-          { label: "Normal",         data: sedes2.map(s => compBySedeUnificado[s].normal),     backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
-          { label: "Complejo",       data: sedes2.map(s => compBySedeUnificado[s].complejo),   backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
-          { label: "En observación", data: sedes2.map(s => compBySedeUnificado[s].observacion),backgroundColor: "rgba(167,139,250,0.7)", borderRadius: 4 },
-          { label: "Crítico",        data: sedes2.map(s => compBySedeUnificado[s].critico),    backgroundColor: "rgba(244,63,94,0.7)",  borderRadius: 4 },
-        ]
+        datasets: datasetsComp
       },
       options: {
         ...chartOptionsBar(),
@@ -1419,18 +1445,42 @@
       : "—";
 
     // Sedes
+    const esSveSnapSedes = document.getElementById("filterModalidad").value === "vigilancia";
     const bySede = {};
     sesiones.forEach(s => {
       const cl = rawClients.find(c => c.id === s.cliente_id);
       const sede = cl?.sede || "Sin sede";
-      if (!bySede[sede]) bySede[sede] = { sesiones: 0, normal: 0, complejo: 0, observacion: 0, critico: 0 };
+      if (!bySede[sede]) {
+        bySede[sede] = esSveSnapSedes
+          ? { sesiones: 0, Alto: 0, Medio: 0, Bajo: 0 }
+          : { sesiones: 0, normal: 0, complejo: 0, observacion: 0, critico: 0 };
+      }
       bySede[sede].sesiones++;
     });
-    casos.forEach(ss => {
-      const cl = rawClients.find(c => c.id === ss[0]?.cliente_id);
-      const sede = cl?.sede || "Sin sede";
-      if (bySede[sede]) bySede[sede][clasificarCaso(ss)]++;
-    });
+    if (esSveSnapSedes) {
+      // SVE: nivel de complejidad (Alto/Medio/Bajo) — el más antiguo por caso
+      const casosEnPeriodoSede = new Set(casos.keys());
+      const casoNivelPorSede = {};
+      rawConsultasSve
+        .filter(s => casosEnPeriodoSede.has(`${s.cliente_id}_${s.consulta_number}`) && s.nivel_complejidad)
+        .forEach(s => {
+          const clave = `${s.cliente_id}_${s.consulta_number}`;
+          const f = new Date(s.fecha);
+          if (!casoNivelPorSede[clave] || f < casoNivelPorSede[clave].fecha) {
+            const cl = rawClients.find(c => c.id === s.cliente_id);
+            casoNivelPorSede[clave] = { nivel: s.nivel_complejidad, sede: cl?.sede || "Sin sede", fecha: f };
+          }
+        });
+      Object.values(casoNivelPorSede).forEach(({ nivel, sede }) => {
+        if (bySede[sede] && bySede[sede][nivel] !== undefined) bySede[sede][nivel]++;
+      });
+    } else {
+      casos.forEach(ss => {
+        const cl = rawClients.find(c => c.id === ss[0]?.cliente_id);
+        const sede = cl?.sede || "Sin sede";
+        if (bySede[sede]) bySede[sede][clasificarCaso(ss)]++;
+      });
+    }
     const bySedeUnificado = unificarSedes(bySede);
 
     const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];

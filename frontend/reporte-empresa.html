@@ -929,6 +929,32 @@
 
   if (sedeKeys.length === 0) {
     sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
+  } else if (d.esSVE) {
+    let tableHTML = `
+      <table class="sedes-table">
+        <thead>
+          <tr>
+            <th>Sede</th>
+            <th style="text-align:center">Sesiones</th>
+            <th style="text-align:center">Alto</th>
+            <th style="text-align:center">Medio</th>
+            <th style="text-align:center">Bajo</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    sedeKeys.forEach(s => {
+      const r = sedes[s];
+      tableHTML += `
+        <tr>
+          <td><strong>${s}</strong></td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
+          <td style="text-align:center"><span class="badge badge-critico">${r.Alto}</span></td>
+          <td style="text-align:center"><span class="badge badge-complejo">${r.Medio}</span></td>
+          <td style="text-align:center"><span class="badge badge-normal">${r.Bajo}</span></td>
+        </tr>`;
+    });
+    tableHTML += "</tbody></table>";
+    sedesEl.innerHTML = tableHTML;
   } else {
     let tableHTML = `
       <table class="sedes-table">

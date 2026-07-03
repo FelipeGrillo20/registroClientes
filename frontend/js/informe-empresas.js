@@ -5,7 +5,7 @@
 //   EN OBSERVACIÓN → confidencial=true  + sesiones <  3
 //   COMPLEJO     → confidencial=false + sesiones >= 5
 //   NORMAL       → confidencial=false + sesiones <  5
-// Reingresos: trabajadores con consulta_number >= 2.
+// Reingresos: trabajadores con consulta_number >= 2
 
 (function () {
   "use strict";
@@ -456,7 +456,7 @@
 
     // ── Tendencia — alternar motivos (OP) o criterios (SVE) según modalidad
     if (modalidadFiltro === "vigilancia") {
-      renderCriteriosSve(clientes);
+      renderCriteriosSve(sesiones);
     } else {
       renderMotivos(sesiones);
     }
@@ -533,21 +533,26 @@
   }
 
   // ── Criterios de Inclusión SVE ──────────────────────
-  // Cuenta criterio_inclusion por trabajador único (un registro por cliente).
-  // El criterio viene de la tabla mesa_trabajo_sve, campo criterio_inclusion.
-  function renderCriteriosSve(clientes) {
+  // Cuenta criterio_inclusion por trabajador único, solo entre los trabajadores
+  // atendidos en el periodo filtrado (mismo criterio que el KPI "Trabajadores atendidos").
+  // Si un trabajador tiene más de un registro en mesa_trabajo_sve, se cuenta
+  // solo el más reciente para no inflar el total.
+  function renderCriteriosSve(sesiones) {
     const container = document.getElementById("tablaMotivos");
     if (!container) return;
 
-    const clienteIds = new Set(clientes.map(c => c.id));
-    const conteo = {};
+    const trabajadoresIds = new Set(sesiones.map(s => s.cliente_id));
 
+    const criterioPorTrabajador = new Map();
     rawMesaTrabajoSve
-      .filter(m => clienteIds.has(m.cliente_id) && m.criterio_inclusion)
-      .forEach(m => {
-        const criterio = m.criterio_inclusion.trim();
-        conteo[criterio] = (conteo[criterio] || 0) + 1;
-      });
+      .filter(m => trabajadoresIds.has(m.cliente_id) && m.criterio_inclusion)
+      .sort((a, b) => (a.id || 0) - (b.id || 0))
+      .forEach(m => criterioPorTrabajador.set(m.cliente_id, m.criterio_inclusion.trim()));
+
+    const conteo = {};
+    criterioPorTrabajador.forEach(criterio => {
+      conteo[criterio] = (conteo[criterio] || 0) + 1;
+    });
 
     const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
 
@@ -1374,7 +1379,6 @@
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
 
     // 2. Total consultas = trabajadores únicos con sesión en el periodo
-    const clienteIdsSnap = new Set(clientes.map(c => c.id));
     const totalConsultas = trabConSesion.size;
 
     // 3 & 4. Casos abiertos y cerrados — misma lógica que renderEstados y renderKPIs
@@ -1481,14 +1485,18 @@
     const compSve = { Alto: 0, Medio: 0, Bajo: 0 };
     Object.values(compSveMap).forEach(({ nivel }) => { if (compSve[nivel] !== undefined) compSve[nivel]++; });
 
-    // Criterios de inclusión SVE (misma lógica que renderCriteriosSve)
-    const conteoCriterios = {};
+    // Criterios de inclusión SVE (misma lógica que renderCriteriosSve):
+    // solo trabajadores atendidos en el periodo, un criterio por trabajador.
+    const criterioPorTrabajadorSnap = new Map();
     rawMesaTrabajoSve
-      .filter(m => clienteIdsSnap.has(m.cliente_id) && m.criterio_inclusion)
-      .forEach(m => {
-        const criterio = m.criterio_inclusion.trim();
-        conteoCriterios[criterio] = (conteoCriterios[criterio] || 0) + 1;
-      });
+      .filter(m => trabConSesion.has(m.cliente_id) && m.criterio_inclusion)
+      .sort((a, b) => (a.id || 0) - (b.id || 0))
+      .forEach(m => criterioPorTrabajadorSnap.set(m.cliente_id, m.criterio_inclusion.trim()));
+
+    const conteoCriterios = {};
+    criterioPorTrabajadorSnap.forEach(criterio => {
+      conteoCriterios[criterio] = (conteoCriterios[criterio] || 0) + 1;
+    });
     const criteriosOrdenados = Object.entries(conteoCriterios)
       .sort((a, b) => b[1] - a[1])
       .map(([criterio, count]) => ({ criterio, count }));

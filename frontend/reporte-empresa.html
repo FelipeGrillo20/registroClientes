@@ -89,7 +89,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 24px;
     }
-    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; }
+    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; text-transform: uppercase; }
     .brand-slogan { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
 
     .header-date { text-align: right; }
@@ -640,6 +640,17 @@
   } else {
     document.getElementById("rSubtitulo").textContent = "Informe general — todas las empresas";
     document.getElementById("rFooterFiltros").textContent = "Informe general";
+
+    // Histórico por modalidad: todos los demás filtros en "todos" y una modalidad seleccionada
+    const esHistoricoModalidad = d.filtros.modalidad !== "Todas"
+      && d.filtros.sede === "Todas"
+      && d.filtros.anio === "Todos"
+      && d.filtros.mes === "Todo el año";
+    if (esHistoricoModalidad) {
+      document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
+        ? "Informe Histórico Sistema de Vigilancia Epidemiológica"
+        : "Informe Histórico Orientación Psicosocial";
+    }
   }
 
   // Badges de filtros activos

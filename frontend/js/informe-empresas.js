@@ -5,7 +5,7 @@
 //   EN OBSERVACIÓN → confidencial=true  + sesiones <  3
 //   COMPLEJO     → confidencial=false + sesiones >= 5
 //   NORMAL       → confidencial=false + sesiones <  5
-// Reingresos: trabajadores con consulta_number >= 2
+// Reingresos: trabajadores con consulta_number >= 2.
 
 (function () {
   "use strict";

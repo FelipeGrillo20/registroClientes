@@ -89,7 +89,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 24px;
     }
-    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; text-transform: uppercase; }
+    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; }
     .brand-slogan { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
 
     .header-date { text-align: right; }
@@ -633,24 +633,32 @@
     document.getElementById("rSlogan").textContent = d.filtros.modalidad;
   }
 
-  if (!d.esGeneral) {
+  const modalidadSel = d.filtros.modalidad !== "Todas";
+  const otrosFiltrosTodos = d.esGeneral
+    && d.filtros.sede === "Todas"
+    && d.filtros.anio === "Todos"
+    && d.filtros.mes === "Todo el año";
+
+  if (modalidadSel && otrosFiltrosTodos) {
+    // Histórico por modalidad: todos los demás filtros en "todos" y una modalidad seleccionada
+    document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
+      ? "Informe Histórico Sistema de Vigilancia Epidemiológica"
+      : "Informe Histórico Orientación Psicosocial";
+  } else if (modalidadSel) {
+    // Modalidad seleccionada junto con algún otro filtro (empresa, sede, año o mes)
+    document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
+      ? "Informe Sistema de Vigilancia Epidemiológica"
+      : "Informe Orientación Psicosocial";
+  } else if (!d.esGeneral) {
     document.getElementById("rTitulo").textContent = "Informe de Seguimiento Psicosocial";
+  }
+
+  if (!d.esGeneral) {
     document.getElementById("rSubtitulo").textContent = d.filtros.empresa;
     document.getElementById("rFooterFiltros").textContent = d.filtros.empresa;
   } else {
     document.getElementById("rSubtitulo").textContent = "Informe general — todas las empresas";
     document.getElementById("rFooterFiltros").textContent = "Informe general";
-
-    // Histórico por modalidad: todos los demás filtros en "todos" y una modalidad seleccionada
-    const esHistoricoModalidad = d.filtros.modalidad !== "Todas"
-      && d.filtros.sede === "Todas"
-      && d.filtros.anio === "Todos"
-      && d.filtros.mes === "Todo el año";
-    if (esHistoricoModalidad) {
-      document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
-        ? "Informe Histórico Sistema de Vigilancia Epidemiológica"
-        : "Informe Histórico Orientación Psicosocial";
-    }
   }
 
   // Badges de filtros activos

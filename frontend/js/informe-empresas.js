@@ -1452,10 +1452,16 @@
       const sede = cl?.sede || "Sin sede";
       if (!bySede[sede]) {
         bySede[sede] = esSveSnapSedes
-          ? { sesiones: 0, Alto: 0, Medio: 0, Bajo: 0 }
-          : { sesiones: 0, normal: 0, complejo: 0, observacion: 0, critico: 0 };
+          ? { consultas: 0, sesiones: 0, Alto: 0, Medio: 0, Bajo: 0 }
+          : { consultas: 0, sesiones: 0, normal: 0, complejo: 0, observacion: 0, critico: 0 };
       }
       bySede[sede].sesiones++;
+    });
+    // Consultas (casos únicos) por sede — común a ambas modalidades
+    casos.forEach(ss => {
+      const cl = rawClients.find(c => c.id === ss[0]?.cliente_id);
+      const sede = cl?.sede || "Sin sede";
+      if (bySede[sede]) bySede[sede].consultas++;
     });
     if (esSveSnapSedes) {
       // SVE: nivel de complejidad (Alto/Medio/Bajo) — el más antiguo por caso

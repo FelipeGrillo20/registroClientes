@@ -89,7 +89,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 24px;
     }
-    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; }
+    .brand-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; text-transform: uppercase; }
     .brand-slogan { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
 
     .header-date { text-align: right; }
@@ -935,6 +935,7 @@
         <thead>
           <tr>
             <th>Sede</th>
+            <th style="text-align:center">Consulta</th>
             <th style="text-align:center">Sesiones</th>
             <th style="text-align:center">Alto</th>
             <th style="text-align:center">Medio</th>
@@ -947,6 +948,7 @@
       tableHTML += `
         <tr>
           <td><strong>${s}</strong></td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
           <td style="text-align:center"><span class="badge badge-critico">${r.Alto}</span></td>
           <td style="text-align:center"><span class="badge badge-complejo">${r.Medio}</span></td>
@@ -961,6 +963,7 @@
         <thead>
           <tr>
             <th>Sede</th>
+            <th style="text-align:center">Consulta</th>
             <th style="text-align:center">Sesiones</th>
             <th style="text-align:center">Normal</th>
             <th style="text-align:center">Complejo</th>
@@ -974,6 +977,7 @@
       tableHTML += `
         <tr>
           <td><strong>${s}</strong></td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
           <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
           <td style="text-align:center"><span class="badge badge-normal">${r.normal}</span></td>
           <td style="text-align:center"><span class="badge badge-complejo">${r.complejo}</span></td>

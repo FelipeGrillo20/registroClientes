@@ -24,7 +24,7 @@ exports.createEntrega = async (data) => {
       fecha_retroalimentacion || null,
       titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html || null,
-      pruebas_profundidad || 'Ninguna',
+      pruebas_profundidad || 'No asistio',
     ]
   );
   return result.rows[0];
@@ -92,7 +92,7 @@ exports.updateEntrega = async (id, data) => {
         fecha_retroalimentacion || null,
         titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
         recomendaciones_html || null,
-        pruebas_profundidad || 'Ninguna',
+        pruebas_profundidad || 'No asistio',
         profesional_id,
         id,
       ]
@@ -112,7 +112,7 @@ exports.updateEntrega = async (id, data) => {
       fecha_retroalimentacion || null,
       titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html || null,
-      pruebas_profundidad || 'Ninguna',
+      pruebas_profundidad || 'No asistio',
       id,
     ]
   );

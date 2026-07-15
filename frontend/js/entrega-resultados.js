@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fechaRetro.value          = '';
     tituloSeccion.value       = 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
     editorContent.innerHTML   = '';
-    pruebasProfundidad.value  = 'Ninguna';
+    pruebasProfundidad.value  = 'No asistio';
   }
 
   // ============================================================
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fecha_retroalimentacion: fechaRetro.value       || null,
       titulo_seccion:          tituloSeccion.value.trim() || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html:    editorContent.innerHTML.trim(),
-      pruebas_profundidad:     pruebasProfundidad.value || 'Ninguna',
+      pruebas_profundidad:     pruebasProfundidad.value || 'No asistio',
     };
 
     try {
@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fechaRetro.value           = data.fecha_retroalimentacion?.slice(0,10) || '';
       tituloSeccion.value        = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML    = data.recomendaciones_html || '';
-      pruebasProfundidad.value   = data.pruebas_profundidad || 'Ninguna';
+      pruebasProfundidad.value   = data.pruebas_profundidad || 'No asistio';
       modalPlantilla.style.display = 'flex';
       document.body.style.overflow = 'hidden';
     } catch (err) {
@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fechaRetro.value        = data.fecha_retroalimentacion?.slice(0,10) || '';
       tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
-      pruebasProfundidad.value = data.pruebas_profundidad || 'Ninguna';
+      pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
       generarYDescargarPDF('ver');
     } catch (err) {
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fechaRetro.value        = data.fecha_retroalimentacion?.slice(0,10) || '';
       tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
-      pruebasProfundidad.value = data.pruebas_profundidad || 'Ninguna';
+      pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
       generarYDescargarPDF('descargar');
     } catch (err) {
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -731,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
     doc.setTextColor(50, 50, 50);
-    doc.text(pruebasProfundidad.value || 'Ninguna', marginL, y);
+    doc.text(pruebasProfundidad.value || 'No asistio', marginL, y);
     y += 10;
 
     // Firma — imagen o línea de fallback

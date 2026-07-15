@@ -6,6 +6,9 @@ const ctrl    = require("../controllers/entregaResultadosController");
 // Crear nuevo registro
 router.post("/", ctrl.createEntrega);
 
+// Obtener todos los registros (dashboard)
+router.get("/", ctrl.getAll);
+
 // Obtener registros de un cliente
 router.get("/cliente/:clientId", ctrl.getByCliente);
 

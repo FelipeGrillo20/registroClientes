@@ -30,6 +30,33 @@ exports.createEntrega = async (data) => {
   return result.rows[0];
 };
 
+// Obtener todos los registros (opcionalmente filtrados por profesional).
+// Usado por el dashboard: una sola consulta en vez de una por cliente.
+exports.getAllEntregas = async (profesionalId) => {
+  const params = [];
+  let where = '';
+  if (profesionalId) {
+    params.push(profesionalId);
+    where = 'WHERE er.profesional_id = $1';
+  }
+  const result = await pool.query(
+    `SELECT
+       er.*,
+       u.nombre AS profesional_nombre,
+       c.nombre AS trabajador_nombre,
+       c.cedula AS trabajador_cedula,
+       c.telefono AS trabajador_telefono,
+       c.perfil_estres AS trabajador_perfil_estres
+     FROM entrega_resultados er
+     LEFT JOIN users u ON er.profesional_id = u.id
+     LEFT JOIN clients c ON er.client_id = c.id
+     ${where}
+     ORDER BY er.created_at DESC`,
+    params
+  );
+  return result.rows;
+};
+
 // Obtener todos los registros de un cliente
 exports.getEntregasByCliente = async (clientId) => {
   const result = await pool.query(

@@ -294,7 +294,7 @@ body {
   margin-bottom: 10px;
 }
 .chart-card-title svg { color: #667eea; }
-.charts-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom:0; }
+.charts-row  { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 16px; margin-bottom:0; }
 .bottom-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom:0; }
 .chart-wrap  { position: relative; width: 100%; }
 

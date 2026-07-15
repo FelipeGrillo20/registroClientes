@@ -34,9 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let profFiltroId     = 'todos'; // 'todos' o id de profesional
   let periodoActual    = 'all';
 
-  let chartBarras = null;
-  let chartDonut  = null;
-  let chartLinea  = null;
+  let chartBarras  = null;
+  let chartDonut   = null;
+  let chartLinea   = null;
+  let chartPruebas = null;
+
+  // Orden fijo del catálogo de "Pruebas a profundidad" (debe coincidir con
+  // las opciones del <select> en entrega-resultados.html)
+  const PRUEBAS_PROFUNDIDAD_ORDEN = [
+    'Incapacidad', 'Vacaciones', 'Licencias', 'Retiro', 'IPT',
+    'Entrevista Semi', 'Grupo Focal', 'Perfil Estres',
+    'Asistir Actividades P&P', 'No asistio',
+  ];
 
   // ============================================================
   // HELPERS
@@ -87,10 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
       await cargarProfesionales();
       // 2. Clientes (depende de profesionales)
       await cargarClientes();
-      // 3. Entregas por cada cliente (fuente real de datos)
+      // 3. Entregas — una sola petición al servidor (antes era 1 por cliente)
       await cargarEntregas();
-      // 4. Datos de perfiles estrés de cada cliente
-      await enriquecerConPerfilesEstres();
+      // 4. Anotar perfil estrés (dato que ya viaja en la respuesta anterior,
+      //    no requiere peticiones adicionales)
+      enriquecerConPerfilesEstres();
       // 5. Render
       poblarFiltroProfesional();
       renderDashboard();
@@ -172,55 +182,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // — Entregas: por cada cliente real —
+  // — Entregas: una sola petición al backend, en vez de una por cliente —
+  // (antes se hacía fetch(`/api/entrega-resultados/cliente/${c.id}`) por
+  // cada trabajador, lo que con cientos de clientes disparaba cientos de
+  // round-trips al servidor; ahora el backend arma un único listado).
   async function cargarEntregas() {
-    if (!allClientes.length) { allEntregas = []; return; }
     try {
-      const peticiones = allClientes.map(c =>
-        fetch(
-          `${API_URL}/api/entrega-resultados/cliente/${c.id}`,
-          { headers: authHeader() }
-        ).then(r => r.ok ? r.json() : [])
-         .catch(() => [])
-      );
-      const res = await Promise.all(peticiones);
-      allEntregas = res.flat().filter(Boolean);
+      const res = await fetch(`${API_URL}/api/entrega-resultados`, { headers: authHeader() });
+      allEntregas = res.ok ? await res.json() : [];
     } catch (e) {
       console.warn('Error al cargar entregas:', e);
       allEntregas = [];
     }
   }
 
-  // — Perfil estrés: enriquecer cada entrega con si el cliente tiene perfil —
-  // El perfil vive en GET /api/clients/:id/documentos → { perfil_estres: "ruta/..." }
-  async function enriquecerConPerfilesEstres() {
-    if (!allClientes.length) return;
-    try {
-      const peticiones = allClientes.map(c =>
-        fetch(
-          `${API_URL}/api/clients/${c.id}/documentos`,
-          { headers: authHeader() }
-        ).then(r => r.ok ? r.json() : null)
-         .catch(() => null)
-      );
-      const resultados = await Promise.all(peticiones);
-      // Construir mapa clientId → tienePerfil
-      const mapaPerfiles = {};
-      allClientes.forEach((c, i) => {
-        const doc = resultados[i];
-        mapaPerfiles[c.id] = !!(doc && doc.perfil_estres);
-      });
-      // Anotar en cada entrega
-      allEntregas.forEach(e => {
-        e._tiene_perfil = !!mapaPerfiles[e.client_id];
-      });
-      // También anotar en clientes para el estado global
-      allClientes.forEach(c => {
-        c._tiene_perfil = !!mapaPerfiles[c.id];
-      });
-    } catch (e) {
-      console.warn('Error al enriquecer perfiles:', e);
-    }
+  // — Perfil estrés: cada cliente ya trae la columna `perfil_estres` en su
+  // propio registro (viene incluida en /api/clients y /api/clients/filters),
+  // y cada entrega ahora trae `trabajador_perfil_estres` vía JOIN — no hace
+  // falta ninguna petición adicional por cliente.
+  function enriquecerConPerfilesEstres() {
+    allClientes.forEach(c => { c._tiene_perfil = !!c.perfil_estres; });
+    allEntregas.forEach(e => { e._tiene_perfil = !!e.trabajador_perfil_estres; });
   }
 
   // ============================================================
@@ -320,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEstados(entregas, clientes);
     renderChartBarras(entregasPorPeriodo(entregas, periodoActual), periodoActual);
     renderChartDonut(entregas);
+    renderChartPruebas(entregas);
     renderChartLinea(entregasPorPeriodo(entregas, periodoActual), periodoActual);
     renderTablaProfesionales(entregas);
     renderTimeline(entregas);
@@ -562,6 +545,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Chart torta: Pruebas a profundidad ─────────────────────────
+  function renderChartPruebas(entregas) {
+    const cats = {};
+    PRUEBAS_PROFUNDIDAD_ORDEN.forEach(l => { cats[l] = 0; });
+    let sinDato = 0;
+
+    entregas.forEach(e => {
+      const valor = e.pruebas_profundidad;
+      if (!valor) return;
+      if (Object.prototype.hasOwnProperty.call(cats, valor)) cats[valor]++;
+      else sinDato++;
+    });
+    if (sinDato > 0) cats['Otros'] = sinDato;
+
+    const labels  = Object.keys(cats).filter(k => cats[k] > 0);
+    const valores = labels.map(l => cats[l]);
+    const colores = ['#5B8AF0','#52b788','#f4a261','#e07a9e','#a8a0d8','#f6c945','#4dd0e1','#ff8a65','#9575cd','#607d8b','#bdbdbd'];
+    const total   = valores.reduce((a,b)=>a+b,0);
+
+    document.getElementById('pruebasLegend').innerHTML = labels.map((l,i) => {
+      const pct = total ? Math.round(valores[i]/total*100) : 0;
+      return `<div class="dl-row">
+        <span class="dl-left"><span class="legend-dot" style="background:${colores[i % colores.length]}"></span>${l}</span>
+        <span class="dl-val">${pct}%</span>
+      </div>`;
+    }).join('');
+
+    const backgroundColor = labels.map((_, i) => colores[i % colores.length]);
+
+    if (chartPruebas) {
+      chartPruebas.data.labels                      = labels;
+      chartPruebas.data.datasets[0].data             = valores;
+      chartPruebas.data.datasets[0].backgroundColor  = backgroundColor;
+      chartPruebas.update();
+      return;
+    }
+    chartPruebas = new Chart(document.getElementById('cPruebas'), {
+      type: 'pie',
+      data: { labels, datasets: [{ data: valores, backgroundColor, borderWidth: 0, hoverOffset: 4 }] },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw}` } } },
+      },
+    });
+  }
+
   // ── Chart línea ───────────────────────────────────────────────
   function renderChartLinea(entregas, periodo) {
     const mesesLabel = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -736,8 +765,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.classList.add('spinning');
     btn.disabled = true;
     // Destruir gráficas para que se recreen con datos frescos
-    [chartBarras, chartDonut, chartLinea].forEach(c => c?.destroy());
-    chartBarras = chartDonut = chartLinea = null;
+    [chartBarras, chartDonut, chartLinea, chartPruebas].forEach(c => c?.destroy());
+    chartBarras = chartDonut = chartLinea = chartPruebas = null;
     await cargarTodosLosDatos();
     btn.classList.remove('spinning');
     btn.disabled = false;

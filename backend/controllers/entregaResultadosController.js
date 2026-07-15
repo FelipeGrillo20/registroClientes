@@ -47,6 +47,23 @@ exports.createEntrega = async (req, res) => {
   }
 };
 
+// GET /api/entrega-resultados  (listado completo — usado por el dashboard)
+exports.getAll = async (req, res) => {
+  try {
+    const userRol = req.user?.rol;
+    const esAdmin = userRol === 'admin' || userRol === 'administrador';
+    // Un profesional solo puede ver sus propios registros, sin importar
+    // qué venga en el query string. El admin puede ver todos o filtrar
+    // por ?profesional_id= para acotar a uno en particular.
+    const profesionalId = esAdmin ? (req.query.profesional_id || null) : req.user?.id;
+    const registros = await entregaModel.getAllEntregas(profesionalId);
+    res.json(registros);
+  } catch (err) {
+    console.error("Error al listar entregas:", err);
+    res.status(500).json({ message: "Error al obtener los registros" });
+  }
+};
+
 // GET /api/entrega-resultados/cliente/:clientId
 exports.getByCliente = async (req, res) => {
   try {

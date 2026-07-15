@@ -7,11 +7,33 @@
  * no desde el cliente.
  */
 
+// Formatea una fecha civil (YYYY-MM-DD, sin componente horario) a DD/MM/YYYY.
+// Trabaja directamente sobre el string — nunca construye un objeto Date —
+// para evitar el desfase de un día que introduce la conversión UTC/zona
+// horaria local cuando el servidor y el navegador están en husos distintos.
 function formatDateInforme(dateString) {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+  if (!dateString) return '-';
+  const partes = dateString.toString().substring(0, 10).split('-');
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+// Extrae año/mes/día de una fecha civil como enteros, sin pasar por Date.
+function parsePartesFecha(dateString) {
+  const partes = dateString.toString().substring(0, 10).split('-');
+  return {
+    year:  parseInt(partes[0], 10),
+    month: parseInt(partes[1], 10) - 1,
+    day:   parseInt(partes[2], 10),
+  };
+}
+
+// Fecha de HOY (momento real de generación) — sí usa Date porque es la
+// hora local genuina del navegador, no una fecha civil venida del servidor.
+function formatFechaActual() {
+  const hoy = new Date();
+  const day = String(hoy.getDate()).padStart(2, '0');
+  const month = String(hoy.getMonth() + 1).padStart(2, '0');
+  const year = hoy.getFullYear();
   return `${day}/${month}/${year}`;
 }
 
@@ -27,20 +49,20 @@ function escapeHtmlInforme(str) {
 function calcularEdadInforme(fechaNacimiento) {
   if (!fechaNacimiento) return null;
   const hoy = new Date();
-  const nac = new Date(fechaNacimiento);
-  let edad = hoy.getFullYear() - nac.getFullYear();
-  const m = hoy.getMonth() - nac.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  const nac = parsePartesFecha(fechaNacimiento);
+  let edad = hoy.getFullYear() - nac.year;
+  const m = hoy.getMonth() - nac.month;
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.day)) edad--;
   return edad;
 }
 
 function calcularTiempoLaboradoInforme(fechaIngreso) {
   if (!fechaIngreso) return null;
   const hoy = new Date();
-  const ingreso = new Date(fechaIngreso);
-  let anios = hoy.getFullYear() - ingreso.getFullYear();
-  let meses  = hoy.getMonth()    - ingreso.getMonth();
-  let dias   = hoy.getDate()     - ingreso.getDate();
+  const ingreso = parsePartesFecha(fechaIngreso);
+  let anios = hoy.getFullYear() - ingreso.year;
+  let meses  = hoy.getMonth()    - ingreso.month;
+  let dias   = hoy.getDate()     - ingreso.day;
   if (dias < 0) { meses--; dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate(); }
   if (meses < 0) { anios--; meses += 12; }
   const partes = [];
@@ -52,12 +74,15 @@ function calcularTiempoLaboradoInforme(fechaIngreso) {
   return partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1];
 }
 
-function calcularDiasEnProceso(fechaInicial, fechaFinal) {
-  const fecha1 = new Date(fechaInicial);
-  const fecha2 = new Date(fechaFinal);
-  fecha1.setHours(0, 0, 0, 0);
-  fecha2.setHours(0, 0, 0, 0);
-  const diferenciaDias = Math.floor((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
+// Recibe fechas civiles (YYYY-MM-DD) como strings. Se calcula la diferencia
+// con Date.UTC sobre año/mes/día explícitos, para que el resultado no
+// dependa del huso horario del navegador ni del servidor.
+function calcularDiasEnProceso(fechaInicialStr, fechaFinalStr) {
+  const f1 = parsePartesFecha(fechaInicialStr);
+  const f2 = parsePartesFecha(fechaFinalStr);
+  const utc1 = Date.UTC(f1.year, f1.month, f1.day);
+  const utc2 = Date.UTC(f2.year, f2.month, f2.day);
+  const diferenciaDias = Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
   return diferenciaDias === 0 ? 1 : diferenciaDias;
 }
 
@@ -139,17 +164,17 @@ window.generarInformePaciente = async function() {
     (total, s) => total + (parseInt(s.horas_sesion) || 1), 0
   );
 
-  const fechaInicial = new Date(sesionesConsulta[0].fecha);
-  const fechaCierre = new Date(fechaCierreConsulta);
+  const fechaInicialStr = sesionesConsulta[0].fecha;
 
-  const diasEnProceso = calcularDiasEnProceso(fechaInicial, fechaCierre);
+  const diasEnProceso = calcularDiasEnProceso(fechaInicialStr, fechaCierreConsulta);
 
   const mesesES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  const mesCierre = mesesES[fechaCierre.getMonth()];
-  const anioCierre = fechaCierre.getFullYear();
-  const fechaCierreFormateada = formatDateInforme(fechaCierre.toISOString());
+  const partesCierre = parsePartesFecha(fechaCierreConsulta);
+  const mesCierre = mesesES[partesCierre.month];
+  const anioCierre = partesCierre.year;
+  const fechaCierreFormateada = formatDateInforme(fechaCierreConsulta);
 
   // Obtener antecedentes de salud del cliente
   let antecedentes = [];
@@ -210,7 +235,7 @@ window.generarInformePaciente = async function() {
           </div>
           <div class="informe-fecha-generacion">
             <strong>Consulta N°:</strong> ${consultaNumberActual}<br>
-            <strong>Fecha de generación:</strong> ${formatDateInforme(new Date().toISOString())}
+            <strong>Fecha de generación:</strong> ${formatFechaActual()}
           </div>
         </div>
 
@@ -291,7 +316,7 @@ window.generarInformePaciente = async function() {
           </div>
           <div class="informe-cierre-info">
             <div class="cierre-item">
-              <strong>📅 Fecha de Inicio:</strong> ${formatDateInforme(fechaInicial.toISOString())}
+              <strong>📅 Fecha de Inicio:</strong> ${formatDateInforme(fechaInicialStr)}
             </div>
             <div class="cierre-item">
               <strong>📅 Fecha de Cierre:</strong> ${fechaCierreFormateada}

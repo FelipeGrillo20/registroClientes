@@ -6,25 +6,25 @@ exports.createEntrega = async (data) => {
   const {
     client_id,
     profesional_id,
-    fecha_aplicacion,
     fecha_retroalimentacion,
     titulo_seccion,
     recomendaciones_html,
+    pruebas_profundidad,
   } = data;
 
   const result = await pool.query(
     `INSERT INTO entrega_resultados
-      (client_id, profesional_id, fecha_aplicacion, fecha_retroalimentacion,
-       titulo_seccion, recomendaciones_html)
+      (client_id, profesional_id, fecha_retroalimentacion,
+       titulo_seccion, recomendaciones_html, pruebas_profundidad)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
     [
       client_id,
       profesional_id,
-      fecha_aplicacion || null,
       fecha_retroalimentacion || null,
-      titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR',
+      titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html || null,
+      pruebas_profundidad || 'Ninguna',
     ]
   );
   return result.rows[0];
@@ -70,10 +70,10 @@ exports.getEntregaById = async (id) => {
 // Actualizar un registro existente
 exports.updateEntrega = async (id, data) => {
   const {
-    fecha_aplicacion,
     fecha_retroalimentacion,
     titulo_seccion,
     recomendaciones_html,
+    pruebas_profundidad,
     profesional_id,       // opcional: si viene, reatribuir autoría al profesional correcto
   } = data;
 
@@ -81,18 +81,18 @@ exports.updateEntrega = async (id, data) => {
   if (profesional_id) {
     const result = await pool.query(
       `UPDATE entrega_resultados SET
-         fecha_aplicacion        = $1,
-         fecha_retroalimentacion = $2,
-         titulo_seccion          = $3,
-         recomendaciones_html    = $4,
+         fecha_retroalimentacion = $1,
+         titulo_seccion          = $2,
+         recomendaciones_html    = $3,
+         pruebas_profundidad     = $4,
          profesional_id          = $5
        WHERE id = $6
        RETURNING *`,
       [
-        fecha_aplicacion || null,
         fecha_retroalimentacion || null,
-        titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR',
+        titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
         recomendaciones_html || null,
+        pruebas_profundidad || 'Ninguna',
         profesional_id,
         id,
       ]
@@ -102,17 +102,17 @@ exports.updateEntrega = async (id, data) => {
 
   const result = await pool.query(
     `UPDATE entrega_resultados SET
-       fecha_aplicacion        = $1,
-       fecha_retroalimentacion = $2,
-       titulo_seccion          = $3,
-       recomendaciones_html    = $4
+       fecha_retroalimentacion = $1,
+       titulo_seccion          = $2,
+       recomendaciones_html    = $3,
+       pruebas_profundidad     = $4
      WHERE id = $5
      RETURNING *`,
     [
-      fecha_aplicacion || null,
       fecha_retroalimentacion || null,
-      titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR',
+      titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html || null,
+      pruebas_profundidad || 'Ninguna',
       id,
     ]
   );

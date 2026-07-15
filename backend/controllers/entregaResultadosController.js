@@ -13,10 +13,10 @@ exports.createEntrega = async (req, res) => {
     const {
       client_id,
       profesional_id: profesional_id_body,
-      fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      pruebas_profundidad,
     } = req.body;
 
     if (!client_id) {
@@ -34,10 +34,10 @@ exports.createEntrega = async (req, res) => {
     const nueva = await entregaModel.createEntrega({
       client_id,
       profesional_id,
-      fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      pruebas_profundidad,
     });
 
     res.status(201).json({ message: "Guardado exitosamente", data: nueva });
@@ -93,10 +93,10 @@ exports.updateEntrega = async (req, res) => {
     }
 
     const {
-      fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      pruebas_profundidad,
       profesional_id: profesional_id_body,
     } = req.body;
 
@@ -107,10 +107,10 @@ exports.updateEntrega = async (req, res) => {
       : existente.profesional_id;
 
     const actualizado = await entregaModel.updateEntrega(id, {
-      fecha_aplicacion,
       fecha_retroalimentacion,
       titulo_seccion,
       recomendaciones_html,
+      pruebas_profundidad,
       profesional_id: profesional_id_actualizado,
     });
 

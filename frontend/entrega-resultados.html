@@ -166,7 +166,7 @@
           <div class="perfil-estres-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
-          <h3 class="perfil-estres-title">Perfil Estrés</h3>
+          <h3 class="perfil-estres-title">Pruebas de profundidad</h3>
         </div>
 
         <div class="perfil-estres-body">
@@ -253,22 +253,16 @@
             <span class="auto-value" id="modalNombre">—</span>
           </div>
         </div>
-        <div class="modal-form-row">
-          <div class="modal-field-group">
-            <label class="modal-label">Fecha aplicación perfil del estrés</label>
-            <input type="date" class="modal-input" id="fechaAplicacion" />
-          </div>
-          <div class="modal-field-group">
-            <label class="modal-label">Fecha de retroalimentación</label>
-            <input type="date" class="modal-input" id="fechaRetroalimentacion" />
-          </div>
+        <div class="modal-field-group">
+          <label class="modal-label">Fecha de retroalimentación</label>
+          <input type="date" class="modal-input" id="fechaRetroalimentacion" />
         </div>
         <div class="modal-field-group">
           <label class="modal-label">Título de la sección</label>
-          <input type="text" class="modal-input" id="tituloSeccion" value="RECOMENDACIONES PARA EL TRABAJADOR" />
+          <input type="text" class="modal-input" id="tituloSeccion" value="RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL" />
         </div>
         <div class="modal-field-group">
-          <label class="modal-label">Recomendaciones / Mensaje</label>
+          <label class="modal-label">Descripción de los Hallazgos</label>
           <div class="editor-wrapper">
 
             <!-- Barra de herramientas -->
@@ -325,10 +319,20 @@
                  id="recomendaciones"
                  contenteditable="true"
                  spellcheck="true"
-                 data-placeholder="Escribe aquí las recomendaciones personalizadas para el trabajador...">
+                 data-placeholder="Escribe aquí la descripción de los hallazgos...">
             </div>
 
           </div><!-- /editor-wrapper -->
+        </div>
+        <div class="modal-field-group">
+          <label class="modal-label">PRUEBAS A PROFUNDIDAD</label>
+          <select class="modal-input" id="pruebasProfundidad">
+            <option value="Ninguna">Ninguna</option>
+            <option value="Analisis de puesto de trabajo">Analisis de puesto de trabajo</option>
+            <option value="Entrevista semi estructurada">Entrevista semi estructurada</option>
+            <option value="Grupo Focal">Grupo Focal</option>
+            <option value="Perfil Estres">Perfil Estres</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">

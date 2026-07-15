@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let todosLosTrabajadores     = [];
   let trabajadorSeleccionado   = null;
   let registroGuardadoId       = null;
+  // Se incrementa cada vez que se selecciona/limpia un trabajador.
+  // Las respuestas async (fetch) que lleguen fuera de orden y no coincidan
+  // con el valor vigente se descartan, para evitar que datos de un trabajador
+  // anterior sobreescriban el estado del trabajador actualmente seleccionado.
+  let seleccionTrabajadorId    = 0;
   // ID del profesional actualmente seleccionado en el selector.
   // Si el usuario ES profesional, es su propio id.
   // Si es admin, es el id del profesional que eligió en el dropdown.
@@ -59,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnEliminar     = document.getElementById('btnEliminar');
 
   // Referencias del modal — se resuelven la primera vez que se abre
-  let modalPlantilla, modalClose, modalNombre, fechaAplicacion, fechaRetro,
-      tituloSeccion, editorContent, btnGuardar, btnCancelar;
+  let modalPlantilla, modalClose, modalNombre, fechaRetro,
+      tituloSeccion, editorContent, pruebasProfundidad, btnGuardar, btnCancelar;
   let modalIniciado = false;
 
   // ============================================================
@@ -240,9 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
     trabajadorSeleccionado = { id, nombre, cedula, telefono };
     registroGuardadoId = null;
     actionsPanel.style.display = 'none';
+
+    // Cada selección invalida las respuestas pendientes de la anterior
+    const solicitudId = ++seleccionTrabajadorId;
+
     mostrarTarjetaTrabajador(nombre, cedula, telefono);
-    mostrarPerfilEstresCard();
-    cargarRegistroExistente(id);
+    mostrarPerfilEstresCard(solicitudId);
+    cargarRegistroExistente(id, solicitudId);
   }
 
   trabSearch.addEventListener('input', () => {
@@ -269,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Consulta si el trabajador ya tiene un registro guardado en entrega_resultados
-  async function cargarRegistroExistente(clientId) {
+  async function cargarRegistroExistente(clientId, solicitudId) {
     try {
       const res = await fetch(
         `${API_URL}/api/entrega-resultados/cliente/${clientId}`,
@@ -278,6 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) return;
 
       const data = await res.json();
+      // Si el usuario ya cambió de trabajador mientras esta petición estaba
+      // en vuelo, descartamos la respuesta para no pisar el estado actual
+      if (solicitudId !== seleccionTrabajadorId) return;
+
       // El endpoint devuelve array ordenado por fecha desc — tomamos el más reciente
       if (Array.isArray(data) && data.length > 0) {
         registroGuardadoId = data[0].id;
@@ -296,6 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
     trabOptions.innerHTML = `<div class="option-empty">Selecciona un profesional primero</div>`;
     todosLosTrabajadores  = [];
     trabajadorSeleccionado = null;
+    registroGuardadoId     = null;
+    urlPerfilGuardado      = null;
+    // Invalida cualquier respuesta pendiente de la selección anterior
+    seleccionTrabajadorId++;
     workerCard.style.display = 'none';
     perfilEstresCard.style.display = 'none';
   }
@@ -316,10 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
     modalPlantilla  = document.getElementById('modalPlantilla');
     modalClose      = document.getElementById('modalClose');
     modalNombre     = document.getElementById('modalNombre');
-    fechaAplicacion = document.getElementById('fechaAplicacion');
     fechaRetro      = document.getElementById('fechaRetroalimentacion');
     tituloSeccion   = document.getElementById('tituloSeccion');
     editorContent   = document.getElementById('recomendaciones');
+    pruebasProfundidad = document.getElementById('pruebasProfundidad');
     btnGuardar      = document.getElementById('btnGuardar');
     btnCancelar     = document.getElementById('btnCancelar');
 
@@ -329,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGuardar.addEventListener('click', guardarRegistro);
 
     // Limpiar borde rojo al empezar a llenar cada campo
-    fechaAplicacion.addEventListener('change', () => fechaAplicacion.style.borderColor = '');
     fechaRetro.addEventListener('change',      () => fechaRetro.style.borderColor = '');
     tituloSeccion.addEventListener('input',    () => tituloSeccion.style.borderColor = '');
     editorContent.addEventListener('input',    () => editorContent.style.borderColor = '');
@@ -437,10 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function limpiarModal() {
-    fechaAplicacion.value   = '';
-    fechaRetro.value        = '';
-    tituloSeccion.value     = 'RECOMENDACIONES PARA EL TRABAJADOR';
-    editorContent.innerHTML = '';
+    fechaRetro.value          = '';
+    tituloSeccion.value       = 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
+    editorContent.innerHTML   = '';
+    pruebasProfundidad.value  = 'Ninguna';
   }
 
   // ============================================================
@@ -452,9 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Validación de campos obligatorios ──────────────────────
     const camposVacios = [];
 
-    if (!fechaAplicacion.value)
-      camposVacios.push('Fecha aplicación perfil del estrés');
-
     if (!fechaRetro.value)
       camposVacios.push('Fecha de retroalimentación');
 
@@ -462,11 +475,10 @@ document.addEventListener('DOMContentLoaded', () => {
       camposVacios.push('Título de la sección');
 
     if (!editorContent.innerText.trim())
-      camposVacios.push('Recomendaciones / Mensaje');
+      camposVacios.push('Descripción de los Hallazgos');
 
     if (camposVacios.length > 0) {
       // Resaltar campos vacíos
-      fechaAplicacion.style.borderColor  = !fechaAplicacion.value  ? '#dc2626' : '';
       fechaRetro.style.borderColor       = !fechaRetro.value       ? '#dc2626' : '';
       tituloSeccion.style.borderColor    = !tituloSeccion.value.trim() ? '#dc2626' : '';
       editorContent.style.borderColor    = !editorContent.innerText.trim() ? '#dc2626' : '';
@@ -479,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Limpiar resaltado si todo está bien
-    fechaAplicacion.style.borderColor  = '';
     fechaRetro.style.borderColor       = '';
     tituloSeccion.style.borderColor    = '';
     editorContent.style.borderColor    = '';
@@ -493,10 +504,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = {
       client_id:               trabajadorSeleccionado.id,
       profesional_id:          profesionalSeleccionadoId || userId,
-      fecha_aplicacion:        fechaAplicacion.value  || null,
       fecha_retroalimentacion: fechaRetro.value       || null,
-      titulo_seccion:          tituloSeccion.value.trim() || 'RECOMENDACIONES PARA EL TRABAJADOR',
+      titulo_seccion:          tituloSeccion.value.trim() || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL',
       recomendaciones_html:    editorContent.innerHTML.trim(),
+      pruebas_profundidad:     pruebasProfundidad.value || 'Ninguna',
     };
 
     try {
@@ -566,10 +577,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       initModal();
       modalNombre.textContent    = trabajadorSeleccionado.nombre;
-      fechaAplicacion.value      = data.fecha_aplicacion?.slice(0,10) || '';
       fechaRetro.value           = data.fecha_retroalimentacion?.slice(0,10) || '';
-      tituloSeccion.value        = data.titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR';
+      tituloSeccion.value        = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML    = data.recomendaciones_html || '';
+      pruebasProfundidad.value   = data.pruebas_profundidad || 'Ninguna';
       modalPlantilla.style.display = 'flex';
       document.body.style.overflow = 'hidden';
     } catch (err) {
@@ -604,10 +615,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const res  = await fetch(`${API_URL}/api/entrega-resultados/${registroGuardadoId}`, { headers: headers() });
       const data = await res.json();
       initModal();
-      fechaAplicacion.value   = data.fecha_aplicacion?.slice(0,10) || '';
       fechaRetro.value        = data.fecha_retroalimentacion?.slice(0,10) || '';
-      tituloSeccion.value     = data.titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR';
+      tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
+      pruebasProfundidad.value = data.pruebas_profundidad || 'Ninguna';
       generarYDescargarPDF('ver');
     } catch (err) {
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -623,10 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const res  = await fetch(`${API_URL}/api/entrega-resultados/${registroGuardadoId}`, { headers: headers() });
       const data = await res.json();
       initModal();
-      fechaAplicacion.value   = data.fecha_aplicacion?.slice(0,10) || '';
       fechaRetro.value        = data.fecha_retroalimentacion?.slice(0,10) || '';
-      tituloSeccion.value     = data.titulo_seccion || 'RECOMENDACIONES PARA EL TRABAJADOR';
+      tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
+      pruebasProfundidad.value = data.pruebas_profundidad || 'Ninguna';
       generarYDescargarPDF('descargar');
     } catch (err) {
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -679,26 +690,29 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.text(`Nombre: ${trabajadorSeleccionado.nombre}`, marginL, y);
     y += 7;
 
-    const fecApl   = fechaAplicacion.value ? formatearFecha(fechaAplicacion.value)  : '_______________';
-    const fecRetro = fechaRetro.value      ? formatearFecha(fechaRetro.value)        : '_______________';
-    doc.text(`Fecha aplicación perfil del estrés: ${fecApl}`, marginL, y);
-    y += 7;
+    const fecRetro = fechaRetro.value ? formatearFecha(fechaRetro.value) : '_______________';
     doc.text(`Fecha de retroalimentación: ${fecRetro}`, marginL, y);
     y += 18;
 
-    // Título de sección
-    const titulo = tituloSeccion.value.trim() || 'RECOMENDACIONES PARA EL TRABAJADOR';
+    // Título de sección (con wrap por si el texto es largo)
+    const titulo = tituloSeccion.value.trim() || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(40, 40, 40);
-    doc.text(titulo, marginL, y);
-    const tituloAncho = doc.getTextWidth(titulo);
-    doc.setDrawColor(40, 40, 40);
-    doc.setLineWidth(0.4);
-    doc.line(marginL, y + 1.5, marginL + tituloAncho, y + 1.5);
-    y += 10;
+    const tituloLineas = doc.splitTextToSize(titulo, contentW);
+    tituloLineas.forEach((linea, idx) => {
+      doc.text(linea, marginL, y);
+      if (idx === tituloLineas.length - 1) {
+        const anchoLinea = doc.getTextWidth(linea);
+        doc.setDrawColor(40, 40, 40);
+        doc.setLineWidth(0.4);
+        doc.line(marginL, y + 1.5, marginL + anchoLinea, y + 1.5);
+      }
+      y += 6;
+    });
+    y += 4;
 
-    // Recomendaciones
+    // Descripción de los Hallazgos
     doc.setFontSize(11);
     doc.setTextColor(50, 50, 50);
     if (editorContent.innerHTML.trim()) {
@@ -706,6 +720,19 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       y += 10;
     }
+
+    // Pruebas a profundidad
+    if (y > pageH - 55) { doc.addPage(); y = 25; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('PRUEBAS A PROFUNDIDAD', marginL, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(50, 50, 50);
+    doc.text(pruebasProfundidad.value || 'Ninguna', marginL, y);
+    y += 10;
 
     // Firma — imagen o línea de fallback
     if (y > pageH - 55) { doc.addPage(); y = 30; }
@@ -1068,24 +1095,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return base;
   }
 
-  function mostrarPerfilEstresCard() {
+  function mostrarPerfilEstresCard(solicitudId) {
     perfilEstresCard.style.display = 'block';
     resetPerfilEstres();
     // Verificar si el trabajador ya tiene un Perfil Estrés cargado
-    cargarPerfilEstresExistente();
+    cargarPerfilEstresExistente(solicitudId);
   }
 
-  async function cargarPerfilEstresExistente() {
+  async function cargarPerfilEstresExistente(solicitudId) {
     if (!trabajadorSeleccionado) return;
+    const clientId = trabajadorSeleccionado.id;
     try {
       const res = await fetch(
-        `${API_URL}/api/clients/${trabajadorSeleccionado.id}/documentos`,
+        `${API_URL}/api/clients/${clientId}/documentos`,
         { headers: { 'Authorization': `Bearer ${getToken()}` } }
       );
       if (!res.ok) return;
       const data = await res.json();
+      // Si el usuario ya cambió de trabajador mientras esta petición estaba
+      // en vuelo, descartamos la respuesta para no pisar el estado actual
+      if (solicitudId !== seleccionTrabajadorId) return;
       if (data.perfil_estres) {
-        urlPerfilGuardado = `${API_URL}/${data.perfil_estres}`;
+        // Se sirve por un endpoint autenticado (no la ruta pública /uploads)
+        urlPerfilGuardado = `${API_URL}/api/clients/${clientId}/documentos/perfil-estres/archivo`;
         fileSavedName.textContent = nombreOriginalArchivo(data.perfil_estres);
         uploadZone.style.display  = 'none';
         fileSaved.style.display   = 'flex';
@@ -1192,11 +1224,10 @@ document.addEventListener('DOMContentLoaded', () => {
       );
 
       if (!res.ok) throw new Error('Error al subir el archivo');
-      const data = await res.json();
+      await res.json();
 
-      urlPerfilGuardado = data.perfil_estres
-        ? `${API_URL}/${data.perfil_estres}`
-        : data.url || data.ruta || data.path || '';
+      // Se sirve por un endpoint autenticado (no la ruta pública /uploads)
+      urlPerfilGuardado = `${API_URL}/api/clients/${trabajadorSeleccionado.id}/documentos/perfil-estres/archivo`;
       fileSavedName.textContent = archivoSeleccionado.name;
       archivoSeleccionado = null;
       // No manipular el input[type=file] tras la subida —
@@ -1218,9 +1249,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Ver PDF guardado
-  btnVerPerfil.addEventListener('click', () => {
-    if (urlPerfilGuardado) window.open(urlPerfilGuardado, '_blank');
+  // Ver PDF guardado — requiere Authorization, por eso no se abre la URL directo
+  // (window.open no puede mandar headers custom)
+  btnVerPerfil.addEventListener('click', async () => {
+    if (!urlPerfilGuardado) return;
+    try {
+      const res = await fetch(urlPerfilGuardado, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) throw new Error('Error al abrir el archivo');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      console.error(err);
+      mostrarToast('❌ Error al abrir el archivo', 'error');
+    }
   });
 
   btnDescargarPerfil.addEventListener('click', async () => {

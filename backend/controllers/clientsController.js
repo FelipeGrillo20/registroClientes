@@ -610,6 +610,47 @@ exports.deleteDocumento = async (req, res) => {
     res.status(500).json({ message: "Error al eliminar documento" });
   }
 };
+
+// Servir el archivo de Perfil Estrés solo a usuarios autenticados con permiso
+// sobre el cliente (a diferencia de /uploads, que es público y sin control de acceso)
+exports.getPerfilEstresArchivo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const clientModel = require("../models/clientModel");
+    const cliente = await clientModel.getClientById(id);
+
+    if (!cliente) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+
+    if (userRole !== 'admin' && cliente.profesional_id !== userId) {
+      return res.status(403).json({ message: "No tienes permiso para ver este documento" });
+    }
+
+    if (!cliente.perfil_estres) {
+      return res.status(404).json({ message: "Este cliente no tiene Perfil Estrés cargado" });
+    }
+
+    const path = require('path');
+    const fs = require('fs');
+    const rutaCompleta = path.join(__dirname, '..', cliente.perfil_estres);
+
+    if (!fs.existsSync(rutaCompleta)) {
+      return res.status(404).json({ message: "El archivo ya no existe en el servidor" });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(rutaCompleta);
+  } catch (err) {
+    console.error("Error sirviendo Perfil Estrés:", err);
+    res.status(500).json({ message: "Error al obtener el documento" });
+  }
+};
 // ============================================================
 // ⭐ NUEVAS FUNCIONES: ANTECEDENTES DE SALUD
 // ============================================================

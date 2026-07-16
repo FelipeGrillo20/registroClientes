@@ -93,6 +93,9 @@ router.post("/:id/documentos", upload.single('documento'), clientsController.upl
 // Obtener documentos del cliente
 router.get("/:id/documentos", clientsController.getDocumentos);
 
+// Servir el archivo de Perfil Estrés (requiere auth + permiso, a diferencia de /uploads)
+router.get("/:id/documentos/perfil-estres/archivo", clientsController.getPerfilEstresArchivo);
+
 // Eliminar documento específico
 router.delete("/:id/documentos/:tipo", clientsController.deleteDocumento);
 

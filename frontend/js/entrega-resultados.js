@@ -621,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
       generarYDescargarPDF('ver');
     } catch (err) {
+      console.error('Error al cargar/generar el documento (Ver documento):', err);
       mostrarToast('❌ Error al cargar el documento', 'error');
     }
   });
@@ -640,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
       generarYDescargarPDF('descargar');
     } catch (err) {
+      console.error('Error al cargar/generar el documento (Descargar PDF):', err);
       mostrarToast('❌ Error al cargar el documento', 'error');
     }
   });

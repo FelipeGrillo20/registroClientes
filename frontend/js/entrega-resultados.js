@@ -1326,9 +1326,14 @@ document.addEventListener('DOMContentLoaded', () => {
   async function precargarImagenes() {
     // Logo
     try {
-      const res  = await fetch('img/logo/stconsultores.png');
-      const blob = await res.blob();
-      logoBase64 = await blobToBase64(blob);
+      const res = await fetch('img/logo/stconsultores.png');
+      const esImagen = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
+      if (esImagen) {
+        const blob = await res.blob();
+        logoBase64 = await blobToBase64(blob);
+      } else {
+        console.warn('Logo no encontrado o inválido');
+      }
     } catch (err) {
       console.warn('Logo no encontrado:', err);
     }
@@ -1338,11 +1343,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const cedula = currentUser.cedula;
       if (cedula) {
         const res  = await fetch(`img/firmas/firma_${cedula}.png`);
-        if (res.ok) {
+        // Algunos servidores devuelven 200 con una página HTML de fallback
+        // en vez de un 404 real cuando el archivo no existe — por eso no basta
+        // con revisar res.ok, también hay que confirmar que el contenido sea
+        // realmente una imagen antes de usarlo (si no, jsPDF truena al armar el PDF).
+        const esImagen = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
+        if (esImagen) {
           const blob = await res.blob();
           firmaBase64 = await blobToBase64(blob);
         } else {
-          console.warn(`Firma no encontrada para cédula: ${cedula}`);
+          console.warn(`Firma no encontrada o inválida para cédula: ${cedula}`);
         }
       }
     } catch (err) {

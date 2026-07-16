@@ -47,6 +47,31 @@ document.addEventListener('DOMContentLoaded', () => {
     'Asistir Actividades P&P', 'No asistio',
   ];
 
+  // Color fijo por categoría (mismo color en la torta y en el desglose
+  // por profesional, para que ambas vistas se lean como el mismo sistema)
+  const PRUEBAS_PROFUNDIDAD_COLORES = {
+    'Incapacidad':              '#5B8AF0',
+    'Vacaciones':                '#52b788',
+    'Licencias':                 '#f4a261',
+    'Retiro':                    '#e07a9e',
+    'IPT':                       '#a8a0d8',
+    'Entrevista Semi':           '#f6c945',
+    'Grupo Focal':               '#4dd0e1',
+    'Perfil Estres':             '#ff8a65',
+    'Asistir Actividades P&P':   '#9575cd',
+    'No asistio':                '#607d8b',
+  };
+  function colorPruebaProfundidad(cat) {
+    return PRUEBAS_PROFUNDIDAD_COLORES[cat] || '#bdbdbd';
+  }
+
+  // "No asistio" es el único valor que no implica que se esperara algún
+  // seguimiento/evidencia — todas las demás opciones sí cuentan como
+  // seguimiento activo sobre el trabajador.
+  function tieneSeguimiento(entrega) {
+    return !!entrega.pruebas_profundidad && entrega.pruebas_profundidad !== 'No asistio';
+  }
+
   // ============================================================
   // HELPERS
   // ============================================================
@@ -316,12 +341,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalTrabajadores      = clientes.length;
     const profActivos            = new Set(entregas.map(e => e.profesional_id)).size;
     const profSinEntregas        = Math.max(0, allProfesionales.length - profActivos);
-    // Perfiles estrés: contamos clientes únicos con perfil (no duplicar por múltiples entregas)
-    const clientesConPerfil = new Set(
-      entregas.filter(e => e._tiene_perfil).map(e => e.client_id)
+    // Seguimiento (pruebas a profundidad ≠ "No asistio"): contamos clientes
+    // únicos con al menos un seguimiento registrado (no duplicar por múltiples entregas)
+    const clientesConSeguimiento = new Set(
+      entregas.filter(tieneSeguimiento).map(e => e.client_id)
     ).size;
     const coberturaPct = totalTrabajadores
-      ? Math.round(clientesConPerfil / totalTrabajadores * 100) : 0;
+      ? Math.round(clientesConSeguimiento / totalTrabajadores * 100) : 0;
     const conRetro = entregas.filter(e => e.fecha_retroalimentacion).length;
 
     // Variación mensual
@@ -376,8 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
                    <circle cx="12" cy="7" r="4"/>`,
       },
       {
-        label: 'Perfiles estrés subidos',
-        value: clientesConPerfil,
+        label: 'Con seguimiento registrado',
+        value: clientesConSeguimiento,
         badge: { cls: coberturaPct >= 60 ? 'badge-green' : 'badge-amber', text: `${coberturaPct}% cobertura` },
         iconBg: '#ede7f6', iconColor: '#4527a0',
         iconPath: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -416,19 +442,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Estados ───────────────────────────────────────────────────
   function renderEstados(entregas, clientes) {
-    // Con plantilla Y perfil estrés
+    // Con plantilla Y seguimiento (pruebas a profundidad ≠ "No asistio")
     const clientesConEntrega = new Set(entregas.map(e => e.client_id));
-    const conTodo = [...clientesConEntrega].filter(cid => {
-      const tieneEntrega = entregas.some(e => String(e.client_id) === String(cid) && e.recomendaciones_html);
-      const c = allClientes.find(c => String(c.id) === String(cid));
-      return tieneEntrega && c?._tiene_perfil;
+    const conSeguimiento = [...clientesConEntrega].filter(cid => {
+      const entregasCliente = entregas.filter(e => String(e.client_id) === String(cid));
+      const tieneEntrega = entregasCliente.some(e => e.recomendaciones_html);
+      const tieneSeg = entregasCliente.some(tieneSeguimiento);
+      return tieneEntrega && tieneSeg;
     }).length;
 
-    // Tiene entrega (plantilla) pero SIN perfil
-    const sinPerfil = [...clientesConEntrega].filter(cid => {
-      const tieneEntrega = entregas.some(e => String(e.client_id) === String(cid) && e.recomendaciones_html);
-      const c = allClientes.find(c => String(c.id) === String(cid));
-      return tieneEntrega && !c?._tiene_perfil;
+    // Tiene entrega (plantilla) pero SIN seguimiento (todas sus entregas son "No asistio")
+    const sinSeguimiento = [...clientesConEntrega].filter(cid => {
+      const entregasCliente = entregas.filter(e => String(e.client_id) === String(cid));
+      const tieneEntrega = entregasCliente.some(e => e.recomendaciones_html);
+      const tieneSeg = entregasCliente.some(tieneSeguimiento);
+      return tieneEntrega && !tieneSeg;
     }).length;
 
     // Clientes sin ninguna entrega registrada
@@ -436,12 +464,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('statusGrid').innerHTML = `
       <div class="status-card s-complete">
-        <div class="status-n">${conTodo}</div>
-        <div class="status-lbl">Con plantilla y perfil estrés</div>
+        <div class="status-n">${conSeguimiento}</div>
+        <div class="status-lbl">Con plantilla y seguimiento</div>
       </div>
       <div class="status-card s-pending">
-        <div class="status-n">${sinPerfil}</div>
-        <div class="status-lbl">Plantilla sin perfil estrés</div>
+        <div class="status-n">${sinSeguimiento}</div>
+        <div class="status-lbl">Plantilla sin seguimiento</div>
       </div>
       <div class="status-card s-missing">
         <div class="status-n">${sinEntrega}</div>
@@ -561,18 +589,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const labels  = Object.keys(cats).filter(k => cats[k] > 0);
     const valores = labels.map(l => cats[l]);
-    const colores = ['#5B8AF0','#52b788','#f4a261','#e07a9e','#a8a0d8','#f6c945','#4dd0e1','#ff8a65','#9575cd','#607d8b','#bdbdbd'];
-    const total   = valores.reduce((a,b)=>a+b,0);
+    const total = valores.reduce((a,b)=>a+b,0);
 
     document.getElementById('pruebasLegend').innerHTML = labels.map((l,i) => {
       const pct = total ? Math.round(valores[i]/total*100) : 0;
       return `<div class="dl-row">
-        <span class="dl-left"><span class="legend-dot" style="background:${colores[i % colores.length]}"></span>${l}</span>
+        <span class="dl-left"><span class="legend-dot" style="background:${colorPruebaProfundidad(l)}"></span>${l}</span>
         <span class="dl-val">${pct}%</span>
       </div>`;
     }).join('');
 
-    const backgroundColor = labels.map((_, i) => colores[i % colores.length]);
+    const backgroundColor = labels.map(colorPruebaProfundidad);
 
     if (chartPruebas) {
       chartPruebas.data.labels                      = labels;
@@ -649,13 +676,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapa  = {};
 
     // Inicializar con todos los profesionales conocidos
-    allProfesionales.forEach(p => { mapa[p.id] = { nombre:p.nombre, entregas:0, conPerfil:0 }; });
+    allProfesionales.forEach(p => { mapa[p.id] = { nombre:p.nombre, entregas:0, conSeguimiento:0 }; });
 
     entregas.forEach(e => {
       const pid = e.profesional_id;
-      if (!mapa[pid]) mapa[pid] = { nombre: e.profesional_nombre || `Prof. ${pid}`, entregas:0, conPerfil:0 };
+      if (!mapa[pid]) mapa[pid] = { nombre: e.profesional_nombre || `Prof. ${pid}`, entregas:0, conSeguimiento:0 };
       mapa[pid].entregas++;
-      if (e._tiene_perfil) mapa[pid].conPerfil++;
+      if (tieneSeguimiento(e)) mapa[pid].conSeguimiento++;
     });
 
     const lista = Object.values(mapa).filter(p => p.entregas > 0)
@@ -666,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     tbody.innerHTML = lista.map(p => {
-      const pct    = p.entregas ? Math.round(p.conPerfil / p.entregas * 100) : 0;
+      const pct    = p.entregas ? Math.round(p.conSeguimiento / p.entregas * 100) : 0;
       const cls    = pct >= 80 ? 'pill-green' : pct >= 55 ? 'pill-amber' : 'pill-red';
       return `<tr>
         <td><div class="td-prof"><div class="prof-avatar">${getIniciales(p.nombre)}</div>${p.nombre}</div></td>
@@ -711,16 +738,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  // ── Barras de cobertura ───────────────────────────────────────
+  // ── Pruebas a profundidad por profesional (desglose por categoría) ────
+  // Antes esta sección solo medía "Perfil Estrés" (un único valor posible).
+  // Ahora "pruebas_profundidad" tiene 10 categorías, así que por cada
+  // profesional mostramos una barra apilada con la proporción de cada una,
+  // más una lista de conteos/porcentaje debajo.
   function renderBarrasCobertura(entregas) {
     const lista = document.getElementById('barList');
     const mapa  = {};
-    allProfesionales.forEach(p => { mapa[p.id] = { nombre:p.nombre, total:0, conPerfil:0 }; });
+    allProfesionales.forEach(p => { mapa[p.id] = { nombre:p.nombre, total:0, categorias:{} }; });
     entregas.forEach(e => {
       const pid = e.profesional_id;
-      if (!mapa[pid]) mapa[pid] = { nombre:e.profesional_nombre||`Prof. ${pid}`, total:0, conPerfil:0 };
+      if (!mapa[pid]) mapa[pid] = { nombre:e.profesional_nombre||`Prof. ${pid}`, total:0, categorias:{} };
+      const cat = e.pruebas_profundidad || 'No asistio';
       mapa[pid].total++;
-      if (e._tiene_perfil) mapa[pid].conPerfil++;
+      mapa[pid].categorias[cat] = (mapa[pid].categorias[cat] || 0) + 1;
     });
 
     const datos = Object.values(mapa).filter(p => p.total > 0).sort((a,b) => b.total - a.total);
@@ -728,17 +760,37 @@ document.addEventListener('DOMContentLoaded', () => {
       lista.innerHTML = `<p style="font-size:13px;color:#9aa3b5;text-align:center;padding:16px 0">Sin datos disponibles</p>`;
       return;
     }
+
     lista.innerHTML = datos.map(p => {
-      const pct   = Math.round(p.conPerfil / p.total * 100);
-      const color = pct >= 80 ? '#52b788' : pct >= 55 ? '#f4a261' : '#e05252';
+      // Categorías del catálogo conocido, en su orden fijo, más cualquier
+      // valor legado que ya no esté en el catálogo (por compatibilidad).
+      const categoriasPresentes = PRUEBAS_PROFUNDIDAD_ORDEN.filter(cat => p.categorias[cat] > 0);
+      Object.keys(p.categorias).forEach(cat => {
+        if (!PRUEBAS_PROFUNDIDAD_ORDEN.includes(cat)) categoriasPresentes.push(cat);
+      });
+
+      const segmentos = categoriasPresentes.map(cat => {
+        const n   = p.categorias[cat];
+        const pct = Math.round(n / p.total * 100);
+        const color = colorPruebaProfundidad(cat);
+        return { cat, n, pct, color };
+      });
+
+      const track = segmentos.map(s =>
+        `<div class="bar-segment" style="width:${s.pct}%;background:${s.color}" title="${s.cat}: ${s.n} (${s.pct}%)"></div>`
+      ).join('');
+
+      const chips = segmentos.map(s =>
+        `<span class="bar-chip"><span class="legend-dot" style="background:${s.color}"></span>${s.cat} · ${s.n} (${s.pct}%)</span>`
+      ).join('');
+
       return `<div class="bar-row">
         <div class="bar-meta">
           <span class="bar-name">${p.nombre}</span>
-          <span class="bar-stat">${p.conPerfil} / ${p.total} · ${pct}%</span>
+          <span class="bar-stat">${p.total} ${p.total === 1 ? 'entrega' : 'entregas'}</span>
         </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${pct}%;background:${color}"></div>
-        </div>
+        <div class="bar-track stacked">${track}</div>
+        <div class="bar-chips">${chips}</div>
       </div>`;
     }).join('');
   }

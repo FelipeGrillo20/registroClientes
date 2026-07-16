@@ -360,6 +360,15 @@ body {
 .bar-track { height:7px; background:#edf0f7; border-radius:4px; overflow:hidden; }
 .bar-fill  { height:100%; border-radius:4px; transition:width .7s cubic-bezier(.4,0,.2,1); }
 
+/* Variante apilada: varios segmentos de color (uno por categoría) en una misma barra */
+.bar-track.stacked { display:flex; }
+.bar-segment { height:100%; transition:width .7s cubic-bezier(.4,0,.2,1); }
+
+/* Chips de conteo por categoría, debajo de la barra apilada */
+.bar-chips { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:2px; }
+.bar-chip  { display:flex; align-items:center; gap:5px; font-size:11px; color:#6b7a99; }
+.bar-chip .legend-dot { width:8px; height:8px; }
+
 /* ====== FOOTER ====== */
 .footer-section { padding:18px 0 4px; text-align:center; }
 .footer-text    { color:rgba(255,255,255,.55); font-size:12px; }

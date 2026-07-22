@@ -94,21 +94,88 @@ function verificarModalidadSeleccionada() {
   const modalidadSeleccionada = localStorage.getItem('modalidadSeleccionada');
   const indicador = document.getElementById('modalidadIndicador');
   const modalidadNombre = document.getElementById('modalidadNombre');
-  
+  const selectorRapido = document.getElementById('selectorModalidadRapido');
+  const selectorTitulo = document.getElementById('selectorModalidadTitulo');
+
   if (!modalidadSeleccionada) {
-    // Si no hay modalidad seleccionada, redirigir a la página de selección
-    alert('⚠️ Debes seleccionar una modalidad antes de registrar trabajadores');
-    window.location.href = 'modalidad.html';
+    // Sin modalidad todavía: mostrar solo el selector, con el texto de instrucción inicial.
+    if (indicador) indicador.style.display = 'none';
+    if (selectorRapido) selectorRapido.style.display = 'flex';
+    if (selectorTitulo) {
+      selectorTitulo.textContent = '📌 Antes de registrar, selecciona con qué modalidad vas a atender a este trabajador:';
+    }
     return null;
   }
-  
-  // Mostrar el indicador de modalidad
+
+  // ✅ Ya hay modalidad elegida: el selector se queda visible (con el texto
+  // "Cambiar de modalidad") para que el profesional pueda corregirla si se
+  // equivocó, en vez de desaparecer.
+  if (selectorRapido) selectorRapido.style.display = 'flex';
+  if (selectorTitulo) selectorTitulo.textContent = '🔄 Cambiar de modalidad';
   if (indicador && modalidadNombre) {
     modalidadNombre.textContent = modalidadSeleccionada;
     indicador.style.display = 'flex';
   }
-  
+
+  // Marcar visualmente cuál de las opciones es la activa
+  document.querySelectorAll('.btn-modalidad-rapida').forEach(btn => {
+    btn.classList.toggle('activo', btn.dataset.modalidad === modalidadSeleccionada);
+  });
+
   return modalidadSeleccionada;
+}
+
+// ✅ NUEVO: ¿el formulario ya tiene algo escrito? — se usa para avisar antes
+// de borrar todo al cambiar de modalidad
+function formTieneDatos() {
+  const ids = [
+    'cedula', 'name', 'vinculo', 'sede', 'entidadPagadora', 'empresaUsuario',
+    'subcontratista', 'email', 'phone', 'fechaNacimiento', 'direccion',
+    'estadoCivil', 'fechaIngreso', 'cargo', 'sexo'
+  ];
+  return ids.some(id => {
+    const el = document.getElementById(id);
+    return !!(el && el.value && el.value.trim() !== '');
+  });
+}
+
+// ✅ NUEVO: Botones del selector rápido de modalidad
+function setupSelectorModalidadRapido() {
+  document.querySelectorAll('.btn-modalidad-rapida').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalidad = btn.dataset.modalidad;
+      const destino = btn.dataset.navega;
+      const modalidadActual = localStorage.getItem('modalidadSeleccionada');
+
+      // Ya está en esa modalidad — no hay nada que cambiar
+      if (modalidad === modalidadActual) return;
+
+      // Si ya se escribió algo en el formulario, confirmar antes de borrarlo
+      if (formTieneDatos()) {
+        const confirmar = confirm(
+          '¿Cambiar de modalidad?\n\nLos datos que ya escribiste en el formulario se van a borrar.'
+        );
+        if (!confirmar) return;
+        form.reset();
+        resetForm();
+      }
+
+      localStorage.setItem('modalidadSeleccionada', modalidad);
+
+      // "Entrega Individual de Resultados" no se registra desde este
+      // formulario — su flujo vive en entrega-resultados.html.
+      if (destino) {
+        window.location.href = destino;
+        return;
+      }
+
+      // Orientación Psicosocial / SVE: seguir en esta misma página
+      verificarModalidadSeleccionada();
+      // Refrescar partes del formulario que dependen de la modalidad
+      setupCamposSVE();
+      actualizarObligatoriedadCargo(document.getElementById('vinculo')?.value || '');
+    });
+  });
 }
 
 // ============================================
@@ -763,8 +830,16 @@ window.addEventListener('DOMContentLoaded', () => {
   setupBotonAgendarCita(); // ✅ NUEVO: Inicializar botón Agendar Cita
   initializeSearchableSelects();
   setupCamposFamiliarTrabajador(); // ✅ NUEVO: Inicializar campos condicionales
+  setupSelectorModalidadRapido(); // ✅ NUEVO: Selector rápido de modalidad en la misma página
   setupCamposSVE(); // ✅ NUEVO: Mostrar/ocultar campos SVE según modalidad
   actualizarObligatoriedadCargo(document.getElementById('vinculo')?.value || '');
+
+  // ✅ NUEVO: Al ir a modalidad.html desde el propio formulario de registro,
+  // marcar que se está cambiando de modalidad para seguir registrando (para
+  // que modalidad.html regrese a index.html en vez de mandar a clientes.html)
+  document.getElementById('btnSeleccionarModalidadRegistro')?.addEventListener('click', () => {
+    sessionStorage.setItem('origenBusqueda', 'registro');
+  });
 });
 
 function initializeSearchableSelects() {
@@ -799,8 +874,8 @@ function initializeForm() {
       // ✅ NUEVO: Obtener modalidad seleccionada
       const modalidadActual = localStorage.getItem('modalidadSeleccionada');
       if (!modalidadActual) {
-        alert("⚠️ Debes seleccionar una modalidad primero");
-        window.location.href = 'modalidad.html';
+        alert("⚠️ Selecciona primero la modalidad arriba del formulario");
+        document.getElementById('selectorModalidadRapido')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
@@ -1072,8 +1147,8 @@ form.addEventListener("submit", async (e) => {
   // ✅ NUEVO: Obtener modalidad del localStorage
   const modalidad = localStorage.getItem('modalidadSeleccionada');
   if (!modalidad) {
-    alert('⚠️ Debes seleccionar una modalidad antes de registrar');
-    window.location.href = 'modalidad.html';
+    alert('⚠️ Selecciona primero la modalidad arriba del formulario');
+    document.getElementById('selectorModalidadRapido')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 

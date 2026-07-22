@@ -198,7 +198,68 @@ exports.getClientById = async (id) => {
   return result.rows[0];
 };
 
+// Buscar un trabajador por cédula, sin importar la modalidad — usado por la
+// pantalla de "Cédula del trabajador" posterior al login, para saber si ya
+// está registrado en el sistema (en cualquier modalidad) antes de mandarlo
+// al formulario de registro.
+exports.getClientByCedula = async (cedula) => {
+  const result = await pool.query(
+    `SELECT id, cedula, nombre, modalidad
+     FROM clients
+     WHERE cedula = $1
+     ORDER BY id DESC
+     LIMIT 1`,
+    [cedula]
+  );
+  return result.rows[0] || null;
+};
+
+// Obtener todas las modalidades en las que ya está registrada una cédula —
+// usada por modalidad.html para decidir si al elegir una tarjeta debe ir
+// directo al listado (clientes.html) o al formulario de registro (index.html).
+exports.getModalidadesByCedula = async (cedula) => {
+  const result = await pool.query(
+    `SELECT DISTINCT modalidad
+     FROM clients
+     WHERE cedula = $1 AND modalidad IS NOT NULL`,
+    [cedula]
+  );
+  return result.rows.map(r => r.modalidad);
+};
+
 // ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR Y SVE)
+// Actualizar únicamente los datos de contacto de emergencia.
+// A diferencia de updateClient, esto NO toca ninguna otra columna del
+// cliente — evita que un dato corrupto/desactualizado en otro campo
+// (ej. fecha_nacimiento) bloquee el guardado del contacto.
+exports.updateContactoEmergencia = async (id, data) => {
+  const {
+    contacto_emergencia_nombre,
+    contacto_emergencia_parentesco,
+    contacto_emergencia_telefono,
+    contacto_emergencia_ciudad,
+  } = data;
+
+  const result = await pool.query(
+    `UPDATE clients SET
+      contacto_emergencia_nombre     = $1,
+      contacto_emergencia_parentesco = $2,
+      contacto_emergencia_telefono   = $3,
+      contacto_emergencia_ciudad     = $4
+    WHERE id = $5
+    RETURNING *`,
+    [
+      contacto_emergencia_nombre,
+      contacto_emergencia_parentesco,
+      contacto_emergencia_telefono,
+      contacto_emergencia_ciudad || null,
+      id,
+    ]
+  );
+
+  return result.rows[0];
+};
+
 exports.updateClient = async (id, data) => {
   const {
     cedula,

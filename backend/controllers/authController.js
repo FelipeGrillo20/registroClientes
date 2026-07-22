@@ -1,36 +1,47 @@
 // backend/controllers/authController.js
 const userModel = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const captchaService = require("../utils/captchaService");
 
 // Clave secreta para JWT (en producción debe estar en .env)
 const JWT_SECRET = process.env.JWT_SECRET || "mi_clave_secreta_temporal_2024";
 const JWT_EXPIRES_IN = "8h"; // Token válido por 8 horas
 
+// Generar captcha (pregunta + token firmado con la respuesta)
+exports.getCaptcha = (req, res) => {
+  const { question, captchaToken } = captchaService.generateCaptcha();
+
+  res.json({
+    success: true,
+    question,
+    captchaToken
+  });
+};
+
 // Login de usuario
 exports.login = async (req, res) => {
   try {
-    const { cedula, password, captchaToken } = req.body;
+    const { cedula, password, captchaToken, captchaAnswer } = req.body;
 
     console.log("=== LOGIN REQUEST ===");
     console.log("Cédula recibida:", cedula);
     console.log("Contraseña recibida:", password ? "***" : "VACÍA");
-    console.log("Captcha recibido:", captchaToken);
 
     // Validaciones básicas
     if (!cedula || !password) {
       console.log("ERROR: Campos vacíos");
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Cédula y contraseña son requeridos" 
+        message: "Cédula y contraseña son requeridos"
       });
     }
 
-    // Verificar captcha (por ahora solo validamos que exista)
-    if (!captchaToken) {
-      console.log("ERROR: Sin captcha");
-      return res.status(400).json({ 
+    // Verificar captcha contra el token firmado por el servidor
+    if (!captchaService.verifyCaptcha(captchaToken, captchaAnswer)) {
+      console.log("ERROR: Captcha incorrecto o expirado");
+      return res.status(400).json({
         success: false,
-        message: "Por favor completa el captcha" 
+        message: "Captcha incorrecto. Por favor intenta de nuevo"
       });
     }
 

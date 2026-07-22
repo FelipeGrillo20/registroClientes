@@ -63,16 +63,6 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Ocultar botón Mi Perfil solo en esta página */
-.btn-mi-perfil {
-  display: none !important;
-}
-
-/* Ocultar botón Mapa de Sitio solo en esta página */
-.btn-sitemap {
-  display: none !important;
-}
-
 .btn-sitemap {
   background: rgba(255, 255, 255, 0.25) !important;
   color: white !important;
@@ -87,6 +77,32 @@ body {
 }
 
 .btn-sitemap:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.user-right-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-atras {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-atras:hover {
   background: rgba(255, 255, 255, 0.4) !important;
   border-color: white !important;
   transform: translateY(-1px);
@@ -417,6 +433,13 @@ body {
     gap: 8px;
   }
 
+  .user-right-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .btn-atras,
   .btn-logout {
     width: 100%;
     text-align: center;

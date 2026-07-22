@@ -20,7 +20,25 @@
         Agendar Cita
       </button>
     </div>
-    
+
+    <!-- Selector rápido de modalidad — se muestra si aún no se ha elegido ninguna -->
+    <div id="selectorModalidadRapido" class="selector-modalidad-rapido" style="display: none;">
+      <p class="selector-modalidad-texto" id="selectorModalidadTitulo">
+        📌 Antes de registrar, selecciona con qué modalidad vas a atender a este trabajador:
+      </p>
+      <div class="selector-modalidad-botones">
+        <button type="button" class="btn-modalidad-rapida" data-modalidad="Orientación Psicosocial">
+          Orientación Psicosocial
+        </button>
+        <button type="button" class="btn-modalidad-rapida" data-modalidad="Sistema de Vigilancia Epidemiológica">
+          Sistema de Vigilancia Epidemiológica
+        </button>
+        <button type="button" class="btn-modalidad-rapida" data-modalidad="Entrega Individual de Resultados">
+          Entrega Individual de Resultados
+        </button>
+      </div>
+    </div>
+
     <h1>📋 Registro de Trabajadores.</h1>
 
     <form id="clientForm">
@@ -221,7 +239,7 @@
       </div>
       
       <div class="form-actions-secondary">
-        <a href="modalidad.html" class="btn-seleccionar-modalidad">🔄 Seleccionar Modalidad</a>
+        <a href="modalidad.html" class="btn-seleccionar-modalidad" id="btnSeleccionarModalidadRegistro">🔄 Seleccionar Modalidad</a>
       </div>
 
     </form>

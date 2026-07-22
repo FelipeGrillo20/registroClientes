@@ -71,11 +71,17 @@ router.post("/", clientsController.createClient);
 // ⭐ NUEVO: Obtener clientes con filtros avanzados (debe ir ANTES de "/:id")
 router.get("/filters", clientsController.getClientsWithFilters);
 
+// Buscar trabajador por cédula, en cualquier modalidad (debe ir ANTES de "/:id")
+router.get("/buscar-cedula/:cedula", clientsController.buscarPorCedula);
+
 // Obtener todos los clientes
 router.get("/", clientsController.getClients);
 
 // Obtener un cliente por ID
 router.get("/:id", clientsController.getClientById);
+
+// Actualizar solo el contacto de emergencia (debe ir ANTES de "/:id")
+router.patch("/:id/contacto-emergencia", clientsController.updateContactoEmergencia);
 
 // Actualizar un cliente
 router.put("/:id", clientsController.updateClient);

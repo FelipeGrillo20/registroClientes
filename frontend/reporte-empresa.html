@@ -520,7 +520,7 @@
           <div id="rTablaMotivos"></div>
         </div>
         <div class="chart-box">
-          <div class="chart-label">Consultas abiertas vs cerradas</div>
+          <div class="chart-label" id="rTituloEstados">Consultas abiertas vs cerradas</div>
           <div class="chart-wrap chart-wrap-sm"><canvas id="rChartEstados"></canvas></div>
         </div>
       </div>
@@ -549,12 +549,12 @@
     <div class="section" id="secComplejidad">
       <div class="section-head">
         <span class="section-num">04</span>
-        <span class="section-title">Indicador de Complejidad</span>
+        <span class="section-title" id="rTituloComplejidadSeccion">Indicador de Complejidad</span>
         <div class="section-line"></div>
       </div>
       <div class="charts-row">
         <div class="chart-box">
-          <div class="chart-label">Distribución de casos</div>
+          <div class="chart-label" id="rTituloComplejidadChart">Distribución de casos</div>
           <div class="chart-wrap"><canvas id="rChartComp"></canvas></div>
         </div>
         <div class="comp-legend" id="rCompLegend"></div>
@@ -639,16 +639,18 @@
     && d.filtros.anio === "Todos"
     && d.filtros.mes === "Todo el año";
 
+  function tituloModalidad(m) {
+    if (m === "Sistema de Vigilancia Epidemiológica") return "Sistema de Vigilancia Epidemiológica";
+    if (m === "Entrega Individual de Resultados") return "Entrega Individual de Resultados";
+    return "Orientación Psicosocial";
+  }
+
   if (modalidadSel && otrosFiltrosTodos) {
     // Histórico por modalidad: todos los demás filtros en "todos" y una modalidad seleccionada
-    document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
-      ? "Informe Histórico Sistema de Vigilancia Epidemiológica"
-      : "Informe Histórico Orientación Psicosocial";
+    document.getElementById("rTitulo").textContent = "Informe Histórico " + tituloModalidad(d.filtros.modalidad);
   } else if (modalidadSel) {
     // Modalidad seleccionada junto con algún otro filtro (empresa, sede, año o mes)
-    document.getElementById("rTitulo").textContent = d.filtros.modalidad === "Sistema de Vigilancia Epidemiológica"
-      ? "Informe Sistema de Vigilancia Epidemiológica"
-      : "Informe Orientación Psicosocial";
+    document.getElementById("rTitulo").textContent = "Informe " + tituloModalidad(d.filtros.modalidad);
   } else if (!d.esGeneral) {
     document.getElementById("rTitulo").textContent = "Informe de Seguimiento Psicosocial";
   }
@@ -687,7 +689,13 @@
     check:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
   };
 
-  const kpiDef = [
+  const kpiDef = d.esEntrega ? [
+    { icon: SVG.personas, label:"Trabajadores atendidos",     val: d.kpis.trabajadores,   cls:"kpi-c1" },
+    { icon: SVG.lista,    label:"Entregas totales",           val: d.kpis.entregas,       cls:"kpi-c2" },
+    { icon: SVG.candadoA, label:"Con seguimiento",            val: d.kpis.conSeguimiento, cls:"kpi-c3" },
+    { icon: SVG.check,    label:"Con retroalimentación",      val: d.kpis.conRetro,       cls:"kpi-c6" },
+    { icon: SVG.reingreso,label:"Profesionales activos",      val: d.kpis.profActivos,    cls:"kpi-c7" },
+  ] : [
     { icon: SVG.personas, label:"Trabajadores atendidos", val: d.kpis.trabajadores,  cls:"kpi-c1" },
     { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
     { icon: SVG.candadoA, label:"Casos abiertos",         val: d.kpis.abiertos,      cls:"kpi-c3" },
@@ -729,7 +737,7 @@
         <th style="text-align:right">Casos</th>
       </tr></thead><tbody>`;
     top5.forEach((item, idx) => {
-      const label  = item.motivo || item.criterio || "";
+      const label  = item.motivo || item.criterio || item.prueba || "";
       const count  = item.count;
       const pct    = totalMenc > 0 ? Math.round(count / totalMenc * 100) : 0;
       const barPct = maxCount  > 0 ? Math.round(count / maxCount  * 100) : 0;
@@ -753,7 +761,10 @@
   // Alternar según modalidad del snapshot
   const tituloTablaEl = document.getElementById("rTituloTabla");
   const badge = `<span style="background:#4f46e5;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:0.4px;vertical-align:middle;margin-left:4px;">TOP 5</span>`;
-  if (d.esSVE) {
+  if (d.esEntrega) {
+    if (tituloTablaEl) tituloTablaEl.innerHTML = `Pruebas a profundidad más frecuentes ${badge}`;
+    renderRepTabla(d.pruebasProfundidad, "Prueba a profundidad", "Sin registros de pruebas a profundidad en el periodo");
+  } else if (d.esSVE) {
     if (tituloTablaEl) tituloTablaEl.innerHTML = `Criterio de Inclusión al SVE ${badge}`;
     renderRepTabla(d.criterios, "Criterio de Inclusión al SVE", "Sin criterios de inclusión registrados");
   } else {
@@ -762,7 +773,18 @@
   }
 
   // Estados
-  const ab = d.estados.abiertos, ce = d.estados.cerrados;
+  const estadosLabels = d.esEntrega
+    ? ["Con retroalimentación", "Pendientes"]
+    : ["Abiertas", "Cerradas"];
+  const estadosVals = d.esEntrega
+    ? [d.estados.conRetro, d.estados.pendientes]
+    : [d.estados.abiertos, d.estados.cerrados];
+  const estadosUnidad = d.esEntrega ? "entrega" : "consulta";
+  const rTituloEstadosEl = document.getElementById("rTituloEstados");
+  if (rTituloEstadosEl) {
+    rTituloEstadosEl.textContent = d.esEntrega ? "Con retroalimentación vs pendientes" : "Consultas abiertas vs cerradas";
+  }
+  const [ab, ce] = estadosVals;
   const tot = ab + ce;
   const pA = tot > 0 ? Math.round(ab/tot*100) : 0;
   const pC = tot > 0 ? Math.round(ce/tot*100) : 0;
@@ -770,7 +792,7 @@
   new Chart(ctxE, {
     type: "doughnut",
     data: {
-      labels: [`Abiertas (${ab} — ${pA}%)`, `Cerradas (${ce} — ${pC}%)`],
+      labels: [`${estadosLabels[0]} (${ab} — ${pA}%)`, `${estadosLabels[1]} (${ce} — ${pC}%)`],
       datasets: [{ data: [ab, ce], backgroundColor: ["#d97706","#059669"], borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
@@ -778,7 +800,7 @@
       plugins: {
         legend: { position:"bottom", labels:{ font:{size:11}, padding:10, boxWidth:12 } },
         tooltip: { ...tooltipStyle(), callbacks: {
-          label: ctx => ` ${ctx.parsed} consulta${ctx.parsed!==1?"s":""} (${tot>0?Math.round(ctx.parsed/tot*100):0}%)`
+          label: ctx => ` ${ctx.parsed} ${estadosUnidad}${ctx.parsed!==1?"s":""} (${tot>0?Math.round(ctx.parsed/tot*100):0}%)`
         }}
       }
     }
@@ -787,7 +809,7 @@
   // ─── VÍNCULO (solo OP) ─────────────────────────────
   const secVinculoEl = document.getElementById("secVinculo");
   const secComplejidadEl = document.getElementById("secComplejidad");
-  if (d.esSVE) {
+  if (d.esSVE || d.esEntrega) {
     if (secVinculoEl) secVinculoEl.style.display = "none";
     // Sin Vínculo, Complejidad conserva su propio salto de página
     if (secComplejidadEl) secComplejidadEl.style.pageBreakBefore = "always";
@@ -886,7 +908,23 @@
     });
   }
 
-  if (d.esSVE) {
+  const rTituloComplejidadSeccionEl = document.getElementById("rTituloComplejidadSeccion");
+  const rTituloComplejidadChartEl   = document.getElementById("rTituloComplejidadChart");
+
+  if (d.esEntrega) {
+    if (rTituloComplejidadSeccionEl) rTituloComplejidadSeccionEl.textContent = "Tipos de Recomendaciones";
+    if (rTituloComplejidadChartEl)   rTituloComplejidadChartEl.textContent   = "Distribución de recomendaciones";
+    const rec = d.recomendaciones || {};
+    renderCompRep([
+      { name:"Manejo estrés",    desc:"Recomendaciones de manejo del estrés",   count: rec["Manejo estrés"] || 0 },
+      { name:"Hábitos de salud", desc:"Recomendaciones de hábitos de salud",    count: rec["Hábitos de salud"] || 0 },
+      { name:"Autocuidado",      desc:"Recomendaciones de autocuidado",         count: rec["Autocuidado"] || 0 },
+      { name:"Comunicación",     desc:"Recomendaciones de comunicación",        count: rec["Comunicación"] || 0 },
+      { name:"Otros",            desc:"Otras recomendaciones",                  count: rec["Otros"] || 0 },
+    ], ["#4f46e5","#059669","#d97706","#0ea5e9","#7c3aed"]);
+  } else if (d.esSVE) {
+    if (rTituloComplejidadSeccionEl) rTituloComplejidadSeccionEl.textContent = "Indicador de Complejidad";
+    if (rTituloComplejidadChartEl)   rTituloComplejidadChartEl.textContent   = "Distribución de casos";
     const cs = d.complejidadSve || { Alto:0, Medio:0, Bajo:0 };
     renderCompRep([
       { name:"Alto",  desc:"Nivel de complejidad alto",  count: cs.Alto  },
@@ -894,6 +932,8 @@
       { name:"Bajo",  desc:"Nivel de complejidad bajo",  count: cs.Bajo  },
     ], ["#e11d48","#d97706","#059669"]);
   } else {
+    if (rTituloComplejidadSeccionEl) rTituloComplejidadSeccionEl.textContent = "Indicador de Complejidad";
+    if (rTituloComplejidadChartEl)   rTituloComplejidadChartEl.textContent   = "Distribución de casos";
     const comp = d.complejidad;
     renderCompRep([
       { name:"Normal",         desc:"Sin confidencialidad · 1–4 sesiones", count: comp.normal },
@@ -905,7 +945,14 @@
 
   // ─── COBERTURA ──────────────────────────────────
   const cov = d.cobertura;
-  const covItems = [
+  const covItems = d.esEntrega ? [
+    { label:"Trabajadores únicos",          val:cov.unicos,         sm:false },
+    { label:"Promedio entregas/trabajador", val:cov.promedio,       sm:false },
+    { label:"Profesionales activos",        val:cov.profActivos,    sm:true  },
+    { label:"Con seguimiento registrado",   val:cov.conSeguimiento, sm:false },
+    { label:"Con retroalimentación",        val:cov.conRetro,       sm:false },
+    { label:"Entrega más reciente",         val:cov.masReciente,    sm:true  },
+  ] : [
     { label:"Trabajadores únicos",          val:cov.unicos,       sm:false },
     { label:"Promedio sesiones/trabajador", val:cov.promedio,     sm:false },
     { label:"Modalidad más frecuente",      val:cov.modFrecuente, sm:true  },
@@ -924,11 +971,36 @@
 
   // ─── SEDES ──────────────────────────────────────
   const sedes = d.sedes;
-  const sedeKeys = Object.keys(sedes).sort((a,b) => sedes[b].sesiones - sedes[a].sesiones);
+  const sedeSortKey = d.esEntrega ? "total" : "sesiones";
+  const sedeKeys = Object.keys(sedes).sort((a,b) => sedes[b][sedeSortKey] - sedes[a][sedeSortKey]);
   const sedesEl = document.getElementById("rSedesContent");
 
   if (sedeKeys.length === 0) {
     sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
+  } else if (d.esEntrega) {
+    let tableHTML = `
+      <table class="sedes-table">
+        <thead>
+          <tr>
+            <th>Sede</th>
+            <th style="text-align:center">Entregas</th>
+            <th style="text-align:center">Con seguimiento</th>
+            <th style="text-align:center">Sin seguimiento</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    sedeKeys.forEach(s => {
+      const r = sedes[s];
+      tableHTML += `
+        <tr>
+          <td><strong>${s}</strong></td>
+          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.total}</td>
+          <td style="text-align:center"><span class="badge badge-normal">${r.conSeguimiento}</span></td>
+          <td style="text-align:center"><span class="badge badge-complejo">${r.sinSeguimiento}</span></td>
+        </tr>`;
+    });
+    tableHTML += "</tbody></table>";
+    sedesEl.innerHTML = tableHTML;
   } else if (d.esSVE) {
     let tableHTML = `
       <table class="sedes-table">

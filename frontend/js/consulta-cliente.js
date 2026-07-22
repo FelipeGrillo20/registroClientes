@@ -284,21 +284,23 @@ document.getElementById("formEditarContacto")?.addEventListener("submit", async 
   try {
     const clienteId = getClienteIdFromURL();
 
-    const datosActualizados = {
-      ...clienteActual,
+    // Endpoint dedicado: solo toca las 4 columnas de contacto de emergencia,
+    // sin reenviar el resto del cliente (evita que un dato corrupto o
+    // desactualizado en otro campo bloquee este guardado).
+    const datosContacto = {
       contacto_emergencia_nombre: nombre,
       contacto_emergencia_parentesco: parentesco,
       contacto_emergencia_telefono: telefono,
       contacto_emergencia_ciudad: ciudad || null
     };
 
-    const res = await fetch(`${API_URL}/${clienteId}`, {
-      method: "PUT",
+    const res = await fetch(`${API_URL}/${clienteId}/contacto-emergencia`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify(datosActualizados)
+      body: JSON.stringify(datosContacto)
     });
 
     if (!res.ok) {

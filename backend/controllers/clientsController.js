@@ -1,6 +1,32 @@
 // backend/controllers/clientsController.js
 const clientModel = require("../models/clientModel");
 
+// GET /api/clients/buscar-cedula/:cedula
+// Usado por la pantalla posterior al login para saber si un trabajador ya
+// está registrado (en cualquier modalidad) antes de enviarlo al formulario.
+exports.buscarPorCedula = async (req, res) => {
+  try {
+    const { cedula } = req.params;
+
+    if (!cedula || !/^\d+$/.test(cedula)) {
+      return res.status(400).json({ message: "Cédula inválida" });
+    }
+
+    const cliente = await clientModel.getClientByCedula(cedula);
+
+    if (!cliente) {
+      return res.json({ existe: false });
+    }
+
+    const modalidades = await clientModel.getModalidadesByCedula(cedula);
+
+    res.json({ existe: true, cliente, modalidades });
+  } catch (err) {
+    console.error("Error buscando cliente por cédula:", err);
+    res.status(500).json({ message: "Error al buscar el trabajador" });
+  }
+};
+
 // Crear nuevo cliente
 exports.createClient = async (req, res) => {
   try {
@@ -40,7 +66,7 @@ exports.createClient = async (req, res) => {
       return res.status(400).json({ message: "La modalidad es requerida" });
     }
 
-    const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
+    const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica', 'Entrega Individual de Resultados'];
     if (!modalidadesValidas.includes(modalidad)) {
       return res.status(400).json({ message: "Modalidad no válida" });
     }
@@ -262,6 +288,46 @@ exports.getClientById = async (req, res) => {
 };
 
 // ✅ ACTUALIZADO: Actualizar cliente (CON CAMPOS DE FAMILIAR TRABAJADOR Y SVE)
+// Actualizar solo el contacto de emergencia (no toca el resto del cliente)
+exports.updateContactoEmergencia = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      contacto_emergencia_nombre,
+      contacto_emergencia_parentesco,
+      contacto_emergencia_telefono,
+      contacto_emergencia_ciudad,
+    } = req.body;
+
+    const existingClient = await clientModel.getClientById(id);
+    if (!existingClient) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+    if (userRole !== 'admin' && existingClient.profesional_id !== userId) {
+      return res.status(403).json({ message: "No tienes permiso para editar este cliente" });
+    }
+
+    if (!contacto_emergencia_nombre || !contacto_emergencia_parentesco || !contacto_emergencia_telefono) {
+      return res.status(400).json({ message: "Nombre, parentesco y teléfono son requeridos" });
+    }
+
+    const updatedClient = await clientModel.updateContactoEmergencia(id, {
+      contacto_emergencia_nombre,
+      contacto_emergencia_parentesco,
+      contacto_emergencia_telefono,
+      contacto_emergencia_ciudad: contacto_emergencia_ciudad || null,
+    });
+
+    res.json(updatedClient);
+  } catch (err) {
+    console.error("Error actualizando contacto de emergencia:", err);
+    res.status(500).json({ message: "Error al actualizar contacto de emergencia" });
+  }
+};
+
 exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -318,7 +384,7 @@ exports.updateClient = async (req, res) => {
     // ✅ NUEVO: Validar modalidad si se proporciona
     const modalidadFinal = modalidad || existingClient.modalidad;
     if (modalidadFinal) {
-      const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
+      const modalidadesValidas = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica', 'Entrega Individual de Resultados'];
       if (!modalidadesValidas.includes(modalidadFinal)) {
         return res.status(400).json({ message: "Modalidad no válida" });
       }

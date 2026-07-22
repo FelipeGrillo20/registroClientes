@@ -27,6 +27,7 @@
   let rawConsultas    = [];  // sesiones de Orientación Psicosocial
   let rawConsultasSve = [];  // sesiones de SVE (/api/consultas-sve)
   let rawMesaTrabajoSve = []; // registros mesa de trabajo SVE (criterio_inclusion)
+  let rawEntregas     = [];  // registros de Entrega Individual de Resultados
   let empresas        = [];  // catálogo de empresas
   let charts          = {};  // instancias Chart.js activas
   let lastSnapshot    = null; // snapshot para el informe imprimible
@@ -255,17 +256,19 @@
   // Traemos todo sin filtros de URL. El filtro real se hace localmente
   // en filtrarDatos() usando subcontratista_id, sede, etc.
   async function cargarDatos() {
-    const [resClients, resConsultas, resConsultasSve, resMesa] = await Promise.all([
+    const [resClients, resConsultas, resConsultasSve, resMesa, resEntregas] = await Promise.all([
       fetch(`${API}/api/clients`,           { headers: authHeaders() }),
       fetch(`${API}/api/consultas`,         { headers: authHeaders() }),
       fetch(`${API}/api/consultas-sve`,     { headers: authHeaders() }),
       fetch(`${API}/api/mesa-trabajo-sve`,  { headers: authHeaders() }),
+      fetch(`${API}/api/entrega-resultados`,{ headers: authHeaders() }),
     ]);
 
     rawClients        = resClients.ok      ? await resClients.json()      : [];
     rawConsultas      = resConsultas.ok    ? await resConsultas.json()    : [];
     rawConsultasSve   = resConsultasSve.ok ? await resConsultasSve.json() : [];
     rawMesaTrabajoSve = resMesa.ok         ? await resMesa.json()         : [];
+    rawEntregas       = resEntregas.ok     ? await resEntregas.json()     : [];
 
     // Normalizar sesiones SVE para que sean compatibles con la lógica existente:
     // - Agregar consulta_number = 1 (SVE no lo tiene, cada registro es independiente)
@@ -292,6 +295,7 @@
     const MODALIDAD_MAP = {
       "orientacion": "Orientación Psicosocial",
       "vigilancia":  "Sistema de Vigilancia Epidemiológica",
+      "entrega":     "Entrega Individual de Resultados",
     };
     const modalidadBD = MODALIDAD_MAP[modalidad] || modalidad; // si ya es texto completo, lo usa tal cual
 
@@ -314,6 +318,14 @@
       pool = rawConsultas;
     } else if (modalidadBD === "Sistema de Vigilancia Epidemiológica") {
       pool = rawConsultasSve;
+    } else if (modalidadBD === "Entrega Individual de Resultados") {
+      // Normalizar registros de entrega para que sean compatibles con el
+      // filtro genérico de abajo (cliente_id / fecha).
+      pool = rawEntregas.map(e => ({
+        ...e,
+        cliente_id: e.client_id,
+        fecha:      e.fecha_aplicacion || e.created_at,
+      }));
     } else {
       // Todos: combinar ambas fuentes, evitando IDs duplicados
       // (un mismo id puede existir en ambas tablas — usamos prefijo para diferenciar)
@@ -421,24 +433,43 @@
 
   // ─── RENDER PRINCIPAL ───────────────────────────────
   function renderDashboard(clientes, sesiones) {
-    const casos = agruparEnCasos(sesiones);
-
     const modalidadFiltro = document.getElementById("filterModalidad").value;
-    const esSVE = modalidadFiltro === "vigilancia";
+    const esSVE     = modalidadFiltro === "vigilancia";
+    const esEntrega = modalidadFiltro === "entrega";
+
+    aplicarEtiquetasModalidad(esEntrega);
 
     // Mostrar/ocultar tarjetas KPI según modalidad
     const cardConfi   = document.getElementById("cardConfidenciales");
     const cardCritico = document.getElementById("cardCriticos");
+    const cardProf    = document.getElementById("cardProfesionales");
     const kpiGrid     = document.querySelector(".kpi-grid");
-    if (cardConfi)   cardConfi.style.display   = esSVE ? "none" : "";
-    if (cardCritico) cardCritico.style.display  = esSVE ? "none" : "";
+    if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
+    if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
+    if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
     if (kpiGrid) {
-      if (esSVE) kpiGrid.classList.add("kpi-grid-sve");
-      else       kpiGrid.classList.remove("kpi-grid-sve");
+      kpiGrid.classList.remove("kpi-grid-sve", "kpi-grid-entrega");
+      if (esSVE)     kpiGrid.classList.add("kpi-grid-sve");
+      if (esEntrega) kpiGrid.classList.add("kpi-grid-entrega");
     }
     // Sección vínculo: solo en Orientación Psicosocial
     const secVinculo = document.getElementById("secVinculo");
-    if (secVinculo) secVinculo.style.display = esSVE ? "none" : "";
+    if (secVinculo) secVinculo.style.display = (esSVE || esEntrega) ? "none" : "";
+
+    // Entrega Individual de Resultados tiene su propio flujo de render,
+    // porque sus registros no tienen consulta_number/estado/confidencialidad
+    // (no forman "casos" como OP/SVE).
+    if (esEntrega) {
+      renderKPIsEntrega(clientes, sesiones);
+      renderPruebasProfundidad(sesiones);
+      renderEstadosEntrega(sesiones);
+      renderRecomendacionesEntrega(sesiones);
+      renderCoberturaEntrega(clientes, sesiones);
+      renderSedesEntrega(clientes, sesiones);
+      return;
+    }
+
+    const casos = agruparEnCasos(sesiones);
 
     // ── KPIs
     renderKPIs(clientes, sesiones, casos);
@@ -1312,6 +1343,340 @@
     });
   }
 
+  // ══════════════════════════════════════════════════════
+  // ENTREGA INDIVIDUAL DE RESULTADOS — render específico
+  // (los registros no tienen consulta_number/estado/confidencialidad,
+  // así que no pasan por agruparEnCasos/clasificarCaso)
+  // ══════════════════════════════════════════════════════
+
+  // Reetiqueta textos/íconos compartidos con OP/SVE según la modalidad activa.
+  function aplicarEtiquetasModalidad(esEntrega) {
+    setText("kpiLabelSesiones", esEntrega ? "Entregas totales"        : "Total de sesiones");
+    setText("kpiLabelAbiertos", esEntrega ? "Con seguimiento"          : "Casos abiertos");
+    setText("kpiLabelCerrados", esEntrega ? "Con retroalimentación"    : "Casos cerrados");
+    const iconSes = document.getElementById("kpiIconSesiones");
+    if (iconSes) iconSes.textContent = esEntrega ? "📨" : "📋";
+    const iconAb = document.getElementById("kpiIconAbiertos");
+    if (iconAb) iconAb.textContent = esEntrega ? "🩺" : "🔓";
+    const iconCe = document.getElementById("kpiIconCerrados");
+    if (iconCe) iconCe.textContent = esEntrega ? "💬" : "✅";
+
+    setText("tituloEstados", esEntrega ? "Con retroalimentación vs Pendiente" : "Abiertos vs Cerrados");
+
+    setText("tituloComplejidadSeccion", esEntrega ? "Tipos de Recomendaciones" : "Indicador de Complejidad");
+    setText("descComplejidadSeccion",
+      esEntrega ? "Clasificación de las recomendaciones registradas" : "Clasificación según sesiones y confidencialidad");
+    setText("tituloComplejidadChart", esEntrega ? "Distribución de recomendaciones" : "Distribución de casos");
+
+    setText("covLabelUnicos",    esEntrega ? "Trabajadores únicos con entrega"    : "Trabajadores únicos");
+    setText("covLabelPromedio",  esEntrega ? "Promedio entregas / trabajador"     : "Promedio sesiones / trabajador");
+    setText("covLabelModalidad", esEntrega ? "Profesionales activos"              : "Modalidad más frecuente");
+    setText("covLabelVirtual",   esEntrega ? "Con seguimiento registrado"         : "Sesiones virtuales");
+    setText("covLabelPresencial",esEntrega ? "Con retroalimentación"              : "Sesiones presenciales");
+    setText("covLabelReciente",  esEntrega ? "Entrega más reciente"               : "Sesión más reciente");
+
+    setText("tituloSedesTotal",       esEntrega ? "Entregas totales por sede" : "Sesiones totales por sede");
+    setText("tituloSedesComplejidad", esEntrega ? "Seguimiento por sede"      : "Complejidad por sede");
+
+    // Título del panel de tendencia (tabla top 5)
+    const tituloPanel = document.querySelector(".chart-title");
+    if (tituloPanel && esEntrega) {
+      tituloPanel.innerHTML = 'Pruebas a profundidad más frecuentes <span class="badge-top5">Top 5</span>';
+    }
+  }
+
+  // "No asistio" es el único valor que no implica seguimiento activo sobre
+  // el trabajador — igual que en dashboard-entrega.js.
+  function tieneSeguimientoEntrega(e) {
+    return !!e.pruebas_profundidad && e.pruebas_profundidad !== "No asistio";
+  }
+
+  const RECOM_KEYWORDS = {
+    "Manejo estrés":    ["estrés","estres","ansiedad","tensión","tension","relajación","relajacion"],
+    "Hábitos de salud": ["hábito","habito","salud","nutrición","nutricion","sueño","sueno","ejercicio"],
+    "Autocuidado":      ["autocuidado","bienestar","higiene","emocional","cuidado personal"],
+    "Comunicación":     ["comunicación","comunicacion","relacion","social","interpersonal","asertividad"],
+  };
+  function clasificarRecomendacion(entrega) {
+    const txt = ((entrega.recomendaciones_html || "") + " " + (entrega.titulo_seccion || "")).toLowerCase();
+    for (const [cat, palabras] of Object.entries(RECOM_KEYWORDS)) {
+      if (palabras.some(p => txt.includes(p))) return cat;
+    }
+    return "Otros";
+  }
+
+  // ── SECCIÓN 1: KPIs (Entrega) ───────────────────────
+  function renderKPIsEntrega(clientes, entregas) {
+    const trabConEntrega = new Set(entregas.map(e => e.cliente_id));
+    const profActivos    = new Set(entregas.map(e => e.profesional_id)).size;
+    const conSeguimiento = new Set(entregas.filter(tieneSeguimientoEntrega).map(e => e.cliente_id)).size;
+    const conRetro       = entregas.filter(e => e.fecha_retroalimentacion).length;
+
+    setText("kpiTrabajadores",  trabConEntrega.size);
+    setText("kpiSesiones",      entregas.length);
+    setText("kpiAbiertos",      conSeguimiento);
+    setText("kpiCerrados",      conRetro);
+    setText("kpiProfesionales", profActivos);
+  }
+
+  // ── SECCIÓN 2: Tendencia — Pruebas a profundidad más frecuentes ─────
+  function renderPruebasProfundidad(entregas) {
+    const container = document.getElementById("tablaMotivos");
+    if (!container) return;
+
+    const conteo = {};
+    entregas.forEach(e => {
+      const val = (e.pruebas_profundidad || "").trim();
+      if (!val) return;
+      conteo[val] = (conteo[val] || 0) + 1;
+    });
+
+    const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+
+    if (items.length === 0) {
+      container.innerHTML = '<div class="motivos-empty">Sin registros de pruebas a profundidad en el periodo</div>';
+      return;
+    }
+
+    const TOP = 5;
+    const maxVal         = items[0][1];
+    const totalMenciones = items.reduce((s, [, v]) => s + v, 0);
+    const hayMas         = items.length > TOP;
+
+    const filaHTML = ([prueba, count], idx) => {
+      const pct    = totalMenciones > 0 ? Math.round((count / totalMenciones) * 100) : 0;
+      const barPct = maxVal > 0 ? Math.round((count / maxVal) * 100) : 0;
+      const rankCls  = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+      const extraCls = idx >= TOP ? "motivo-extra" : "";
+      return `
+        <tr class="${extraCls}">
+          <td class="td-rank"><span class="rank-badge ${rankCls}">${idx + 1}</span></td>
+          <td class="td-motivo">
+            <div class="motivo-nombre">${prueba}</div>
+            <div class="motivo-bar-track">
+              <div class="motivo-bar-fill" style="width:${barPct}%"></div>
+            </div>
+          </td>
+          <td class="td-count">
+            <span class="count-num">${count}</span>
+            <span class="count-pct">(${pct}%)</span>
+          </td>
+        </tr>`;
+    };
+
+    let html = `
+      <table class="tabla-motivos">
+        <thead><tr>
+          <th class="td-rank">#</th>
+          <th>Prueba a profundidad</th>
+          <th class="td-count">Registros</th>
+        </tr></thead>
+        <tbody>${items.map(filaHTML).join("")}</tbody>
+      </table>`;
+
+    if (hayMas) {
+      const restantes = items.length - TOP;
+      html += `
+        <button class="btn-ver-mas-motivos" id="btnVerMasMotivos">
+          Ver ${restantes} prueba${restantes > 1 ? "s" : ""} más
+          <span class="btn-arrow">▼</span>
+        </button>`;
+    }
+
+    container.innerHTML = html;
+
+    if (hayMas) {
+      const btn = document.getElementById("btnVerMasMotivos");
+      btn.addEventListener("click", () => {
+        const expanded = btn.classList.toggle("expanded");
+        document.querySelectorAll(".motivo-extra").forEach(tr =>
+          tr.classList.toggle("visible", expanded)
+        );
+        const restantes = items.length - TOP;
+        btn.childNodes[0].textContent = expanded
+          ? "Ver menos "
+          : `Ver ${restantes} prueba${restantes > 1 ? "s" : ""} más `;
+      });
+    }
+  }
+
+  // ── SECCIÓN 2b: Con retroalimentación vs Pendiente ──────────────────
+  function renderEstadosEntrega(entregas) {
+    const conRetro   = entregas.filter(e => e.fecha_retroalimentacion).length;
+    const pendientes = entregas.length - conRetro;
+    const total = entregas.length;
+    const pct = v => total > 0 ? Math.round((v / total) * 100) : 0;
+
+    destroyChart("chartEstados");
+    const ctx = document.getElementById("chartEstados").getContext("2d");
+    charts.estados = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: [
+          `Con retroalimentación (${conRetro} — ${pct(conRetro)}%)`,
+          `Pendientes (${pendientes} — ${pct(pendientes)}%)`
+        ],
+        datasets: [{
+          data: [conRetro, pendientes],
+          backgroundColor: ["#10b981", "#f59e0b"],
+          borderWidth: 0,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        ...chartOptionsDoughnut(),
+        plugins: {
+          ...chartOptionsDoughnut().plugins,
+          tooltip: {
+            ...tooltipStyle(),
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.parsed;
+                return ` ${val} entrega${val !== 1 ? "s" : ""} (${pct(val)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── SECCIÓN 4 (repurpuesta): Tipos de Recomendaciones ───────────────
+  function renderRecomendacionesEntrega(entregas) {
+    const COLORS = {
+      "Manejo estrés":    "#6366f1",
+      "Hábitos de salud": "#10b981",
+      "Autocuidado":      "#f59e0b",
+      "Comunicación":     "#38bdf8",
+      "Otros":            "#a78bfa",
+    };
+    const counts = { "Manejo estrés": 0, "Hábitos de salud": 0, "Autocuidado": 0, "Comunicación": 0, "Otros": 0 };
+    entregas.forEach(e => { counts[clasificarRecomendacion(e)]++; });
+
+    const labelsAll = Object.keys(counts);
+    const total = labelsAll.reduce((s, k) => s + counts[k], 0);
+    const pct = v => total > 0 ? Math.round((v / total) * 100) : 0;
+
+    // Reemplazar la leyenda (misma técnica que renderComplejidadSve)
+    const legendContainer = document.querySelector(".complexity-legend");
+    if (legendContainer) {
+      legendContainer.innerHTML = labelsAll.map(name => `
+        <div class="legend-item" style="border-left: 3px solid ${COLORS[name]}; background: rgba(255,255,255,0.03);">
+          <div class="legend-dot" style="background: ${COLORS[name]};"></div>
+          <div>
+            <p class="legend-name">${name}</p>
+            <p class="legend-desc">${pct(counts[name])}% del total</p>
+            <p class="legend-count">${counts[name]}</p>
+          </div>
+        </div>`).join("");
+    }
+
+    destroyChart("chartComplejidad");
+    const ctx = document.getElementById("chartComplejidad").getContext("2d");
+    charts.complejidad = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labelsAll.map(name => `${name} (${counts[name]} — ${pct(counts[name])}%)`),
+        datasets: [{
+          data: labelsAll.map(name => counts[name]),
+          backgroundColor: labelsAll.map(name => COLORS[name]),
+          borderWidth: 0,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        ...chartOptionsDoughnut(),
+        plugins: {
+          ...chartOptionsDoughnut().plugins,
+          tooltip: {
+            ...tooltipStyle(),
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.parsed;
+                return ` ${val} entrega${val !== 1 ? "s" : ""} (${pct(val)}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── SECCIÓN 6: Cobertura (Entrega) ──────────────────────────────────
+  function renderCoberturaEntrega(clientes, entregas) {
+    const unicos = new Set(entregas.map(e => e.cliente_id)).size;
+    const promedio = unicos > 0 ? (entregas.length / unicos).toFixed(1) : "0";
+    const profActivos    = new Set(entregas.map(e => e.profesional_id)).size;
+    const conSeguimiento = new Set(entregas.filter(tieneSeguimientoEntrega).map(e => e.cliente_id)).size;
+    const conRetro        = entregas.filter(e => e.fecha_retroalimentacion).length;
+
+    const fechas = entregas.map(e => new Date(e.fecha)).filter(f => !isNaN(f));
+    const masReciente = fechas.length > 0
+      ? new Date(Math.max(...fechas)).toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric" })
+      : "—";
+
+    setText("covUnicos",     unicos);
+    setText("covPromedio",   promedio);
+    setText("covModalidad",  profActivos);
+    setText("covVirtual",    conSeguimiento);
+    setText("covPresencial", conRetro);
+    setText("covReciente",   masReciente);
+  }
+
+  // ── SECCIÓN 7: Análisis por Sede (Entrega) ──────────────────────────
+  function renderSedesEntrega(clientes, entregas) {
+    const bySede = {};
+    entregas.forEach(e => {
+      const cliente = rawClients.find(c => c.id === e.cliente_id);
+      const sede = cliente?.sede || "Sin sede";
+      if (!bySede[sede]) bySede[sede] = { total: 0, conSeguimiento: 0, sinSeguimiento: 0 };
+      bySede[sede].total++;
+      if (tieneSeguimientoEntrega(e)) bySede[sede].conSeguimiento++;
+      else bySede[sede].sinSeguimiento++;
+    });
+    const bySedeUnificado = unificarSedes(bySede);
+
+    const sedeLabels = Object.keys(bySedeUnificado)
+      .sort((a, b) => bySedeUnificado[b].total - bySedeUnificado[a].total);
+
+    destroyChart("chartSedes");
+    const ctx1 = document.getElementById("chartSedes").getContext("2d");
+    charts.sedes = new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: sedeLabels,
+        datasets: [{
+          label: "Entregas",
+          data: sedeLabels.map(s => bySedeUnificado[s].total),
+          backgroundColor: sedeLabels.map((_, i) => PALETTE_INDIGO[i % PALETTE_INDIGO.length]),
+          borderWidth: 0,
+          borderRadius: 6,
+        }]
+      },
+      options: chartOptionsBar(),
+    });
+
+    destroyChart("chartSedesComplejidad");
+    const ctx2 = document.getElementById("chartSedesComplejidad").getContext("2d");
+    charts.sedesComp = new Chart(ctx2, {
+      type: "bar",
+      data: {
+        labels: sedeLabels,
+        datasets: [
+          { label: "Con seguimiento", data: sedeLabels.map(s => bySedeUnificado[s].conSeguimiento), backgroundColor: "rgba(16,185,129,0.7)", borderRadius: 4 },
+          { label: "Sin seguimiento", data: sedeLabels.map(s => bySedeUnificado[s].sinSeguimiento), backgroundColor: "rgba(245,158,11,0.7)", borderRadius: 4 },
+        ]
+      },
+      options: {
+        ...chartOptionsBar(),
+        scales: {
+          x: { stacked: true, grid: { color: "rgba(255,255,255,0.05)" } },
+          y: { stacked: true, grid: { color: "rgba(255,255,255,0.05)" } }
+        }
+      },
+    });
+  }
+
   // ─── CHART OPTIONS ──────────────────────────────────
   function chartOptionsLine() {
     return {
@@ -1381,8 +1746,95 @@
   ];
 
   // ─── UTILIDADES ─────────────────────────────────────
+  // ─── SNAPSHOT PARA INFORME — Entrega Individual de Resultados ──────
+  function buildSnapshotEntrega(clientes, entregas) {
+    const empresaId = document.getElementById("filterEmpresa").value;
+    const sedeVal    = document.getElementById("filterSede").value;
+    const anio       = parseInt(document.getElementById("filterAnio").value) || null;
+    const mes        = parseInt(document.getElementById("filterMes").value) || null;
+
+    let empresaNombre = "Todas las empresas";
+    if (empresaId) {
+      const emp = empresas.find(e => String(e.id) === empresaId);
+      if (emp) empresaNombre = emp.cliente_definitivo || emp.cliente_final || empresaNombre;
+    }
+
+    const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+    const trabConEntrega = new Set(entregas.map(e => e.cliente_id));
+    const profActivos    = new Set(entregas.map(e => e.profesional_id)).size;
+    const conSeguimiento = new Set(entregas.filter(tieneSeguimientoEntrega).map(e => e.cliente_id)).size;
+    const conRetro       = entregas.filter(e => e.fecha_retroalimentacion).length;
+    const pendientes     = entregas.length - conRetro;
+
+    // Pruebas a profundidad — ranking
+    const conteoPruebas = {};
+    entregas.forEach(e => {
+      const val = (e.pruebas_profundidad || "").trim();
+      if (!val) return;
+      conteoPruebas[val] = (conteoPruebas[val] || 0) + 1;
+    });
+    const pruebasOrdenadas = Object.entries(conteoPruebas)
+      .sort((a, b) => b[1] - a[1])
+      .map(([prueba, count]) => ({ prueba, count }));
+
+    // Tipos de recomendaciones
+    const recomCounts = { "Manejo estrés": 0, "Hábitos de salud": 0, "Autocuidado": 0, "Comunicación": 0, "Otros": 0 };
+    entregas.forEach(e => { recomCounts[clasificarRecomendacion(e)]++; });
+
+    // Cobertura
+    const unicos = trabConEntrega.size;
+    const promedio = unicos > 0 ? (entregas.length / unicos).toFixed(1) : "0";
+    const fechas = entregas.map(e => new Date(e.fecha)).filter(f => !isNaN(f));
+    const masReciente = fechas.length > 0
+      ? new Date(Math.max(...fechas)).toLocaleDateString("es-CO", { day:"2-digit", month:"long", year:"numeric" })
+      : "—";
+
+    // Sedes
+    const bySede = {};
+    entregas.forEach(e => {
+      const cliente = rawClients.find(c => c.id === e.cliente_id);
+      const sede = cliente?.sede || "Sin sede";
+      if (!bySede[sede]) bySede[sede] = { total: 0, conSeguimiento: 0, sinSeguimiento: 0 };
+      bySede[sede].total++;
+      if (tieneSeguimientoEntrega(e)) bySede[sede].conSeguimiento++;
+      else bySede[sede].sinSeguimiento++;
+    });
+    const bySedeUnificado = unificarSedes(bySede);
+
+    return {
+      fechaGeneracion: new Date().toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"}),
+      filtros: {
+        empresa: empresaNombre,
+        sede: sedeVal || "Todas",
+        modalidad: "Entrega Individual de Resultados",
+        anio: anio ? String(anio) : "Todos",
+        mes: mes ? MESES_FULL[mes-1] : "Todo el año",
+      },
+      esGeneral: !empresaId,
+      esSVE: false,
+      esEntrega: true,
+      kpis: {
+        trabajadores:  trabConEntrega.size,
+        entregas:      entregas.length,
+        conSeguimiento,
+        conRetro,
+        profActivos,
+      },
+      estados: { conRetro, pendientes },
+      pruebasProfundidad: pruebasOrdenadas,
+      recomendaciones: recomCounts,
+      cobertura: { unicos, promedio, profActivos, conSeguimiento, conRetro, masReciente },
+      sedes: bySedeUnificado,
+    };
+  }
+
   // ─── SNAPSHOT PARA INFORME ─────────────────────────
   function buildSnapshot(clientes, sesiones) {
+    if (document.getElementById("filterModalidad").value === "entrega") {
+      return buildSnapshotEntrega(clientes, sesiones);
+    }
+
     const casos = agruparEnCasos(sesiones);
 
     // Filtros activos

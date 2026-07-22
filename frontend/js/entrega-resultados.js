@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let trabajadores = [];
 
       if (isProfesional) {
-        const modalidades = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica'];
+        const modalidades = ['Orientación Psicosocial', 'Sistema de Vigilancia Epidemiológica', 'Entrega Individual de Resultados'];
         const peticiones = modalidades.map(m =>
           fetch(`${API_URL}/api/clients?profesional_id=${profesionalId}&modalidad=${encodeURIComponent(m)}`,
             { headers: { 'Authorization': `Bearer ${getToken()}` } })

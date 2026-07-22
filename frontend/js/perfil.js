@@ -283,7 +283,7 @@
     // Botón volver
     if (btnBack) {
       btnBack.addEventListener("click", () => {
-        window.location.href = "index.html";
+        window.location.href = "buscar-trabajador.html";
       });
     }
     

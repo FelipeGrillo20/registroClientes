@@ -8,6 +8,9 @@ const { isAdmin } = require("../middleware/adminMiddleware");
 // RUTAS PÚBLICAS (sin autenticación)
 // ============================================
 
+// Ruta para obtener un captcha (pregunta + token firmado)
+router.get("/captcha", authController.getCaptcha);
+
 // Ruta de login
 router.post("/login", authController.login);
 

@@ -102,18 +102,53 @@
       cards.forEach(card => {
         card.addEventListener('click', (e) => {
           e.preventDefault();
-          
+
           // Obtener el texto de la modalidad desde el h2
           const modalidadTexto = card.querySelector('.card-title').textContent.trim();
-          
+
           // Guardar en localStorage
           localStorage.setItem('modalidadSeleccionada', modalidadTexto);
-          
+
+          // ⭐ De dónde venimos:
+          // - 'cedula'   → (desde buscar-trabajador.html) se buscó una cédula
+          //                puntual; hay que revisar en qué modalidades YA
+          //                está registrado ese trabajador.
+          // - 'registro' → (desde index.html) el profesional está registrando
+          //                un trabajador y solo está cambiando de modalidad.
+          // - sin bandera (o 'revisar') → el profesional solo quiere ver su
+          //                listado (ej. botón "Seleccionar Modalidad" en
+          //                buscar-trabajador.html, "← Modalidad" desde
+          //                clientes.html, o el redireccionamiento automático
+          //                cuando clientes.html no tiene modalidad elegida).
+          const origenBusqueda = sessionStorage.getItem('origenBusqueda');
+          sessionStorage.removeItem('origenBusqueda');
+
+          let modalidadesRegistradas = [];
+          try {
+            modalidadesRegistradas = JSON.parse(sessionStorage.getItem('modalidadesRegistradas') || '[]');
+          } catch (e) {
+            modalidadesRegistradas = [];
+          }
+          sessionStorage.removeItem('modalidadesRegistradas');
+
           // Redireccionar según modalidad
           if (card.classList.contains('card-entrega')) {
+            // Entrega Individual de Resultados tiene su propio flujo de
+            // búsqueda de trabajador dentro de la página.
             window.location.href = 'entrega-resultados.html';
-          } else {
+          } else if (origenBusqueda === 'cedula') {
+            // ¿El trabajador ya está registrado en la modalidad elegida?
+            if (modalidadesRegistradas.includes(modalidadTexto)) {
+              window.location.href = 'clientes.html';
+            } else {
+              window.location.href = 'index.html';
+            }
+          } else if (origenBusqueda === 'registro') {
             window.location.href = 'index.html';
+          } else {
+            // Por defecto (incluye 'revisar' y cualquier llegada sin bandera):
+            // el objetivo es ver el listado de trabajadores ya registrados.
+            window.location.href = 'clientes.html';
           }
         });
       });

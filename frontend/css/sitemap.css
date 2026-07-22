@@ -40,7 +40,7 @@
   align-self: center;
 }
 
-/* ====== CONTENEDOR DE LA RUEDA — compacto para 7 items ====== */
+/* ====== CONTENEDOR DE LA RUEDA — compacto para 8 items ====== */
 .wheel-container {
   position: relative;
   width: 640px;
@@ -107,7 +107,7 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* ====== ITEMS DE LA RUEDA — compactos para 7 items ====== */
+/* ====== ITEMS DE LA RUEDA — compactos para 8 items ====== */
 .wheel-item {
   position: absolute;
   width: 132px;

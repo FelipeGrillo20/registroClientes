@@ -96,6 +96,32 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.user-right-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-atras {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-atras:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 .btn-logout {
   background: rgba(255, 255, 255, 0.2) !important;
   color: white !important;
@@ -143,6 +169,66 @@ body {
 .modalidad-indicador .modalidad-text strong {
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================ */
+/* SELECTOR RÁPIDO DE MODALIDAD (sin salir de la página) */
+/* ============================================ */
+.selector-modalidad-rapido {
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 18px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: slideInDown 0.5s ease-out;
+  text-align: center;
+}
+
+.selector-modalidad-texto {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.selector-modalidad-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-modalidad-rapida {
+  background: rgba(255, 255, 255, 0.9);
+  color: #4a3f8a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.btn-modalidad-rapida:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Modalidad actualmente seleccionada, dentro del selector */
+.btn-modalidad-rapida.activo {
+  background: #4a3f8a;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7) inset;
+}
+
+.btn-modalidad-rapida.activo:hover {
+  background: #3a3170;
 }
 
 /* Animación de entrada */
@@ -1034,7 +1120,14 @@ form#clientForm.modalidad-op #name {
     padding: 6px 12px !important;
     width: fit-content;
   }
-  
+
+  .user-right-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .btn-atras,
   .btn-logout {
     width: 100%;
     text-align: center;
@@ -1118,11 +1211,12 @@ form#clientForm.modalidad-op #name {
     padding: 5px 10px !important;
   }
   
+  .btn-atras,
   .btn-logout {
     font-size: 12px;
     padding: 7px 14px !important;
   }
-  
+
   .form-row label {
     font-size: 13px;
   }

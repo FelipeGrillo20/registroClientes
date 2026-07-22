@@ -26,7 +26,22 @@
     const paginaActual = window.location.pathname.split('/').pop();
     return paginasConModalidad.includes(paginaActual);
   }
-  
+
+  // ⭐ NUEVO: Botón "Atrás" del menú superior — a dónde debe llevar según
+  // la página actual, siguiendo el flujo: buscar-trabajador → modalidad →
+  // index.html (registrar) / clientes.html (ver registrados)
+  function obtenerDestinoAtras() {
+    const destinos = {
+      'index.html':     'buscar-trabajador.html',
+      'modalidad.html': 'buscar-trabajador.html',
+      'clientes.html':  'modalidad.html',
+      'sitemap.html':   'buscar-trabajador.html',
+    };
+
+    const paginaActual = window.location.pathname.split('/').pop();
+    return destinos[paginaActual] || null;
+  }
+
   // Verificar autenticación al cargar la página
   async function checkAuth() {
     const token = localStorage.getItem("authToken");
@@ -90,11 +105,21 @@
   // ⭐ MEJORADO: Mostrar modalidad seleccionada SIN redirección agresiva
   function displayModalidadIndicador() {
     const modalidadIndicador = document.getElementById("modalidadIndicador");
-    
+
     if (!modalidadIndicador) {
       return; // Si no existe el elemento, salir
     }
-    
+
+    // ⭐ index.html tiene su propio selector rápido de modalidad
+    // (verificarModalidadSeleccionada en script.js) que ya controla este
+    // mismo elemento en tiempo real. Si esta función también lo pisa,
+    // borra el <strong id="modalidadNombre"> justo cuando el usuario elige
+    // una modalidad, dejando el aviso rosa "Sin modalidad" pegado en pantalla.
+    const paginaActual = window.location.pathname.split('/').pop();
+    if (paginaActual === 'index.html') {
+      return;
+    }
+
     // Obtener la modalidad desde localStorage
     let modalidad = localStorage.getItem('modalidadSeleccionada');
     
@@ -157,6 +182,12 @@
       return;
     }
     
+    // ⭐ NUEVO: Botón "Atrás", solo en las páginas que tienen un destino definido
+    const destinoAtras = obtenerDestinoAtras();
+    const btnAtrasHtml = destinoAtras
+      ? `<button type="button" id="btnAtras" class="btn-atras" data-destino="${destinoAtras}">← Atrás</button>`
+      : '';
+
     // Mostrar el elemento y actualizar contenidos
     userInfoElement.style.display = "flex";
     userInfoElement.innerHTML = `
@@ -169,25 +200,36 @@
           🗺️ Mapa de Sitio
         </button>
       </div>
-      <button id="btnLogout" class="btn-logout">Cerrar sesión</button>
+      <div class="user-right-section">
+        ${btnAtrasHtml}
+        <button id="btnLogout" class="btn-logout">Cerrar sesión</button>
+      </div>
     `;
-    
+
     // Agregar evento de logout
     const btnLogout = document.getElementById("btnLogout");
     if (btnLogout) {
       btnLogout.addEventListener("click", logout);
     }
-    
+
     // Agregar evento al botón Mi Perfil
     const btnMiPerfil = document.getElementById("btnMiPerfil");
     if (btnMiPerfil) {
       btnMiPerfil.addEventListener("click", abrirMiPerfil);
     }
-    
+
     // ⭐ NUEVO: Agregar evento al botón Mapa de Sitio
     const btnMapaSitio = document.getElementById("btnMapaSitio");
     if (btnMapaSitio) {
       btnMapaSitio.addEventListener("click", abrirMapaSitio);
+    }
+
+    // ⭐ NUEVO: Agregar evento al botón Atrás
+    const btnAtras = document.getElementById("btnAtras");
+    if (btnAtras) {
+      btnAtras.addEventListener("click", () => {
+        window.location.href = btnAtras.dataset.destino;
+      });
     }
   }
   

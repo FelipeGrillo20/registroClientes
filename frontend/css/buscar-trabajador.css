@@ -1,0 +1,373 @@
+/* css/buscar-trabajador.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* ====== BARRA DE USUARIO ====== */
+.user-info-bar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-name {
+  color: white !important;
+  font-weight: 600;
+  font-size: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-mi-perfil,
+.btn-sitemap {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-mi-perfil:hover,
+.btn-sitemap:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background: white !important;
+  color: #667eea !important;
+  transform: translateY(-2px);
+}
+
+/* ====== CONTENEDOR PRINCIPAL ====== */
+.buscar-container {
+  max-width: 620px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 30px;
+}
+
+.buscar-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 40px 35px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* ====== ENCABEZADO ====== */
+.header-section {
+  text-align: center;
+}
+
+.main-title {
+  font-size: 1.9em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 1.05em;
+  color: #5a6c7d;
+  font-weight: 500;
+}
+
+/* ====== TARJETAS ====== */
+.buscar-card {
+  background: #f8f9ff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px 26px;
+  text-align: center;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.buscar-card:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
+.buscar-card-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.buscar-card-title {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 16px;
+}
+
+.buscar-card-desc {
+  font-size: 0.92em;
+  color: #6b7a99;
+  margin-bottom: 18px;
+}
+
+/* ====== FORMULARIO DE BÚSQUEDA ====== */
+.buscar-form {
+  display: flex;
+  gap: 10px;
+}
+
+.buscar-form input {
+  flex: 1;
+  padding: 13px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1em;
+  font-family: inherit;
+  color: #2d3748;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.buscar-form input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+}
+
+.btn-buscar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 13px 24px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-buscar:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+}
+
+.btn-buscar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.buscar-mensaje {
+  margin-top: 14px;
+  font-size: 0.92em;
+  font-weight: 600;
+  min-height: 1.3em;
+}
+
+.buscar-mensaje.mensaje-ok {
+  color: #2e7d32;
+}
+
+.buscar-mensaje.mensaje-error {
+  color: #c62828;
+}
+
+.buscar-mensaje.mensaje-info {
+  color: #6b7a99;
+}
+
+.buscar-modalidades-info {
+  margin-top: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: #6b7a99;
+  min-height: 1.2em;
+}
+
+/* ====== SEPARADOR ====== */
+.buscar-separador {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #9aa3b5;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.buscar-separador::before,
+.buscar-separador::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.buscar-separador span {
+  padding: 0 14px;
+}
+
+/* ====== TARJETA REGISTRAR ====== */
+.buscar-card-registrar {
+  background: #fff8ec;
+  border-color: #ffe1a8;
+}
+
+.buscar-card-registrar:focus-within {
+  border-color: #f7971e;
+  box-shadow: 0 0 0 4px rgba(247, 151, 30, 0.12);
+}
+
+.btn-registrar {
+  background: linear-gradient(135deg, #f7971e 0%, #e07b00 100%);
+  color: white;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-registrar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(224, 123, 0, 0.35);
+}
+
+/* Resaltado temporal cuando la búsqueda no encuentra nada */
+.buscar-card-registrar.resaltar {
+  animation: pulseResaltar 1.4s ease-in-out 2;
+}
+
+@keyframes pulseResaltar {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(247, 151, 30, 0.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(247, 151, 30, 0); }
+}
+
+/* ====== ACCESO DIRECTO A TRABAJADORES YA REGISTRADOS ====== */
+.buscar-acceso-directo {
+  text-align: center;
+}
+
+.buscar-acceso-directo .buscar-card-desc {
+  margin-bottom: 16px;
+}
+
+.btn-seleccionar-modalidad {
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: #fff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-seleccionar-modalidad:hover {
+  background: linear-gradient(135deg, #732d91, #8e44ad);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+}
+
+/* ====== FOOTER ====== */
+.footer-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 480px) {
+  .buscar-wrapper {
+    padding: 28px 20px;
+    border-radius: 18px;
+  }
+
+  .main-title {
+    font-size: 1.5em;
+  }
+
+  .buscar-form {
+    flex-direction: column;
+  }
+
+  .btn-buscar {
+    width: 100%;
+  }
+
+  .user-info-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .user-left-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-logout {
+    width: 100%;
+    text-align: center;
+  }
+}

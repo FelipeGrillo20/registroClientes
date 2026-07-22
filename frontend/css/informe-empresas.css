@@ -282,6 +282,10 @@ body {
 .kpi-grid.kpi-grid-sve {
   grid-template-columns: repeat(4, 1fr);
 }
+/* Entrega Individual de Resultados: 5 tarjetas visibles */
+.kpi-grid.kpi-grid-entrega {
+  grid-template-columns: repeat(5, 1fr);
+}
 
 .kpi-card {
   background: rgba(30,28,60,0.75);

@@ -67,6 +67,7 @@
         <option value="">Todas</option>
         <option value="orientacion">Orientación Psicosocial</option>
         <option value="vigilancia">SVE</option>
+        <option value="entrega">Entrega Individual de Resultados</option>
       </select>
     </div>
     <div class="filter-group">
@@ -115,23 +116,23 @@
           </div>
         </div>
         <div class="kpi-card kpi-blue">
-          <div class="kpi-icon">📋</div>
+          <div class="kpi-icon" id="kpiIconSesiones">📋</div>
           <div class="kpi-body">
-            <p class="kpi-label">Total de sesiones</p>
+            <p class="kpi-label" id="kpiLabelSesiones">Total de sesiones</p>
             <p class="kpi-value" id="kpiSesiones">—</p>
           </div>
         </div>
         <div class="kpi-card kpi-orange">
-          <div class="kpi-icon">🔓</div>
+          <div class="kpi-icon" id="kpiIconAbiertos">🔓</div>
           <div class="kpi-body">
-            <p class="kpi-label">Casos abiertos</p>
+            <p class="kpi-label" id="kpiLabelAbiertos">Casos abiertos</p>
             <p class="kpi-value" id="kpiAbiertos">—</p>
           </div>
         </div>
         <div class="kpi-card kpi-emerald">
-          <div class="kpi-icon">✅</div>
+          <div class="kpi-icon" id="kpiIconCerrados">✅</div>
           <div class="kpi-body">
-            <p class="kpi-label">Casos cerrados</p>
+            <p class="kpi-label" id="kpiLabelCerrados">Casos cerrados</p>
             <p class="kpi-value" id="kpiCerrados">—</p>
           </div>
         </div>
@@ -147,6 +148,13 @@
           <div class="kpi-body">
             <p class="kpi-label">Casos críticos</p>
             <p class="kpi-value" id="kpiCriticos">—</p>
+          </div>
+        </div>
+        <div class="kpi-card kpi-teal" id="cardProfesionales" style="display:none;">
+          <div class="kpi-icon">🧑‍⚕️</div>
+          <div class="kpi-body">
+            <p class="kpi-label">Profesionales activos</p>
+            <p class="kpi-value" id="kpiProfesionales">—</p>
           </div>
         </div>
       </div>
@@ -168,7 +176,7 @@
           <div id="tablaMotivos" class="tabla-motivos-wrapper"></div>
         </div>
         <div class="chart-card">
-          <p class="chart-title">Abiertos vs Cerrados</p>
+          <p class="chart-title" id="tituloEstados">Abiertos vs Cerrados</p>
           <div class="chart-wrap chart-wrap-sm"><canvas id="chartEstados"></canvas></div>
         </div>
       </div>
@@ -197,12 +205,12 @@
     <section class="section-block">
       <div class="section-header">
         <span class="section-num">04</span>
-        <h2 class="section-title">Indicador de Complejidad</h2>
-        <span class="section-desc">Clasificación según sesiones y confidencialidad</span>
+        <h2 class="section-title" id="tituloComplejidadSeccion">Indicador de Complejidad</h2>
+        <span class="section-desc" id="descComplejidadSeccion">Clasificación según sesiones y confidencialidad</span>
       </div>
       <div class="charts-row">
         <div class="chart-card">
-          <p class="chart-title">Distribución de casos</p>
+          <p class="chart-title" id="tituloComplejidadChart">Distribución de casos</p>
           <div class="chart-wrap chart-wrap-sm"><canvas id="chartComplejidad"></canvas></div>
         </div>
         <div class="complexity-legend">
@@ -299,27 +307,27 @@
       </div>
       <div class="coverage-grid">
         <div class="cov-card">
-          <p class="cov-label">Trabajadores únicos</p>
+          <p class="cov-label" id="covLabelUnicos">Trabajadores únicos</p>
           <p class="cov-value" id="covUnicos">—</p>
         </div>
         <div class="cov-card">
-          <p class="cov-label">Promedio sesiones / trabajador</p>
+          <p class="cov-label" id="covLabelPromedio">Promedio sesiones / trabajador</p>
           <p class="cov-value" id="covPromedio">—</p>
         </div>
         <div class="cov-card">
-          <p class="cov-label">Modalidad más frecuente</p>
+          <p class="cov-label" id="covLabelModalidad">Modalidad más frecuente</p>
           <p class="cov-value cov-value-sm" id="covModalidad">—</p>
         </div>
         <div class="cov-card">
-          <p class="cov-label">Sesiones virtuales</p>
+          <p class="cov-label" id="covLabelVirtual">Sesiones virtuales</p>
           <p class="cov-value" id="covVirtual">—</p>
         </div>
         <div class="cov-card">
-          <p class="cov-label">Sesiones presenciales</p>
+          <p class="cov-label" id="covLabelPresencial">Sesiones presenciales</p>
           <p class="cov-value" id="covPresencial">—</p>
         </div>
         <div class="cov-card">
-          <p class="cov-label">Sesión más reciente</p>
+          <p class="cov-label" id="covLabelReciente">Sesión más reciente</p>
           <p class="cov-value cov-value-sm" id="covReciente">—</p>
         </div>
       </div>
@@ -334,11 +342,11 @@
       </div>
       <div class="charts-row">
         <div class="chart-card chart-wide">
-          <p class="chart-title">Sesiones totales por sede</p>
+          <p class="chart-title" id="tituloSedesTotal">Sesiones totales por sede</p>
           <div class="chart-wrap"><canvas id="chartSedes"></canvas></div>
         </div>
         <div class="chart-card">
-          <p class="chart-title">Complejidad por sede</p>
+          <p class="chart-title" id="tituloSedesComplejidad">Complejidad por sede</p>
           <div class="chart-wrap chart-wrap-sm"><canvas id="chartSedesComplejidad"></canvas></div>
         </div>
       </div>

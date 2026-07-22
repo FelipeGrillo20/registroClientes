@@ -3,7 +3,7 @@
 const API_URL = window.API_CONFIG.BASE_URL + "/api/auth";
 
 // Variables del captcha
-let captchaAnswer = 0;
+let currentCaptchaToken = null;
 
 // Referencias DOM
 const loginForm = document.getElementById("loginForm");
@@ -36,14 +36,25 @@ if (btnTogglePassword) {
   });
 }
 
-// Generar captcha matemático simple
-function generateCaptcha() {
-  const num1 = Math.floor(Math.random() * 10) + 1;
-  const num2 = Math.floor(Math.random() * 10) + 1;
-  captchaAnswer = num1 + num2;
-  
-  document.getElementById("captchaQuestion").textContent = `${num1} + ${num2} = ?`;
+// Pedir un captcha nuevo al servidor (pregunta + token firmado con la respuesta)
+async function generateCaptcha() {
   captchaAnswerInput.value = "";
+
+  try {
+    const response = await fetch(window.API_CONFIG.ENDPOINTS.AUTH.CAPTCHA);
+    const data = await response.json();
+
+    if (data.success) {
+      currentCaptchaToken = data.captchaToken;
+      document.getElementById("captchaQuestion").textContent = data.question;
+    } else {
+      throw new Error("Respuesta inválida del servidor");
+    }
+  } catch (err) {
+    console.error("Error obteniendo captcha:", err);
+    currentCaptchaToken = null;
+    document.getElementById("captchaQuestion").textContent = "Error cargando captcha";
+  }
 }
 
 // Mostrar mensaje de error
@@ -70,12 +81,6 @@ function setLoading(isLoading) {
     btnLogin.disabled = false;
     btnLogin.style.cursor = "pointer";
   }
-}
-
-// Validar captcha
-function validateCaptcha() {
-  const userAnswer = parseInt(captchaAnswerInput.value);
-  return userAnswer === captchaAnswer;
 }
 
 // Manejar submit del formulario
@@ -105,23 +110,22 @@ loginForm.addEventListener("submit", async (e) => {
     return;
   }
   
-  // Validar captcha
-  if (!validateCaptcha()) {
-    showError("Captcha incorrecto. Por favor intenta de nuevo");
-    generateCaptcha();
+  if (!captchaAnswerInput.value) {
+    showError("Por favor completa el captcha");
     return;
   }
-  
+
   console.log("Validaciones pasadas, enviando al servidor...");
-  
+
   // Realizar login
   setLoading(true);
-  
+
   try {
     const requestBody = {
       cedula,
       password,
-      captchaToken: "valid"
+      captchaToken: currentCaptchaToken,
+      captchaAnswer: captchaAnswerInput.value
     };
     
     console.log("Request body:", requestBody);
@@ -161,10 +165,10 @@ loginForm.addEventListener("submit", async (e) => {
       // Mostrar mensaje de éxito
       showSuccess("¡Bienvenido! Redirigiendo...");
       
-      // ⭐ CAMBIO: Redireccionar a modalidad.html en lugar de index.html
+      // ⭐ CAMBIO: Redireccionar a buscar-trabajador.html en lugar de modalidad.html
       setTimeout(() => {
-        console.log("Redirigiendo a modalidad.html");
-        window.location.href = "modalidad.html";
+        console.log("Redirigiendo a buscar-trabajador.html");
+        window.location.href = "buscar-trabajador.html";
       }, 1000);
     } else {
       throw new Error("Respuesta inválida del servidor");
@@ -233,8 +237,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       if (data.success) {
         console.log("Token válido, redirigiendo...");
-        // ⭐ CAMBIO: Token válido, redireccionar a modalidad.html
-        window.location.href = "modalidad.html";
+        // ⭐ CAMBIO: Token válido, redireccionar a buscar-trabajador.html
+        window.location.href = "buscar-trabajador.html";
       } else {
         console.log("Token inválido, limpiando...");
         // Token inválido, limpiar localStorage

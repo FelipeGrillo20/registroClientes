@@ -11,28 +11,11 @@
   let creditosAsignados = [];
 
   // ========== PERSISTENCIA DE ASIGNACIONES ==========
-  // Clave: "profesionalId_clienteId_sesionId" → { credito_id, horas_asignadas }
-  // Se guarda en localStorage para sobrevivir entre recargas de página
+  // v2: Las asignaciones se persisten en la BD (tabla asignaciones_creditos).
+  // El Map _asignaciones se mantiene solo como caché en memoria para la sesión
+  // actual del modal (evitar llamadas repetidas a la API dentro de la misma sesión).
 
-  const STORAGE_KEY = `creditos_asignaciones_${modalidadPrograma}`;
-
-  function _cargarAsignaciones() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return new Map();
-      return new Map(JSON.parse(raw));
-    } catch (_) {
-      return new Map();
-    }
-  }
-
-  function _guardarAsignaciones() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([..._asignaciones]));
-    } catch (_) {}
-  }
-
-  const _asignaciones = _cargarAsignaciones();
+  const _asignaciones = new Map(); // creditoId_sesionKey → { credito_id, horas_asignadas }
 
   // ========== ELEMENTOS DEL DOM ==========
   const elements = {
@@ -549,14 +532,24 @@
         return;
       }
 
-      // Cargar créditos disponibles
-      const creditos = await cargarCreditosParaModal();
+      // Cargar créditos disponibles y asignaciones existentes en BD en paralelo
+      const [creditos, asignacionesBD] = await Promise.all([
+        cargarCreditosParaModal(),
+        cargarAsignacionesBD(profesionalId, anio, mes)
+      ]);
 
       // Renderizar una fila por cada sesión
       sesiones.forEach(sesion => {
-        // Clave de persistencia: profesional + trabajador + sesion.id
-        const clave   = `${profesionalId}_${sesion.cliente_id}_${sesion.id}`;
-        const guardado = _asignaciones.get(clave) || {};
+        // Consultar si ya hay asignación en BD para esta sesión
+        const asignacionExistente = asignacionesBD.find(
+          a => String(a.sesion_id) === String(sesion.id)
+        );
+        // Compatibilidad con el Map en memoria (caché de la sesión actual)
+        const clave    = `${profesionalId}_${sesion.cliente_id}_${sesion.id}`;
+        const enMemoria = _asignaciones.get(clave) || {};
+        const guardado  = asignacionExistente
+          ? { credito_id: asignacionExistente.credito_id, horas_asignadas: asignacionExistente.horas_asignadas }
+          : enMemoria;
 
         const registro = {
           id:                 `ses_${sesion.id}`,
@@ -652,6 +645,57 @@
       return (data.success && Array.isArray(data.data)) ? data.data : [];
     } catch (error) {
       console.error('❌ Error al cargar créditos para modal:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Cargar asignaciones existentes en la BD para un profesional + periodo
+   * Permite precargar el estado "Asignado" en cada fila al abrir el modal
+   */
+  async function cargarAsignacionesBD(profesionalId, anio, mes) {
+    try {
+      const token = localStorage.getItem('authToken');
+      // Traemos todos los créditos del periodo y sus asignaciones
+      const res = await fetch(
+        `${API_URL}/api/creditos?anio=${anio}&mes=${mes}&modalidad_programa=${encodeURIComponent(modalidadPrograma)}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (!res.ok) return [];
+      const data    = await res.json();
+      const creditos = (data.success && Array.isArray(data.data)) ? data.data : [];
+
+      // Para cada crédito del periodo, traer sus asignaciones
+      const todasAsignaciones = [];
+      await Promise.all(creditos.map(async c => {
+        try {
+          const r = await fetch(
+            `${API_URL}/api/creditos/${c.id}/asignaciones`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          if (!r.ok) return;
+          const d = await r.json();
+          if (Array.isArray(d.data)) {
+            // Filtrar solo las del profesional actual
+            d.data
+              .filter(a => String(a.profesional_id) === String(profesionalId))
+              .forEach(a => todasAsignaciones.push(a));
+          }
+        } catch (_) {}
+      }));
+
+      // Poblar también el Map en memoria como caché
+      todasAsignaciones.forEach(a => {
+        const clave = `${a.profesional_id}_${a.trabajador_id}_${a.sesion_id}`;
+        _asignaciones.set(clave, {
+          credito_id:      a.credito_id,
+          horas_asignadas: a.horas_asignadas
+        });
+      });
+
+      return todasAsignaciones;
+    } catch (err) {
+      console.error('❌ Error al cargar asignaciones BD:', err);
       return [];
     }
   }
@@ -789,10 +833,21 @@
 
     try {
       const token    = localStorage.getItem('authToken');
+
+      // ── Consumir horas + guardar asignación en BD ────────────────────────
       const response = await fetch(`${API_URL}/api/creditos/${creditoId}/consumir`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ horas })
+        body: JSON.stringify({
+          horas,
+          // Datos para registrar la asignación en asignaciones_creditos
+          profesional_id:     registro.profesional_id,
+          trabajador_id:      registro.trabajador_id,
+          sesion_id:          registro.sesion_id,
+          fecha_sesion:       registro.fecha_sesion || null,
+          profesional_nombre: registro.profesional_nombre || null,
+          trabajador_nombre:  registro.trabajador_nombre  || null
+        })
       });
 
       const data = await response.json();
@@ -800,12 +855,11 @@
 
       console.log(`✅ Consumidas ${horas}h del crédito ${creditoId} para ${registro.trabajador_nombre}`);
 
-      // Guardar en el registro y persistir en el Map
+      // Actualizar caché en memoria
       registro.credito_id      = parseInt(creditoId);
       registro.horas_asignadas = horas;
       const claveAsig = `${registro.profesional_id}_${registro.trabajador_id}_${registro.sesion_id || registro.id}`;
       _asignaciones.set(claveAsig, { credito_id: parseInt(creditoId), horas_asignadas: horas });
-      _guardarAsignaciones();
 
       // Actualizar horas disponibles en el objeto local y en todos los selects del modal
       const creditoObj = creditos.find(c => String(c.id) === String(creditoId));
@@ -839,7 +893,6 @@
         .addEventListener('click', () => quitarAsignacionFila(tr, registro, creditos));
 
       cargarCreditosFiltrados();
-      // Si el modal Sin Asignación está abierto, refrescarlo para quitar la sesión asignada
       if (elements.modalSA.classList.contains('active') &&
           elements.modalSAProfesional.value === registro.profesional_id) {
         cargarSesionesSinAsignacion();
@@ -864,15 +917,23 @@
     const btnQuitar = tr.querySelector('.btn-quitar-fila');
     if (btnQuitar) { btnQuitar.disabled = true; btnQuitar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
 
-    const creditoAnteriorId  = registro.credito_id;
-    const horasADevolver     = parseFloat(registro.horas_asignadas) || parseFloat(registro.horas) || 1;
+    const creditoAnteriorId = registro.credito_id;
+    const horasADevolver    = parseFloat(registro.horas_asignadas) || parseFloat(registro.horas) || 1;
 
     try {
       const token    = localStorage.getItem('authToken');
+
+      // ── Devolver horas + eliminar asignación en BD ───────────────────────
       const response = await fetch(`${API_URL}/api/creditos/${creditoAnteriorId}/devolver`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ horas: horasADevolver })
+        body: JSON.stringify({
+          horas:          horasADevolver,
+          // Datos para eliminar la fila en asignaciones_creditos
+          profesional_id: registro.profesional_id,
+          trabajador_id:  registro.trabajador_id,
+          sesion_id:      registro.sesion_id || registro.id
+        })
       });
 
       const data = await response.json();
@@ -882,11 +943,8 @@
       if (!response.ok) {
         if (response.status === 404 || (data.message && data.message.toLowerCase().includes('no encontrado'))) {
           console.warn('⚠️ Crédito no encontrado en BD — limpiando asignación local');
-          // Limpiar Map y localStorage
           const claveF = `${registro.profesional_id}_${registro.trabajador_id}_${registro.sesion_id || registro.id}`;
           _asignaciones.delete(claveF);
-          _guardarAsignaciones();
-          // Restaurar UI
           registro.credito_id      = null;
           registro.horas_asignadas = null;
           const tdFmtF = tr.querySelector('td:nth-last-child(2)');
@@ -903,11 +961,11 @@
         throw new Error(data.message || 'Error al quitar asignación');
       }
 
+      // Limpiar caché en memoria
       registro.credito_id      = null;
       registro.horas_asignadas = null;
       const claveQuitar = `${registro.profesional_id}_${registro.trabajador_id}_${registro.sesion_id || registro.id}`;
       _asignaciones.delete(claveQuitar);
-      _guardarAsignaciones();
 
       // Actualizar horas disponibles en objeto local y selects
       const creditoObj = creditos.find(c => String(c.id) === String(creditoAnteriorId));
@@ -935,7 +993,6 @@
         .addEventListener('click', () => asignarCreditoFila(tr, registro, creditos));
 
       cargarCreditosFiltrados();
-      // Si el modal Sin Asignación está abierto, refrescarlo para mostrar la sesión devuelta
       if (elements.modalSA.classList.contains('active') &&
           elements.modalSAProfesional.value === registro.profesional_id) {
         cargarSesionesSinAsignacion();

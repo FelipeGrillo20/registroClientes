@@ -690,11 +690,9 @@
   };
 
   const kpiDef = d.esEntrega ? [
-    { icon: SVG.personas, label:"Trabajadores atendidos",     val: d.kpis.trabajadores,   cls:"kpi-c1" },
-    { icon: SVG.lista,    label:"Entregas totales",           val: d.kpis.entregas,       cls:"kpi-c2" },
-    { icon: SVG.candadoA, label:"Con seguimiento",            val: d.kpis.conSeguimiento, cls:"kpi-c3" },
-    { icon: SVG.check,    label:"Con retroalimentación",      val: d.kpis.conRetro,       cls:"kpi-c6" },
-    { icon: SVG.reingreso,label:"Profesionales activos",      val: d.kpis.profActivos,    cls:"kpi-c7" },
+    { icon: SVG.carpeta,  label:"Entregas individuales",      val: d.kpis.conPlantilla,       cls:"kpi-c3" },
+    { icon: SVG.check,    label:"Pruebas de profundidad",     val: d.kpis.conArchivoPruebas,  cls:"kpi-c6" },
+    { icon: SVG.reingreso,label:"Profesionales activos",      val: d.kpis.profActivos,        cls:"kpi-c7" },
   ] : [
     { icon: SVG.personas, label:"Trabajadores atendidos", val: d.kpis.trabajadores,  cls:"kpi-c1" },
     { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
@@ -774,15 +772,17 @@
 
   // Estados
   const estadosLabels = d.esEntrega
-    ? ["Con retroalimentación", "Pendientes"]
+    ? ["Entregas individuales", "Pruebas de profundidad"]
     : ["Abiertas", "Cerradas"];
   const estadosVals = d.esEntrega
-    ? [d.estados.conRetro, d.estados.pendientes]
+    ? [d.estados.conPlantilla, d.estados.conArchivoPruebas]
     : [d.estados.abiertos, d.estados.cerrados];
-  const estadosUnidad = d.esEntrega ? "entrega" : "consulta";
+  // En Entrega cada rebanada cuenta algo distinto (registros vs trabajadores)
+  const estadosUnidades = d.esEntrega ? ["registro", "trabajador"] : ["consulta", "consulta"];
+  const estadosPlural   = d.esEntrega ? ["registros", "trabajadores"] : ["consultas", "consultas"];
   const rTituloEstadosEl = document.getElementById("rTituloEstados");
   if (rTituloEstadosEl) {
-    rTituloEstadosEl.textContent = d.esEntrega ? "Con retroalimentación vs pendientes" : "Consultas abiertas vs cerradas";
+    rTituloEstadosEl.textContent = d.esEntrega ? "Entregas individuales vs Pruebas de profundidad" : "Consultas abiertas vs cerradas";
   }
   const [ab, ce] = estadosVals;
   const tot = ab + ce;
@@ -800,7 +800,11 @@
       plugins: {
         legend: { position:"bottom", labels:{ font:{size:11}, padding:10, boxWidth:12 } },
         tooltip: { ...tooltipStyle(), callbacks: {
-          label: ctx => ` ${ctx.parsed} ${estadosUnidad}${ctx.parsed!==1?"s":""} (${tot>0?Math.round(ctx.parsed/tot*100):0}%)`
+          label: ctx => {
+            const val = ctx.parsed;
+            const unidad = val !== 1 ? estadosPlural[ctx.dataIndex] : estadosUnidades[ctx.dataIndex];
+            return ` ${val} ${unidad} (${tot>0?Math.round(val/tot*100):0}%)`;
+          }
         }}
       }
     }
@@ -811,8 +815,14 @@
   const secComplejidadEl = document.getElementById("secComplejidad");
   if (d.esSVE || d.esEntrega) {
     if (secVinculoEl) secVinculoEl.style.display = "none";
-    // Sin Vínculo, Complejidad conserva su propio salto de página
-    if (secComplejidadEl) secComplejidadEl.style.pageBreakBefore = "always";
+    if (d.esEntrega) {
+      // Duplicaba la información de "Pruebas a profundidad" que ya se ve
+      // en la sección 02 (Tendencia de Atenciones) — se oculta.
+      if (secComplejidadEl) secComplejidadEl.style.display = "none";
+    } else if (secComplejidadEl) {
+      // Sin Vínculo, Complejidad conserva su propio salto de página
+      secComplejidadEl.style.pageBreakBefore = "always";
+    }
   } else {
     if (secVinculoEl) secVinculoEl.style.display = "";
     const vinc      = d.vinculos || { trabajadores: 0, familiares: 0 };
@@ -912,16 +922,8 @@
   const rTituloComplejidadChartEl   = document.getElementById("rTituloComplejidadChart");
 
   if (d.esEntrega) {
-    if (rTituloComplejidadSeccionEl) rTituloComplejidadSeccionEl.textContent = "Tipos de Recomendaciones";
-    if (rTituloComplejidadChartEl)   rTituloComplejidadChartEl.textContent   = "Distribución de recomendaciones";
-    const rec = d.recomendaciones || {};
-    renderCompRep([
-      { name:"Manejo estrés",    desc:"Recomendaciones de manejo del estrés",   count: rec["Manejo estrés"] || 0 },
-      { name:"Hábitos de salud", desc:"Recomendaciones de hábitos de salud",    count: rec["Hábitos de salud"] || 0 },
-      { name:"Autocuidado",      desc:"Recomendaciones de autocuidado",         count: rec["Autocuidado"] || 0 },
-      { name:"Comunicación",     desc:"Recomendaciones de comunicación",        count: rec["Comunicación"] || 0 },
-      { name:"Otros",            desc:"Otras recomendaciones",                  count: rec["Otros"] || 0 },
-    ], ["#4f46e5","#059669","#d97706","#0ea5e9","#7c3aed"]);
+    // Sección oculta para Entrega Individual de Resultados (ver arriba) —
+    // duplicaba "Pruebas a profundidad" de la sección 02.
   } else if (d.esSVE) {
     if (rTituloComplejidadSeccionEl) rTituloComplejidadSeccionEl.textContent = "Indicador de Complejidad";
     if (rTituloComplejidadChartEl)   rTituloComplejidadChartEl.textContent   = "Distribución de casos";
@@ -943,31 +945,29 @@
     ], ["#059669","#d97706","#7c3aed","#e11d48"]);
   }
 
-  // ─── COBERTURA ──────────────────────────────────
-  const cov = d.cobertura;
-  const covItems = d.esEntrega ? [
-    { label:"Trabajadores únicos",          val:cov.unicos,         sm:false },
-    { label:"Promedio entregas/trabajador", val:cov.promedio,       sm:false },
-    { label:"Profesionales activos",        val:cov.profActivos,    sm:true  },
-    { label:"Con seguimiento registrado",   val:cov.conSeguimiento, sm:false },
-    { label:"Con retroalimentación",        val:cov.conRetro,       sm:false },
-    { label:"Entrega más reciente",         val:cov.masReciente,    sm:true  },
-  ] : [
-    { label:"Trabajadores únicos",          val:cov.unicos,       sm:false },
-    { label:"Promedio sesiones/trabajador", val:cov.promedio,     sm:false },
-    { label:"Modalidad más frecuente",      val:cov.modFrecuente, sm:true  },
-    { label:"Sesiones virtuales",           val:cov.virtuales,    sm:false },
-    { label:"Sesiones presenciales",        val:cov.presenciales, sm:false },
-    { label:"Sesión más reciente",          val:cov.masReciente,  sm:true  },
-  ];
-  const covGrid = document.getElementById("rCovGrid");
-  covItems.forEach(i => {
-    covGrid.innerHTML += `
-      <div class="cov-card">
-        <div class="cov-label">${i.label}</div>
-        <div class="cov-value ${i.sm?"cov-value-sm":""}">${i.val}</div>
-      </div>`;
-  });
+  // ─── COBERTURA ────────────────────────────────── (oculta en Entrega)
+  const secCoberturaEl = document.getElementById("secCobertura");
+  if (d.esEntrega) {
+    if (secCoberturaEl) secCoberturaEl.style.display = "none";
+  } else {
+    const cov = d.cobertura;
+    const covItems = [
+      { label:"Trabajadores únicos",          val:cov.unicos,       sm:false },
+      { label:"Promedio sesiones/trabajador", val:cov.promedio,     sm:false },
+      { label:"Modalidad más frecuente",      val:cov.modFrecuente, sm:true  },
+      { label:"Sesiones virtuales",           val:cov.virtuales,    sm:false },
+      { label:"Sesiones presenciales",        val:cov.presenciales, sm:false },
+      { label:"Sesión más reciente",          val:cov.masReciente,  sm:true  },
+    ];
+    const covGrid = document.getElementById("rCovGrid");
+    covItems.forEach(i => {
+      covGrid.innerHTML += `
+        <div class="cov-card">
+          <div class="cov-label">${i.label}</div>
+          <div class="cov-value ${i.sm?"cov-value-sm":""}">${i.val}</div>
+        </div>`;
+    });
+  }
 
   // ─── SEDES ──────────────────────────────────────
   const sedes = d.sedes;

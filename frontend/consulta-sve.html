@@ -598,8 +598,19 @@
         <span class="label-icon">📄</span>
         Observaciones de la Consulta
       </label>
-      <textarea 
-        id="observaciones_consulta_sve" 
+
+      <!-- Widget Horas Sesión — igual que en Orientación Psicosocial -->
+      <div class="horas-sesion-widget">
+        <span class="horas-sesion-label">⏱ Horas sesión</span>
+        <button type="button" class="btn-horas btn-horas-dec" id="btnDecHorasSVE" onclick="cambiarHorasSesionSVE(-1)" title="Disminuir horas" disabled>▼</button>
+        <span class="horas-sesion-valor" id="horasSesionValorSVE">1</span>
+        <button type="button" class="btn-horas btn-horas-inc" id="btnIncHorasSVE" onclick="cambiarHorasSesionSVE(1)" title="Aumentar horas">▲</button>
+        <span class="horas-sesion-unidad">hora(s)</span>
+        <input type="hidden" id="horas_sesion_sve" value="1" disabled>
+      </div>
+
+      <textarea
+        id="observaciones_consulta_sve"
         rows="3"
         placeholder="Registre observaciones adicionales de la consulta..."
         disabled

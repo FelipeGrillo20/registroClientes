@@ -384,6 +384,13 @@ function desbloquearFormularioConsulta() {
 
   inputs.forEach(input => { input.disabled = false; });
 
+  // El desbloqueo genérico de arriba habilita TODOS los botones, incluido
+  // btnDecHorasSVE — hay que reafirmar su estado según el valor actual
+  // (deshabilitado si sigue en 1, igual que en Orientación Psicosocial).
+  const btnDecHorasSVE = document.getElementById('btnDecHorasSVE');
+  const horasActuales  = parseInt(document.getElementById('horas_sesion_sve')?.value) || 1;
+  if (btnDecHorasSVE) btnDecHorasSVE.disabled = horasActuales <= 1;
+
   // Aplicar lógica de Nivel de Complejidad después de desbloquear
   actualizarNivelComplejidad();
 }
@@ -475,6 +482,39 @@ function toggleFechaCierreSVE() {
     recomendacionesSVEInput.required = false;
     fechaCierreSVEInput.value = "";
   }
+}
+
+// ============================================
+// WIDGET HORAS SESIÓN (SVE) — mismo comportamiento que en
+// Orientación Psicosocial (consulta-form.js): valor por defecto 1,
+// mínimo 1 (no acepta 0 ni negativos).
+// ============================================
+
+window.cambiarHorasSesionSVE = function(delta) {
+  const hiddenInput = document.getElementById("horas_sesion_sve");
+  const valorSpan   = document.getElementById("horasSesionValorSVE");
+  const btnDec      = document.getElementById("btnDecHorasSVE");
+
+  if (!hiddenInput || !valorSpan) return;
+
+  let actual = parseInt(hiddenInput.value) || 1;
+  actual += delta;
+  if (actual < 1) actual = 1; // nunca cero ni negativo
+
+  hiddenInput.value     = actual;
+  valorSpan.textContent = actual;
+
+  // Deshabilitar botón de decrementar cuando llegue a 1
+  if (btnDec) btnDec.disabled = actual <= 1;
+};
+
+function resetHorasSesionSVE() {
+  const hiddenInput = document.getElementById("horas_sesion_sve");
+  const valorSpan   = document.getElementById("horasSesionValorSVE");
+  const btnDec      = document.getElementById("btnDecHorasSVE");
+  if (hiddenInput) hiddenInput.value = "1";
+  if (valorSpan)   valorSpan.textContent = "1";
+  if (btnDec)      btnDec.disabled = true;
 }
 
 // ============================================
@@ -578,6 +618,7 @@ async function registrarConsultaSVE(e) {
     recomendaciones_empresa: document.getElementById('recomendaciones_empresa_sve').value.trim() || null,
     observaciones: document.getElementById('observaciones_consulta_sve').value.trim() || null,
     estado: estado,
+    horas_sesion: parseInt(document.getElementById('horas_sesion_sve')?.value) || 1,
     nivel_complejidad: nivelComplejidadValor,
     es_primera_sesion: esPrimeraSesion || editandoPrimeraConsulta
   };
@@ -629,6 +670,7 @@ async function registrarConsultaSVE(e) {
     // Limpiar formulario
     document.getElementById('formConsultaVigilancia').reset();
     document.getElementById('fecha_consulta_sve').value = getFechaLocalHoy();
+    resetHorasSesionSVE();
 
     editandoConsultaSVE = null;
     document.getElementById('btnRegistrarConsultaSVE').innerHTML = '💾 Registrar Consulta';
@@ -762,6 +804,7 @@ function mostrarConsultasSVE() {
     <div class="consulta-sve-card ${esCerrado ? 'consulta-cerrada' : ''}">
       <div class="consulta-sve-header">
         <div class="sesion-sve-numero">Sesión #${index + 1}</div>
+        <span class="badge badge-horas">&#9200; Sesión: ${consulta.horas_sesion || 1} hora(s)</span>
         <span class="badge badge-modalidad">${consulta.modalidad}</span>
         <span class="badge badge-estado ${consulta.estado.toLowerCase()}">${consulta.estado}</span>
         ${nivelBadgeHeader}
@@ -884,6 +927,15 @@ window.editarConsultaSVE = async function(id) {
     document.getElementById('recomendaciones_empresa_sve').value = consulta.recomendaciones_empresa || '';
     document.getElementById('observaciones_consulta_sve').value = consulta.observaciones || '';
     document.getElementById('estado_sve').value = consulta.estado;
+
+    // Cargar horas de sesión guardadas (o 1 por defecto)
+    const horasGuardadas = parseInt(consulta.horas_sesion) || 1;
+    const hiddenHorasSVE  = document.getElementById('horas_sesion_sve');
+    const valorSpanSVE    = document.getElementById('horasSesionValorSVE');
+    const btnDecHorasSVE  = document.getElementById('btnDecHorasSVE');
+    if (hiddenHorasSVE) hiddenHorasSVE.value = horasGuardadas;
+    if (valorSpanSVE)   valorSpanSVE.textContent = horasGuardadas;
+    if (btnDecHorasSVE) btnDecHorasSVE.disabled = horasGuardadas <= 1;
 
     // Nivel de complejidad: asignar id primero, luego actualizarNivelComplejidad
     // que ya maneja los 3 casos (nueva, editando 1ª, editando otra)

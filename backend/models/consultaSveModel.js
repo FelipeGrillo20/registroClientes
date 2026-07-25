@@ -13,19 +13,20 @@ exports.createConsultaSve = async (data) => {
     recomendaciones_empresa,
     observaciones,
     estado,
+    horas_sesion,
     nivel_complejidad  // ✅ BUG 1 CORREGIDO: campo faltaba en el destructuring
   } = data;
 
   const result = await pool.query(
-    `INSERT INTO consultas_sve 
-    (cliente_id, fecha, modalidad, ajuste_funciones, 
-     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
-     observaciones, estado, nivel_complejidad)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `INSERT INTO consultas_sve
+    (cliente_id, fecha, modalidad, ajuste_funciones,
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa,
+     observaciones, estado, horas_sesion, nivel_complejidad)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *`,
-    [cliente_id, fecha, modalidad, ajuste_funciones, 
-     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
-     observaciones, estado, nivel_complejidad || null]
+    [cliente_id, fecha, modalidad, ajuste_funciones,
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa,
+     observaciones, estado, horas_sesion || 1, nivel_complejidad || null]
   );
 
   return result.rows[0];
@@ -121,6 +122,7 @@ exports.updateConsultaSve = async (id, data) => {
     recomendaciones_empresa,
     observaciones,
     estado,
+    horas_sesion,
     nivel_complejidad  // ✅ BUG 1 CORREGIDO: campo faltaba en el destructuring
   } = data;
 
@@ -138,13 +140,14 @@ exports.updateConsultaSve = async (id, data) => {
         recomendaciones_empresa = $6,
         observaciones = $7,
         estado = $8,
-        nivel_complejidad = $9,
+        horas_sesion = $9,
+        nivel_complejidad = $10,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
+      WHERE id = $11
       RETURNING *`,
       [fecha, modalidad, ajuste_funciones,
        recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa,
-       observaciones, estado, nivel_complejidad || null, id]
+       observaciones, estado, horas_sesion || 1, nivel_complejidad || null, id]
     );
     return result.rows[0];
   }
@@ -160,12 +163,13 @@ exports.updateConsultaSve = async (id, data) => {
       recomendaciones_empresa = $6,
       observaciones = $7,
       estado = $8,
+      horas_sesion = $9,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $9
+    WHERE id = $10
     RETURNING *`,
-    [fecha, modalidad, ajuste_funciones, 
-     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa, 
-     observaciones, estado, id]
+    [fecha, modalidad, ajuste_funciones,
+     recomendaciones_medicas, recomendaciones_trabajador, recomendaciones_empresa,
+     observaciones, estado, horas_sesion || 1, id]
   );
 
   return result.rows[0];

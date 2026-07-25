@@ -16,6 +16,7 @@ exports.createConsultaSve = async (req, res) => {
       recomendaciones_empresa,
       observaciones,
       estado,
+      horas_sesion,
       nivel_complejidad
     } = req.body;
 
@@ -76,6 +77,7 @@ exports.createConsultaSve = async (req, res) => {
       recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
       estado,
+      horas_sesion: parseInt(horas_sesion) || 1,
       nivel_complejidad: nivel_complejidad || null  // ✅ YA ESTABA — requería fix en el modelo
     });
 
@@ -176,6 +178,7 @@ exports.updateConsultaSve = async (req, res) => {
       recomendaciones_empresa,
       observaciones,
       estado,
+      horas_sesion,
       nivel_complejidad,
       es_primera_sesion
     } = req.body;
@@ -234,6 +237,7 @@ exports.updateConsultaSve = async (req, res) => {
       recomendaciones_empresa: recomendaciones_empresa || null,
       observaciones: observaciones || null,
       estado,
+      horas_sesion: parseInt(horas_sesion) || 1,
       nivel_complejidad: nivelParaModelo
     });
 

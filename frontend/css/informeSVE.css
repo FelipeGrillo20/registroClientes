@@ -248,6 +248,41 @@
   box-shadow: 0 2px 6px rgba(86, 171, 47, 0.1);
 }
 
+/* Alcance del concepto — nota fija antes de la firma.
+   Mismo patrón que "Recomendaciones Finales": título + texto dentro de
+   UNA sola caja con borde, para que nunca se separen entre dos páginas
+   al imprimir (break-inside: avoid sobre el contenedor completo). */
+.informe-alcance-concepto-sve {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8f4);
+  border: 1.5px solid #56ab2f;
+  border-left: 4px solid #56ab2f;
+  border-radius: 10px;
+  padding: 16px 20px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.informe-alcance-concepto-sve .informe-section-title-sve {
+  border-bottom-color: #a5d6a7;
+  /* Chrome no siempre respeta break-inside:avoid en el contenedor cuando
+     el bloque no cabe entero en lo que resta de página — sin esto, deja
+     el título solo en una hoja y el texto en la siguiente. Prohibir el
+     salto justo después del título obliga a que viajen juntos. */
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.alcance-concepto-contenido-sve {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #2c3e50;
+  text-align: justify;
+  /* Si el texto llega a ser tan largo que de todas formas deba partirse
+     entre páginas, evita dejar solo 1-2 líneas sueltas al final/inicio. */
+  orphans: 3;
+  widows: 3;
+}
+
 /* Historial de Sesiones */
 .informe-sesiones-sve {
   background: linear-gradient(to bottom, #f8f9fa, white);
@@ -498,13 +533,16 @@
   transform: translateY(-1px);
 }
 
-/* ── Bloque cierre: recomendaciones finales + firma            */
-/* No forzar salto de página; si cabe en la misma hoja que la  */
-/* última sesión se queda ahí. break-inside: avoid garantiza   */
-/* que firma y nota no se corten entre dos páginas.            */
+/* ── Bloque cierre: recomendaciones finales + alcance + firma  */
+/* Ya NO se fuerza a que las tres secciones viajen juntas como  */
+/* un solo bloque indivisible (con 3 secciones puede ser más    */
+/* alto que una página, y eso produce saltos feos con huecos    */
+/* en blanco). Cada sección se protege a sí misma por separado  */
+/* (ver .informe-recomendaciones-finales-sve,                   */
+/* .informe-alcance-concepto-sve y .firma-y-nota-sve), y el     */
+/* navegador puede partir la página entre secciones con         */
+/* normalidad si no caben todas juntas.                         */
 .bloque-cierre-sve {
-  break-inside: avoid;
-  page-break-inside: avoid;
   margin-top: 24px;
 }
 
@@ -585,11 +623,15 @@
   border-left: 4px solid #f0a500;
   border-radius: 10px;
   padding: 16px 20px;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .informe-recomendaciones-finales-sve .informe-section-title-sve {
   color: #b7791f;
   border-bottom-color: #f6d860;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .recomendaciones-finales-contenido-sve {
@@ -597,6 +639,10 @@
   line-height: 1.75;
   color: #4a4a4a;
   text-align: justify;
+  /* Si el texto llega a ser tan largo que de todas formas deba partirse
+     entre páginas, evita dejar solo 1-2 líneas sueltas al final/inicio. */
+  orphans: 3;
+  widows: 3;
 }
 
 /* ============================================ */
@@ -606,6 +652,13 @@
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    /* Las animaciones de entrada (fade/slide) no deben correr nunca al
+       imprimir/exportar a PDF — Chrome puede capturar un frame intermedio
+       (opacity/transform aún sin asentar) y eso deja huecos en blanco o
+       desplazamientos raros justo donde ocurre un salto de página. */
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 
   html, body {
@@ -757,6 +810,23 @@
     border-radius: 10px !important;
     border: 2px solid #56ab2f !important;
     page-break-inside: avoid !important;
+  }
+
+  .informe-alcance-concepto-sve {
+    background: linear-gradient(135deg, #e8f5e9, #f1f8f4) !important;
+    border: 1.5px solid #56ab2f !important;
+    border-left: 4px solid #56ab2f !important;
+    border-radius: 8px !important;
+    padding: 14px 18px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-decoration-break: clone !important;
+    -webkit-box-decoration-break: clone !important;
+  }
+
+  .informe-alcance-concepto-sve .informe-section-title-sve {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   .informe-sesiones-sve {
@@ -1046,11 +1116,10 @@
     justify-content: center;
   }
 
-  /* Recomendaciones finales + firma: fluyen junto a la última   */
-  /* sesión si hay espacio; solo saltan si no caben.             */
+  /* Recomendaciones finales + alcance + firma: cada sección se  */
+  /* protege por separado (ver más abajo); el bloque contenedor  */
+  /* ya no fuerza que las tres viajen juntas.                    */
   .bloque-cierre-sve {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
     break-before: auto !important;
     page-break-before: auto !important;
     margin-top: 24px !important;
@@ -1091,8 +1160,15 @@
     border-left: 4px solid #f0a500 !important;
     border-radius: 8px !important;
     padding: 14px 18px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
     box-decoration-break: clone !important;
     -webkit-box-decoration-break: clone !important;
+  }
+
+  .informe-recomendaciones-finales-sve .informe-section-title-sve {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   @media (max-width: 768px) {

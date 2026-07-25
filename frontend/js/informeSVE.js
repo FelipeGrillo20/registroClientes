@@ -480,7 +480,10 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
       `).join('')}
     </div>
 
-    <!-- Recomendaciones Finales + Firma: agrupadas para evitar corte entre páginas -->
+    <!-- Recomendaciones Finales + Alcance del Concepto + Firma:
+         cada sección se protege individualmente contra cortes de página
+         (ver .informe-recomendaciones-finales-sve, .informe-alcance-concepto-sve
+         y .firma-y-nota-sve en informeSVE.css) -->
     <div class="bloque-cierre-sve">
 
       ${recomendacionesFinales ? `
@@ -494,6 +497,17 @@ function generarHTMLInformeSVE(cliente, todasConsultas, usuario, mesaTrabajo, ni
         </div>
       </div>
       ` : ''}
+
+      <!-- Alcance del Concepto -->
+      <div class="informe-section-sve informe-alcance-concepto-sve">
+        <h2 class="informe-section-title-sve">
+          <span class="section-icon-sve">📌</span>
+          Alcance del concepto
+        </h2>
+        <div class="alcance-concepto-contenido-sve">
+          Este informe corresponde a un concepto técnico emitido en el marco del Sistema de Vigilancia Epidemiológica (SVE). Su finalidad es orientar las acciones de promoción, prevención, seguimiento y adaptación laboral, sin sustituir las valoraciones, decisiones clínicas o conceptos médico-laborales que corresponden a los profesionales tratantes, Medicina Laboral de la EPS, la ARL o las demás autoridades competentes.
+        </div>
+      </div>
 
       <!-- Firma -->
       <div class="informe-footer-sve">

@@ -452,10 +452,12 @@
     const cardProf       = document.getElementById("cardProfesionales");
     const cardSesiones   = document.getElementById("cardSesiones");
     const cardTrabajadores = document.getElementById("cardTrabajadores");
+    const cardConAdjunto = document.getElementById("cardConAdjunto");
     const kpiGrid       = document.querySelector(".kpi-grid");
     if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
     if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
     if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
+    if (cardConAdjunto) cardConAdjunto.style.display = esEntrega ? "" : "none";
     // "Entregas totales" y "Trabajadores atendidos" no se muestran en
     // Entrega — el desglose ya lo dan "Entregas individuales" y
     // "Pruebas de profundidad".
@@ -1379,7 +1381,7 @@
     const iconCe = document.getElementById("kpiIconCerrados");
     if (iconCe) iconCe.textContent = esEntrega ? "📎" : "✅";
 
-    setText("tituloEstados", esEntrega ? "Entregas individuales vs Pruebas de profundidad" : "Abiertos vs Cerrados");
+    setText("tituloEstados", esEntrega ? "Entregas individuales vs Con adjunto" : "Abiertos vs Cerrados");
 
     setText("tituloSedesTotal",       esEntrega ? "Entregas totales por sede" : "Sesiones totales por sede");
     setText("tituloSedesComplejidad", esEntrega ? "Seguimiento por sede"      : "Complejidad por sede");
@@ -1404,9 +1406,11 @@
     // "Entregas individuales": registros donde realmente se diligenció la
     // plantilla (recomendaciones_html), no solo un registro vacío.
     const conPlantilla = entregas.filter(e => e.recomendaciones_html).length;
-    // "Pruebas de profundidad": trabajadores únicos que tienen el PDF de
-    // Perfil Estrés adjuntado (trabajador_perfil_estres, viene del JOIN
-    // con clients.perfil_estres en el backend).
+    // "Pruebas de profundidad": registros donde se seleccionó una opción real
+    // del desplegable "PRUEBAS A PROFUNDIDAD" (no cuenta "No asistio").
+    const conPruebaSeleccionada = entregas.filter(tieneSeguimientoEntrega).length;
+    // "Pruebas de profundidad Con Adjunto": trabajadores únicos que tienen
+    // el PDF de Perfil Estrés cargado (trabajador_perfil_estres).
     const conArchivoPruebas = new Set(
       entregas.filter(e => e.trabajador_perfil_estres).map(e => e.cliente_id)
     ).size;
@@ -1414,7 +1418,8 @@
     setText("kpiTrabajadores",  trabConEntrega.size);
     setText("kpiSesiones",      entregas.length);
     setText("kpiAbiertos",      conPlantilla);
-    setText("kpiCerrados",      conArchivoPruebas);
+    setText("kpiCerrados",      conPruebaSeleccionada);
+    setText("kpiConAdjunto",    conArchivoPruebas);
     setText("kpiProfesionales", profActivos);
   }
 
@@ -1431,7 +1436,13 @@
       conteo[val] = (conteo[val] || 0) + 1;
     });
 
-    const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+    // "No asistio" siempre va de último cuando hay empate en el conteo.
+    const items = Object.entries(conteo).sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      if (a[0] === "No asistio") return 1;
+      if (b[0] === "No asistio") return -1;
+      return 0;
+    });
 
     if (items.length === 0) {
       container.innerHTML = '<div class="motivos-empty">Sin registros de pruebas a profundidad en el periodo</div>';
@@ -1521,7 +1532,7 @@
       data: {
         labels: [
           `Entregas individuales (${conPlantilla} — ${pct(conPlantilla)}%)`,
-          `Pruebas de profundidad (${conArchivoPruebas} — ${pct(conArchivoPruebas)}%)`
+          `Con adjunto (${conArchivoPruebas} — ${pct(conArchivoPruebas)}%)`
         ],
         datasets: [{
           data: [conPlantilla, conArchivoPruebas],
@@ -1692,6 +1703,10 @@
     const conRetro       = entregas.filter(e => e.fecha_retroalimentacion).length;
     // KPIs de Resumen Ejecutivo (sección 01)
     const conPlantilla = entregas.filter(e => e.recomendaciones_html).length;
+    // "Pruebas de profundidad": registros con una opción real seleccionada
+    // en el desplegable (no cuenta "No asistio").
+    const conPruebaSeleccionada = entregas.filter(tieneSeguimientoEntrega).length;
+    // "Con adjunto": trabajadores únicos con el PDF de Perfil Estrés cargado.
     const conArchivoPruebas = new Set(
       entregas.filter(e => e.trabajador_perfil_estres).map(e => e.cliente_id)
     ).size;
@@ -1704,8 +1719,14 @@
       if (!val || val === "Ninguna") return;
       conteoPruebas[val] = (conteoPruebas[val] || 0) + 1;
     });
+    // "No asistio" siempre va de último cuando hay empate en el conteo.
     const pruebasOrdenadas = Object.entries(conteoPruebas)
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        if (a[0] === "No asistio") return 1;
+        if (b[0] === "No asistio") return -1;
+        return 0;
+      })
       .map(([prueba, count]) => ({ prueba, count }));
 
     // Cobertura
@@ -1744,6 +1765,7 @@
         trabajadores:  trabConEntrega.size,
         entregas:      entregas.length,
         conPlantilla,
+        conPruebaSeleccionada,
         conArchivoPruebas,
         profActivos,
       },

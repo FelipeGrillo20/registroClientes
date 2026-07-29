@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let allClientes      = [];   // todos los clientes accesibles (con perfil_estres si existe)
   let allEntregas      = [];   // todos los registros de entrega_resultados
   let profFiltroId     = 'todos'; // 'todos' o id de profesional
+  let empresaFiltroId  = 'todos'; // 'todos' o id de empresa (subcontratista)
   let periodoActual    = 'all';
 
   let chartBarras  = null;
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       enriquecerConPerfilesEstres();
       // 5. Render
       poblarFiltroProfesional();
+      poblarFiltroEmpresa();
       renderDashboard();
     } catch (err) {
       console.error('Error cargando dashboard:', err);
@@ -261,37 +263,37 @@ document.addEventListener('DOMContentLoaded', () => {
       ).join('');
 
     select.value = profFiltroId;
-
-    // Hint dinámico: cuántos trabajadores y entregas tiene el seleccionado
-    function actualizarHint() {
-      if (!hint) return;
-      if (profFiltroId === 'todos') {
-        hint.textContent = `${allClientes.length} trabajadores · ${allEntregas.length} entregas`;
-      } else {
-        const e = allEntregas.filter(e => String(e.profesional_id) === String(profFiltroId));
-        const c = clientesFiltrados();
-        hint.textContent = `${c.length} trabajadores · ${e.length} entregas`;
-      }
-    }
-    actualizarHint();
+    actualizarHintFiltros();
 
     // Actualizar hint al cambiar selección
-    select.addEventListener('change', actualizarHint);
+    select.addEventListener('change', actualizarHintFiltros);
+  }
+
+  // Hint dinámico compartido: cuántos trabajadores y entregas quedan con
+  // los filtros de profesional y empresa actualmente seleccionados
+  function actualizarHintFiltros() {
+    const hint = document.getElementById('profFilterHint');
+    if (!hint) return;
+    if (profFiltroId === 'todos' && empresaFiltroId === 'todos') {
+      hint.textContent = `${allClientes.length} trabajadores · ${allEntregas.length} entregas`;
+    } else {
+      hint.textContent = `${clientesFiltrados().length} trabajadores · ${entregasFiltradas().length} entregas`;
+    }
   }
 
   // Evento del selector de profesional
   document.getElementById('filtroProfesional')?.addEventListener('change', function () {
     profFiltroId = this.value;
+    // El catálogo de empresas depende de qué profesional está seleccionado
+    // (solo deben verse las empresas con trabajadores de ESE profesional).
+    poblarFiltroEmpresa();
     renderDashboard();
   });
 
-  // Devuelve los datos filtrados según el profesional seleccionado
-  function entregasFiltradas() {
-    if (profFiltroId === 'todos') return allEntregas;
-    return allEntregas.filter(e => String(e.profesional_id) === String(profFiltroId));
-  }
-
-  function clientesFiltrados() {
+  // Clientes filtrados SOLO por profesional (sin aplicar el filtro de
+  // empresa) — es la base tanto para poblar el catálogo de empresas como
+  // para el filtrado final combinado.
+  function clientesPorProfesional() {
     if (profFiltroId === 'todos') return allClientes;
     const pid = String(profFiltroId);
     return allClientes.filter(c => {
@@ -305,6 +307,71 @@ document.addEventListener('DOMContentLoaded', () => {
         String(e.profesional_id) === pid
       );
     });
+  }
+
+  // ============================================================
+  // FILTRO DE EMPRESA — solo empresas con trabajadores registrados
+  // (y, si hay un profesional seleccionado, solo las suyas)
+  // ============================================================
+  function poblarFiltroEmpresa() {
+    const select = document.getElementById('filtroEmpresa');
+    if (!select) return;
+
+    // Catálogo de empresas (subcontratista) presentes entre los trabajadores
+    // del profesional seleccionado — no se pide el listado completo al backend.
+    const mapa = {};
+    clientesPorProfesional().forEach(c => {
+      if (!c.subcontratista_id) return;
+      if (!mapa[c.subcontratista_id]) {
+        mapa[c.subcontratista_id] = c.subcontratista_definitivo || c.subcontratista_nombre || `Empresa ${c.subcontratista_id}`;
+      }
+    });
+    const empresas = Object.entries(mapa)
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    // Si la empresa antes seleccionada ya no aplica para este profesional, resetear
+    if (empresaFiltroId !== 'todos' && !empresas.some(e => String(e.id) === String(empresaFiltroId))) {
+      empresaFiltroId = 'todos';
+    }
+
+    select.innerHTML =
+      `<option value="todos">Todas las empresas</option>` +
+      empresas.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+
+    select.value = empresaFiltroId;
+  }
+
+  document.getElementById('filtroEmpresa')?.addEventListener('change', function () {
+    empresaFiltroId = this.value;
+    actualizarHintFiltros();
+    renderDashboard();
+  });
+
+  // Mapa client_id -> subcontratista_id, usado para filtrar entregas por empresa
+  function clienteEmpresaId(clientId) {
+    const c = allClientes.find(c => String(c.id) === String(clientId));
+    return c ? c.subcontratista_id : null;
+  }
+
+  // Devuelve los datos filtrados según el profesional y la empresa seleccionados
+  function entregasFiltradas() {
+    let entregas = allEntregas;
+    if (profFiltroId !== 'todos') {
+      entregas = entregas.filter(e => String(e.profesional_id) === String(profFiltroId));
+    }
+    if (empresaFiltroId !== 'todos') {
+      entregas = entregas.filter(e => String(clienteEmpresaId(e.client_id)) === String(empresaFiltroId));
+    }
+    return entregas;
+  }
+
+  function clientesFiltrados() {
+    let clientes = clientesPorProfesional();
+    if (empresaFiltroId !== 'todos') {
+      clientes = clientes.filter(c => String(c.subcontratista_id) === String(empresaFiltroId));
+    }
+    return clientes;
   }
 
   function entregasPorPeriodo(entregas, periodo) {

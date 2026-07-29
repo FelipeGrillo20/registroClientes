@@ -1792,6 +1792,30 @@
     });
     const bySedeUnificado = unificarSedes(bySede);
 
+    // Listado de trabajadores a los que se les aplicó la Entrega Individual
+    // (una fila por trabajador — si tiene varios registros, se toma el más reciente)
+    const entregaPorCliente = {};
+    entregas.forEach(e => {
+      const actual = entregaPorCliente[e.cliente_id];
+      if (!actual || new Date(e.fecha) > new Date(actual.fecha)) {
+        entregaPorCliente[e.cliente_id] = e;
+      }
+    });
+    const listadoTrabajadores = Object.values(entregaPorCliente)
+      .map(e => {
+        const cliente = rawClients.find(c => c.id === e.cliente_id);
+        return {
+          nombre: e.trabajador_nombre || cliente?.nombre || "—",
+          cedula: e.trabajador_cedula || cliente?.cedula || "—",
+          sede: cliente?.sede || "Sin sede",
+          profesional: e.profesional_nombre || "—",
+          prueba: e.pruebas_profundidad || "No asistio",
+          seguimiento: tieneSeguimientoEntrega(e),
+          fecha: e.fecha ? new Date(e.fecha).toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric" }) : "—",
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
     return {
       fechaGeneracion: new Date().toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"}),
       filtros: {
@@ -1817,6 +1841,7 @@
       pruebasProfundidad: pruebasOrdenadas,
       cobertura: { unicos, promedio, profActivos, conSeguimiento, conRetro, masReciente },
       sedes: bySedeUnificado,
+      listadoTrabajadores,
     };
   }
 

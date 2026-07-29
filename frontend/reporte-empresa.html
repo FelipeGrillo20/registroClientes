@@ -571,6 +571,16 @@
       <div class="cov-grid" id="rCovGrid"></div>
     </div>
 
+    <!-- ── SECCIÓN: LISTADO DE TRABAJADORES (solo Entrega Individual) ── -->
+    <div class="section" id="secListadoTrabajadores" style="display:none;">
+      <div class="section-head">
+        <span class="section-num">05</span>
+        <span class="section-title">Listado de Trabajadores Atendidos</span>
+        <div class="section-line"></div>
+      </div>
+      <div id="rListadoTrabajadores"></div>
+    </div>
+
     <!-- ── SECCIÓN 5: SEDES ──────────────────────────── -->
     <div class="section" id="secSedes">
       <div class="section-head">
@@ -970,6 +980,48 @@
           <div class="cov-value ${i.sm?"cov-value-sm":""}">${i.val}</div>
         </div>`;
     });
+  }
+
+  // ─── LISTADO DE TRABAJADORES ATENDIDOS (solo Entrega) ──────
+  const secListadoEl = document.getElementById("secListadoTrabajadores");
+  if (d.esEntrega && Array.isArray(d.listadoTrabajadores)) {
+    if (secListadoEl) secListadoEl.style.display = "";
+    const listado = d.listadoTrabajadores;
+    const listadoEl = document.getElementById("rListadoTrabajadores");
+    if (listadoEl) {
+      if (listado.length === 0) {
+        listadoEl.innerHTML = '<div class="empty-state"><p>No hay trabajadores registrados en el periodo seleccionado.</p></div>';
+      } else {
+        let tableHTML = `
+          <table class="sedes-table">
+            <thead>
+              <tr>
+                <th>Trabajador</th>
+                <th>Cédula</th>
+                <th>Sede</th>
+                <th>Prueba a profundidad</th>
+                <th style="text-align:center">Seguimiento</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        listado.forEach(t => {
+          tableHTML += `
+            <tr>
+              <td><strong>${t.nombre}</strong></td>
+              <td>${t.cedula}</td>
+              <td>${t.sede}</td>
+              <td>${t.prueba}</td>
+              <td style="text-align:center"><span class="badge ${t.seguimiento ? "badge-normal" : "badge-complejo"}">${t.seguimiento ? "Sí" : "No"}</span></td>
+              <td>${t.fecha}</td>
+            </tr>`;
+        });
+        tableHTML += "</tbody></table>";
+        listadoEl.innerHTML = tableHTML;
+      }
+    }
+  } else if (secListadoEl) {
+    secListadoEl.style.display = "none";
   }
 
   // ─── SEDES ──────────────────────────────────────

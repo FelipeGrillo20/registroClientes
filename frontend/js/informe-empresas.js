@@ -29,6 +29,7 @@
   let rawMesaTrabajoSve = []; // registros mesa de trabajo SVE (criterio_inclusion)
   let rawEntregas     = [];  // registros de Entrega Individual de Resultados
   let empresas        = [];  // catálogo de empresas
+  let profesionales   = [];  // catálogo de profesionales + admin
   let charts          = {};  // instancias Chart.js activas
   let lastSnapshot    = null; // snapshot para el informe imprimible
 
@@ -74,9 +75,33 @@
     // Cargar catálogo empresas
     await cargarEmpresas();
 
+    // Cargar catálogo de profesionales (profesional + admin)
+    await cargarProfesionales();
+
     // Primera carga
     await aplicarFiltros();
   });
+
+  // ─── PROFESIONALES ──────────────────────────────────
+  // Lista tanto usuarios con rol "profesional" como "admin".
+  async function cargarProfesionales() {
+    const sel = document.getElementById("filterProfesional");
+    if (!sel) return;
+    try {
+      const res = await fetch(`${API}/api/auth/users`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      const lista = (data.users || []).filter(u => u.rol === "profesional" || u.rol === "admin");
+      lista.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+      profesionales = lista;
+
+      const etiquetaRol = (u) => u.rol === "admin" ? " (Admin)" : "";
+      sel.innerHTML = '<option value="">Todos los profesionales</option>' +
+        lista.map(u => `<option value="${u.id}">${escHtml(u.nombre || "")}${etiquetaRol(u)}</option>`).join("");
+    } catch (err) {
+      console.error("Error cargando profesionales:", err);
+    }
+  }
 
   // ─── EMPRESAS ───────────────────────────────────────
   // Solo descarga el catálogo. El filtrado a empresas con registros
@@ -289,6 +314,7 @@
     const modalidad        = document.getElementById("filterModalidad").value;
     const anio             = parseInt(document.getElementById("filterAnio").value) || null;
     const mes              = parseInt(document.getElementById("filterMes").value) || null;
+    const profesionalId    = document.getElementById("filterProfesional").value;
 
     // El select guarda códigos cortos de localStorage ('orientacion','vigilancia')
     // pero la BD guarda el texto completo. Mapeamos antes de comparar.
@@ -302,15 +328,20 @@
     // Filtrar clientes por empresa, sede y modalidad del programa.
     // ⭐ Excepción: "Entrega Individual de Resultados" no exige que el
     // cliente esté registrado bajo ESA modalidad puntual — en
-    // entrega-resultados.html el profesional genera la plantilla para
-    // cualquier trabajador ya registrado (OP, SVE o Entrega), así que aquí
-    // no filtramos por c.modalidad; el cruce real se hace más abajo por
-    // client_id contra los registros de entrega_resultados.
-    const filtrarPorModalidadCliente = modalidadBD && modalidadBD !== "Entrega Individual de Resultados";
+    // entrega-resultados.html el profesional (o un admin) genera la
+    // plantilla para cualquier trabajador ya registrado (OP, SVE o
+    // Entrega), sin importar quién sea el dueño original del cliente. Así
+    // que aquí no filtramos por c.modalidad ni por c.profesional_id; el
+    // cruce real se hace más abajo por client_id y por el profesional_id
+    // propio de cada registro de entrega_resultados (quién generó ESE
+    // documento en particular, no quién registró al trabajador).
+    const esEntregaFiltro = modalidadBD === "Entrega Individual de Resultados";
+    const filtrarPorModalidadCliente = modalidadBD && !esEntregaFiltro;
     let clientes = rawClients.filter(c => {
       if (subcontratistaId && String(c.subcontratista_id) !== subcontratistaId) return false;
       if (sedeVal    && c.sede      !== sedeVal)      return false;
       if (filtrarPorModalidadCliente && c.modalidad !== modalidadBD) return false;
+      if (!esEntregaFiltro && profesionalId && String(c.profesional_id) !== profesionalId) return false;
       return true;
     });
 
@@ -327,12 +358,16 @@
       pool = rawConsultasSve;
     } else if (modalidadBD === "Entrega Individual de Resultados") {
       // Normalizar registros de entrega para que sean compatibles con el
-      // filtro genérico de abajo (cliente_id / fecha).
-      pool = rawEntregas.map(e => ({
-        ...e,
-        cliente_id: e.client_id,
-        fecha:      e.fecha_aplicacion || e.created_at,
-      }));
+      // filtro genérico de abajo (cliente_id / fecha). El filtro de
+      // profesional se aplica aquí por e.profesional_id (quién generó
+      // ESE registro), no por el dueño del cliente.
+      pool = rawEntregas
+        .filter(e => !profesionalId || String(e.profesional_id) === profesionalId)
+        .map(e => ({
+          ...e,
+          cliente_id: e.client_id,
+          fecha:      e.fecha_aplicacion || e.created_at,
+        }));
     } else {
       // Todos: combinar ambas fuentes, evitando IDs duplicados
       // (un mismo id puede existir en ambas tablas — usamos prefijo para diferenciar)
@@ -397,6 +432,7 @@
     const anioActual = new Date().getFullYear();
     document.getElementById("filterAnio").value     = String(anioActual);
     document.getElementById("filterMes").value      = "";
+    document.getElementById("filterProfesional").value = "";
 
     // Resetear buscador de empresa
     seleccionarEmpresa("", "Todas las empresas");
@@ -1695,6 +1731,13 @@
       if (emp) empresaNombre = emp.cliente_definitivo || emp.cliente_final || empresaNombre;
     }
 
+    const profesionalId = document.getElementById("filterProfesional").value;
+    let profesionalNombreFiltro = "Todos";
+    if (profesionalId) {
+      const prof = profesionales.find(p => String(p.id) === profesionalId);
+      if (prof) profesionalNombreFiltro = prof.nombre || profesionalNombreFiltro;
+    }
+
     const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
     const trabConEntrega = new Set(entregas.map(e => e.cliente_id));
@@ -1757,6 +1800,7 @@
         modalidad: "Entrega Individual de Resultados",
         anio: anio ? String(anio) : "Todos",
         mes: mes ? MESES_FULL[mes-1] : "Todo el año",
+        profesional: profesionalNombreFiltro,
       },
       esGeneral: !empresaId,
       esSVE: false,
@@ -1796,6 +1840,14 @@
     if (empresaId) {
       const emp = empresas.find(e => String(e.id) === empresaId);
       if (emp) empresaNombre = emp.cliente_definitivo || emp.cliente_final || empresaNombre;
+    }
+
+    // Nombre profesional
+    const profesionalId = document.getElementById("filterProfesional").value;
+    let profesionalNombreFiltro = "Todos";
+    if (profesionalId) {
+      const prof = profesionales.find(p => String(p.id) === profesionalId);
+      if (prof) profesionalNombreFiltro = prof.nombre || profesionalNombreFiltro;
     }
 
     // ── KPIs — misma lógica que renderKPIs ──────────────
@@ -1969,6 +2021,7 @@
                : "Todas",
         anio: anio ? String(anio) : "Todos",
         mes: mes ? MESES_FULL[mes-1] : "Todo el año",
+        profesional: profesionalNombreFiltro,
       },
       esGeneral: !empresaId,
       kpis: {

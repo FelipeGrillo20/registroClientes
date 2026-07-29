@@ -670,6 +670,7 @@
     { k: "Modalidad", v: d.filtros.modalidad !== "Todas" ? d.filtros.modalidad : null },
     { k: "Año",       v: d.filtros.anio !== "Todos" ? d.filtros.anio : null },
     { k: "Mes",       v: d.filtros.mes !== "Todo el año" ? d.filtros.mes : null },
+    { k: "Profesional", v: d.filtros.profesional && d.filtros.profesional !== "Todos" ? d.filtros.profesional : null },
   ];
   const tagsEl = document.getElementById("rFiltros");
   tagsDef.filter(t => t.v).forEach(t => {

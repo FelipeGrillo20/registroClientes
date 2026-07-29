@@ -81,7 +81,10 @@ exports.getEntregaById = async (id) => {
   const result = await pool.query(
     `SELECT
        er.*,
-       u.nombre AS profesional_nombre,
+       u.nombre    AS profesional_nombre,
+       u.cedula    AS profesional_cedula,
+       u.licencia  AS profesional_licencia,
+       u.telefono  AS profesional_telefono,
        c.nombre AS trabajador_nombre,
        c.cedula AS trabajador_cedula,
        c.telefono AS trabajador_telefono

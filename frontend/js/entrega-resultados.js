@@ -619,7 +619,13 @@ document.addEventListener('DOMContentLoaded', () => {
       tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
       pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
-      generarYDescargarPDF('ver');
+      const autor = {
+        nombre:   data.profesional_nombre   || '',
+        licencia: data.profesional_licencia || '',
+        telefono: data.profesional_telefono || '',
+      };
+      const firma = await obtenerFirmaBase64(data.profesional_cedula);
+      generarYDescargarPDF('ver', autor, firma);
     } catch (err) {
       console.error('Error al cargar/generar el documento (Ver documento):', err);
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -639,7 +645,13 @@ document.addEventListener('DOMContentLoaded', () => {
       tituloSeccion.value     = data.titulo_seccion || 'RESULTADO INDIVIDUAL DEL DIAGNOSTICO DE RIESGO PSICOSOCIAL';
       editorContent.innerHTML = data.recomendaciones_html || '';
       pruebasProfundidad.value = data.pruebas_profundidad || 'No asistio';
-      generarYDescargarPDF('descargar');
+      const autor = {
+        nombre:   data.profesional_nombre   || '',
+        licencia: data.profesional_licencia || '',
+        telefono: data.profesional_telefono || '',
+      };
+      const firma = await obtenerFirmaBase64(data.profesional_cedula);
+      generarYDescargarPDF('descargar', autor, firma);
     } catch (err) {
       console.error('Error al cargar/generar el documento (Descargar PDF):', err);
       mostrarToast('❌ Error al cargar el documento', 'error');
@@ -649,13 +661,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   // GENERAR PDF
   // ============================================================
-  function generarYDescargarPDF(modo = 'descargar') {
+  function generarYDescargarPDF(modo = 'descargar', autor = {}, firmaBase64 = null) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    // Leer datos del profesional en el momento de generar (no al cargar la página)
-    // para asegurar que auth-check.js ya haya actualizado el localStorage
-    const profesional = JSON.parse(localStorage.getItem('userData') || '{}');
+    // Datos del profesional que realmente registró el documento (no el
+    // usuario que lo está consultando) — vienen del registro obtenido del
+    // backend, para que la firma y los datos de pie de página sean siempre
+    // los del autor real, incluso si quien genera el PDF es un admin.
+    const profesional = autor;
 
     const pageW   = doc.internal.pageSize.getWidth();
     const pageH   = doc.internal.pageSize.getHeight();
@@ -947,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function procesarNodo(nodo, fmtPadre) {
       if (nodo.nodeType === Node.TEXT_NODE) {
         const txt = nodo.textContent;
-        if (txt) resultado.push({ texto: txt, align: 'left', segmentos: [{ ...fmtPadre, texto: txt }], esBr: false, esLista: false });
+        if (txt) resultado.push({ texto: txt, align: 'justify', segmentos: [{ ...fmtPadre, texto: txt }], esBr: false, esLista: false });
         return;
       }
       if (nodo.nodeType !== Node.ELEMENT_NODE) return;
@@ -1013,7 +1027,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hijo.getAttribute && hijo.getAttribute('align')) return hijo.getAttribute('align');
       }
     }
-    return 'left';
+    // Sin alineación explícita en el editor: justificado por defecto
+    return 'justify';
   }
 
   function extraerSegmentosInline(el, fmtPadre) {
@@ -1318,10 +1333,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================================
-  // LOGO Y FIRMA — precarga al iniciar para usarlos en el PDF
+  // LOGO — precarga al iniciar para usarlo en el PDF
   // ============================================================
   let logoBase64  = null;
-  let firmaBase64 = null;
 
   async function precargarImagenes() {
     // Logo
@@ -1337,27 +1351,37 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.warn('Logo no encontrado:', err);
     }
+  }
 
-    // Firma del profesional logueado (img/firmas/firma_{cedula}.png)
+  // ============================================================
+  // FIRMA — se carga según el profesional que realmente registró el
+  // documento (no el usuario que está consultando), para que un admin
+  // que revise el registro de otra psicóloga vea SU firma, no la propia.
+  // Se cachea por cédula para no repetir la petición en cada clic.
+  // ============================================================
+  const firmaCache = {};
+  async function obtenerFirmaBase64(cedula) {
+    if (!cedula) return null;
+    if (Object.prototype.hasOwnProperty.call(firmaCache, cedula)) return firmaCache[cedula];
     try {
-      const cedula = currentUser.cedula;
-      if (cedula) {
-        const res  = await fetch(`img/firmas/firma_${cedula}.png`);
-        // Algunos servidores devuelven 200 con una página HTML de fallback
-        // en vez de un 404 real cuando el archivo no existe — por eso no basta
-        // con revisar res.ok, también hay que confirmar que el contenido sea
-        // realmente una imagen antes de usarlo (si no, jsPDF truena al armar el PDF).
-        const esImagen = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
-        if (esImagen) {
-          const blob = await res.blob();
-          firmaBase64 = await blobToBase64(blob);
-        } else {
-          console.warn(`Firma no encontrada o inválida para cédula: ${cedula}`);
-        }
+      const res = await fetch(`img/firmas/firma_${cedula}.png`);
+      // Algunos servidores devuelven 200 con una página HTML de fallback
+      // en vez de un 404 real cuando el archivo no existe — por eso no basta
+      // con revisar res.ok, también hay que confirmar que el contenido sea
+      // realmente una imagen antes de usarlo (si no, jsPDF truena al armar el PDF).
+      const esImagen = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
+      if (esImagen) {
+        const blob = await res.blob();
+        firmaCache[cedula] = await blobToBase64(blob);
+      } else {
+        console.warn(`Firma no encontrada o inválida para cédula: ${cedula}`);
+        firmaCache[cedula] = null;
       }
     } catch (err) {
       console.warn('Error al cargar firma:', err);
+      firmaCache[cedula] = null;
     }
+    return firmaCache[cedula];
   }
 
   function blobToBase64(blob) {

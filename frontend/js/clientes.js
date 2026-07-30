@@ -226,6 +226,8 @@ function verificarYMostrarModalidad() {
       titulo.innerHTML = '📋 Trabajadores - Orientación Psicosocial';
     } else if (modalidadSeleccionada === 'Sistema de Vigilancia Epidemiológica') {
       titulo.innerHTML = '📋 Trabajadores - Sistema de Vigilancia Epidemiológica';
+    } else if (modalidadSeleccionada === 'Entrega Individual de Resultados') {
+      titulo.innerHTML = '📋 Trabajadores - Entrega Individual de Resultados';
     }
   }
   
@@ -422,26 +424,26 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
   try {
     // Construir URL con parámetros
     let url = `${API_URL}?modalidad=${encodeURIComponent(modalidad)}`;
-    
+
     // Si hay profesional seleccionado, agregarlo a la URL
     if (profesionalId) {
       url += `&profesional_id=${profesionalId}`;
       console.log("🔍 Filtrando por profesional ID:", profesionalId);
     }
-    
+
     // ✅ NUEVO: Agregar filtros de año y mes si existen
     if (año) {
       url += `&año=${año}`;
       console.log("📅 Filtrando por año:", año);
     }
-    
+
     if (mes) {
       url += `&mes=${mes}`;
       console.log("📆 Filtrando por mes:", mes);
     }
-    
+
     console.log("📡 Petición a:", url);
-    
+
     const res = await fetch(url, {
       headers: {
         "Authorization": `Bearer ${getAuthToken()}`
@@ -453,14 +455,14 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
       console.log("⚠️ Respuesta descartada (petición más reciente en curso)");
       return;
     }
-    
+
     if (!res.ok) {
       tbody.innerHTML = `<tr><td colspan="8" class="no-data">Error al cargar clientes</td></tr>`;
       // ✅ Actualizar contador a 0 en caso de error
       actualizarContadorTrabajadores(0);
       return;
     }
-    
+
     const clients = await res.json();
 
     // ✅ Verificar token nuevamente después de parsear JSON
@@ -468,7 +470,7 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
       console.log("⚠️ Respuesta descartada tras parsear JSON (petición más reciente en curso)");
       return;
     }
-    
+
     console.log("📦 Clientes recibidos:", clients.length);
     if (clients.length > 0) {
       console.log("📋 Primer cliente de ejemplo:", clients[0]);
@@ -952,7 +954,13 @@ function onEdit(id) {
 // Función para ir a Consulta/Seguimiento
 window.onConsulta = function(id) {
   const modalidad = window.currentModalidad || localStorage.getItem('modalidadSeleccionada');
-  if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
+  if (modalidad === 'Entrega Individual de Resultados') {
+    // Llevar directamente a entrega-resultados.html con el trabajador (y su
+    // profesional dueño) ya preseleccionados.
+    const cliente = allClients.find(c => String(c.id) === String(id));
+    const profesionalId = cliente?.profesional_id || '';
+    window.location.href = `entrega-resultados.html?cliente=${id}&profesional=${profesionalId}`;
+  } else if (modalidad === 'Sistema de Vigilancia Epidemiológica') {
     window.location.href = `consulta-sve.html?cliente=${id}`;
   } else {
     window.location.href = `consulta.html?cliente=${id}`;

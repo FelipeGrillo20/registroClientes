@@ -133,9 +133,11 @@
 
           // Redireccionar según modalidad
           if (card.classList.contains('card-entrega')) {
-            // Entrega Individual de Resultados tiene su propio flujo de
-            // búsqueda de trabajador dentro de la página.
-            window.location.href = 'entrega-resultados.html';
+            // Entrega Individual de Resultados: primero se muestra el
+            // listado de trabajadores (clientes.html); desde allí, el botón
+            // "Consulta" de cada fila lleva a entrega-resultados.html con
+            // el trabajador ya preseleccionado.
+            window.location.href = 'clientes.html';
           } else if (origenBusqueda === 'cedula') {
             // ¿El trabajador ya está registrado en la modalidad elegida?
             if (modalidadesRegistradas.includes(modalidadTexto)) {

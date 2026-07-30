@@ -1393,9 +1393,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================================
+  // PRESELECCIÓN DESDE QUERY STRING
+  // Llegada desde clientes.html (botón "Consulta" en modalidad Entrega):
+  // ?cliente=<id>&profesional=<id> — se preselecciona automáticamente el
+  // profesional (si es admin) y el trabajador correspondiente.
+  // ============================================================
+  async function preseleccionarDesdeQuery() {
+    const params    = new URLSearchParams(window.location.search);
+    const clienteId = params.get('cliente');
+    if (!clienteId) return;
+
+    let profesionalIdActivo = profesionalSeleccionadoId;
+
+    if (!isProfesional) {
+      const profesionalIdParam = params.get('profesional');
+      const prof = todosLosProfesionales.find(p => String(p.id) === String(profesionalIdParam));
+      if (prof) {
+        seleccionarProfesional({ dataset: { id: prof.id, nombre: prof.nombre } });
+        profesionalIdActivo = prof.id;
+      }
+    }
+
+    if (!profesionalIdActivo) return;
+
+    await cargarTrabajadores(profesionalIdActivo);
+
+    const trabajador = todosLosTrabajadores.find(t => String(t.id) === String(clienteId));
+    if (trabajador) {
+      seleccionarTrabajador({
+        dataset: {
+          id:       trabajador.id,
+          nombre:   trabajador.nombre,
+          cedula:   trabajador.cedula,
+          telefono: trabajador.telefono || '',
+        },
+      });
+
+      // Volver a este listado de trabajadores, no al selector de modalidad
+      const btnVolver = document.getElementById('btnVolver');
+      if (btnVolver) btnVolver.onclick = () => { window.location.href = 'clientes.html'; };
+    }
+  }
+
+  // ============================================================
   // INIT
   // ============================================================
   precargarImagenes();
-  cargarProfesionales();
+  cargarProfesionales().then(preseleccionarDesdeQuery);
 
 });

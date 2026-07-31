@@ -17,6 +17,13 @@
     : "";
   const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
+  // De todas las opciones del desplegable "PRUEBAS A PROFUNDIDAD" en
+  // entrega-resultados.html, solo estas 4 son conceptos reales de "Pruebas
+  // a profundidad" — el resto (Incapacidad, Vacaciones, Licencias, Retiro,
+  // Asistir Actividades P&P, No asistio) se excluyen del ranking "Pruebas a
+  // profundidad más frecuentes".
+  const PRUEBAS_PROFUNDIDAD_VALIDAS = ["Perfil Estres", "Entrevista Semi", "IPT", "Grupo Focal"];
+
   // Chart.js defaults (tema oscuro)
   Chart.defaults.color = "#8b94a8";
   Chart.defaults.borderColor = "rgba(255,255,255,0.07)";
@@ -1429,10 +1436,11 @@
     }
   }
 
-  // "No asistio" es el único valor que no implica seguimiento activo sobre
-  // el trabajador — igual que en dashboard-entrega.js.
+  // Solo cuenta como seguimiento/"Pruebas de profundidad" si el valor es uno
+  // de los 4 conceptos reales (ver PRUEBAS_PROFUNDIDAD_VALIDAS) — el resto
+  // de opciones del desplegable (incluido "No asistio") no cuentan.
   function tieneSeguimientoEntrega(e) {
-    return !!e.pruebas_profundidad && e.pruebas_profundidad !== "No asistio";
+    return PRUEBAS_PROFUNDIDAD_VALIDAS.includes((e.pruebas_profundidad || "").trim());
   }
 
   // ── SECCIÓN 1: KPIs (Entrega) ───────────────────────
@@ -1442,13 +1450,15 @@
     // "Entregas individuales": registros donde realmente se diligenció la
     // plantilla (recomendaciones_html), no solo un registro vacío.
     const conPlantilla = entregas.filter(e => e.recomendaciones_html).length;
-    // "Pruebas de profundidad": registros donde se seleccionó una opción real
-    // del desplegable "PRUEBAS A PROFUNDIDAD" (no cuenta "No asistio").
+    // "Pruebas de profundidad": registros donde se seleccionó uno de los 4
+    // conceptos reales de "Pruebas a profundidad" (Perfil Estres, Entrevista
+    // Semi, IPT, Grupo Focal) — el resto de opciones del desplegable no cuentan.
     const conPruebaSeleccionada = entregas.filter(tieneSeguimientoEntrega).length;
     // "Pruebas de profundidad Con Adjunto": trabajadores únicos que tienen
-    // el PDF de Perfil Estrés cargado (trabajador_perfil_estres).
+    // el PDF de Perfil Estrés cargado (trabajador_perfil_estres) Y además
+    // el registro corresponde a uno de los 4 conceptos válidos.
     const conArchivoPruebas = new Set(
-      entregas.filter(e => e.trabajador_perfil_estres).map(e => e.cliente_id)
+      entregas.filter(e => e.trabajador_perfil_estres && tieneSeguimientoEntrega(e)).map(e => e.cliente_id)
     ).size;
 
     setText("kpiTrabajadores",  trabConEntrega.size);
@@ -1467,18 +1477,13 @@
     const conteo = {};
     entregas.forEach(e => {
       const val = (e.pruebas_profundidad || "").trim();
-      // "Ninguna" es un valor heredado que ya no existe en el selector actual.
-      if (!val || val === "Ninguna") return;
+      // Solo los 4 conceptos reales de "Pruebas a profundidad" — el resto
+      // (incluido "No asistio") no aplica a este ranking.
+      if (!PRUEBAS_PROFUNDIDAD_VALIDAS.includes(val)) return;
       conteo[val] = (conteo[val] || 0) + 1;
     });
 
-    // "No asistio" siempre va de último cuando hay empate en el conteo.
-    const items = Object.entries(conteo).sort((a, b) => {
-      if (b[1] !== a[1]) return b[1] - a[1];
-      if (a[0] === "No asistio") return 1;
-      if (b[0] === "No asistio") return -1;
-      return 0;
-    });
+    const items = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
 
     if (items.length === 0) {
       container.innerHTML = '<div class="motivos-empty">Sin registros de pruebas a profundidad en el periodo</div>';
@@ -1553,7 +1558,7 @@
     // plantilla diligenciada vs trabajadores con PDF de pruebas adjuntado.
     const conPlantilla = entregas.filter(e => e.recomendaciones_html).length;
     const conArchivoPruebas = new Set(
-      entregas.filter(e => e.trabajador_perfil_estres).map(e => e.cliente_id)
+      entregas.filter(e => e.trabajador_perfil_estres && tieneSeguimientoEntrega(e)).map(e => e.cliente_id)
     ).size;
     const total = conPlantilla + conArchivoPruebas;
     const pct = v => total > 0 ? Math.round((v / total) * 100) : 0;
@@ -1746,30 +1751,26 @@
     const conRetro       = entregas.filter(e => e.fecha_retroalimentacion).length;
     // KPIs de Resumen Ejecutivo (sección 01)
     const conPlantilla = entregas.filter(e => e.recomendaciones_html).length;
-    // "Pruebas de profundidad": registros con una opción real seleccionada
-    // en el desplegable (no cuenta "No asistio").
+    // "Pruebas de profundidad": registros con uno de los 4 conceptos reales
+    // de "Pruebas a profundidad" (Perfil Estres, Entrevista Semi, IPT, Grupo Focal).
     const conPruebaSeleccionada = entregas.filter(tieneSeguimientoEntrega).length;
-    // "Con adjunto": trabajadores únicos con el PDF de Perfil Estrés cargado.
+    // "Con adjunto": trabajadores únicos con el PDF de Perfil Estrés cargado
+    // Y cuyo registro corresponde a uno de los 4 conceptos válidos.
     const conArchivoPruebas = new Set(
-      entregas.filter(e => e.trabajador_perfil_estres).map(e => e.cliente_id)
+      entregas.filter(e => e.trabajador_perfil_estres && tieneSeguimientoEntrega(e)).map(e => e.cliente_id)
     ).size;
 
     // Pruebas a profundidad — ranking
+    // Solo los 4 conceptos reales de "Pruebas a profundidad" — el resto
+    // (incluido "No asistio") no aplica a este ranking.
     const conteoPruebas = {};
     entregas.forEach(e => {
       const val = (e.pruebas_profundidad || "").trim();
-      // "Ninguna" es un valor heredado que ya no existe en el selector actual.
-      if (!val || val === "Ninguna") return;
+      if (!PRUEBAS_PROFUNDIDAD_VALIDAS.includes(val)) return;
       conteoPruebas[val] = (conteoPruebas[val] || 0) + 1;
     });
-    // "No asistio" siempre va de último cuando hay empate en el conteo.
     const pruebasOrdenadas = Object.entries(conteoPruebas)
-      .sort((a, b) => {
-        if (b[1] !== a[1]) return b[1] - a[1];
-        if (a[0] === "No asistio") return 1;
-        if (b[0] === "No asistio") return -1;
-        return 0;
-      })
+      .sort((a, b) => b[1] - a[1])
       .map(([prueba, count]) => ({ prueba, count }));
 
     // Cobertura

@@ -13,8 +13,8 @@ const pool = require("../config/db");
 exports.createSeguimiento = async (cliente_id, consulta_number, fecha_seguimiento, observaciones_seguimiento) => {
   const result = await pool.query(
     `INSERT INTO seguimientos
-       (cliente_id, consulta_number, fecha_seguimiento, observaciones_seguimiento)
-     VALUES ($1, $2, $3, $4)
+       (cliente_id, consulta_number, fecha_seguimiento, observaciones_seguimiento, horas_seguimiento)
+     VALUES ($1, $2, $3, $4, 1)
      RETURNING *`,
     [cliente_id, consulta_number, fecha_seguimiento, observaciones_seguimiento]
   );
@@ -33,6 +33,7 @@ exports.getSeguimientosByConsulta = async (cliente_id, consulta_number) => {
        consulta_number,
        fecha_seguimiento,
        observaciones_seguimiento,
+       horas_seguimiento,
        created_at,
        updated_at
      FROM seguimientos
@@ -80,6 +81,28 @@ exports.deleteSeguimiento = async (id) => {
     [id]
   );
   return result.rows[0] || null;
+};
+
+// ============================================
+// Obtener TODOS los seguimientos (de cualquier cliente/consulta)
+// Usado por trazabilidad.html para mostrar cada seguimiento como
+// una fila independiente, sin tener que pedirlos uno por uno.
+// ============================================
+exports.getAllSeguimientos = async () => {
+  const result = await pool.query(
+    `SELECT
+       id,
+       cliente_id,
+       consulta_number,
+       fecha_seguimiento,
+       observaciones_seguimiento,
+       horas_seguimiento,
+       created_at,
+       updated_at
+     FROM seguimientos
+     ORDER BY fecha_seguimiento ASC, created_at ASC`
+  );
+  return result.rows;
 };
 
 // ============================================

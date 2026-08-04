@@ -33,44 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
   let allEntregas      = [];   // todos los registros de entrega_resultados
   let profFiltroId     = 'todos'; // 'todos' o id de profesional
   let empresaFiltroId  = 'todos'; // 'todos' o id de empresa (subcontratista)
-  let periodoActual    = 'all';
 
-  let chartBarras  = null;
-  let chartDonut   = null;
-  let chartLinea   = null;
   let chartPruebas = null;
-
-  // Orden fijo del catálogo de "Pruebas a profundidad" (debe coincidir con
-  // las opciones del <select> en entrega-resultados.html)
-  const PRUEBAS_PROFUNDIDAD_ORDEN = [
-    'Incapacidad', 'Vacaciones', 'Licencias', 'Retiro', 'IPT',
-    'Entrevista Semi', 'Grupo Focal', 'Perfil Estres',
-    'Asistir Actividades P&P', 'No asistio',
-  ];
 
   // Color fijo por categoría (mismo color en la torta y en el desglose
   // por profesional, para que ambas vistas se lean como el mismo sistema)
   const PRUEBAS_PROFUNDIDAD_COLORES = {
-    'Incapacidad':              '#5B8AF0',
-    'Vacaciones':                '#52b788',
-    'Licencias':                 '#f4a261',
-    'Retiro':                    '#e07a9e',
     'IPT':                       '#a8a0d8',
     'Entrevista Semi':           '#f6c945',
     'Grupo Focal':               '#4dd0e1',
     'Perfil Estres':             '#ff8a65',
-    'Asistir Actividades P&P':   '#9575cd',
-    'No asistio':                '#607d8b',
   };
   function colorPruebaProfundidad(cat) {
     return PRUEBAS_PROFUNDIDAD_COLORES[cat] || '#bdbdbd';
   }
 
-  // "No asistio" es el único valor que no implica que se esperara algún
-  // seguimiento/evidencia — todas las demás opciones sí cuentan como
-  // seguimiento activo sobre el trabajador.
+  // Solo estos 4 son conceptos reales de "Pruebas a profundidad" — el resto
+  // de opciones del desplegable (incluido "No asistio") no cuentan. Mismo
+  // criterio que informe-empresas.js (PRUEBAS_PROFUNDIDAD_VALIDAS).
+  const PRUEBAS_PROFUNDIDAD_VALIDAS = ['Perfil Estres', 'Entrevista Semi', 'IPT', 'Grupo Focal'];
   function tieneSeguimiento(entrega) {
-    return !!entrega.pruebas_profundidad && entrega.pruebas_profundidad !== 'No asistio';
+    return PRUEBAS_PROFUNDIDAD_VALIDAS.includes((entrega.pruebas_profundidad || '').trim());
   }
 
   // ============================================================
@@ -92,24 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (h < 24) return `Hace ${h} h`;
     const d = Math.floor(h / 24);
     return `Hace ${d} día${d > 1 ? 's' : ''}`;
-  }
-
-  function diffDias(f1, f2) {
-    if (!f1 || !f2) return null;
-    return Math.round(Math.abs(new Date(f2) - new Date(f1)) / 86400000);
-  }
-
-  function mesIdx(isoDate) {
-    if (!isoDate) return -1;
-    return new Date(isoDate).getMonth(); // 0-11
-  }
-
-  function trimestre(isoDate) {
-    const m = mesIdx(isoDate) + 1;
-    if (m <= 3)  return 'q1';
-    if (m <= 6)  return 'q2';
-    if (m <= 9)  return 'q3';
-    return 'q4';
   }
 
   // ============================================================
@@ -374,15 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return clientes;
   }
 
-  function entregasPorPeriodo(entregas, periodo) {
-    if (periodo === 'all') return entregas;
-    const meses = { q1:[0,1,2], q2:[3,4,5], q3:[6,7,8], q4:[9,10,11] };
-    return entregas.filter(e => {
-      const m = mesIdx(e.created_at);
-      return m >= 0 && meses[periodo]?.includes(m);
-    });
-  }
-
   // ============================================================
   // RENDER PRINCIPAL
   // ============================================================
@@ -391,11 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientes = clientesFiltrados();
 
     renderKPIs(entregas, clientes);
-    renderEstados(entregas, clientes);
-    renderChartBarras(entregasPorPeriodo(entregas, periodoActual), periodoActual);
-    renderChartDonut(entregas);
     renderChartPruebas(entregas);
-    renderChartLinea(entregasPorPeriodo(entregas, periodoActual), periodoActual);
     renderTablaProfesionales(entregas);
     renderTimeline(entregas);
     renderBarrasCobertura(entregas);
@@ -404,18 +356,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── KPIs ──────────────────────────────────────────────────────
   function renderKPIs(entregas, clientes) {
     const totalEntregas         = entregas.length;
-    const trabajadoresConEntrega = new Set(entregas.map(e => e.client_id)).size;
     const totalTrabajadores      = clientes.length;
     const profActivos            = new Set(entregas.map(e => e.profesional_id)).size;
     const profSinEntregas        = Math.max(0, allProfesionales.length - profActivos);
-    // Seguimiento (pruebas a profundidad ≠ "No asistio"): contamos clientes
-    // únicos con al menos un seguimiento registrado (no duplicar por múltiples entregas)
+    // "Pruebas de profundidad": clientes únicos con al menos una de las 4
+    // pruebas reales aplicadas (no duplicar por múltiples entregas).
     const clientesConSeguimiento = new Set(
       entregas.filter(tieneSeguimiento).map(e => e.client_id)
     ).size;
     const coberturaPct = totalTrabajadores
       ? Math.round(clientesConSeguimiento / totalTrabajadores * 100) : 0;
-    const conRetro = entregas.filter(e => e.fecha_retroalimentacion).length;
+    // "Pruebas de profundidad Con Adjunto": clientes únicos con el PDF de
+    // Perfil Estrés cargado Y una de las 4 pruebas reales aplicadas.
+    const clientesConAdjunto = new Set(
+      entregas.filter(e => e._tiene_perfil && tieneSeguimiento(e)).map(e => e.client_id)
+    ).size;
 
     // Variación mensual
     const ahora   = new Date();
@@ -449,14 +404,22 @@ document.addEventListener('DOMContentLoaded', () => {
                    <line x1="16" y1="17" x2="8" y2="17"/>`,
       },
       {
-        label: 'Trabajadores atendidos',
-        value: trabajadoresConEntrega,
-        sub: totalTrabajadores ? `de ${totalTrabajadores} registrados` : null,
-        iconBg: '#e8f5e9', iconColor: '#2e7d32',
-        iconPath: `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                   <circle cx="9" cy="7" r="4"/>
-                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                   <path d="M16 3.13a4 4 0 0 1 0 7.75"/>`,
+        label: 'Pruebas de profundidad',
+        value: clientesConSeguimiento,
+        badge: { cls: coberturaPct >= 60 ? 'badge-green' : 'badge-amber', text: `${coberturaPct}% cobertura` },
+        iconBg: '#ede7f6', iconColor: '#4527a0',
+        iconPath: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                   <polyline points="17 8 12 3 7 8"/>
+                   <line x1="12" y1="3" x2="12" y2="15"/>`,
+      },
+      {
+        label: 'Pruebas de profundidad Con Adjunto',
+        value: clientesConAdjunto,
+        badge: totalEntregas
+          ? { cls: 'badge-blue', text: `${Math.round(clientesConAdjunto / totalEntregas * 100)}% del total` }
+          : null,
+        iconBg: '#fce4ec', iconColor: '#c62828',
+        iconPath: `<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>`,
       },
       {
         label: 'Profesionales activos',
@@ -467,26 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         iconBg: '#fff3e0', iconColor: '#e65100',
         iconPath: `<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                    <circle cx="12" cy="7" r="4"/>`,
-      },
-      {
-        label: 'Con seguimiento registrado',
-        value: clientesConSeguimiento,
-        badge: { cls: coberturaPct >= 60 ? 'badge-green' : 'badge-amber', text: `${coberturaPct}% cobertura` },
-        iconBg: '#ede7f6', iconColor: '#4527a0',
-        iconPath: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                   <polyline points="17 8 12 3 7 8"/>
-                   <line x1="12" y1="3" x2="12" y2="15"/>`,
-      },
-      {
-        label: 'Con retroalimentación',
-        value: conRetro,
-        badge: totalEntregas
-          ? { cls: 'badge-blue', text: `${Math.round(conRetro / totalEntregas * 100)}% del total` }
-          : null,
-        iconBg: '#fce4ec', iconColor: '#c62828',
-        iconPath: `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                   <polyline points="7 10 12 15 17 10"/>
-                   <line x1="12" y1="15" x2="12" y2="3"/>`,
       },
     ];
 
@@ -507,152 +450,15 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   }
 
-  // ── Estados ───────────────────────────────────────────────────
-  function renderEstados(entregas, clientes) {
-    // Con plantilla Y seguimiento (pruebas a profundidad ≠ "No asistio")
-    const clientesConEntrega = new Set(entregas.map(e => e.client_id));
-    const conSeguimiento = [...clientesConEntrega].filter(cid => {
-      const entregasCliente = entregas.filter(e => String(e.client_id) === String(cid));
-      const tieneEntrega = entregasCliente.some(e => e.recomendaciones_html);
-      const tieneSeg = entregasCliente.some(tieneSeguimiento);
-      return tieneEntrega && tieneSeg;
-    }).length;
-
-    // Tiene entrega (plantilla) pero SIN seguimiento (todas sus entregas son "No asistio")
-    const sinSeguimiento = [...clientesConEntrega].filter(cid => {
-      const entregasCliente = entregas.filter(e => String(e.client_id) === String(cid));
-      const tieneEntrega = entregasCliente.some(e => e.recomendaciones_html);
-      const tieneSeg = entregasCliente.some(tieneSeguimiento);
-      return tieneEntrega && !tieneSeg;
-    }).length;
-
-    // Clientes sin ninguna entrega registrada
-    const sinEntrega = clientes.filter(c => !clientesConEntrega.has(c.id)).length;
-
-    document.getElementById('statusGrid').innerHTML = `
-      <div class="status-card s-complete">
-        <div class="status-n">${conSeguimiento}</div>
-        <div class="status-lbl">Con plantilla y seguimiento</div>
-      </div>
-      <div class="status-card s-pending">
-        <div class="status-n">${sinSeguimiento}</div>
-        <div class="status-lbl">Plantilla sin seguimiento</div>
-      </div>
-      <div class="status-card s-missing">
-        <div class="status-n">${sinEntrega}</div>
-        <div class="status-lbl">Sin entrega registrada</div>
-      </div>
-    `;
-  }
-
-  // ── Chart barras ──────────────────────────────────────────────
-  function renderChartBarras(entregas, periodo) {
-    const mesesLabel = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const rangos = {
-      all:[0,1,2,3,4,5,6,7,8,9,10,11], q1:[0,1,2], q2:[3,4,5], q3:[6,7,8], q4:[9,10,11]
-    };
-    const idxs   = rangos[periodo];
-    const labels = idxs.map(i => mesesLabel[i]);
-
-    const nuevas   = idxs.map(i => entregas.filter(e => {
-      const m = mesIdx(e.created_at);
-      const esEdita = e.updated_at && Math.abs(new Date(e.updated_at) - new Date(e.created_at)) > 5000;
-      return m === i && !esEdita;
-    }).length);
-
-    const editadas = idxs.map(i => entregas.filter(e => {
-      const m = mesIdx(e.updated_at);
-      return m === i && e.updated_at && Math.abs(new Date(e.updated_at) - new Date(e.created_at)) > 5000;
-    }).length);
-
-    const gridC = 'rgba(0,0,0,.06)', textC = '#888';
-
-    if (chartBarras) {
-      chartBarras.data.labels            = labels;
-      chartBarras.data.datasets[0].data  = nuevas;
-      chartBarras.data.datasets[1].data  = editadas;
-      chartBarras.update();
-      return;
-    }
-    chartBarras = new Chart(document.getElementById('cBarras'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { label:'Nuevas',   data:nuevas,   backgroundColor:'#5B8AF0', borderRadius:5, borderSkipped:false },
-          { label:'Editadas', data:editadas, backgroundColor:'#52b788', borderRadius:5, borderSkipped:false },
-        ]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}`} } },
-        scales:{
-          x:{grid:{display:false}, ticks:{color:textC, font:{size:11}}},
-          y:{grid:{color:gridC},   ticks:{color:textC, font:{size:11}, precision:0}, border:{display:false}},
-        },
-      },
-    });
-  }
-
-  // ── Chart dona ────────────────────────────────────────────────
-  function renderChartDonut(entregas) {
-    const cats = {'Manejo estrés':0,'Hábitos salud':0,'Autocuidado':0,'Comunicación':0,'Otros':0};
-    const kw = {
-      'Manejo estrés': ['estrés','estres','ansiedad','tensión','tension','relajación','relajacion'],
-      'Hábitos salud': ['hábito','habito','salud','nutrición','nutricion','sueño','sueno','ejercicio'],
-      'Autocuidado':   ['autocuidado','bienestar','higiene','emocional','cuidado personal'],
-      'Comunicación':  ['comunicación','comunicacion','relacion','social','interpersonal','asertividad'],
-    };
-    entregas.forEach(e => {
-      const txt = ((e.recomendaciones_html||'') + ' ' + (e.titulo_seccion||'')).toLowerCase();
-      let ok = false;
-      for (const [cat, palabras] of Object.entries(kw)) {
-        if (palabras.some(p => txt.includes(p))) { cats[cat]++; ok = true; break; }
-      }
-      if (!ok) cats['Otros']++;
-    });
-
-    const labels  = Object.keys(cats).filter(k => cats[k] > 0);
-    const valores = labels.map(l => cats[l]);
-    const colores = ['#5B8AF0','#52b788','#f4a261','#e07a9e','#a8a0d8'];
-    const total   = valores.reduce((a,b)=>a+b,0);
-
-    document.getElementById('donutLegend').innerHTML = labels.map((l,i) => {
-      const pct = total ? Math.round(valores[i]/total*100) : 0;
-      return `<div class="dl-row">
-        <span class="dl-left"><span class="legend-dot" style="background:${colores[i]}"></span>${l}</span>
-        <span class="dl-val">${pct}%</span>
-      </div>`;
-    }).join('');
-
-    if (chartDonut) {
-      chartDonut.data.labels             = labels;
-      chartDonut.data.datasets[0].data   = valores;
-      chartDonut.data.datasets[0].backgroundColor = colores.slice(0,labels.length);
-      chartDonut.update();
-      return;
-    }
-    chartDonut = new Chart(document.getElementById('cDonut'), {
-      type:'doughnut',
-      data:{ labels, datasets:[{data:valores, backgroundColor:colores.slice(0,labels.length), borderWidth:0, hoverOffset:4}] },
-      options:{ responsive:true, maintainAspectRatio:true, cutout:'70%',
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw}`}} } },
-    });
-  }
-
   // ── Chart torta: Pruebas a profundidad ─────────────────────────
   function renderChartPruebas(entregas) {
     const cats = {};
-    PRUEBAS_PROFUNDIDAD_ORDEN.forEach(l => { cats[l] = 0; });
-    let sinDato = 0;
+    PRUEBAS_PROFUNDIDAD_VALIDAS.forEach(l => { cats[l] = 0; });
 
     entregas.forEach(e => {
-      const valor = e.pruebas_profundidad;
-      if (!valor) return;
-      if (Object.prototype.hasOwnProperty.call(cats, valor)) cats[valor]++;
-      else sinDato++;
+      const valor = (e.pruebas_profundidad || '').trim();
+      if (PRUEBAS_PROFUNDIDAD_VALIDAS.includes(valor)) cats[valor]++;
     });
-    if (sinDato > 0) cats['Otros'] = sinDato;
 
     const labels  = Object.keys(cats).filter(k => cats[k] > 0);
     const valores = labels.map(l => cats[l]);
@@ -681,58 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
       options: {
         responsive: true, maintainAspectRatio: true,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw}` } } },
-      },
-    });
-  }
-
-  // ── Chart línea ───────────────────────────────────────────────
-  function renderChartLinea(entregas, periodo) {
-    const mesesLabel = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const rangos = { all:[0,1,2,3,4,5,6,7,8,9,10,11], q1:[0,1,2], q2:[3,4,5], q3:[6,7,8], q4:[9,10,11] };
-    const idxs   = rangos[periodo];
-    const labels = idxs.map(i => mesesLabel[i]);
-
-    const conAmbas = entregas.filter(e => e.fecha_aplicacion && e.fecha_retroalimentacion);
-    const data = idxs.map(i => {
-      const del = conAmbas.filter(e => mesIdx(e.fecha_aplicacion) === i);
-      if (!del.length) return 0;
-      const suma = del.reduce((a,e) => a + (diffDias(e.fecha_aplicacion, e.fecha_retroalimentacion)||0), 0);
-      return Math.round(suma / del.length);
-    });
-
-    const tieneData = data.some(v => v > 0);
-    const promGlobal = tieneData
-      ? Math.round(data.filter(v=>v>0).reduce((a,b)=>a+b,0) / data.filter(v=>v>0).length * 10) / 10
-      : 0;
-
-    const gridC = 'rgba(0,0,0,.06)', textC = '#888';
-
-    if (chartLinea) {
-      chartLinea.data.labels           = labels;
-      chartLinea.data.datasets[0].data = data;
-      chartLinea.data.datasets[1].data = Array(labels.length).fill(promGlobal);
-      chartLinea.update();
-      return;
-    }
-    chartLinea = new Chart(document.getElementById('cLinea'), {
-      type:'line',
-      data:{
-        labels,
-        datasets:[
-          { label:'Días promedio', data,
-            borderColor:'#5B8AF0', backgroundColor:'rgba(91,138,240,.1)',
-            tension:.35, fill:true, pointRadius:3, pointBackgroundColor:'#5B8AF0' },
-          { label:'Promedio global', data:Array(labels.length).fill(promGlobal),
-            borderColor:'#e05252', borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false },
-        ],
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw} días`}} },
-        scales:{
-          x:{grid:{display:false}, ticks:{color:textC, font:{size:11}}},
-          y:{grid:{color:gridC},   ticks:{color:textC, font:{size:11}, callback:v=>v+'d'}, border:{display:false}, min:0},
-        },
       },
     });
   }
@@ -815,9 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapa  = {};
     allProfesionales.forEach(p => { mapa[p.id] = { nombre:p.nombre, total:0, categorias:{} }; });
     entregas.forEach(e => {
+      const cat = (e.pruebas_profundidad || '').trim();
+      if (!PRUEBAS_PROFUNDIDAD_VALIDAS.includes(cat)) return;
       const pid = e.profesional_id;
       if (!mapa[pid]) mapa[pid] = { nombre:e.profesional_nombre||`Prof. ${pid}`, total:0, categorias:{} };
-      const cat = e.pruebas_profundidad || 'No asistio';
       mapa[pid].total++;
       mapa[pid].categorias[cat] = (mapa[pid].categorias[cat] || 0) + 1;
     });
@@ -829,12 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     lista.innerHTML = datos.map(p => {
-      // Categorías del catálogo conocido, en su orden fijo, más cualquier
-      // valor legado que ya no esté en el catálogo (por compatibilidad).
-      const categoriasPresentes = PRUEBAS_PROFUNDIDAD_ORDEN.filter(cat => p.categorias[cat] > 0);
-      Object.keys(p.categorias).forEach(cat => {
-        if (!PRUEBAS_PROFUNDIDAD_ORDEN.includes(cat)) categoriasPresentes.push(cat);
-      });
+      const categoriasPresentes = PRUEBAS_PROFUNDIDAD_VALIDAS.filter(cat => p.categorias[cat] > 0);
 
       const segmentos = categoriasPresentes.map(cat => {
         const n   = p.categorias[cat];
@@ -863,29 +613,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================================
-  // FILTRO DE PERÍODO
-  // ============================================================
-  document.getElementById('chipGroup')?.addEventListener('click', e => {
-    const chip = e.target.closest('.chip');
-    if (!chip) return;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    periodoActual = chip.dataset.period;
-    const entregas = entregasFiltradas();
-    renderChartBarras(entregasPorPeriodo(entregas, periodoActual), periodoActual);
-    renderChartLinea(entregasPorPeriodo(entregas, periodoActual), periodoActual);
-  });
-
-  // ============================================================
   // BOTÓN ACTUALIZAR
   // ============================================================
   document.getElementById('btnRefresh')?.addEventListener('click', async () => {
     const btn = document.getElementById('btnRefresh');
     btn.classList.add('spinning');
     btn.disabled = true;
-    // Destruir gráficas para que se recreen con datos frescos
-    [chartBarras, chartDonut, chartLinea, chartPruebas].forEach(c => c?.destroy());
-    chartBarras = chartDonut = chartLinea = chartPruebas = null;
+    // Destruir gráfica para que se recree con datos frescos
+    chartPruebas?.destroy();
+    chartPruebas = null;
     await cargarTodosLosDatos();
     btn.classList.remove('spinning');
     btn.disabled = false;

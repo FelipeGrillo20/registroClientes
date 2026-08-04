@@ -907,6 +907,7 @@ body {
 }
 .trazabilidad-table .col-sesion-num { text-align: center; min-width: 70px; }
 .trazabilidad-table .col-horas      { text-align: center; min-width: 80px; font-weight: 600; }
+.trazabilidad-table .col-horas-seguimiento { text-align: center; min-width: 90px; font-weight: 600; }
 .trazabilidad-table .col-sugeridas  { text-align: center; min-width: 90px; }
 .trazabilidad-table .col-obs        { min-width: 220px; max-width: 340px;
                                       vertical-align: top; padding: 10px 12px; }

@@ -3,6 +3,8 @@
 const API_URL        = window.API_CONFIG.ENDPOINTS.CLIENTS;
 const API_USERS      = window.API_CONFIG.ENDPOINTS.AUTH.USERS;
 const API_CONSULTAS  = window.API_CONFIG.ENDPOINTS.CONSULTAS;
+// Módulo de seguimientos (tabla independiente) — se deriva de la misma base que API_CONSULTAS
+const API_SEGUIMIENTOS = API_CONSULTAS.replace('/consultas', '/seguimientos');
 
 // ─── Referencias DOM ────────────────────────────────────────────────────────
 const tbody                        = document.getElementById("trazabilidadList");
@@ -64,7 +66,8 @@ let allClients          = [];   // Lista base de clientes cargados
 let allConsultas        = [];   // Todas las consultas cargadas
 let allProfesionales    = [];   // Lista de profesionales (para cruzar nombre)
 let allCreditos         = [];   // Créditos cargados para cruzar consecutivo
-let matrizRows          = [];   // Filas combinadas (1 fila por sesión)
+let allSeguimientos     = [];   // Todos los seguimientos cargados (una fila propia cada uno)
+let matrizRows          = [];   // Filas combinadas (1 fila por sesión + 1 fila por seguimiento)
 let currentFilteredRows = [];   // Filas visibles (para exportar)
 let currentUserRole     = null;
 let _asignacionesMap    = new Map(); // Asignaciones desde creditos.js
@@ -125,6 +128,23 @@ async function loadProfesionales() {
   }
 }
 
+// ─── Cargar todos los seguimientos (todas las consultas) ─────────────────────
+// Trae, en una sola petición, todos los registros de la tabla `seguimientos`
+// (cada uno se pinta luego como su propia fila independiente).
+async function loadSeguimientos() {
+  try {
+    const res = await fetch(API_SEGUIMIENTOS, {
+      headers: { "Authorization": `Bearer ${getAuthToken()}` }
+    });
+    if (!res.ok) throw new Error("Error al cargar seguimientos");
+    const data = await res.json();
+    allSeguimientos = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error("Error cargando seguimientos:", err);
+    allSeguimientos = [];
+  }
+}
+
 // ─── Cargar datos principales (clientes + consultas) ─────────────────────────
 async function loadData() {
   tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:40px;">Cargando datos...</td></tr>`;
@@ -147,7 +167,8 @@ async function loadData() {
       }),
       fetch(`${API_CREDITOS_BASE}/api/creditos?anio=${anioActual}&mes=1&modalidad_programa=Orientaci%C3%B3n%20Psicosocial`, {
         headers: { "Authorization": `Bearer ${getAuthToken()}` }
-      }).catch(() => ({ ok: false }))
+      }).catch(() => ({ ok: false })),
+      loadSeguimientos()
     ]);
 
     if (!resClients.ok)   throw new Error("Error al cargar clientes");
@@ -198,13 +219,15 @@ async function loadData() {
   }
 }
 
-// ─── Construir filas de la matriz (1 fila por sesión) ────────────────────────
+// ─── Construir filas de la matriz (1 fila por sesión + 1 fila por seguimiento) ─
 /**
  * Por cada cliente calcula el número de sesión de cada consulta
- * (ordenadas por fecha) y genera una fila combinada.
- * Si el cliente no tiene consultas, genera 1 fila sin datos de sesión.
+ * (ordenadas por fecha) y genera una fila combinada. Además, agrega una
+ * fila independiente por cada seguimiento post-cierre registrado (con
+ * Sesión # y Horas Sesión en 0 — el seguimiento no es una sesión).
+ * Si el cliente no tiene consultas ni seguimientos, se omite.
  */
-function buildMatrizRows(clients, consultas) {
+function buildMatrizRows(clients, consultas, seguimientos = allSeguimientos) {
   const rows = [];
 
   // ── Mapa de consultas a mostrar (filtradas) agrupadas por cliente
@@ -216,7 +239,8 @@ function buildMatrizRows(clients, consultas) {
     consultasPorCliente[c.cliente_id].push(c);
   });
 
-  // ── Mapa del historial COMPLETO por cliente (para numerar correctamente)
+  // ── Mapa del historial COMPLETO por cliente (para numerar correctamente
+  // y para poder ubicar el profesional dueño de cada caso/consulta_number)
   // allConsultas siempre contiene todas las sesiones sin filtro de fecha
   const historialCompleto = {};
   allConsultas.forEach(c => {
@@ -235,22 +259,50 @@ function buildMatrizRows(clients, consultas) {
     });
   });
 
-  clients.forEach(client => {
-    const consultasCliente = consultasPorCliente[client.id] || [];
-
-    if (consultasCliente.length === 0) {
-      // Cliente sin sesiones en el filtro → se omite
-    } else {
-      // Ordenar las sesiones filtradas por fecha ascendente
-      const ordenadas = [...consultasCliente].sort((a, b) =>
-        new Date(a.fecha) - new Date(b.fecha)
-      );
-      ordenadas.forEach(consulta => {
-        // Usar el número real de sesión del historial completo
-        const sesionNum = sesionRealPorId[consulta.id] ?? null;
-        rows.push({ client, consulta, sesionNum });
-      });
+  // ── Seguimientos agrupados por cliente
+  const seguimientosPorCliente = {};
+  seguimientos.forEach(s => {
+    if (!seguimientosPorCliente[s.cliente_id]) {
+      seguimientosPorCliente[s.cliente_id] = [];
     }
+    seguimientosPorCliente[s.cliente_id].push(s);
+  });
+
+  clients.forEach(client => {
+    const consultasCliente    = consultasPorCliente[client.id] || [];
+    const seguimientosCliente = seguimientosPorCliente[client.id] || [];
+
+    if (consultasCliente.length === 0 && seguimientosCliente.length === 0) {
+      // Cliente sin sesiones ni seguimientos en el filtro → se omite
+      return;
+    }
+
+    // Ordenar las sesiones filtradas por fecha ascendente
+    const ordenadas = [...consultasCliente].sort((a, b) =>
+      new Date(a.fecha) - new Date(b.fecha)
+    );
+    ordenadas.forEach(consulta => {
+      // Usar el número real de sesión del historial completo
+      const sesionNum = sesionRealPorId[consulta.id] ?? null;
+      rows.push({ client, consulta, sesionNum, seguimiento: null });
+    });
+
+    // Una fila independiente por cada seguimiento, ordenados por fecha.
+    // El profesional se hereda del caso (consulta_number) al que pertenece.
+    const seguimientosOrdenados = [...seguimientosCliente].sort((a, b) =>
+      new Date(a.fecha_seguimiento) - new Date(b.fecha_seguimiento)
+    );
+    seguimientosOrdenados.forEach(seguimiento => {
+      const casoConsultas = (historialCompleto[client.id] || [])
+        .filter(c => c.consulta_number === seguimiento.consulta_number);
+      const profesionalId = casoConsultas[0]?.profesional_id || client.profesional_id || null;
+      rows.push({
+        client,
+        consulta: null,
+        sesionNum: null,
+        seguimiento: { ...seguimiento, profesional_id: profesionalId }
+      });
+    });
   });
 
   return rows;
@@ -392,7 +444,7 @@ function renderRows(rows) {
 
   hideNoData();
 
-  rows.forEach(({ client, consulta, sesionNum }, index) => {
+  rows.forEach(({ client, consulta, sesionNum, seguimiento }, index) => {
 
     // ── Campos del cliente ───────────────────────────────────────────────────
     let tipoBadge = '-';
@@ -431,16 +483,47 @@ function renderRows(rows) {
       vinculoBadge = '<span class="badge badge-vinculo-familiar">Familiar</span>';
     }
 
-    // ── Campos de la sesión ──────────────────────────────────────────────────
+    // ── Campos de la sesión / del seguimiento ────────────────────────────────
     let fechaConsulta = '-';
     let motivoConsulta = '-';
     let sesionNumCell = '-';
     let horasSesion = '-';
+    let horasSeguimiento = '-';
     let sesionessugeridas = '-';
-    let observaciones = '-';
+    let observacionesCell = '-';
     let profesionalNombre = '-';
+    let modalidadCell = '-';
+    let estadoCell = '-';
 
-    if (consulta) {
+    if (seguimiento) {
+      // Fila independiente de seguimiento post-cierre — no es una sesión,
+      // por eso Sesión # y Horas Sesión van en 0.
+      if (seguimiento.fecha_seguimiento) {
+        fechaConsulta = seguimiento.fecha_seguimiento.split('T')[0]
+          .split('-')
+          .reverse()
+          .join('/');
+      }
+
+      sesionNumCell    = '<span class="badge badge-sesion">0</span>';
+      horasSesion      = '0';
+      horasSeguimiento = String(parseInt(seguimiento.horas_seguimiento) || 1);
+
+      sesionessugeridas = client.consultas_sugeridas
+        ? String(client.consultas_sugeridas)
+        : '-';
+
+      // Observaciones → lo escrito por el profesional en el seguimiento
+      observacionesCell = seguimiento.observaciones_seguimiento
+        ? `<span class="obs-texto">${escapeHtml(seguimiento.observaciones_seguimiento)}</span>`
+        : '-';
+
+      profesionalNombre = escapeHtml(getNombreProfesional(seguimiento.profesional_id));
+
+      // El seguimiento solo existe post-cierre del caso
+      estadoCell = '<span class="badge badge-estado-cerrado">🔴 Cerrado</span>';
+
+    } else if (consulta) {
       // Fecha consulta formateada
       if (consulta.fecha) {
       fechaConsulta = consulta.fecha.split('T')[0]
@@ -466,13 +549,14 @@ function renderRows(rows) {
         : '-';
 
       // Observaciones → columna1 en la tabla consultas
-      observaciones = consulta.columna1
-        ? escapeHtml(consulta.columna1)
-        : '-';
+      observacionesCell = buildObsCell(consulta, index);
 
       // Profesional que registró la consulta (viene del cliente si no hay en consulta)
       const profId = consulta.profesional_id || client.profesional_id;
       profesionalNombre = escapeHtml(getNombreProfesional(profId));
+
+      modalidadCell = buildModalidadBadge(consulta);
+      estadoCell    = buildEstadoBadge(consulta);
     }
 
     const tr = document.createElement("tr");
@@ -487,13 +571,14 @@ function renderRows(rows) {
       <td class="col-nombre">${buildNombreCell(client)}</td>
       <td class="col-cedula">${escapeHtml(client.cedula || '-')}</td>
       <td class="col-motivo">${motivoConsulta}</td>
-      <td class="col-modalidad">${buildModalidadBadge(consulta)}</td>
+      <td class="col-modalidad">${modalidadCell}</td>
       <td class="col-sesion-num">${sesionNumCell}</td>
       <td class="col-horas">${horasSesion}</td>
+      <td class="col-horas-seguimiento">${horasSeguimiento}</td>
       <td class="col-sugeridas">${sesionessugeridas}</td>
-      <td class="col-obs">${buildObsCell(consulta, index)}</td>
+      <td class="col-obs">${observacionesCell}</td>
       <td class="col-profesional">${profesionalNombre}</td>
-      <td class="col-estado">${buildEstadoBadge(consulta)}</td>
+      <td class="col-estado">${estadoCell}</td>
       <td class="col-formato">${buildFormatoBadge(getFormatoDeConsulta(consulta, client))}</td>
     `;
 
@@ -656,13 +741,30 @@ async function applyAdvancedFilters() {
       });
     }
 
-    // ── Solo mostrar clientes que tengan consultas en el rango filtrado
-    const clientesConConsultas = new Set(consultasFiltradas.map(c => c.cliente_id));
+    // ── Filtrar seguimientos por su propia fecha (campo `fecha_seguimiento`)
+    // — no por la fecha de la sesión a la que pertenecen —, para que solo
+    // aparezcan en el mes en que realmente se registraron.
+    let seguimientosFiltrados = allSeguimientos;
+    if (fechaInicio || fechaFin) {
+      seguimientosFiltrados = allSeguimientos.filter(s => {
+        if (!s.fecha_seguimiento) return false;
+        const f = s.fecha_seguimiento.split('T')[0];
+        if (fechaInicio && f < fechaInicio) return false;
+        if (fechaFin    && f > fechaFin)    return false;
+        return true;
+      });
+    }
+
+    // ── Solo mostrar clientes que tengan consultas o seguimientos en el rango filtrado
+    const clientesConRegistros = new Set([
+      ...consultasFiltradas.map(c => c.cliente_id),
+      ...seguimientosFiltrados.map(s => s.cliente_id)
+    ]);
     const clientesFiltrados = (fechaInicio || fechaFin)
-      ? allClients.filter(c => clientesConConsultas.has(c.id))
+      ? allClients.filter(c => clientesConRegistros.has(c.id))
       : allClients;
 
-    matrizRows = buildMatrizRows(clientesFiltrados, consultasFiltradas);
+    matrizRows = buildMatrizRows(clientesFiltrados, consultasFiltradas, seguimientosFiltrados);
 
     populateFilterOptions();
     renderRows(matrizRows);
@@ -823,7 +925,7 @@ function exportarExcel() {
     return;
   }
 
-  const filas = datos.map(({ client, consulta, sesionNum }) => {
+  const filas = datos.map(({ client, consulta, sesionNum, seguimiento }) => {
 
     // Tipo Cliente
     const tipoCliente = client.tipo_entidad_pagadora || '-';
@@ -862,25 +964,45 @@ function exportarExcel() {
       ? String(client.consultas_sugeridas)
       : '-';
 
-    // Campos de la sesión
+    // Campos de la sesión / del seguimiento
     let fechaConsulta = '-';
     let motivoConsulta = '-';
     let numSesion = '-';
     let horasSesion = '-';
+    let horasSeguimiento = '-';
     let observaciones = '-';
     let profesional = '-';
+    let modalidad = '-';
+    let estado = '-';
 
-    if (consulta) {
+    if (seguimiento) {
+      // Fila independiente de seguimiento post-cierre — no es una sesión
+      if (seguimiento.fecha_seguimiento) {
+        fechaConsulta = seguimiento.fecha_seguimiento.split('T')[0]
+          .split('-')
+          .reverse()
+          .join('/');
+      }
+      numSesion        = '0';
+      horasSesion      = '0';
+      horasSeguimiento = String(parseInt(seguimiento.horas_seguimiento) || 1);
+      observaciones    = seguimiento.observaciones_seguimiento || '-';
+      profesional      = getNombreProfesional(seguimiento.profesional_id);
+      estado           = 'Cerrado';
+
+    } else if (consulta) {
        if (consulta.fecha) {
        fechaConsulta = consulta.fecha.split('T')[0]
       .split('-')
       .reverse()
       .join('/');
       }
-      motivoConsulta = consulta.motivo_consulta || '-';
-      numSesion      = sesionNum !== null ? String(sesionNum) : '-';
-      horasSesion    = String(parseInt(consulta.horas_sesion) || 1);
-      observaciones  = consulta.columna1 || '-';
+      motivoConsulta   = consulta.motivo_consulta || '-';
+      numSesion        = sesionNum !== null ? String(sesionNum) : '-';
+      horasSesion      = String(parseInt(consulta.horas_sesion) || 1);
+      observaciones    = consulta.columna1 || '-';
+      modalidad        = consulta.modalidad || '-';
+      estado           = consulta.estado || '-';
 
       const profId   = consulta.profesional_id || client.profesional_id;
       profesional    = getNombreProfesional(profId);
@@ -897,13 +1019,14 @@ function exportarExcel() {
       'Nombre':              nombre,
       'Cédula':              cedula,
       'Motivo Consulta':     motivoConsulta,
-      'Modalidad':           consulta ? (consulta.modalidad || '-') : '-',
+      'Modalidad':           modalidad,
       'Sesión #':            numSesion,
       'Horas Sesión':        horasSesion,
+      'Horas Seguimiento':   horasSeguimiento,
       'Sesiones Sugeridas':  sesionessugeridas,
       'Observaciones':       observaciones,
       'Profesional':         profesional,
-      'Estado':              consulta ? (consulta.estado || '-') : '-',
+      'Estado':              estado,
       'Formato':             (() => {
         const f = getFormatoDeConsulta(consulta, client);
         if (!f) return '-';
@@ -930,6 +1053,7 @@ function exportarExcel() {
     { wch: 12 }, // Modalidad
     { wch:  9 }, // Sesión #
     { wch: 12 }, // Horas Sesión
+    { wch: 16 }, // Horas Seguimiento
     { wch: 16 }, // Sesiones Sugeridas
     { wch: 40 }, // Observaciones
     { wch: 24 }, // Profesional

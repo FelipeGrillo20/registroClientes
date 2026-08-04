@@ -73,6 +73,22 @@ exports.getSeguimientosByConsulta = async (req, res) => {
 };
 
 // ============================================
+// Obtener TODOS los seguimientos (de cualquier cliente/consulta)
+// GET /api/seguimientos
+// Usado por trazabilidad.html para mostrar cada seguimiento como una
+// fila independiente, sin tener que pedirlos consulta por consulta.
+// ============================================
+exports.getAllSeguimientos = async (req, res) => {
+  try {
+    const seguimientos = await seguimientoModel.getAllSeguimientos();
+    res.json(seguimientos);
+  } catch (err) {
+    console.error("Error obteniendo todos los seguimientos:", err);
+    res.status(500).json({ message: "Error al obtener los seguimientos" });
+  }
+};
+
+// ============================================
 // Obtener un seguimiento por ID
 // GET /api/seguimientos/:id
 // ============================================

@@ -7,6 +7,10 @@ const seguimientoController = require("../controllers/seguimientoController");
 // RUTAS ESPECIALES — deben ir ANTES de /:id
 // ============================================
 
+// Obtener todos los seguimientos (todas las consultas)
+// GET /api/seguimientos
+router.get("/", seguimientoController.getAllSeguimientos);
+
 // Obtener todos los seguimientos de una consulta
 // GET /api/seguimientos/:cliente_id/:consulta_number
 router.get("/:cliente_id/:consulta_number", seguimientoController.getSeguimientosByConsulta);

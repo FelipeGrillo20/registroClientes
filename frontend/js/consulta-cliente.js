@@ -144,10 +144,12 @@ function displayClientData(cliente) {
   // Vínculo
   mostrarItem('item-vinculo', !!cliente.vinculo);
   const vinculoElement = document.getElementById("clientVinculo");
-  if (cliente.vinculo === 'Trabajador') {
-    vinculoElement.innerHTML = '<span class="badge-vinculo-consulta badge-trabajador-consulta">Trabajador</span>';
-  } else if (cliente.vinculo === 'Familiar Trabajador') {
-    vinculoElement.innerHTML = '<span class="badge-vinculo-consulta badge-familiar-consulta">Familiar Trabajador</span>';
+  const VINCULOS_TIPO_TRABAJADOR = ['Trabajador', 'Asociado', 'Dependiente - Trabajador del Asociado'];
+  const VINCULOS_TIPO_FAMILIAR = ['Familiar Trabajador', 'Familiar del Asociado', 'Familiar del Dependiente'];
+  if (VINCULOS_TIPO_TRABAJADOR.includes(cliente.vinculo)) {
+    vinculoElement.innerHTML = `<span class="badge-vinculo-consulta badge-trabajador-consulta">${cliente.vinculo}</span>`;
+  } else if (VINCULOS_TIPO_FAMILIAR.includes(cliente.vinculo)) {
+    vinculoElement.innerHTML = `<span class="badge-vinculo-consulta badge-familiar-consulta">${cliente.vinculo}</span>`;
   } else {
     vinculoElement.textContent = "-";
   }

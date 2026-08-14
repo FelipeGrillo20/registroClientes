@@ -221,6 +221,41 @@ function setupCamposSVE() {
 }
 
 // ============================================
+// VÍNCULO: Opciones dinámicas según Empresa Usuario
+// La empresa "Asociados Coopidrogas" maneja categorías propias de vínculo
+// ============================================
+const EMPRESA_VINCULO_ESPECIAL = 'Asociados Coopidrogas';
+
+const VINCULO_OPCIONES_DEFAULT = [
+  { value: 'Trabajador', label: 'Trabajador' },
+  { value: 'Familiar Trabajador', label: 'Familiar Trabajador' },
+];
+
+const VINCULO_OPCIONES_COOPIDROGAS = [
+  { value: 'Asociado', label: 'Asociado' },
+  { value: 'Dependiente - Trabajador del Asociado', label: 'Dependiente - Trabajador del Asociado' },
+  { value: 'Familiar del Asociado', label: 'Familiar del Asociado' },
+  { value: 'Familiar del Dependiente', label: 'Familiar del Dependiente' },
+];
+
+function actualizarOpcionesVinculo(empresaTexto, valorPreferido) {
+  const vinculoSelect = document.getElementById('vinculo');
+  if (!vinculoSelect) return;
+
+  const opciones = empresaTexto === EMPRESA_VINCULO_ESPECIAL
+    ? VINCULO_OPCIONES_COOPIDROGAS
+    : VINCULO_OPCIONES_DEFAULT;
+
+  vinculoSelect.innerHTML = '<option value="">Seleccione...</option>' +
+    opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+
+  const nuevoValor = valorPreferido && opciones.some(o => o.value === valorPreferido)
+    ? valorPreferido
+    : '';
+  vinculoSelect.value = nuevoValor;
+}
+
+// ============================================
 // CARGO: Obligatorio/opcional según vínculo
 // ============================================
 function actualizarObligatoriedadCargo(vinculo) {
@@ -940,6 +975,7 @@ function initializeForm() {
             const empresaEncontrada = empresas.find(e => e.value === clienteEncontrado.empresa_id);
             if (empresaEncontrada) {
               empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
+              actualizarOpcionesVinculo(empresaEncontrada.text, clienteEncontrado.vinculo);
             }
           }
           
@@ -1021,6 +1057,7 @@ function resetForm() {
   if (entidadEspecificaSelector) entidadEspecificaSelector.reset();
   document.getElementById("entidadEspecificaContainer").style.display = "none";
   if (empresaSelector) empresaSelector.reset();
+  actualizarOpcionesVinculo('');
   if (subcontratistaSelector) subcontratistaSelector.reset();
   document.getElementById("email").value = "";
   document.getElementById("phone").value = "";
@@ -1114,7 +1151,13 @@ async function loadEmpresas() {
       subcontratistasFormateados,
       (item) => item.text
     );
-    
+
+    // ✅ Cambiar opciones de Vínculo cuando se selecciona/limpia la Empresa Usuario
+    document.getElementById('empresaUsuario')?.addEventListener('change', function() {
+      const empresaTexto = document.getElementById('empresaUsuarioSearch')?.value || '';
+      actualizarOpcionesVinculo(empresaTexto);
+    });
+
   } catch (err) {
     console.error("❌ Error cargando empresas:", err);
   }
@@ -1397,6 +1440,7 @@ window.startEdit = async function (id) {
       const empresaEncontrada = empresas.find(e => e.value === client.empresa_id);
       if (empresaEncontrada) {
         empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
+        actualizarOpcionesVinculo(empresaEncontrada.text, client.vinculo);
       }
     }
     

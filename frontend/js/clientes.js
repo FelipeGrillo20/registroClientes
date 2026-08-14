@@ -408,6 +408,34 @@ function populateEmpresaFilter() {
   });
 }
 
+// ============================================
+// VÍNCULO: Opciones del filtro dinámicas según Empresa
+// "Asociados Coopidrogas" maneja categorías propias de vínculo
+// ============================================
+const EMPRESA_VINCULO_ESPECIAL = 'Asociados Coopidrogas';
+
+const VINCULO_OPCIONES_DEFAULT = ['Trabajador', 'Familiar Trabajador'];
+
+const VINCULO_OPCIONES_COOPIDROGAS = [
+  'Asociado',
+  'Dependiente - Trabajador del Asociado',
+  'Familiar del Asociado',
+  'Familiar del Dependiente',
+];
+
+function actualizarOpcionesFiltroVinculo() {
+  const empresaTexto = filterEmpresa.selectedOptions[0]?.textContent || '';
+  const opciones = empresaTexto === EMPRESA_VINCULO_ESPECIAL
+    ? VINCULO_OPCIONES_COOPIDROGAS
+    : VINCULO_OPCIONES_DEFAULT;
+
+  const valorPrevio = filterVinculo.value;
+  filterVinculo.innerHTML = '<option value="">Todos los Vínculos</option>' +
+    opciones.map(v => `<option value="${v}">${v}</option>`).join('');
+
+  filterVinculo.value = opciones.includes(valorPrevio) ? valorPrevio : '';
+}
+
 // Cargar clientes CON filtro de modalidad y profesional
 async function loadClients(modalidad, profesionalId = null, año = null, mes = null) {
   // ✅ Incrementar token: cualquier renderClients anterior que siga en curso
@@ -621,10 +649,10 @@ async function renderClients(list, myToken = null) {
 
     // Determinar badge de vínculos
     let vinculoBadge = '';
-    if (c.vinculo === 'Trabajador') {
-      vinculoBadge = '<span class="badge-vinculo badge-trabajador">Trabajador</span>';
-    } else if (c.vinculo === 'Familiar Trabajador') {
-      vinculoBadge = '<span class="badge-vinculo badge-familiar">Familiar</span>';
+    if (c.vinculo === 'Trabajador' || c.vinculo === 'Asociado' || c.vinculo === 'Dependiente - Trabajador del Asociado') {
+      vinculoBadge = `<span class="badge-vinculo badge-trabajador">${escapeHtml(c.vinculo)}</span>`;
+    } else if (c.vinculo === 'Familiar Trabajador' || c.vinculo === 'Familiar del Asociado' || c.vinculo === 'Familiar del Dependiente') {
+      vinculoBadge = `<span class="badge-vinculo badge-familiar">${escapeHtml(c.vinculo)}</span>`;
     } else {
       vinculoBadge = '<span style="color: #95a5a6;">-</span>';
     }
@@ -801,6 +829,9 @@ function setupFilterEvents() {
   
   [filterSede, filterVinculo, filterEmpresa].forEach(select => {
     select.addEventListener("change", () => {
+      if (select === filterEmpresa) {
+        actualizarOpcionesFiltroVinculo();
+      }
       applyFilters();
       const filterType = select.id.replace('filter', '').toLowerCase();
       const menu = document.getElementById(`filterMenu-${filterType}`);
@@ -876,9 +907,10 @@ function setupFilterEvents() {
     btnClearFilters.addEventListener("click", () => {
       filterCedula.value = "";
       filterSede.value = "";
-      filterVinculo.value = "";
       filterEmpresa.value = "";
-      
+      actualizarOpcionesFiltroVinculo();
+      filterVinculo.value = "";
+
       if (filterProfesionalSelect) {
         filterProfesionalSelect.value = "";
       }

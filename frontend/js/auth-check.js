@@ -17,7 +17,8 @@
       'index.html',
       'clientes.html',
       'consulta.html',
-      'agendamiento.html',  // ⭐ Agregado
+      // 'agendamiento.html' — ya no depende de modalidad: se puede agendar
+      // antes de saber en qué modalidad quedará el trabajador.
       'dashboard.html',
       'dashboardSVE.html',
       'trazabilidad.html'

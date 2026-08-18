@@ -74,6 +74,10 @@ router.get("/filters", clientsController.getClientsWithFilters);
 // Buscar trabajador por cédula, en cualquier modalidad (debe ir ANTES de "/:id")
 router.get("/buscar-cedula/:cedula", clientsController.buscarPorCedula);
 
+// Buscar trabajador PENDIENTE (agendado sin completar registro) por cédula,
+// acotado al profesional actual (debe ir ANTES de "/:id")
+router.get("/pendiente/:cedula", clientsController.buscarPendientePorCedula);
+
 // Obtener todos los clientes
 router.get("/", clientsController.getClients);
 

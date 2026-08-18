@@ -98,6 +98,7 @@ const CitaModel = {
           cl.nombre AS trabajador_nombre,
           cl.cedula AS trabajador_cedula,
           cl.email  AS trabajador_email,
+          cl.sede   AS trabajador_sede,
           u.nombre  AS profesional_nombre,
           u.email   AS profesional_email
         FROM citas c
@@ -271,6 +272,7 @@ const CitaModel = {
           c.modalidad_programa,
           cl.nombre AS trabajador_nombre,
           cl.cedula AS trabajador_cedula,
+          cl.sede   AS trabajador_sede,
           u.nombre AS profesional_nombre
         FROM citas c
         LEFT JOIN clients cl ON c.trabajador_id = cl.id
@@ -377,6 +379,19 @@ const CitaModel = {
       console.error("Error en existeCitaPrevia:", error);
       throw error;
     }
+  },
+
+  /**
+   * ¿Le queda alguna cita (de cualquier profesional) a este trabajador?
+   * Usado al eliminar una cita para saber si un trabajador "pendiente" que
+   * se creó solo para esa cita quedó huérfano y debe limpiarse.
+   */
+  async tieneCitas(trabajador_id) {
+    const result = await pool.query(
+      `SELECT 1 FROM citas WHERE trabajador_id = $1 LIMIT 1`,
+      [trabajador_id]
+    );
+    return result.rows.length > 0;
   },
 
   /**

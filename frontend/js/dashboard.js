@@ -46,8 +46,10 @@ async function cargarDatosOriginales() {
     // un objeto filtrado o un array, según el rol en el backend
     if (clientesRes.ok) {
       const clientesData = await clientesRes.json();
-      // Asegurarse de que siempre sea un array
-      datosOriginales.clientes = Array.isArray(clientesData) ? clientesData : [];
+      // Asegurarse de que siempre sea un array — se excluyen los
+      // "pendientes" (agendados sin completar registro, sin sede): estas
+      // estadísticas cuentan trabajadores efectivamente registrados.
+      datosOriginales.clientes = (Array.isArray(clientesData) ? clientesData : []).filter(c => c.sede);
     } else {
       console.warn("No se pudo obtener clientes (status:", clientesRes.status, "). Se usará array vacío.");
       datosOriginales.clientes = [];

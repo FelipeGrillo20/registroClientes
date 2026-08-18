@@ -205,7 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
         trabajadores = Array.isArray(data) ? data : [];
       }
 
-      todosLosTrabajadores = trabajadores;
+      // Excluir "pendientes" (agendados sin completar registro, sin sede):
+      // no tienen modalidad asignada, así que aparecerían repetidos (una vez
+      // por cada modalidad consultada arriba) y de todas formas no tienen
+      // los datos necesarios para generar una entrega de resultados.
+      todosLosTrabajadores = trabajadores.filter(t => t.sede);
       renderTrabajadores(todosLosTrabajadores);
     } catch (err) {
       console.error('Error al cargar trabajadores:', err);

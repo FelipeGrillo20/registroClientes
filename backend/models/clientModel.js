@@ -76,9 +76,13 @@ exports.getClients = async () => {
 };
 
 // ✅ NUEVO: Obtener clientes filtrados por profesional Y modalidad
+// Incluye también los trabajadores "pendientes" (agendados desde Agendamiento
+// sin completar su registro, modalidad aún NULL) — todavía no tienen
+// modalidad definida, así que son candidatos válidos en cualquiera que se
+// esté consultando, hasta que completen su registro.
 exports.getClientsByProfesionalAndModalidad = async (profesionalId, modalidad) => {
   const result = await pool.query(`
-    SELECT 
+    SELECT
       c.*,
       e.tipo_cliente,
       e.nombre_cliente,
@@ -91,7 +95,7 @@ exports.getClientsByProfesionalAndModalidad = async (profesionalId, modalidad) =
     LEFT JOIN empresas e ON c.empresa_id = e.id
     LEFT JOIN empresas s ON c.subcontratista_id = s.id
     LEFT JOIN users u ON c.profesional_id = u.id
-    WHERE c.profesional_id = $1 AND c.modalidad = $2
+    WHERE c.profesional_id = $1 AND (c.modalidad = $2 OR c.modalidad IS NULL)
     ORDER BY c.id DESC
   `, [profesionalId, modalidad]);
   return result.rows;
@@ -150,9 +154,10 @@ exports.getClientsWithFilters = async (filters) => {
     paramIndex++;
   }
   
-  // ✅ NUEVO: Filtro por modalidad
+  // ✅ NUEVO: Filtro por modalidad — incluye pendientes (modalidad IS NULL),
+  // ver comentario en getClientsByProfesionalAndModalidad
   if (modalidad) {
-    query += ` AND c.modalidad = $${paramIndex}`;
+    query += ` AND (c.modalidad = $${paramIndex} OR c.modalidad IS NULL)`;
     params.push(modalidad);
     paramIndex++;
   }
@@ -210,6 +215,22 @@ exports.getClientByCedula = async (cedula) => {
      ORDER BY id DESC
      LIMIT 1`,
     [cedula]
+  );
+  return result.rows[0] || null;
+};
+
+// Buscar un cliente por cédula, acotado al profesional que lo atiende —
+// usado para el flujo de "trabajador pendiente" (agendado antes de
+// completar su registro): permite saber si esa cédula ya existe para
+// ESE profesional en particular (pendiente o ya completo), sin chocar
+// con los registros que otros profesionales puedan tener con la misma cédula.
+exports.getClientByCedulaYProfesional = async (cedula, profesionalId) => {
+  const result = await pool.query(
+    `SELECT * FROM clients
+     WHERE cedula = $1 AND profesional_id = $2
+     ORDER BY id DESC
+     LIMIT 1`,
+    [cedula, profesionalId]
   );
   return result.rows[0] || null;
 };

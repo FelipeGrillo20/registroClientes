@@ -24,6 +24,11 @@
   // profundidad más frecuentes".
   const PRUEBAS_PROFUNDIDAD_VALIDAS = ["Perfil Estres", "Entrevista Semi", "IPT", "Grupo Focal"];
 
+  // Vínculo: "Asociados Coopidrogas" usa categorías propias, pero para las
+  // gráficas de Trabajador/Familiar se agrupan bajo el mismo par de barras.
+  const VINCULOS_TIPO_TRABAJADOR = ["Trabajador", "Asociado", "Dependiente - Trabajador del Asociado"];
+  const VINCULOS_TIPO_FAMILIAR   = ["Familiar Trabajador", "Familiar del Asociado", "Familiar del Dependiente"];
+
   // Chart.js defaults (tema oscuro)
   Chart.defaults.color = "#8b94a8";
   Chart.defaults.borderColor = "rgba(255,255,255,0.07)";
@@ -883,8 +888,8 @@
     let trabajadores = 0;
     let familiares   = 0;
     atendidos.forEach(c => {
-      if (c.vinculo === "Trabajador") trabajadores++;
-      else if (c.vinculo === "Familiar Trabajador") familiares++;
+      if (VINCULOS_TIPO_TRABAJADOR.includes(c.vinculo)) trabajadores++;
+      else if (VINCULOS_TIPO_FAMILIAR.includes(c.vinculo)) familiares++;
     });
 
     const total = trabajadores + familiares;
@@ -1973,8 +1978,8 @@
     const atendidosSnap = clientes.filter(c => clientesConSesionSnap.has(c.id));
     const vinculos = { trabajadores: 0, familiares: 0 };
     atendidosSnap.forEach(c => {
-      if (c.vinculo === "Trabajador") vinculos.trabajadores++;
-      else if (c.vinculo === "Familiar Trabajador") vinculos.familiares++;
+      if (VINCULOS_TIPO_TRABAJADOR.includes(c.vinculo)) vinculos.trabajadores++;
+      else if (VINCULOS_TIPO_FAMILIAR.includes(c.vinculo)) vinculos.familiares++;
     });
 
     // Motivos de consulta: contar igual que renderMotivos

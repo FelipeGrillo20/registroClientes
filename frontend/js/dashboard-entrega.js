@@ -168,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         allClientes = Object.values(mapa);
       }
+
+      // Excluir "pendientes" (agendados sin completar registro, sin sede):
+      // este dashboard cuenta trabajadores efectivamente registrados. Además,
+      // como un pendiente no tiene modalidad asignada, aparece en la
+      // respuesta de cada modalidad consultada arriba — sin este filtro
+      // quedaría contado más de una vez.
+      allClientes = allClientes.filter(c => c.sede);
     } catch (e) {
       console.warn('No se pudieron cargar clientes:', e);
       allClientes = [];

@@ -8,8 +8,9 @@
   let calendar;
   let citaSeleccionada = null;
   const API_URL = window.API_CONFIG?.ENDPOINTS?.BASE || 'http://localhost:5000';
-  const modalidadPrograma = localStorage.getItem('modalidadSeleccionada') || 'Orientación Psicosocial';
-  
+  // ✅ Agendamiento ya no depende de la modalidad seleccionada: un mismo
+  // calendario muestra citas de Orientación Psicosocial y SVE juntas.
+
   // ✅ NUEVO: Obtener usuario actual y su rol
   const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRol = currentUser.rol || '';
@@ -46,7 +47,16 @@
     trabBuscador: document.getElementById('trabBuscador'),
     trabClearBtn: document.getElementById('trabClearBtn'),
     trabOptions: document.getElementById('trabOptions'),
-    
+
+    // Trabajador nuevo (sin registrar)
+    trabBtnNuevo: document.getElementById('trabBtnNuevo'),
+    trabNuevoForm: document.getElementById('trabNuevoForm'),
+    trabNuevoCancelar: document.getElementById('trabNuevoCancelar'),
+    trabNuevoCedula: document.getElementById('trabNuevoCedula'),
+    trabNuevoNombre: document.getElementById('trabNuevoNombre'),
+    trabNuevoEmail: document.getElementById('trabNuevoEmail'),
+
+
     // Filtros
     filtroProfesional: document.getElementById('filtroProfesional'),
     filtroEstado: document.getElementById('filtroEstado'),
@@ -61,6 +71,7 @@
     btnCerrarDetalleBtn: document.getElementById('btnCerrarDetalleBtn'),
     btnEditarCita: document.getElementById('btnEditarCita'),
     btnEliminarCita: document.getElementById('btnEliminarCita'),
+    btnCompletarRegistro: document.getElementById('btnCompletarRegistro'),
     
     // Botones de acciones calendario (solo admin)
     calendarActions: document.getElementById('calendarActions'),
@@ -81,9 +92,13 @@
   // ========== INICIALIZACIÓN ==========
   function init() {
     console.log('🚀 Inicializando módulo de agendamiento...');
-    console.log('📋 Modalidad:', modalidadPrograma);
     console.log('👤 Rol:', userRol, '- Profesional?', isProfesional);
-    
+
+    // ✅ Esta página ya no depende de una modalidad seleccionada
+    const modalidadIndicador = document.getElementById('modalidadIndicador');
+    if (modalidadIndicador) modalidadIndicador.style.display = 'none';
+
+
     initCalendar();
     configurarFormularioSegunRol();  // ✅ NUEVO: Configurar según rol
     loadProfesionales();
@@ -229,10 +244,11 @@
       
       const estadoSeleccionado = elements.filtroEstado.value;
       
+      // ✅ Calendario desligado de modalidad: se muestran juntas las citas
+      // de Orientación Psicosocial y de Sistema de Vigilancia Epidemiológica
       const params = new URLSearchParams({
         fecha_inicio: start.toISOString().split('T')[0],
-        fecha_fin: end.toISOString().split('T')[0],
-        modalidad_programa: modalidadPrograma
+        fecha_fin: end.toISOString().split('T')[0]
       });
       
       if (profesionalId) {
@@ -348,6 +364,7 @@
 
   // ========== BUSCADOR DE TRABAJADOR ==========
   let _listaTrabajadores = [];
+  let modoTrabajadorNuevo = false;
 
   function _trabAbrirDropdown() {
     if (elements.trabDisplay.classList.contains('disabled')) return;
@@ -392,6 +409,7 @@
   }
 
   function _trabSeleccionar(trab) {
+    _trabSalirModoNuevo();
     elements.trabajadorId.value = trab.id;
     elements.trabDisplayText.textContent = trab.nombre;
     elements.trabDisplayText.classList.remove('placeholder');
@@ -405,6 +423,7 @@
     elements.trabDisplayText.textContent = placeholder;
     elements.trabDisplayText.classList.add('placeholder');
     _trabCerrarDropdown();
+    _trabSalirModoNuevo();
   }
 
   function _trabDeshabilitar(placeholder = 'Primero seleccione un profesional') {
@@ -416,6 +435,35 @@
 
   function _trabHabilitar() {
     elements.trabDisplay.classList.remove('disabled');
+  }
+
+  // ── Trabajador nuevo (sin registrar) ──────────────────────────────────
+  // Permite agendar solo con Cédula + Nombre + Correo cuando el trabajador
+  // todavía no existe. El backend crea (o reutiliza, si ya estaba pendiente)
+  // un registro mínimo al guardar la cita.
+  function _trabEntrarModoNuevo() {
+    modoTrabajadorNuevo = true;
+    _trabCerrarDropdown();
+    elements.trabajadorId.value = '';
+    elements.trabDisplayText.textContent = '🆕 Trabajador nuevo (sin registrar)';
+    elements.trabDisplayText.classList.remove('placeholder');
+    elements.trabNuevoForm.style.display = 'block';
+
+    // Si el usuario ya había escrito algo en el buscador, aprovecharlo como
+    // punto de partida del nombre (búsqueda que no dio resultados)
+    const textoBuscado = elements.trabBuscador.value.trim();
+    if (textoBuscado && !elements.trabNuevoNombre.value) {
+      elements.trabNuevoNombre.value = textoBuscado;
+    }
+    elements.trabNuevoCedula.focus();
+  }
+
+  function _trabSalirModoNuevo() {
+    modoTrabajadorNuevo = false;
+    elements.trabNuevoForm.style.display = 'none';
+    elements.trabNuevoCedula.value = '';
+    elements.trabNuevoNombre.value = '';
+    elements.trabNuevoEmail.value = '';
   }
 
   function _trabCargarLista(trabajadores) {
@@ -443,16 +491,21 @@
     document.addEventListener('click', e => {
       if (!elements.trabWrapper.contains(e.target)) _trabCerrarDropdown();
     });
+    elements.trabBtnNuevo.addEventListener('click', _trabEntrarModoNuevo);
+    elements.trabNuevoCancelar.addEventListener('click', () => _trabReset('Seleccione un trabajador'));
   }
 
   // ========== CARGA DE TRABAJADORES ==========
   async function loadTrabajadores() {
     try {
       const token = window.getAuthToken();
-      let url = `${API_URL}/api/clients?modalidad=${encodeURIComponent(modalidadPrograma)}`;
+      // ✅ Sin filtro de modalidad: Agendamiento muestra trabajadores de
+      // cualquier modalidad (y pendientes), ya que todavía no se decide en
+      // qué modalidad quedará hasta que se complete su registro.
+      let url = `${API_URL}/api/clients`;
 
       if (isProfesional) {
-        url += `&profesional_id=${userId}`;
+        url += `?profesional_id=${userId}`;
         console.log('🔒 [ROL] Filtrando trabajadores del profesional:', userId);
       }
 
@@ -484,7 +537,7 @@
 
     try {
       const token = window.getAuthToken();
-      const url = `${API_URL}/api/clients?modalidad=${encodeURIComponent(modalidadPrograma)}&profesional_id=${profesionalId}`;
+      const url = `${API_URL}/api/clients?profesional_id=${profesionalId}`;
       console.log('📡 [CASCADA] Petición a:', url);
 
       const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -507,10 +560,10 @@
       const primerDia = new Date(now.getFullYear(), now.getMonth(), 1);
       const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       
+      // ✅ Estadísticas del mes agregadas entre ambas modalidades
       const params = new URLSearchParams({
         fecha_inicio: primerDia.toISOString().split('T')[0],
-        fecha_fin: ultimoDia.toISOString().split('T')[0],
-        modalidad_programa: modalidadPrograma
+        fecha_fin: ultimoDia.toISOString().split('T')[0]
       });
       
       // ✅ MODIFICADO: Si es profesional, filtrar solo sus estadísticas
@@ -564,6 +617,12 @@
     elements.btnCerrarDetalleBtn.addEventListener('click', cerrarModalDetalle);
     elements.btnEditarCita.addEventListener('click', editarCitaDesdeDetalle);
     elements.btnEliminarCita.addEventListener('click', eliminarCitaDesdeDetalle);
+    if (elements.btnCompletarRegistro) {
+      elements.btnCompletarRegistro.addEventListener('click', () => {
+        if (!citaSeleccionada) return;
+        window.location.href = `index.html?edit=${citaSeleccionada.trabajador_id}`;
+      });
+    }
     
     // Filtros
     elements.filtroProfesional.addEventListener('change', () => {
@@ -701,9 +760,8 @@
     
     // ✅ Para profesionales, usar directamente userId; para admin, leer del campo
     const profesionalIdValue = isProfesional ? userId : parseInt(elements.profesionalId.value);
-    
+
     const citaData = {
-      trabajador_id: parseInt(elements.trabajadorId.value),
       profesional_id: profesionalIdValue,
       fecha: elements.fecha.value,
       hora_inicio: elements.horaInicio.value,
@@ -713,26 +771,59 @@
       // observaciones_internas: elements.observacionesInternas.value, // ⚠️ COMENTADO (campo oculto)
       observaciones_internas: null,  // ✅ Enviar como null
       observaciones_informe: elements.observacionesInforme.value,
-      modalidad_programa: modalidadPrograma
+      // ✅ Ya no se pide en el modal: el backend la deriva de la modalidad
+      // del trabajador si ya está registrado, o queda sin definir hasta
+      // que complete su registro.
     };
-    
+
+    // ✅ Trabajador nuevo (sin registrar) — se envían cédula/nombre/correo en
+    // vez de trabajador_id; el backend lo crea o reutiliza si ya está pendiente
+    if (modoTrabajadorNuevo) {
+      const cedulaNueva  = elements.trabNuevoCedula.value.trim();
+      const nombreNuevo  = elements.trabNuevoNombre.value.trim();
+      const emailNuevo   = elements.trabNuevoEmail.value.trim();
+
+      if (!cedulaNueva || !/^\d+$/.test(cedulaNueva)) {
+        mostrarNotificacion('La cédula del trabajador nuevo debe contener solo números', 'error');
+        return;
+      }
+      if (!nombreNuevo) {
+        mostrarNotificacion('El nombre del trabajador nuevo es obligatorio', 'error');
+        return;
+      }
+      if (!emailNuevo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNuevo)) {
+        mostrarNotificacion('El correo del trabajador nuevo no es válido', 'error');
+        return;
+      }
+      if (isNaN(profesionalIdValue)) {
+        mostrarNotificacion('Seleccione primero un profesional para registrar al trabajador nuevo', 'error');
+        return;
+      }
+
+      citaData.trabajador_cedula = cedulaNueva;
+      citaData.trabajador_nombre = nombreNuevo;
+      citaData.trabajador_email  = emailNuevo;
+    } else {
+      citaData.trabajador_id = parseInt(elements.trabajadorId.value);
+    }
+
     console.log('📤 [guardarCita] Datos a enviar:', citaData);
-    
+
     // Validar que hora fin sea mayor que hora inicio
     if (citaData.hora_fin <= citaData.hora_inicio) {
       mostrarNotificacion('La hora de fin debe ser posterior a la hora de inicio', 'error');
       return;
     }
-    
+
     // Validar campos obligatorios
-    if (!citaData.trabajador_id || isNaN(citaData.profesional_id)) {
+    if ((!citaData.trabajador_id && !modoTrabajadorNuevo) || isNaN(citaData.profesional_id)) {
       console.error('❌ [guardarCita] Faltan datos obligatorios');
       console.error('trabajador_id:', citaData.trabajador_id);
       console.error('profesional_id:', citaData.profesional_id);
       mostrarNotificacion('Por favor complete todos los campos obligatorios', 'error');
       return;
     }
-    
+
     try {
       mostrarLoading(true);
       const token = window.getAuthToken();
@@ -789,7 +880,14 @@
       const data = await response.json();
       const cita = data.data;
       citaSeleccionada = cita;
-      
+
+      const trabajadorPendiente = !cita.trabajador_sede;
+
+      // Mostrar/ocultar el botón "Completar Registro" según el estado del trabajador
+      if (elements.btnCompletarRegistro) {
+        elements.btnCompletarRegistro.style.display = trabajadorPendiente ? 'inline-flex' : 'none';
+      }
+
       // Renderizar detalle
       elements.detalleContent.innerHTML = `
         <div class="detalle-grid">
@@ -799,9 +897,10 @@
             </div>
             <div class="detalle-value">
               ${cita.trabajador_nombre} - ${cita.trabajador_cedula}
+              ${trabajadorPendiente ? '<span class="badge-estado" style="background:#fef3c7;color:#92400e;margin-left:8px;">🕓 Pendiente de registro</span>' : ''}
             </div>
           </div>
-          
+
           <div class="detalle-item">
             <div class="detalle-label">
               <i class="fas fa-user-md"></i> Profesional:

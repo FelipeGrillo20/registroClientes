@@ -32,7 +32,10 @@ exports.getDashboardStats = async (req, res) => {
     // ==========================================
     
     // 1. Obtener todos los clientes (filtrando por profesional y/o modalidad)
-    let clientesWhere = [];
+    // Se excluyen los "pendientes" (agendados sin completar registro, sin
+    // sede) — estas estadísticas cuentan trabajadores efectivamente
+    // registrados, no citas agendadas.
+    let clientesWhere = ['sede IS NOT NULL'];
     let clientesParams = [];
     if (profesionalId && profesionalId !== 'all') {
       clientesParams.push(profesionalId);
@@ -42,9 +45,7 @@ exports.getDashboardStats = async (req, res) => {
       clientesParams.push(modalidadBD);
       clientesWhere.push(`modalidad = $${clientesParams.length}`);
     }
-    const clientesQuery = clientesWhere.length > 0
-      ? `SELECT * FROM clients WHERE ${clientesWhere.join(' AND ')}`
-      : `SELECT * FROM clients`;
+    const clientesQuery = `SELECT * FROM clients WHERE ${clientesWhere.join(' AND ')}`;
 
     const clientesResult = await pool.query(clientesQuery, clientesParams);
     const todosLosClientes = clientesResult.rows;

@@ -2,9 +2,48 @@
 // VERSIÓN CON LOGGING DETALLADO PARA DEBUG
 
 const CitaModel = require("../models/citaModel");
+const clientModel = require("../models/clientModel");
 const { consumirHorasCita, devolverHorasCita, ajustarHorasCitaEditada } = require('../utils/creditosHelper');
 const { enviarNotificacionCitaAgendada } = require('../utils/emailService');
 const { crearEventoCalendario, actualizarEventoCalendario, eliminarEventoCalendario, verificarDisponibilidadGoogleCalendar } = require('../utils/googleCalendarService');
+
+// Resuelve el trabajador_id de una cita cuando el trabajador todavía no está
+// registrado: recibe cédula+nombre+correo (capturados en el modal de
+// Agendamiento) y busca/crea el cliente "pendiente" (sin sede) acotado al
+// profesional de la cita — la misma cédula puede pertenecer a trabajadores
+// distintos de otros profesionales, así que la búsqueda siempre va con
+// profesional_id.
+// Devuelve { trabajador_id } o { error: mensaje } si la cédula ya pertenece
+// a un registro completo de ese profesional.
+async function resolverTrabajadorNuevo({ cedula, nombre, email, profesional_id }) {
+  if (!cedula || !/^\d+$/.test(cedula)) {
+    return { error: "La cédula del trabajador debe contener solo números" };
+  }
+  if (!nombre || !nombre.trim()) {
+    return { error: "El nombre del trabajador es requerido" };
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "El correo del trabajador no es válido" };
+  }
+
+  const existente = await clientModel.getClientByCedulaYProfesional(cedula, profesional_id);
+
+  if (existente) {
+    if (existente.sede) {
+      return { error: "Esta cédula ya está en el registro completo con este profesional" };
+    }
+    // Ya estaba pendiente (ej. una cita anterior) — se reutiliza el mismo trabajador
+    return { trabajador_id: existente.id };
+  }
+
+  const nuevo = await clientModel.createClient({
+    cedula,
+    nombre: nombre.trim(),
+    email: email.trim(),
+    profesional_id,
+  });
+  return { trabajador_id: nuevo.id };
+}
 
 const CitasController = {
   /**
@@ -85,6 +124,47 @@ const CitasController = {
       const userId = req.user.id;
       const userRol = req.user.rol; // Obtener rol del usuario autenticado
       console.log("👤 [createCita] Usuario ID:", userId, "- Rol:", userRol);
+
+      // ✅ NUEVO: Trabajador aún no registrado — viene cédula+nombre+correo en
+      // vez de trabajador_id. Se resuelve (reutiliza si ya está pendiente) o
+      // se crea el registro mínimo, acotado al profesional de la cita.
+      if (!citaData.trabajador_id && citaData.trabajador_cedula) {
+        console.log("🆕 [createCita] Trabajador nuevo, resolviendo:", citaData.trabajador_cedula);
+
+        if (!citaData.profesional_id) {
+          return res.status(400).json({
+            success: false,
+            message: "Debe seleccionar un profesional antes de registrar un trabajador nuevo",
+          });
+        }
+
+        const resolucion = await resolverTrabajadorNuevo({
+          cedula: citaData.trabajador_cedula,
+          nombre: citaData.trabajador_nombre,
+          email: citaData.trabajador_email,
+          profesional_id: parseInt(citaData.profesional_id),
+        });
+
+        if (resolucion.error) {
+          console.log("⚠️ [createCita] No se pudo resolver trabajador nuevo:", resolucion.error);
+          return res.status(409).json({ success: false, message: resolucion.error });
+        }
+
+        citaData.trabajador_id = resolucion.trabajador_id;
+        console.log("✅ [createCita] Trabajador resuelto, ID:", citaData.trabajador_id);
+      }
+
+      // ✅ NUEVO: Agendamiento ya no pide modalidad_programa en el formulario
+      // (se decide al completar el registro del trabajador). Si el trabajador
+      // ya está registrado y tiene modalidad definida, se copia aquí para que
+      // estadísticas/filtros por modalidad sigan funcionando; si es un
+      // trabajador nuevo o pendiente, queda sin definir (NULL) hasta entonces.
+      if (!citaData.modalidad_programa && citaData.trabajador_id) {
+        const trabajador = await clientModel.getClientById(citaData.trabajador_id);
+        if (trabajador?.modalidad) {
+          citaData.modalidad_programa = trabajador.modalidad;
+        }
+      }
 
       // Validaciones básicas
       if (!citaData.trabajador_id || !citaData.profesional_id || !citaData.fecha || !citaData.hora_inicio || !citaData.hora_fin) {
@@ -326,6 +406,12 @@ const CitasController = {
 
       console.log("💾 [updateCita] Actualizando...");
 
+      // ✅ El modal de edición ya no envía modalidad_programa (Agendamiento
+      // no la pide) — conservar la que ya tenía la cita en vez de borrarla.
+      if (!citaData.modalidad_programa) {
+        citaData.modalidad_programa = citaExistente.modalidad_programa;
+      }
+
       // ✅ Si el estado cambia a "cancelada" y la cita tenía crédito asignado:
       //    devolver las horas Y limpiar el credito_id
       const estadosQueConsumen = ["programada", "confirmada", "realizada", "no_asistio"];
@@ -419,8 +505,25 @@ const CitasController = {
       }
 
       const citaEliminada = await CitaModel.deleteCita(id);
-
       console.log("✅ [deleteCita] Cita eliminada");
+
+      // ✅ NUEVO: Si el trabajador seguía "pendiente" (creado desde
+      // Agendamiento sin completar su registro) y esta era su única cita,
+      // se elimina también — evita que quede huérfano en el listado de
+      // trabajadores del profesional.
+      try {
+        const trabajador = await clientModel.getClientById(cita.trabajador_id);
+        if (trabajador && !trabajador.sede) {
+          const leQuedanCitas = await CitaModel.tieneCitas(cita.trabajador_id);
+          if (!leQuedanCitas) {
+            await clientModel.deleteClient(cita.trabajador_id);
+            console.log("🧹 [deleteCita] Trabajador pendiente sin más citas, eliminado:", cita.trabajador_id);
+          }
+        }
+      } catch (cleanupError) {
+        console.error("⚠️ [deleteCita] Error al limpiar trabajador pendiente:", cleanupError);
+      }
+
       res.json({
         success: true,
         message: "Cita eliminada exitosamente",

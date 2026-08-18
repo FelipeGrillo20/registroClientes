@@ -125,20 +125,6 @@ function verificarModalidadSeleccionada() {
   return modalidadSeleccionada;
 }
 
-// ✅ NUEVO: ¿el formulario ya tiene algo escrito? — se usa para avisar antes
-// de borrar todo al cambiar de modalidad
-function formTieneDatos() {
-  const ids = [
-    'cedula', 'name', 'vinculo', 'sede', 'entidadPagadora', 'empresaUsuario',
-    'subcontratista', 'email', 'phone', 'fechaNacimiento', 'direccion',
-    'estadoCivil', 'fechaIngreso', 'cargo', 'sexo'
-  ];
-  return ids.some(id => {
-    const el = document.getElementById(id);
-    return !!(el && el.value && el.value.trim() !== '');
-  });
-}
-
 // ✅ NUEVO: Botones del selector rápido de modalidad
 function setupSelectorModalidadRapido() {
   document.querySelectorAll('.btn-modalidad-rapida').forEach(btn => {
@@ -150,16 +136,9 @@ function setupSelectorModalidadRapido() {
       // Ya está en esa modalidad — no hay nada que cambiar
       if (modalidad === modalidadActual) return;
 
-      // Si ya se escribió algo en el formulario, confirmar antes de borrarlo
-      if (formTieneDatos()) {
-        const confirmar = confirm(
-          '¿Cambiar de modalidad?\n\nLos datos que ya escribiste en el formulario se van a borrar.'
-        );
-        if (!confirmar) return;
-        form.reset();
-        resetForm();
-      }
-
+      // ✅ Cambiar de modalidad ya NO borra lo escrito en el formulario — se
+      // conserva, y se guarda con la modalidad que esté activa al momento
+      // de dar clic en "Registrar Trabajador" (se lee de localStorage recién ahí).
       localStorage.setItem('modalidadSeleccionada', modalidad);
 
       // "Entrega Individual de Resultados" no se registra desde este
@@ -892,6 +871,10 @@ function initializeForm() {
   const cedulaInput = document.getElementById("cedula");
 
   // === BÚSQUEDA POR CÉDULA ===
+  // Dedicada a localizar trabajadores "pendientes": agendados desde
+  // Agendamiento con solo cédula+nombre+correo, que aún no completan su
+  // registro. No busca entre trabajadores ya registrados por completo —
+  // esos se editan desde "Trabajadores Registrados".
   if (btnBuscarCedula) {
     btnBuscarCedula.addEventListener("click", async () => {
       const cedula = cedulaInput.value.trim();
@@ -906,21 +889,12 @@ function initializeForm() {
         return;
       }
 
-      // ✅ NUEVO: Obtener modalidad seleccionada
-      const modalidadActual = localStorage.getItem('modalidadSeleccionada');
-      if (!modalidadActual) {
-        alert("⚠️ Selecciona primero la modalidad arriba del formulario");
-        document.getElementById('selectorModalidadRapido')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-
       // Deshabilitar botón mientras busca
       btnBuscarCedula.disabled = true;
       btnBuscarCedula.textContent = "⏳";
 
       try {
-        // ✅ NUEVO: Agregar parámetro de modalidad a la búsqueda
-        const res = await fetch(`${API_URL}?modalidad=${encodeURIComponent(modalidadActual)}`, {
+        const res = await fetch(`${API_URL}/pendiente/${cedula}`, {
           headers: {
             "Authorization": `Bearer ${getAuthToken()}`
           }
@@ -930,88 +904,25 @@ function initializeForm() {
           return;
         }
 
-        const clients = await res.json();
-        const clienteEncontrado = clients.find(c => c.cedula === cedula);
+        const data = await res.json();
 
-        if (clienteEncontrado) {
-          // Pre-llenar el formulario con los datos encontrados
-          document.getElementById("name").value = toTitleCase(clienteEncontrado.nombre || ""); // ✅ Title Case
-          document.getElementById("vinculo").value = clienteEncontrado.vinculo || "";
-          
-          // ✅ Cargar datos de familiar trabajador si existen (sin abrir modal)
-          if (clienteEncontrado.vinculo === 'Familiar Trabajador') {
-            const hCedula = document.getElementById("cedulaTrabajador");
-            const hNombre = document.getElementById("nombreTrabajador");
-            if (hCedula && clienteEncontrado.cedula_trabajador) hCedula.value = clienteEncontrado.cedula_trabajador;
-            if (hNombre && clienteEncontrado.nombre_trabajador) hNombre.value = clienteEncontrado.nombre_trabajador;
-            document.getElementById("vinculo").classList.add("vinculo-con-familiar");
-            familiarConfirmado = true;
-          }
-          
-          if (clienteEncontrado.sede) {
-            sedeSelector.setValue(clienteEncontrado.sede, clienteEncontrado.sede);
-          }
-          
-          if (clienteEncontrado.tipo_entidad_pagadora) {
-            document.getElementById("entidadPagadora").value = clienteEncontrado.tipo_entidad_pagadora;
-            
-            const event = new Event('change');
-            document.getElementById("entidadPagadora").dispatchEvent(event);
-            
-            if (clienteEncontrado.entidad_pagadora_especifica) {
-              setTimeout(() => {
-                if (entidadEspecificaSelector) {
-                  entidadEspecificaSelector.setValue(
-                    clienteEncontrado.entidad_pagadora_especifica,
-                    clienteEncontrado.entidad_pagadora_especifica
-                  );
-                }
-              }, 100);
-            }
-          }
-          
-          if (clienteEncontrado.empresa_id && empresaSelector) {
-            const empresas = empresaSelector.options;
-            const empresaEncontrada = empresas.find(e => e.value === clienteEncontrado.empresa_id);
-            if (empresaEncontrada) {
-              empresaSelector.setValue(empresaEncontrada.value, empresaEncontrada.text);
-              actualizarOpcionesVinculo(empresaEncontrada.text, clienteEncontrado.vinculo);
-            }
-          }
-          
-          if (clienteEncontrado.subcontratista_id && subcontratistaSelector) {
-            const subcontratistas = subcontratistaSelector.options;
-            const subcontratistaEncontrado = subcontratistas.find(s => s.value === clienteEncontrado.subcontratista_id);
-            if (subcontratistaEncontrado) {
-              subcontratistaSelector.setValue(subcontratistaEncontrado.value, subcontratistaEncontrado.text);
-            }
-          }
-          
-          document.getElementById("email").value = clienteEncontrado.email || "";
-          document.getElementById("phone").value = clienteEncontrado.telefono || "";
+        if (data.pendiente) {
+          // Solo se precargan nombre y correo — es todo lo que se capturó al agendar
+          document.getElementById("name").value = toTitleCase(data.cliente.nombre || "");
+          document.getElementById("email").value = data.cliente.email || "";
 
-          // ✅ NUEVO: Cargar campos SVE si existen
-          const modalidadActualSVE = localStorage.getItem('modalidadSeleccionada');
-          if (modalidadActualSVE === 'Sistema de Vigilancia Epidemiológica') {
-            const sexoInput = document.getElementById("sexo");
-            const cargoInput = document.getElementById("cargo");
-            if (sexoInput && clienteEncontrado.sexo) sexoInput.value = clienteEncontrado.sexo;
-            if (cargoInput && clienteEncontrado.cargo) cargoInput.value = clienteEncontrado.cargo;
-          }
-
-          editingId = clienteEncontrado.id;
+          editingId = data.cliente.id;
           form.querySelector("button[type='submit']").textContent = "Guardar cambios";
-          
           document.getElementById("btnCancelarEdicion").style.display = "inline-block";
 
-          alert("✅ Cliente encontrado. Los datos han sido cargados.");
+          alert("🕓 Trabajador con cita pendiente encontrado. Nombre y correo cargados — completa el resto de los datos.");
         } else {
-          alert("❌ No se encontró ningún cliente con esa cédula en la modalidad actual");
+          alert("❌ No hay ningún trabajador pendiente con esa cédula. Puedes continuar registrándolo como nuevo.");
           resetForm();
         }
       } catch (err) {
-        console.error("Error buscando cliente:", err);
-        alert("Error de conexión al buscar cliente");
+        console.error("Error buscando trabajador pendiente:", err);
+        alert("Error de conexión al buscar trabajador");
       } finally {
         btnBuscarCedula.disabled = false;
         btnBuscarCedula.textContent = "🔍";

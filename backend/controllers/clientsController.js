@@ -27,6 +27,49 @@ exports.buscarPorCedula = async (req, res) => {
   }
 };
 
+// GET /api/clients/pendiente/:cedula
+// Usado por la lupa del formulario "Registro de Trabajadores": busca si esa
+// cédula corresponde a un trabajador agendado (creado desde Agendamiento con
+// solo cédula+nombre+correo) que el usuario actual todavía no ha completado.
+// Acotado a profesional_id = usuario actual — cada profesional solo ve sus
+// propios pendientes, igual que con sus clientes ya registrados.
+exports.buscarPendientePorCedula = async (req, res) => {
+  try {
+    const { cedula } = req.params;
+
+    if (!cedula || !/^\d+$/.test(cedula)) {
+      return res.status(400).json({ message: "Cédula inválida" });
+    }
+
+    const profesionalId = req.user?.id;
+    if (!profesionalId) {
+      return res.status(401).json({ message: "No se pudo identificar al usuario" });
+    }
+
+    const cliente = await clientModel.getClientByCedulaYProfesional(cedula, profesionalId);
+
+    // Solo interesa si existe Y sigue pendiente (sin sede). Si ya está
+    // completo, esta búsqueda no es la vía para editarlo (se hace desde
+    // "Trabajadores Registrados").
+    if (!cliente || cliente.sede) {
+      return res.json({ pendiente: false });
+    }
+
+    res.json({
+      pendiente: true,
+      cliente: {
+        id: cliente.id,
+        cedula: cliente.cedula,
+        nombre: cliente.nombre,
+        email: cliente.email,
+      },
+    });
+  } catch (err) {
+    console.error("Error buscando pendiente por cédula:", err);
+    res.status(500).json({ message: "Error al buscar el trabajador pendiente" });
+  }
+};
+
 // Crear nuevo cliente
 exports.createClient = async (req, res) => {
   try {
@@ -159,19 +202,14 @@ exports.getClients = async (req, res) => {
       // ✅ Si hay filtro de profesional específico
       if (profesional_id) {
         console.log(`📊 Admin filtrando por profesional ID: ${profesional_id}`);
-        
-        if (!modalidad) {
-          return res.status(400).json({ 
-            message: "Se requiere modalidad cuando se filtra por profesional" 
-          });
-        }
-        
-        // Filtrar por profesional Y modalidad
-        clients = await clientModel.getClientsByProfesionalAndModalidad(
-          parseInt(profesional_id), 
-          modalidad
-        );
-      } 
+
+        // Con modalidad: filtrar por profesional Y modalidad.
+        // Sin modalidad (ej. Agendamiento, ya no depende de modalidad):
+        // todos los clientes de ese profesional, sin importar modalidad.
+        clients = modalidad
+          ? await clientModel.getClientsByProfesionalAndModalidad(parseInt(profesional_id), modalidad)
+          : await clientModel.getClientsByProfesional(parseInt(profesional_id));
+      }
       // Si solo hay filtro de modalidad
       else if (modalidad) {
         console.log(`📊 Admin filtrando solo por modalidad: ${modalidad}`);
@@ -183,18 +221,16 @@ exports.getClients = async (req, res) => {
         clients = await clientModel.getClients();
       }
     } 
-    // Si es profesional, ver solo sus clientes (DEBE filtrar por modalidad)
+    // Si es profesional, ver solo sus clientes (modalidad opcional — sin ella,
+    // ve todos sus trabajadores sin importar modalidad; usado por Agendamiento)
     else if (userRole === 'profesional') {
-      if (!modalidad) {
-        return res.status(400).json({ 
-          message: "Los profesionales deben especificar una modalidad" 
-        });
+      if (modalidad) {
+        console.log(`👤 Profesional ${userId} filtrando por modalidad: ${modalidad}`);
+        clients = await clientModel.getClientsByProfesionalAndModalidad(userId, modalidad);
+      } else {
+        console.log(`👤 Profesional ${userId} viendo todos sus trabajadores (sin filtro de modalidad)`);
+        clients = await clientModel.getClientsByProfesional(userId);
       }
-      
-      console.log(`👤 Profesional ${userId} filtrando por modalidad: ${modalidad}`);
-      
-      // ✅ Filtrar por profesional Y modalidad
-      clients = await clientModel.getClientsByProfesionalAndModalidad(userId, modalidad);
     }
     else {
       return res.status(403).json({ message: "No tienes permisos para ver clientes" });

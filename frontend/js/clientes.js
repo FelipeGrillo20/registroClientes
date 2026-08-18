@@ -491,13 +491,18 @@ async function loadClients(modalidad, profesionalId = null, año = null, mes = n
       return;
     }
 
-    const clients = await res.json();
+    let clients = await res.json();
 
     // ✅ Verificar token nuevamente después de parsear JSON
     if (myToken !== renderToken) {
       console.log("⚠️ Respuesta descartada tras parsear JSON (petición más reciente en curso)");
       return;
     }
+
+    // Esta tabla es de trabajadores ya registrados — se excluyen los
+    // "pendientes" (agendados desde Agendamiento sin completar registro,
+    // sin sede). Aparecen aquí solo una vez que completan su registro.
+    clients = clients.filter(c => c.sede);
 
     console.log("📦 Clientes recibidos:", clients.length);
     if (clients.length > 0) {

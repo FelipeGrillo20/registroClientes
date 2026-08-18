@@ -6,6 +6,18 @@ const API_CONSULTAS  = window.API_CONFIG.ENDPOINTS.CONSULTAS;
 // Módulo de seguimientos (tabla independiente) — se deriva de la misma base que API_CONSULTAS
 const API_SEGUIMIENTOS = API_CONSULTAS.replace('/consultas', '/seguimientos');
 
+// ─── Vínculo: "Asociados Coopidrogas" usa categorías propias ────────────────
+const EMPRESA_VINCULO_ESPECIAL   = 'Asociados Coopidrogas';
+const VINCULOS_TIPO_TRABAJADOR   = ['Trabajador', 'Asociado', 'Dependiente - Trabajador del Asociado'];
+const VINCULOS_TIPO_FAMILIAR     = ['Familiar Trabajador', 'Familiar del Asociado', 'Familiar del Dependiente'];
+const VINCULO_OPCIONES_DEFAULT     = ['Trabajador', 'Familiar Trabajador'];
+const VINCULO_OPCIONES_COOPIDROGAS = [
+  'Asociado',
+  'Dependiente - Trabajador del Asociado',
+  'Familiar del Asociado',
+  'Familiar del Dependiente',
+];
+
 // ─── Referencias DOM ────────────────────────────────────────────────────────
 const tbody                        = document.getElementById("trazabilidadList");
 const filterTipoCliente            = document.getElementById("filterTipoCliente");
@@ -477,10 +489,10 @@ function renderRows(rows) {
       : '<span class="badge badge-no-subcontratista">N/A</span>';
 
     let vinculoBadge = '-';
-    if (client.vinculo === 'Trabajador') {
-      vinculoBadge = '<span class="badge badge-vinculo-trabajador">Trabajador</span>';
-    } else if (client.vinculo === 'Familiar Trabajador') {
-      vinculoBadge = '<span class="badge badge-vinculo-familiar">Familiar</span>';
+    if (VINCULOS_TIPO_TRABAJADOR.includes(client.vinculo)) {
+      vinculoBadge = `<span class="badge badge-vinculo-trabajador">${escapeHtml(client.vinculo)}</span>`;
+    } else if (VINCULOS_TIPO_FAMILIAR.includes(client.vinculo)) {
+      vinculoBadge = `<span class="badge badge-vinculo-familiar">${escapeHtml(client.vinculo)}</span>`;
     }
 
     // ── Campos de la sesión / del seguimiento ────────────────────────────────
@@ -610,6 +622,20 @@ function populateFilterOptions() {
   });
 }
 
+// ─── Vínculo: opciones del filtro dinámicas según Empresa ────────────────────
+function actualizarOpcionesFiltroVinculo() {
+  const empresaTexto = filterEmpresa.value;
+  const opciones = empresaTexto === EMPRESA_VINCULO_ESPECIAL
+    ? VINCULO_OPCIONES_COOPIDROGAS
+    : VINCULO_OPCIONES_DEFAULT;
+
+  const valorPrevio = filterVinculo.value;
+  filterVinculo.innerHTML = '<option value="">Todos los Vínculos</option>' +
+    opciones.map(v => `<option value="${v}">${v}</option>`).join('');
+
+  filterVinculo.value = opciones.includes(valorPrevio) ? valorPrevio : '';
+}
+
 function fillSelect(selectElem, items, placeholder) {
   selectElem.innerHTML = `<option value="">Todas las ${placeholder}s</option>`;
   items.forEach(item => {
@@ -673,9 +699,9 @@ function clearAllFilters() {
   filterTipoCliente.value = "";
   filterNombreCliente.value = "";
   filterNombreClienteContainer.style.display = "none";
-  filterVinculo.value = "";
-  filterSede.value = "";
   filterEmpresa.value = "";
+  actualizarOpcionesFiltroVinculo();
+  filterSede.value = "";
   filterSubcontratista.value = "";
 
   renderRows(matrizRows);
@@ -911,7 +937,7 @@ function setupFilterEvents() {
   filterNombreCliente.addEventListener("change",   applyFilters);
   filterVinculo.addEventListener("change",         applyFilters);
   filterSede.addEventListener("change",            applyFilters);
-  filterEmpresa.addEventListener("change",         applyFilters);
+  filterEmpresa.addEventListener("change",         () => { actualizarOpcionesFiltroVinculo(); applyFilters(); });
   filterSubcontratista.addEventListener("change",  applyFilters);
   btnClearFilters.addEventListener("click",        clearAllFilters);
 }

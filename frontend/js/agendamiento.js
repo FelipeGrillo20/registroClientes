@@ -604,7 +604,7 @@
     // Botones principales
     elements.btnNuevaCita.addEventListener('click', abrirModalNuevaCita);
     elements.btnVolver.addEventListener('click', () => {
-      window.location.href = 'index.html';
+      window.location.href = 'buscar-trabajador.html';
     });
     
     // Modal cita

@@ -200,6 +200,9 @@
         <button type="button" id="btnMapaSitio" class="btn-sitemap">
           🗺️ Mapa de Sitio
         </button>
+        <button type="button" id="btnAgendamiento" class="btn-sitemap">
+          📅 Agendamiento
+        </button>
       </div>
       <div class="user-right-section">
         ${btnAtrasHtml}
@@ -225,6 +228,12 @@
       btnMapaSitio.addEventListener("click", abrirMapaSitio);
     }
 
+    // ⭐ NUEVO: Agregar evento al botón Agendamiento
+    const btnAgendamiento = document.getElementById("btnAgendamiento");
+    if (btnAgendamiento) {
+      btnAgendamiento.addEventListener("click", abrirAgendamiento);
+    }
+
     // ⭐ NUEVO: Agregar evento al botón Atrás
     const btnAtras = document.getElementById("btnAtras");
     if (btnAtras) {
@@ -243,7 +252,12 @@
   function abrirMapaSitio() {
     window.location.href = "sitemap.html";
   }
-  
+
+  // ⭐ NUEVA: Función para abrir Agendamiento
+  function abrirAgendamiento() {
+    window.location.href = "agendamiento.html";
+  }
+
   // Función de logout
   async function logout() {
     if (!confirm("¿Estás seguro que deseas cerrar sesión?")) {

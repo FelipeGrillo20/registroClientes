@@ -163,6 +163,30 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.user-right-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-atras {
+  background: var(--light-bg);
+  color: var(--dark-color);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.btn-atras:hover {
+  background: #F3F4F6;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
 /* ========== CONTENEDOR PRINCIPAL (SIDEBAR MÁS ANCHO PARA 2 COLUMNAS) ========== */
 .main-container {
   display: grid;

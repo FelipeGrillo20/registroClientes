@@ -33,10 +33,11 @@
   // index.html (registrar) / clientes.html (ver registrados)
   function obtenerDestinoAtras() {
     const destinos = {
-      'index.html':     'buscar-trabajador.html',
-      'modalidad.html': 'buscar-trabajador.html',
-      'clientes.html':  'modalidad.html',
-      'sitemap.html':   'buscar-trabajador.html',
+      'index.html':       'buscar-trabajador.html',
+      'modalidad.html':   'buscar-trabajador.html',
+      'clientes.html':    'modalidad.html',
+      'sitemap.html':     'buscar-trabajador.html',
+      'agendamiento.html': 'buscar-trabajador.html',
     };
 
     const paginaActual = window.location.pathname.split('/').pop();

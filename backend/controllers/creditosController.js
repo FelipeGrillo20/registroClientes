@@ -1,7 +1,9 @@
 // backend/controllers/creditosController.js
-const CreditoModel = require('../models/creditoModel');
+const CreditoModel   = require('../models/creditoModel');
+const AsignacionModel = require('../models/asignacionModel');
 
 const CreditosController = {
+
   /**
    * Crear nuevo crédito
    */
@@ -9,15 +11,10 @@ const CreditosController = {
     try {
       const { anio, mes, consecutivo, cantidad_horas, modalidad_programa } = req.body;
 
-      // Validaciones
       if (!anio || !mes || !consecutivo || !cantidad_horas) {
-        return res.status(400).json({
-          success: false,
-          message: 'Faltan campos obligatorios'
-        });
+        return res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
       }
 
-      // Validar que no exista ya un formato con el mismo consecutivo
       const existente = await CreditoModel.buscarPorConsecutivo(consecutivo);
       if (existente) {
         return res.status(409).json({
@@ -36,25 +33,17 @@ const CreditosController = {
 
       const nuevoCredito = await CreditoModel.crear(creditoData);
 
-      res.status(201).json({
-        success: true,
-        message: 'Crédito creado exitosamente',
-        data: nuevoCredito
-      });
+      res.status(201).json({ success: true, message: 'Crédito creado exitosamente', data: nuevoCredito });
 
     } catch (error) {
       console.error('Error al crear crédito:', error);
-      // Capturar error de restricción unique de la BD como fallback
       if (error.code === '23505' || (error.detail && error.detail.includes('consecutivo'))) {
         return res.status(409).json({
           success: false,
-          message: `Ya tienes cargado un formato con ese nombre, debes cambiarlo por uno diferente`
+          message: 'Ya tienes cargado un formato con ese nombre, debes cambiarlo por uno diferente'
         });
       }
-      res.status(500).json({
-        success: false,
-        message: 'Error al crear crédito'
-      });
+      res.status(500).json({ success: false, message: 'Error al crear crédito' });
     }
   },
 
@@ -64,34 +53,22 @@ const CreditosController = {
   async obtenerCreditoActivo(req, res) {
     try {
       const { modalidad_programa } = req.query;
-
       const creditoActivo = await CreditoModel.obtenerCreditoActivo(modalidad_programa);
 
       if (!creditoActivo) {
-        return res.status(200).json({
-          success: true,
-          data: null,
-          message: 'No hay créditos activos disponibles'
-        });
+        return res.status(200).json({ success: true, data: null, message: 'No hay créditos activos disponibles' });
       }
 
-      // Calcular horas disponibles
       const horasDisponibles = creditoActivo.cantidad_horas - creditoActivo.horas_consumidas;
 
       res.status(200).json({
         success: true,
-        data: {
-          ...creditoActivo,
-          horas_disponibles: horasDisponibles
-        }
+        data: { ...creditoActivo, horas_disponibles: horasDisponibles }
       });
 
     } catch (error) {
       console.error('Error al obtener crédito activo:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error al obtener crédito activo'
-      });
+      res.status(500).json({ success: false, message: 'Error al obtener crédito activo' });
     }
   },
 
@@ -103,29 +80,16 @@ const CreditosController = {
       const { anio, mes, modalidad_programa } = req.query;
 
       if (!anio || !mes) {
-        return res.status(400).json({
-          success: false,
-          message: 'Año y mes son requeridos'
-        });
+        return res.status(400).json({ success: false, message: 'Año y mes son requeridos' });
       }
 
-      const creditos = await CreditoModel.listar(
-        parseInt(anio),
-        parseInt(mes),
-        modalidad_programa
-      );
+      const creditos = await CreditoModel.listar(parseInt(anio), parseInt(mes), modalidad_programa);
 
-      res.status(200).json({
-        success: true,
-        data: creditos
-      });
+      res.status(200).json({ success: true, data: creditos });
 
     } catch (error) {
       console.error('Error al listar créditos:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error al listar créditos'
-      });
+      res.status(500).json({ success: false, message: 'Error al listar créditos' });
     }
   },
 
@@ -136,26 +100,18 @@ const CreditosController = {
     try {
       const { modalidad_programa } = req.query;
       const now = new Date();
-      const anio = now.getFullYear();
-      const mes = now.getMonth() + 1;
 
       const estadisticas = await CreditoModel.obtenerEstadisticas(
-        anio,
-        mes,
+        now.getFullYear(),
+        now.getMonth() + 1,
         modalidad_programa
       );
 
-      res.status(200).json({
-        success: true,
-        data: estadisticas
-      });
+      res.status(200).json({ success: true, data: estadisticas });
 
     } catch (error) {
       console.error('Error al obtener estadísticas:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error al obtener estadísticas'
-      });
+      res.status(500).json({ success: false, message: 'Error al obtener estadísticas' });
     }
   },
 
@@ -167,25 +123,15 @@ const CreditosController = {
       const { id } = req.params;
       const { anio, mes, consecutivo, cantidad_horas, modalidad_programa } = req.body;
 
-      // Validaciones
       if (!anio || !mes || !consecutivo || !cantidad_horas) {
-        return res.status(400).json({
-          success: false,
-          message: 'Faltan campos obligatorios'
-        });
+        return res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
       }
 
-      // Verificar que el crédito existe
       const creditoExistente = await CreditoModel.obtenerPorId(id);
-      
       if (!creditoExistente) {
-        return res.status(404).json({
-          success: false,
-          message: 'Crédito no encontrado'
-        });
+        return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
       }
 
-      // Validar que el consecutivo nuevo no exista en otro crédito diferente
       const creditoMismoNombre = await CreditoModel.buscarPorConsecutivo(consecutivo);
       if (creditoMismoNombre && String(creditoMismoNombre.id) !== String(id)) {
         return res.status(409).json({
@@ -197,7 +143,6 @@ const CreditosController = {
       const nuevaCantidad   = parseInt(cantidad_horas);
       const horasConsumidas = parseFloat(creditoExistente.horas_consumidas) || 0;
 
-      // Validar que la nueva cantidad no sea menor a las horas ya consumidas
       if (nuevaCantidad < horasConsumidas) {
         return res.status(400).json({
           success: false,
@@ -206,27 +151,18 @@ const CreditosController = {
       }
 
       const creditoData = {
-        anio: parseInt(anio),
-        mes: parseInt(mes),
-        consecutivo,
-        cantidad_horas: nuevaCantidad,
+        anio: parseInt(anio), mes: parseInt(mes),
+        consecutivo, cantidad_horas: nuevaCantidad,
         modalidad_programa
       };
 
       const creditoActualizado = await CreditoModel.actualizar(id, creditoData);
 
-      res.status(200).json({
-        success: true,
-        message: 'Crédito actualizado exitosamente',
-        data: creditoActualizado
-      });
+      res.status(200).json({ success: true, message: 'Crédito actualizado exitosamente', data: creditoActualizado });
 
     } catch (error) {
       console.error('Error al actualizar crédito:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error al actualizar crédito'
-      });
+      res.status(500).json({ success: false, message: 'Error al actualizar crédito' });
     }
   },
 
@@ -237,14 +173,9 @@ const CreditosController = {
     try {
       const { id } = req.params;
 
-      // Verificar que el crédito existe y no tiene horas consumidas
       const creditoExistente = await CreditoModel.obtenerPorId(id);
-      
       if (!creditoExistente) {
-        return res.status(404).json({
-          success: false,
-          message: 'Crédito no encontrado'
-        });
+        return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
       }
 
       if (creditoExistente.horas_consumidas > 0) {
@@ -256,29 +187,34 @@ const CreditosController = {
 
       await CreditoModel.eliminar(id);
 
-      res.status(200).json({
-        success: true,
-        message: 'Crédito eliminado exitosamente'
-      });
+      res.status(200).json({ success: true, message: 'Crédito eliminado exitosamente' });
 
     } catch (error) {
       console.error('Error al eliminar crédito:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error al eliminar crédito'
-      });
+      res.status(500).json({ success: false, message: 'Error al eliminar crédito' });
     }
   },
 
   /**
-   * Consumir horas de un crédito directamente (sin cita)
+   * ─────────────────────────────────────────────────────────────────────────
+   * Consumir horas de un crédito + registrar asignación en BD
    * PATCH /api/creditos/:id/consumir
-   * body: { horas }
+   * Body: { horas, profesional_id, trabajador_id, sesion_id,
+   *         fecha_sesion, profesional_nombre, trabajador_nombre }
+   * ─────────────────────────────────────────────────────────────────────────
    */
   async consumirHoras(req, res) {
     try {
       const { id } = req.params;
-      const { horas } = req.body;
+      const {
+        horas,
+        profesional_id,
+        trabajador_id,
+        sesion_id,
+        fecha_sesion,
+        profesional_nombre,
+        trabajador_nombre
+      } = req.body;
 
       if (!horas || horas <= 0) {
         return res.status(400).json({ success: false, message: 'Horas inválidas' });
@@ -297,10 +233,26 @@ const CreditosController = {
         });
       }
 
+      // 1. Descontar horas del crédito
       await CreditoModel.consumirHoras(id, horas);
 
-      const actualizado = await CreditoModel.obtenerPorId(id);
-      const dispActual  = actualizado.cantidad_horas - actualizado.horas_consumidas;
+      // 2. Registrar asignación en BD (si vienen los datos del trabajador/sesión)
+      let asignacion = null;
+      if (profesional_id && trabajador_id && sesion_id) {
+        asignacion = await AsignacionModel.crear({
+          credito_id:         parseInt(id),
+          profesional_id:     parseInt(profesional_id),
+          trabajador_id:      parseInt(trabajador_id),
+          sesion_id:          parseInt(sesion_id),
+          horas_asignadas:    horas,
+          fecha_sesion:       fecha_sesion || null,
+          profesional_nombre: profesional_nombre || null,
+          trabajador_nombre:  trabajador_nombre  || null
+        });
+      }
+
+      const actualizado  = await CreditoModel.obtenerPorId(id);
+      const dispActual   = actualizado.cantidad_horas - actualizado.horas_consumidas;
 
       res.json({
         success: true,
@@ -308,7 +260,8 @@ const CreditosController = {
         data: {
           credito_id:        parseInt(id),
           horas_consumidas:  horas,
-          horas_disponibles: dispActual
+          horas_disponibles: dispActual,
+          asignacion_id:     asignacion?.id || null
         }
       });
 
@@ -319,14 +272,16 @@ const CreditosController = {
   },
 
   /**
-   * Devolver horas a un crédito directamente (sin cita)
+   * ─────────────────────────────────────────────────────────────────────────
+   * Devolver horas a un crédito + eliminar registro de asignación en BD
    * PATCH /api/creditos/:id/devolver
-   * body: { horas }
+   * Body: { horas, profesional_id, trabajador_id, sesion_id }
+   * ─────────────────────────────────────────────────────────────────────────
    */
   async devolverHoras(req, res) {
     try {
       const { id } = req.params;
-      const { horas } = req.body;
+      const { horas, profesional_id, trabajador_id, sesion_id } = req.body;
 
       if (!horas || horas <= 0) {
         return res.status(400).json({ success: false, message: 'Horas inválidas' });
@@ -337,7 +292,18 @@ const CreditosController = {
         return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
       }
 
+      // 1. Devolver horas al crédito
       await CreditoModel.devolverHoras(id, horas);
+
+      // 2. Eliminar el registro de asignación en BD (si vienen los datos)
+      if (profesional_id && trabajador_id && sesion_id) {
+        await AsignacionModel.eliminar(
+          parseInt(id),
+          parseInt(profesional_id),
+          parseInt(trabajador_id),
+          parseInt(sesion_id)
+        );
+      }
 
       const actualizado = await CreditoModel.obtenerPorId(id);
       const dispActual  = actualizado.cantidad_horas - actualizado.horas_consumidas;
@@ -355,6 +321,67 @@ const CreditosController = {
     } catch (error) {
       console.error('Error al devolver horas:', error);
       res.status(500).json({ success: false, message: 'Error al devolver horas al crédito' });
+    }
+  },
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   * Obtener el informe de asignaciones de un crédito (para el modal)
+   * GET /api/creditos/:id/asignaciones
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  async obtenerAsignaciones(req, res) {
+    try {
+      const { id } = req.params;
+
+      const creditoExistente = await CreditoModel.obtenerPorId(id);
+      if (!creditoExistente) {
+        return res.status(404).json({ success: false, message: 'Crédito no encontrado' });
+      }
+
+      const asignaciones = await AsignacionModel.listarPorCredito(id);
+
+      res.status(200).json({
+        success: true,
+        data: asignaciones,
+        credito: creditoExistente
+      });
+
+    } catch (error) {
+      console.error('Error al obtener asignaciones:', error);
+      res.status(500).json({ success: false, message: 'Error al obtener asignaciones' });
+    }
+  },
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────────
+   * Verificar si una sesión ya tiene asignación
+   * GET /api/creditos/asignacion-sesion?profesional_id=&trabajador_id=&sesion_id=
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  async verificarAsignacionSesion(req, res) {
+    try {
+      const { profesional_id, trabajador_id, sesion_id } = req.query;
+
+      if (!profesional_id || !trabajador_id || !sesion_id) {
+        return res.status(400).json({ success: false, message: 'Faltan parámetros' });
+      }
+
+      const asignacion = await AsignacionModel.buscarPorSesion(
+        parseInt(profesional_id),
+        parseInt(trabajador_id),
+        parseInt(sesion_id)
+      );
+
+      res.status(200).json({
+        success: true,
+        data: asignacion || null,
+        tiene_asignacion: !!asignacion
+      });
+
+    } catch (error) {
+      console.error('Error al verificar asignación:', error);
+      res.status(500).json({ success: false, message: 'Error al verificar asignación' });
     }
   }
 

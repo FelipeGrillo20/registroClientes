@@ -176,6 +176,22 @@ body {
   font-style: italic;
 }
 
+.btn-descarga-masiva {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg,#f59e0b,#d97706);
+  color: #fff; border: none;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.btn-descarga-masiva:hover    { opacity: .9; transform: translateY(-1px); }
+.btn-descarga-masiva:active   { transform: scale(.97); }
+.btn-descarga-masiva:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
 /* ====== LOADER ====== */
 .global-loader {
   display: flex; flex-direction: column;

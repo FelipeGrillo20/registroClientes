@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let allEntregas      = [];   // todos los registros de entrega_resultados
   let profFiltroId     = 'todos'; // 'todos' o id de profesional
   let empresaFiltroId  = 'todos'; // 'todos' o id de empresa (subcontratista)
+  let sedeFiltroId     = 'todos'; // 'todos' o nombre de sede
 
   let chartPruebas = null;
 
@@ -95,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 5. Render
       poblarFiltroProfesional();
       poblarFiltroEmpresa();
+      poblarFiltroSede();
       renderDashboard();
     } catch (err) {
       console.error('Error cargando dashboard:', err);
@@ -246,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function actualizarHintFiltros() {
     const hint = document.getElementById('profFilterHint');
     if (!hint) return;
-    if (profFiltroId === 'todos' && empresaFiltroId === 'todos') {
+    if (profFiltroId === 'todos' && empresaFiltroId === 'todos' && sedeFiltroId === 'todos') {
       hint.textContent = `${allClientes.length} trabajadores · ${allEntregas.length} entregas`;
     } else {
       hint.textContent = `${clientesFiltrados().length} trabajadores · ${entregasFiltradas().length} entregas`;
@@ -256,9 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Evento del selector de profesional
   document.getElementById('filtroProfesional')?.addEventListener('change', function () {
     profFiltroId = this.value;
-    // El catálogo de empresas depende de qué profesional está seleccionado
-    // (solo deben verse las empresas con trabajadores de ESE profesional).
+    // Los catálogos de empresa y sede dependen de qué profesional está
+    // seleccionado (solo deben verse las opciones con trabajadores de ESE profesional).
     poblarFiltroEmpresa();
+    poblarFiltroSede();
     renderDashboard();
   });
 
@@ -320,13 +323,49 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboard();
   });
 
+  // ============================================================
+  // FILTRO DE SEDE — solo sedes con trabajadores registrados
+  // (y, si hay un profesional seleccionado, solo las suyas)
+  // ============================================================
+  function poblarFiltroSede() {
+    const select = document.getElementById('filtroSede');
+    if (!select) return;
+
+    const sedes = [...new Set(
+      clientesPorProfesional().map(c => c.sede).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+
+    // Si la sede antes seleccionada ya no aplica para este profesional, resetear
+    if (sedeFiltroId !== 'todos' && !sedes.includes(sedeFiltroId)) {
+      sedeFiltroId = 'todos';
+    }
+
+    select.innerHTML =
+      `<option value="todos">Todas las sedes</option>` +
+      sedes.map(s => `<option value="${s}">${s}</option>`).join('');
+
+    select.value = sedeFiltroId;
+  }
+
+  document.getElementById('filtroSede')?.addEventListener('change', function () {
+    sedeFiltroId = this.value;
+    actualizarHintFiltros();
+    renderDashboard();
+  });
+
   // Mapa client_id -> subcontratista_id, usado para filtrar entregas por empresa
   function clienteEmpresaId(clientId) {
     const c = allClientes.find(c => String(c.id) === String(clientId));
     return c ? c.subcontratista_id : null;
   }
 
-  // Devuelve los datos filtrados según el profesional y la empresa seleccionados
+  // Mapa client_id -> sede, usado para filtrar entregas por sede
+  function clienteSede(clientId) {
+    const c = allClientes.find(c => String(c.id) === String(clientId));
+    return c ? c.sede : null;
+  }
+
+  // Devuelve los datos filtrados según el profesional, la empresa y la sede seleccionados
   function entregasFiltradas() {
     let entregas = allEntregas;
     if (profFiltroId !== 'todos') {
@@ -335,6 +374,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (empresaFiltroId !== 'todos') {
       entregas = entregas.filter(e => String(clienteEmpresaId(e.client_id)) === String(empresaFiltroId));
     }
+    if (sedeFiltroId !== 'todos') {
+      entregas = entregas.filter(e => clienteSede(e.client_id) === sedeFiltroId);
+    }
     return entregas;
   }
 
@@ -342,6 +384,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let clientes = clientesPorProfesional();
     if (empresaFiltroId !== 'todos') {
       clientes = clientes.filter(c => String(c.subcontratista_id) === String(empresaFiltroId));
+    }
+    if (sedeFiltroId !== 'todos') {
+      clientes = clientes.filter(c => c.sede === sedeFiltroId);
     }
     return clientes;
   }
@@ -632,6 +677,88 @@ document.addEventListener('DOMContentLoaded', () => {
     await cargarTodosLosDatos();
     btn.classList.remove('spinning');
     btn.disabled = false;
+  });
+
+  // ============================================================
+  // DESCARGUE MASIVO — genera un PDF por cada plantilla diligenciada
+  // que cumpla los filtros activos (profesional / empresa / sede) y los
+  // empaqueta en un único .zip. La construcción de cada PDF reutiliza el
+  // mismo módulo (js/plantilla-pdf.js) que usa la descarga individual en
+  // entrega-resultados.html, para que ambas plantillas sean idénticas.
+  // ============================================================
+  document.getElementById('btnDescargaMasiva')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btnDescargaMasiva');
+    const textoOriginal = btn.innerHTML;
+
+    const entregas = entregasFiltradas();
+    if (!entregas.length) {
+      alert('No hay plantillas diligenciadas para descargar con los filtros actuales.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `Generando 0 / ${entregas.length}…`;
+
+    try {
+      await PlantillaPDF.precargarLogo();
+      const zip = new JSZip();
+      const nombresUsados = new Set();
+
+      for (let i = 0; i < entregas.length; i++) {
+        const e = entregas[i];
+        btn.innerHTML = `Generando ${i + 1} / ${entregas.length}…`;
+
+        const firma = await PlantillaPDF.obtenerFirmaBase64(e.profesional_cedula);
+        const doc = PlantillaPDF.construirDocumentoPDF({
+          trabajadorNombre: e.trabajador_nombre || 'Sin nombre',
+          fechaRetroalimentacion: e.fecha_retroalimentacion?.slice(0, 10) || '',
+          tituloSeccion: e.titulo_seccion,
+          recomendacionesHtml: e.recomendaciones_html,
+          pruebasProfundidad: e.pruebas_profundidad,
+          profesional: {
+            nombre:   e.profesional_nombre   || '',
+            licencia: e.profesional_licencia || '',
+            telefono: e.profesional_telefono || '',
+          },
+          firmaBase64: firma,
+        });
+
+        // Nombre de archivo único dentro del .zip — si dos entregas
+        // comparten trabajador (ej. reingreso) se numeran para no
+        // sobreescribirse entre sí.
+        const base = `Plantilla_${(e.trabajador_nombre || 'Sin_nombre').replace(/\s+/g, '_')}`;
+        let nombreArchivo = `${base}.pdf`;
+        let contador = 2;
+        while (nombresUsados.has(nombreArchivo)) {
+          nombreArchivo = `${base}_${contador++}.pdf`;
+        }
+        nombresUsados.add(nombreArchivo);
+
+        zip.file(nombreArchivo, doc.output('blob'));
+      }
+
+      btn.innerHTML = 'Comprimiendo…';
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      const hoy = new Date().toISOString().slice(0, 10);
+      const nombreZip = `Plantillas_Entrega_Resultados_${hoy}.zip`;
+
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreZip;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error('Error generando el descargue masivo:', err);
+      alert('Ocurrió un error generando el descargue masivo. Revisa la consola para más detalle.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
   });
 
   // ============================================================

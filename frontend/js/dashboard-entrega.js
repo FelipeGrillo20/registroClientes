@@ -34,6 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let profFiltroId     = 'todos'; // 'todos' o id de profesional
   let empresaFiltroId  = 'todos'; // 'todos' o id de empresa (subcontratista)
   let sedeFiltroId     = 'todos'; // 'todos' o nombre de sede
+  let anioFiltro       = 'todos'; // 'todos' o 'YYYY'
+  let mesFiltro        = 'todos'; // 'todos' o '1'..'12' (sin cero a la izquierda)
+
+  const MESES = [
+    { valor: '1',  nombre: 'Enero' },      { valor: '2',  nombre: 'Febrero' },
+    { valor: '3',  nombre: 'Marzo' },      { valor: '4',  nombre: 'Abril' },
+    { valor: '5',  nombre: 'Mayo' },       { valor: '6',  nombre: 'Junio' },
+    { valor: '7',  nombre: 'Julio' },      { valor: '8',  nombre: 'Agosto' },
+    { valor: '9',  nombre: 'Septiembre' }, { valor: '10', nombre: 'Octubre' },
+    { valor: '11', nombre: 'Noviembre' },  { valor: '12', nombre: 'Diciembre' },
+  ];
 
   let chartPruebas = null;
 
@@ -97,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       poblarFiltroProfesional();
       poblarFiltroEmpresa();
       poblarFiltroSede();
+      poblarFiltroAnioMes();
       renderDashboard();
     } catch (err) {
       console.error('Error cargando dashboard:', err);
@@ -220,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (wrapper) wrapper.style.display = 'none';
       return;
     }
-    if (wrapper) wrapper.style.display = 'flex';
+    if (wrapper) wrapper.style.display = 'block';
 
     // Etiqueta de rol legible
     function labelRol(u) {
@@ -248,7 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function actualizarHintFiltros() {
     const hint = document.getElementById('profFilterHint');
     if (!hint) return;
-    if (profFiltroId === 'todos' && empresaFiltroId === 'todos' && sedeFiltroId === 'todos') {
+    if (profFiltroId === 'todos' && empresaFiltroId === 'todos' && sedeFiltroId === 'todos'
+        && anioFiltro === 'todos' && mesFiltro === 'todos') {
       hint.textContent = `${allClientes.length} trabajadores · ${allEntregas.length} entregas`;
     } else {
       hint.textContent = `${clientesFiltrados().length} trabajadores · ${entregasFiltradas().length} entregas`;
@@ -353,6 +366,41 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboard();
   });
 
+  // ============================================================
+  // FILTRO DE AÑO / MES — sobre la fecha de retroalimentación de la entrega
+  // Rango de años fijo (2026-2030), no depende de los datos cargados.
+  // ============================================================
+  function poblarFiltroAnioMes() {
+    const selectAnio = document.getElementById('filtroAnio');
+    const selectMes  = document.getElementById('filtroMes');
+    if (selectAnio) {
+      const anios = [];
+      for (let a = 2026; a <= 2030; a++) anios.push(a);
+      selectAnio.innerHTML =
+        `<option value="todos">Todos los años</option>` +
+        anios.map(a => `<option value="${a}">${a}</option>`).join('');
+      selectAnio.value = anioFiltro;
+    }
+    if (selectMes) {
+      selectMes.innerHTML =
+        `<option value="todos">Todos los meses</option>` +
+        MESES.map(m => `<option value="${m.valor}">${m.nombre}</option>`).join('');
+      selectMes.value = mesFiltro;
+    }
+  }
+
+  document.getElementById('filtroAnio')?.addEventListener('change', function () {
+    anioFiltro = this.value;
+    actualizarHintFiltros();
+    renderDashboard();
+  });
+
+  document.getElementById('filtroMes')?.addEventListener('change', function () {
+    mesFiltro = this.value;
+    actualizarHintFiltros();
+    renderDashboard();
+  });
+
   // Mapa client_id -> subcontratista_id, usado para filtrar entregas por empresa
   function clienteEmpresaId(clientId) {
     const c = allClientes.find(c => String(c.id) === String(clientId));
@@ -365,7 +413,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return c ? c.sede : null;
   }
 
-  // Devuelve los datos filtrados según el profesional, la empresa y la sede seleccionados
+  // Año/mes de la fecha de retroalimentación de una entrega (string 'YYYY-MM-DD...')
+  function entregaAnio(fecha) {
+    return fecha ? fecha.slice(0, 4) : null;
+  }
+  function entregaMes(fecha) {
+    return fecha ? String(parseInt(fecha.slice(5, 7), 10)) : null;
+  }
+
+  // Devuelve los datos filtrados según profesional, empresa, sede, año y mes
   function entregasFiltradas() {
     let entregas = allEntregas;
     if (profFiltroId !== 'todos') {
@@ -376,6 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (sedeFiltroId !== 'todos') {
       entregas = entregas.filter(e => clienteSede(e.client_id) === sedeFiltroId);
+    }
+    if (anioFiltro !== 'todos') {
+      entregas = entregas.filter(e => entregaAnio(e.fecha_retroalimentacion) === anioFiltro);
+    }
+    if (mesFiltro !== 'todos') {
+      entregas = entregas.filter(e => entregaMes(e.fecha_retroalimentacion) === mesFiltro);
     }
     return entregas;
   }
@@ -680,6 +742,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================================================
+  // LIMPIAR FILTROS — vuelve profesional/empresa/sede/año/mes a "todos"
+  // ============================================================
+  document.getElementById('btnLimpiarFiltros')?.addEventListener('click', () => {
+    profFiltroId    = 'todos';
+    empresaFiltroId = 'todos';
+    sedeFiltroId    = 'todos';
+    anioFiltro      = 'todos';
+    mesFiltro       = 'todos';
+
+    poblarFiltroProfesional();
+    poblarFiltroEmpresa();
+    poblarFiltroSede();
+    poblarFiltroAnioMes();
+    actualizarHintFiltros();
+    renderDashboard();
+  });
+
+  // ============================================================
   // DESCARGUE MASIVO — genera un PDF por cada plantilla diligenciada
   // que cumpla los filtros activos (profesional / empresa / sede) y los
   // empaqueta en un único .zip. La construcción de cada PDF reutiliza el
@@ -740,7 +820,10 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.innerHTML = 'Comprimiendo…';
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-      const hoy = new Date().toISOString().slice(0, 10);
+      // Fecha local del navegador (no UTC) — toISOString() adelanta el día
+      // varias horas antes de medianoche en zonas horarias negativas como Colombia.
+      const ahora = new Date();
+      const hoy = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
       const nombreZip = `Plantillas_Entrega_Resultados_${hoy}.zip`;
 
       const url = URL.createObjectURL(zipBlob);

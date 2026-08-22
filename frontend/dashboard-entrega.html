@@ -52,53 +52,90 @@
       <!-- ── Filtro por profesional ── -->
       <div class="prof-filter-bar" id="filtroProfWrapper">
         <div class="prof-filter-inner">
-          <div class="prof-filter-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
+
+          <!-- Fila 1: profesional / empresa / sede -->
+          <div class="prof-filter-row">
+            <div class="prof-filter-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <span class="prof-filter-label">Ver estadísticas de:</span>
+            <div class="custom-select-wrap">
+              <select id="filtroProfesional" class="prof-select">
+                <option value="todos">Todos los profesionales</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <span class="prof-filter-label">Empresa:</span>
+            <div class="custom-select-wrap">
+              <select id="filtroEmpresa" class="prof-select">
+                <option value="todos">Todas las empresas</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <span class="prof-filter-label">Sede:</span>
+            <div class="custom-select-wrap">
+              <select id="filtroSede" class="prof-select">
+                <option value="todos">Todas las sedes</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
           </div>
-          <span class="prof-filter-label">Ver estadísticas de:</span>
-          <div class="custom-select-wrap">
-            <select id="filtroProfesional" class="prof-select">
-              <option value="todos">Todos los profesionales</option>
-            </select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
+
+          <!-- Fila 2: año / mes + resumen + descargue masivo -->
+          <div class="prof-filter-row">
+            <span class="prof-filter-label">Año:</span>
+            <div class="custom-select-wrap">
+              <select id="filtroAnio" class="prof-select">
+                <option value="todos">Todos los años</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <span class="prof-filter-label">Mes:</span>
+            <div class="custom-select-wrap">
+              <select id="filtroMes" class="prof-select">
+                <option value="todos">Todos los meses</option>
+              </select>
+              <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <span class="prof-filter-hint" id="profFilterHint"></span>
+            <button type="button" class="btn-limpiar-filtros" id="btnLimpiarFiltros" title="Vuelve todos los filtros a su valor por defecto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Limpiar filtros
+            </button>
+            <button type="button" class="btn-descarga-masiva" id="btnDescargaMasiva" title="Descarga en un .zip todas las plantillas que cumplen los filtros activos">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Descargue masivo
+            </button>
           </div>
-          <span class="prof-filter-label">Empresa:</span>
-          <div class="custom-select-wrap">
-            <select id="filtroEmpresa" class="prof-select">
-              <option value="todos">Todas las empresas</option>
-            </select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-          <span class="prof-filter-label">Sede:</span>
-          <div class="custom-select-wrap">
-            <select id="filtroSede" class="prof-select">
-              <option value="todos">Todas las sedes</option>
-            </select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-          <span class="prof-filter-hint" id="profFilterHint"></span>
-          <button type="button" class="btn-descarga-masiva" id="btnDescargaMasiva" title="Descarga en un .zip todas las plantillas que cumplen los filtros activos">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Descargue masivo
-          </button>
+
         </div>
       </div>
 

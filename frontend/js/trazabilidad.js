@@ -308,11 +308,15 @@ function buildMatrizRows(clients, consultas, seguimientos = allSeguimientos) {
       const casoConsultas = (historialCompleto[client.id] || [])
         .filter(c => c.consulta_number === seguimiento.consulta_number);
       const profesionalId = casoConsultas[0]?.profesional_id || client.profesional_id || null;
+      // "Sesiones sugeridas" vive en la tabla consultas (se guarda en la
+      // primera sesión del caso y se replica a todas las del mismo
+      // consulta_number) — el seguimiento hereda el valor de su caso.
+      const consultasSugeridas = casoConsultas.find(c => c.consultas_sugeridas)?.consultas_sugeridas || null;
       rows.push({
         client,
         consulta: null,
         sesionNum: null,
-        seguimiento: { ...seguimiento, profesional_id: profesionalId }
+        seguimiento: { ...seguimiento, profesional_id: profesionalId, consultas_sugeridas: consultasSugeridas }
       });
     });
   });
@@ -521,8 +525,8 @@ function renderRows(rows) {
       horasSesion      = '0';
       horasSeguimiento = String(parseInt(seguimiento.horas_seguimiento) || 1);
 
-      sesionessugeridas = client.consultas_sugeridas
-        ? String(client.consultas_sugeridas)
+      sesionessugeridas = seguimiento.consultas_sugeridas
+        ? String(seguimiento.consultas_sugeridas)
         : '-';
 
       // Observaciones → lo escrito por el profesional en el seguimiento
@@ -555,9 +559,9 @@ function renderRows(rows) {
       // Horas reales de la sesión (campo horas_sesion, por defecto 1)
       horasSesion = String(parseInt(consulta.horas_sesion) || 1);
 
-      // Sesiones sugeridas del cliente
-      sesionessugeridas = client.consultas_sugeridas
-        ? String(client.consultas_sugeridas)
+      // Sesiones sugeridas — se guarda por sesión (tabla consultas), no en el cliente
+      sesionessugeridas = consulta.consultas_sugeridas
+        ? String(consulta.consultas_sugeridas)
         : '-';
 
       // Observaciones → columna1 en la tabla consultas
@@ -985,17 +989,13 @@ function exportarExcel() {
       nombre = `${nombre} - ${relacion}`;
     }
 
-    // Sesiones sugeridas
-    const sesionessugeridas = client.consultas_sugeridas
-      ? String(client.consultas_sugeridas)
-      : '-';
-
     // Campos de la sesión / del seguimiento
     let fechaConsulta = '-';
     let motivoConsulta = '-';
     let numSesion = '-';
     let horasSesion = '-';
     let horasSeguimiento = '-';
+    let sesionessugeridas = '-';
     let observaciones = '-';
     let profesional = '-';
     let modalidad = '-';
@@ -1012,6 +1012,8 @@ function exportarExcel() {
       numSesion        = '0';
       horasSesion      = '0';
       horasSeguimiento = String(parseInt(seguimiento.horas_seguimiento) || 1);
+      // Sesiones sugeridas — heredada del caso (ver buildMatrizRows)
+      sesionessugeridas = seguimiento.consultas_sugeridas ? String(seguimiento.consultas_sugeridas) : '-';
       observaciones    = seguimiento.observaciones_seguimiento || '-';
       profesional      = getNombreProfesional(seguimiento.profesional_id);
       estado           = 'Cerrado';
@@ -1026,6 +1028,8 @@ function exportarExcel() {
       motivoConsulta   = consulta.motivo_consulta || '-';
       numSesion        = sesionNum !== null ? String(sesionNum) : '-';
       horasSesion      = String(parseInt(consulta.horas_sesion) || 1);
+      // Sesiones sugeridas — se guarda por sesión (tabla consultas), no en el cliente
+      sesionessugeridas = consulta.consultas_sugeridas ? String(consulta.consultas_sugeridas) : '-';
       observaciones    = consulta.columna1 || '-';
       modalidad        = consulta.modalidad || '-';
       estado           = consulta.estado || '-';

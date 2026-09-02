@@ -393,9 +393,19 @@
     let sesiones = pool.filter(s => {
       if (!clienteIds.has(s.cliente_id)) return false;
       if (anio || mes) {
-        const f = new Date(s.fecha);
-        if (anio && f.getFullYear() !== anio) return false;
-        if (mes  && f.getMonth() + 1 !== mes)  return false;
+        // Comparar sobre el string de fecha (YYYY-MM-DD) en vez de
+        // new Date().getFullYear()/getMonth(): la BD guarda `fecha` como
+        // DATE (medianoche UTC), y al reconstruirla como Date en el
+        // navegador (Colombia, UTC-5) se reinterpreta como el día
+        // anterior a las 19:00 — desplazando el mes de TODAS las
+        // sesiones un día hacia atrás. El string crudo no sufre ese
+        // desplazamiento.
+        if (!s.fecha) return false;
+        const fStr  = String(s.fecha).split('T')[0];
+        const fAnio = parseInt(fStr.slice(0, 4), 10);
+        const fMes  = parseInt(fStr.slice(5, 7), 10);
+        if (anio && fAnio !== anio) return false;
+        if (mes  && fMes  !== mes)  return false;
       }
       return true;
     });

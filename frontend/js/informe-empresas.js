@@ -526,11 +526,15 @@
     const cardConAdjunto = document.getElementById("cardConAdjunto");
     const cardHorasSeguimiento = document.getElementById("cardHorasSeguimiento");
     const cardTotalHorasAtendidas = document.getElementById("cardTotalHorasAtendidas");
+    const cardHorasSesion = document.getElementById("cardHorasSesion");
     const kpiGrid       = document.querySelector(".kpi-grid");
     if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
     if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
     if (cardHorasSeguimiento) cardHorasSeguimiento.style.display = (esSVE || esEntrega) ? "none" : "";
     if (cardTotalHorasAtendidas) cardTotalHorasAtendidas.style.display = (esSVE || esEntrega) ? "none" : "";
+    // Horas sesión aplica tanto a OP como a SVE (ambas tablas de sesiones
+    // tienen horas_sesion) — solo se oculta en Entrega, igual que "Total de sesiones".
+    if (cardHorasSesion) cardHorasSesion.style.display = esEntrega ? "none" : "";
     if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
     if (cardConAdjunto) cardConAdjunto.style.display = esEntrega ? "" : "none";
     // "Entregas totales" y "Trabajadores atendidos" no se muestran en
@@ -658,6 +662,13 @@
       (sum, s) => sum + (parseInt(s.horas_seguimiento) || 1), 0
     );
 
+    // ── Horas de sesión reales (campo horas_sesion, por defecto 1) ─────
+    // Misma lógica que la columna "Horas Sesión" / stat "Horas Atendidas"
+    // de trazabilidad.html.
+    const totalHorasSesion = sesiones.reduce(
+      (sum, s) => sum + (parseInt(s.horas_sesion) || 1), 0
+    );
+
     // ── Total horas atendidas = Total de sesiones + Horas Seguimiento ──
     const totalHorasAtendidas = totalSesiones + totalHorasSeguimiento;
 
@@ -668,6 +679,7 @@
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
     setText("kpiHorasSeguimiento", totalHorasSeguimiento);
+    setText("kpiHorasSesion",   totalHorasSesion);
     setText("kpiTotalHorasAtendidas", totalHorasAtendidas);
   }
 

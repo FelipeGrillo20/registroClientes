@@ -386,6 +386,7 @@
       color: var(--slate);
     }
     .sedes-table tbody tr:last-child td { border-bottom: none; }
+    .sedes-table tbody tr.totals-row td { background: #ede9fe; border-top: 2px solid var(--indigo); color: var(--slate); }
 
     .badge {
       display: inline-block;
@@ -571,10 +572,10 @@
       <div class="cov-grid" id="rCovGrid"></div>
     </div>
 
-    <!-- ── SECCIÓN: LISTADO DE TRABAJADORES (solo Entrega Individual) ── -->
+    <!-- ── SECCIÓN: LISTADO DE TRABAJADORES ── -->
     <div class="section" id="secListadoTrabajadores" style="display:none;">
       <div class="section-head">
-        <span class="section-num">05</span>
+        <span class="section-num">06</span>
         <span class="section-title">Listado de Trabajadores Atendidos</span>
         <div class="section-line"></div>
       </div>
@@ -584,7 +585,7 @@
     <!-- ── SECCIÓN 5: SEDES ──────────────────────────── -->
     <div class="section" id="secSedes">
       <div class="section-head">
-        <span class="section-num">06</span>
+        <span class="section-num">07</span>
         <span class="section-title">Análisis por Sede</span>
         <div class="section-line"></div>
       </div>
@@ -982,16 +983,20 @@
     });
   }
 
-  // ─── LISTADO DE TRABAJADORES ATENDIDOS (solo Entrega) ──────
+  // ─── LISTADO DE TRABAJADORES ATENDIDOS ──────────────
+  // Entrega Individual: una fila por trabajador con su plantilla/prueba.
+  // Orientación Psicosocial / SVE: una fila por trabajador con el desglose
+  // de los mismos conceptos del Resumen Ejecutivo (sesiones, casos, estado,
+  // confidencialidad, criticidad) — para auditar de dónde salen los totales.
   const secListadoEl = document.getElementById("secListadoTrabajadores");
-  if (d.esEntrega && Array.isArray(d.listadoTrabajadores)) {
+  if (Array.isArray(d.listadoTrabajadores)) {
     if (secListadoEl) secListadoEl.style.display = "";
     const listado = d.listadoTrabajadores;
     const listadoEl = document.getElementById("rListadoTrabajadores");
     if (listadoEl) {
       if (listado.length === 0) {
-        listadoEl.innerHTML = '<div class="empty-state"><p>No hay trabajadores registrados en el periodo seleccionado.</p></div>';
-      } else {
+        listadoEl.innerHTML = '<div class="empty-state"><p>No hay trabajadores atendidos en el periodo seleccionado.</p></div>';
+      } else if (d.esEntrega) {
         let tableHTML = `
           <table class="sedes-table">
             <thead>
@@ -1016,6 +1021,44 @@
               <td>${t.fecha}</td>
             </tr>`;
         });
+        tableHTML += "</tbody></table>";
+        listadoEl.innerHTML = tableHTML;
+      } else {
+        let tableHTML = `
+          <table class="sedes-table">
+            <thead>
+              <tr>
+                <th style="text-align:center">#</th>
+                <th>Trabajador</th>
+                <th style="text-align:center">Sesiones</th>
+                <th style="text-align:center">Casos</th>
+                <th style="text-align:center">Estado</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        let totalSesiones = 0, totalCasos = 0, totalAbiertos = 0, totalCerrados = 0;
+        listado.forEach((t, idx) => {
+          const estadoCls = t.estado === "Abierto" ? "badge-complejo" : t.estado === "Mixto" ? "badge-observ" : "badge-normal";
+          totalSesiones += t.sesiones;
+          totalCasos    += t.casos;
+          if (t.estado === "Abierto") totalAbiertos++;
+          else if (t.estado === "Cerrado") totalCerrados++;
+          tableHTML += `
+            <tr>
+              <td style="text-align:center;color:#94a3b8">${idx + 1}</td>
+              <td><strong>${t.nombre}</strong></td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${t.sesiones}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${t.casos}</td>
+              <td style="text-align:center"><span class="badge ${estadoCls}">${t.estado}</span></td>
+            </tr>`;
+        });
+        tableHTML += `
+            <tr class="totals-row">
+              <td colspan="2"><strong>Total — ${listado.length} trabajador${listado.length === 1 ? "" : "es"}</strong></td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalSesiones}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalCasos}</td>
+              <td style="text-align:center;font-weight:700;white-space:nowrap">${totalAbiertos} Abiertos / ${totalCerrados} Cerrados</td>
+            </tr>`;
         tableHTML += "</tbody></table>";
         listadoEl.innerHTML = tableHTML;
       }

@@ -2042,6 +2042,38 @@
     // Modalidad del filtro para saber qué mostrar en el reporte
     const modalidadFiltroSnap = document.getElementById("filterModalidad").value;
 
+    // Listado de trabajadores atendidos — un renglón por trabajador con el
+    // desglose de los mismos conceptos del Resumen Ejecutivo (sesiones,
+    // casos, estado, confidencialidad, criticidad), para poder ver de dónde
+    // salen los totales agregados de la sección 01.
+    const casosPorClienteSnap = {};
+    casos.forEach(ss => {
+      const clienteId = ss[0]?.cliente_id;
+      if (clienteId == null) return;
+      if (!casosPorClienteSnap[clienteId]) casosPorClienteSnap[clienteId] = [];
+      casosPorClienteSnap[clienteId].push(ss);
+    });
+    const listadoTrabajadores = Array.from(trabConSesion).map(clienteId => {
+      const cliente = rawClients.find(c => c.id === clienteId);
+      const sesionesCliente = sesiones.filter(s => s.cliente_id === clienteId);
+      const casosCliente = casosPorClienteSnap[clienteId] || [];
+      const tieneAbierto = casosCliente.some(ss => ss.some(s => s.estado === "Abierto"));
+      const tieneCerrado = casosCliente.some(ss => !ss.some(s => s.estado === "Abierto"));
+      const estado = tieneAbierto && tieneCerrado ? "Mixto" : tieneAbierto ? "Abierto" : "Cerrado";
+      const confidencial = casosCliente.some(ss => ss.some(s => s.observaciones_confidenciales === true));
+      const critico = casosCliente.some(ss => clasificarCaso(ss) === "critico");
+      return {
+        nombre: cliente?.nombre || "—",
+        cedula: cliente?.cedula || "—",
+        sede: cliente?.sede || "Sin sede",
+        sesiones: sesionesCliente.length,
+        casos: casosCliente.length,
+        estado,
+        confidencial,
+        critico,
+      };
+    }).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
     return {
       fechaGeneracion: new Date().toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"}),
       filtros: {
@@ -2074,6 +2106,7 @@
       cobertura: { unicos, promedio, virtuales, presenciales, masReciente,
         modFrecuente: virtuales >= presenciales ? "Virtual" : "Presencial" },
       sedes: bySedeUnificado,
+      listadoTrabajadores,
     };
   }
 

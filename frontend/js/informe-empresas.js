@@ -40,6 +40,7 @@
   let rawConsultasSve = [];  // sesiones de SVE (/api/consultas-sve)
   let rawMesaTrabajoSve = []; // registros mesa de trabajo SVE (criterio_inclusion)
   let rawEntregas     = [];  // registros de Entrega Individual de Resultados
+  let rawSeguimientos = [];  // seguimientos post-cierre de Orientación Psicosocial
   let empresas        = [];  // catálogo de empresas
   let profesionales   = [];  // catálogo de profesionales + admin
   let charts          = {};  // instancias Chart.js activas
@@ -293,12 +294,13 @@
   // Traemos todo sin filtros de URL. El filtro real se hace localmente
   // en filtrarDatos() usando subcontratista_id, sede, etc.
   async function cargarDatos() {
-    const [resClients, resConsultas, resConsultasSve, resMesa, resEntregas] = await Promise.all([
+    const [resClients, resConsultas, resConsultasSve, resMesa, resEntregas, resSeguimientos] = await Promise.all([
       fetch(`${API}/api/clients`,           { headers: authHeaders() }),
       fetch(`${API}/api/consultas`,         { headers: authHeaders() }),
       fetch(`${API}/api/consultas-sve`,     { headers: authHeaders() }),
       fetch(`${API}/api/mesa-trabajo-sve`,  { headers: authHeaders() }),
       fetch(`${API}/api/entrega-resultados`,{ headers: authHeaders() }),
+      fetch(`${API}/api/seguimientos`,      { headers: authHeaders() }),
     ]);
 
     rawClients        = resClients.ok      ? await resClients.json()      : [];
@@ -306,6 +308,7 @@
     rawConsultasSve   = resConsultasSve.ok ? await resConsultasSve.json() : [];
     rawMesaTrabajoSve = resMesa.ok         ? await resMesa.json()         : [];
     rawEntregas       = resEntregas.ok     ? await resEntregas.json()     : [];
+    rawSeguimientos   = resSeguimientos.ok ? await resSeguimientos.json() : [];
 
     // Normalizar sesiones SVE para que sean compatibles con la lógica existente:
     // - Agregar consulta_number = 1 (SVE no lo tiene, cada registro es independiente)
@@ -392,25 +395,35 @@
     // Filtrar por clienteIds y fecha
     let sesiones = pool.filter(s => {
       if (!clienteIds.has(s.cliente_id)) return false;
-      if (anio || mes) {
-        // Comparar sobre el string de fecha (YYYY-MM-DD) en vez de
-        // new Date().getFullYear()/getMonth(): la BD guarda `fecha` como
-        // DATE (medianoche UTC), y al reconstruirla como Date en el
-        // navegador (Colombia, UTC-5) se reinterpreta como el día
-        // anterior a las 19:00 — desplazando el mes de TODAS las
-        // sesiones un día hacia atrás. El string crudo no sufre ese
-        // desplazamiento.
-        if (!s.fecha) return false;
-        const fStr  = String(s.fecha).split('T')[0];
-        const fAnio = parseInt(fStr.slice(0, 4), 10);
-        const fMes  = parseInt(fStr.slice(5, 7), 10);
-        if (anio && fAnio !== anio) return false;
-        if (mes  && fMes  !== mes)  return false;
-      }
+      if ((anio || mes) && !fechaEnPeriodo(s.fecha, anio, mes)) return false;
       return true;
     });
 
-    return { clientes, sesiones };
+    // Seguimientos post-cierre (solo existen para Orientación Psicosocial)
+    // que pertenezcan a alguno de los clientes filtrados, en el periodo.
+    let seguimientos = rawSeguimientos.filter(sg => {
+      if (!clienteIds.has(sg.cliente_id)) return false;
+      if ((anio || mes) && !fechaEnPeriodo(sg.fecha_seguimiento, anio, mes)) return false;
+      return true;
+    });
+
+    return { clientes, sesiones, seguimientos };
+  }
+
+  // Compara una fecha (string "YYYY-MM-DD" o con hora) contra año/mes sin
+  // pasar por new Date().getFullYear()/getMonth(): la BD guarda `fecha`
+  // como DATE (medianoche UTC), y al reconstruirla como Date en el
+  // navegador (Colombia, UTC-5) se reinterpreta como el día anterior a las
+  // 19:00 — desplazando el mes de TODAS las sesiones un día hacia atrás.
+  // Comparar el string crudo evita ese desplazamiento.
+  function fechaEnPeriodo(fechaStr, anio, mes) {
+    if (!fechaStr) return false;
+    const fStr  = String(fechaStr).split('T')[0];
+    const fAnio = parseInt(fStr.slice(0, 4), 10);
+    const fMes  = parseInt(fStr.slice(5, 7), 10);
+    if (anio && fAnio !== anio) return false;
+    if (mes  && fMes  !== mes)  return false;
+    return true;
   }
 
   // ─── ACTUALIZAR SEDES DISPONIBLES ───────────────────
@@ -483,12 +496,12 @@
       );
       actualizarSedes(clientesFiltradosParaSede);
 
-      const { clientes, sesiones } = filtrarDatos();
-      renderDashboard(clientes, sesiones);
+      const { clientes, sesiones, seguimientos } = filtrarDatos();
+      renderDashboard(clientes, sesiones, seguimientos);
       actualizarTimestamp();
 
       // Guardar snapshot para el informe imprimible
-      lastSnapshot = buildSnapshot(clientes, sesiones);
+      lastSnapshot = buildSnapshot(clientes, sesiones, seguimientos);
     } catch (err) {
       console.error("Error aplicando filtros:", err);
     } finally {
@@ -497,7 +510,7 @@
   }
 
   // ─── RENDER PRINCIPAL ───────────────────────────────
-  function renderDashboard(clientes, sesiones) {
+  function renderDashboard(clientes, sesiones, seguimientos = []) {
     const modalidadFiltro = document.getElementById("filterModalidad").value;
     const esSVE     = modalidadFiltro === "vigilancia";
     const esEntrega = modalidadFiltro === "entrega";
@@ -511,9 +524,11 @@
     const cardSesiones   = document.getElementById("cardSesiones");
     const cardTrabajadores = document.getElementById("cardTrabajadores");
     const cardConAdjunto = document.getElementById("cardConAdjunto");
+    const cardHorasSeguimiento = document.getElementById("cardHorasSeguimiento");
     const kpiGrid       = document.querySelector(".kpi-grid");
     if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
     if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
+    if (cardHorasSeguimiento) cardHorasSeguimiento.style.display = (esSVE || esEntrega) ? "none" : "";
     if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
     if (cardConAdjunto) cardConAdjunto.style.display = esEntrega ? "" : "none";
     // "Entregas totales" y "Trabajadores atendidos" no se muestran en
@@ -553,7 +568,7 @@
     const casos = agruparEnCasos(sesiones);
 
     // ── KPIs
-    renderKPIs(clientes, sesiones, casos);
+    renderKPIs(clientes, sesiones, casos, seguimientos);
 
     // Actualizar título del panel de tendencia según modalidad
     // (modalidadFiltro ya declarado arriba)
@@ -601,7 +616,7 @@
 
   // ── SECCIÓN 1: KPIs ─────────────────────────────────
   // Sesiones y casos ya filtrados por el periodo seleccionado.
-  function renderKPIs(clientes, sesiones, casos) {
+  function renderKPIs(clientes, sesiones, casos, seguimientos = []) {
 
     // ── Trabajadores atendidos ─────────────────────────
     // Únicos con al menos 1 sesión en el periodo.
@@ -636,12 +651,18 @@
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
 
+    // ── Horas de seguimiento post-cierre ───────────────
+    const totalHorasSeguimiento = seguimientos.reduce(
+      (sum, s) => sum + (parseInt(s.horas_seguimiento) || 1), 0
+    );
+
     setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiSesiones",      totalSesiones);
     setText("kpiAbiertos",      casosAbiertos);
     setText("kpiCerrados",      casosCerrados);
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
+    setText("kpiHorasSeguimiento", totalHorasSeguimiento);
   }
 
   // ── Criterios de Inclusión SVE ──────────────────────
@@ -1862,7 +1883,7 @@
   }
 
   // ─── SNAPSHOT PARA INFORME ─────────────────────────
-  function buildSnapshot(clientes, sesiones) {
+  function buildSnapshot(clientes, sesiones, seguimientos = []) {
     if (document.getElementById("filterModalidad").value === "entrega") {
       return buildSnapshotEntrega(clientes, sesiones);
     }
@@ -2084,6 +2105,27 @@
       };
     }).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+    // Horas de seguimiento post-cierre — total y desglose por trabajador
+    const totalHorasSeguimientoSnap = seguimientos.reduce(
+      (sum, s) => sum + (parseInt(s.horas_seguimiento) || 1), 0
+    );
+    const seguimientosPorCliente = {};
+    seguimientos.forEach(sg => {
+      if (!seguimientosPorCliente[sg.cliente_id]) {
+        seguimientosPorCliente[sg.cliente_id] = { cantidad: 0, horas: 0 };
+      }
+      seguimientosPorCliente[sg.cliente_id].cantidad++;
+      seguimientosPorCliente[sg.cliente_id].horas += parseInt(sg.horas_seguimiento) || 1;
+    });
+    const listadoSeguimientos = Object.entries(seguimientosPorCliente).map(([clienteId, info]) => {
+      const cliente = rawClients.find(c => c.id === Number(clienteId));
+      return {
+        nombre:   cliente?.nombre || "—",
+        cantidad: info.cantidad,
+        horas:    info.horas,
+      };
+    }).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
     return {
       fechaGeneracion: new Date().toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"}),
       filtros: {
@@ -2105,6 +2147,7 @@
         cerrados: casosCerradosSnap,
         confidenciales: casosConfi.size,
         criticos,
+        horasSeguimiento: totalHorasSeguimientoSnap,
       },
       vinculos,
       motivos: motivosOrdenados,
@@ -2117,6 +2160,7 @@
         modFrecuente: virtuales >= presenciales ? "Virtual" : "Presencial" },
       sedes: bySedeUnificado,
       listadoTrabajadores,
+      listadoSeguimientos,
     };
   }
 

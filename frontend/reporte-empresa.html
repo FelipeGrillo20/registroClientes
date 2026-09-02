@@ -582,10 +582,20 @@
       <div id="rListadoTrabajadores"></div>
     </div>
 
+    <!-- ── SECCIÓN: SEGUIMIENTOS REGISTRADOS (solo OP) ── -->
+    <div class="section" id="secSeguimientos" style="display:none;">
+      <div class="section-head">
+        <span class="section-num">07</span>
+        <span class="section-title">Seguimientos Registrados</span>
+        <div class="section-line"></div>
+      </div>
+      <div id="rListadoSeguimientos"></div>
+    </div>
+
     <!-- ── SECCIÓN 5: SEDES ──────────────────────────── -->
     <div class="section" id="secSedes">
       <div class="section-head">
-        <span class="section-num">07</span>
+        <span class="section-num">08</span>
         <span class="section-title">Análisis por Sede</span>
         <div class="section-line"></div>
       </div>
@@ -712,10 +722,11 @@
     { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
     { icon: SVG.candadoA, label:"Casos abiertos",         val: d.kpis.abiertos,      cls:"kpi-c3" },
     { icon: SVG.check,    label:"Casos cerrados",         val: d.kpis.cerrados,      cls:"kpi-c6" },
-    // Confidenciales y críticos: solo en OP
+    // Confidenciales, críticos y horas de seguimiento: solo en OP
     ...(!d.esSVE ? [
       { icon: SVG.candadoC, label:"Casos confidenciales", val: d.kpis.confidenciales,cls:"kpi-c4" },
       { icon: SVG.alerta,   label:"Casos críticos",       val: d.kpis.criticos,      cls:"kpi-c5" },
+      { icon: SVG.reingreso,label:"Horas Seguimiento",    val: d.kpis.horasSeguimiento, cls:"kpi-c7" },
     ] : []),
   ];
   const kpiGrid = document.getElementById("rKpiGrid");
@@ -1065,6 +1076,53 @@
     }
   } else if (secListadoEl) {
     secListadoEl.style.display = "none";
+  }
+
+  // ─── SEGUIMIENTOS REGISTRADOS (solo OP) ──────────────
+  const secSeguimientosEl = document.getElementById("secSeguimientos");
+  if (!d.esEntrega && !d.esSVE && Array.isArray(d.listadoSeguimientos)) {
+    if (secSeguimientosEl) secSeguimientosEl.style.display = "";
+    const segListado = d.listadoSeguimientos;
+    const segEl = document.getElementById("rListadoSeguimientos");
+    if (segEl) {
+      if (segListado.length === 0) {
+        segEl.innerHTML = '<div class="empty-state"><p>No hay seguimientos registrados en el periodo seleccionado.</p></div>';
+      } else {
+        let tableHTML = `
+          <table class="sedes-table">
+            <thead>
+              <tr>
+                <th style="text-align:center">#</th>
+                <th>Trabajador</th>
+                <th style="text-align:center">Seguimientos</th>
+                <th style="text-align:center">Horas</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        let totalSeguimientos = 0, totalHorasSeg = 0;
+        segListado.forEach((s, idx) => {
+          totalSeguimientos += s.cantidad;
+          totalHorasSeg     += s.horas;
+          tableHTML += `
+            <tr>
+              <td style="text-align:center;color:#94a3b8">${idx + 1}</td>
+              <td><strong>${s.nombre}</strong></td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${s.cantidad}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${s.horas}</td>
+            </tr>`;
+        });
+        tableHTML += `
+            <tr class="totals-row">
+              <td colspan="2"><strong>Total — ${segListado.length} trabajador${segListado.length === 1 ? "" : "es"}</strong></td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalSeguimientos}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalHorasSeg}</td>
+            </tr>`;
+        tableHTML += "</tbody></table>";
+        segEl.innerHTML = tableHTML;
+      }
+    }
+  } else if (secSeguimientosEl) {
+    secSeguimientosEl.style.display = "none";
   }
 
   // ─── SEDES ──────────────────────────────────────

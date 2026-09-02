@@ -525,10 +525,12 @@
     const cardTrabajadores = document.getElementById("cardTrabajadores");
     const cardConAdjunto = document.getElementById("cardConAdjunto");
     const cardHorasSeguimiento = document.getElementById("cardHorasSeguimiento");
+    const cardTotalHorasAtendidas = document.getElementById("cardTotalHorasAtendidas");
     const kpiGrid       = document.querySelector(".kpi-grid");
     if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
     if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
     if (cardHorasSeguimiento) cardHorasSeguimiento.style.display = (esSVE || esEntrega) ? "none" : "";
+    if (cardTotalHorasAtendidas) cardTotalHorasAtendidas.style.display = (esSVE || esEntrega) ? "none" : "";
     if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
     if (cardConAdjunto) cardConAdjunto.style.display = esEntrega ? "" : "none";
     // "Entregas totales" y "Trabajadores atendidos" no se muestran en
@@ -656,6 +658,9 @@
       (sum, s) => sum + (parseInt(s.horas_seguimiento) || 1), 0
     );
 
+    // ── Total horas atendidas = Total de sesiones + Horas Seguimiento ──
+    const totalHorasAtendidas = totalSesiones + totalHorasSeguimiento;
+
     setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiSesiones",      totalSesiones);
     setText("kpiAbiertos",      casosAbiertos);
@@ -663,6 +668,7 @@
     setText("kpiConfidenciales",casosConfi.size);
     setText("kpiCriticos",      criticos);
     setText("kpiHorasSeguimiento", totalHorasSeguimiento);
+    setText("kpiTotalHorasAtendidas", totalHorasAtendidas);
   }
 
   // ── Criterios de Inclusión SVE ──────────────────────

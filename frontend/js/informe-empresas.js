@@ -669,8 +669,8 @@
       (sum, s) => sum + (parseInt(s.horas_sesion) || 1), 0
     );
 
-    // ── Total horas atendidas = Total de sesiones + Horas Seguimiento ──
-    const totalHorasAtendidas = totalSesiones + totalHorasSeguimiento;
+    // ── Total horas atendidas = Horas sesión + Horas Seguimiento ────────
+    const totalHorasAtendidas = totalHorasSesion + totalHorasSeguimiento;
 
     setText("kpiTrabajadores",  trabConSesion.size);
     setText("kpiSesiones",      totalSesiones);

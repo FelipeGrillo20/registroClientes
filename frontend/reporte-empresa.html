@@ -719,14 +719,22 @@
     { icon: SVG.reingreso,label:"Profesionales activos",           val: d.kpis.profActivos,           cls:"kpi-c7" },
   ] : [
     { icon: SVG.personas, label:"Trabajadores atendidos", val: d.kpis.trabajadores,  cls:"kpi-c1" },
+    // Total horas atendidas: solo en OP (depende de Horas Seguimiento, que no existe en SVE)
+    ...(!d.esSVE ? [
+      { icon: SVG.reingreso,label:"Total horas atendidas", val: d.kpis.horasAtendidas, cls:"kpi-c1" },
+    ] : []),
     { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
+    // Horas Seguimiento: solo en OP
+    ...(!d.esSVE ? [
+      { icon: SVG.reingreso,label:"Horas Seguimiento",    val: d.kpis.horasSeguimiento, cls:"kpi-c6" },
+    ] : []),
+    { icon: SVG.lista,    label:"Horas sesión",           val: d.kpis.horasSesion,   cls:"kpi-c2" },
     { icon: SVG.candadoA, label:"Casos abiertos",         val: d.kpis.abiertos,      cls:"kpi-c3" },
-    { icon: SVG.check,    label:"Casos cerrados",         val: d.kpis.cerrados,      cls:"kpi-c6" },
-    // Confidenciales, críticos y horas de seguimiento: solo en OP
+    { icon: SVG.check,    label:"Casos cerrados",         val: d.kpis.cerrados,      cls:"kpi-c7" },
+    // Confidenciales y críticos: solo en OP
     ...(!d.esSVE ? [
       { icon: SVG.candadoC, label:"Casos confidenciales", val: d.kpis.confidenciales,cls:"kpi-c4" },
       { icon: SVG.alerta,   label:"Casos críticos",       val: d.kpis.criticos,      cls:"kpi-c5" },
-      { icon: SVG.reingreso,label:"Horas Seguimiento",    val: d.kpis.horasSeguimiento, cls:"kpi-c7" },
     ] : []),
   ];
   const kpiGrid = document.getElementById("rKpiGrid");

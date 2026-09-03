@@ -1954,6 +1954,11 @@
     let criticos = 0;
     casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
 
+    // Horas de sesión — misma lógica que renderKPIs
+    const totalHorasSesionSnap = sesiones.reduce(
+      (sum, s) => sum + (parseInt(s.horas_sesion) || 1), 0
+    );
+
     // Estados para gráfica dona (sobre sesiones del periodo)
     let casosAbCount = 0, casosCeCount = 0;
     casos.forEach(ss => {
@@ -2166,6 +2171,8 @@
         confidenciales: casosConfi.size,
         criticos,
         horasSeguimiento: totalHorasSeguimientoSnap,
+        horasSesion: totalHorasSesionSnap,
+        horasAtendidas: totalHorasSesionSnap + totalHorasSeguimientoSnap,
       },
       vinculos,
       motivos: motivosOrdenados,

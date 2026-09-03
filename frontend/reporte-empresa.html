@@ -502,6 +502,8 @@
       <div class="header-date">
         <div class="date-label">Fecha de generación</div>
         <div class="date-value" id="rFecha">—</div>
+        <div class="date-label" style="margin-top:8px;">Generado por</div>
+        <div class="date-value" id="rGeneradoPor">—</div>
       </div>
     </div>
 
@@ -664,6 +666,7 @@
   // ─── CABECERA ────────────────────────────────────
   document.getElementById("rFecha").textContent = d.fechaGeneracion;
   document.getElementById("rFooterFecha").textContent = "Generado: " + d.fechaGeneracion;
+  document.getElementById("rGeneradoPor").textContent = d.generadoPor || "—";
 
   // Eslogan: muestra la modalidad filtrada, o el texto por defecto si no hay filtro
   if (d.filtros.modalidad && d.filtros.modalidad !== "Todas") {

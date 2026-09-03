@@ -106,6 +106,32 @@ exports.getAllSeguimientos = async () => {
 };
 
 // ============================================
+// Obtener los seguimientos de los clientes de un profesional
+// Mismo criterio de propiedad que consultaModel.getConsultasByProfesional:
+// por clients.profesional_id (dueño del trabajador) — la tabla seguimientos
+// no tiene su propio profesional_id.
+// ============================================
+exports.getSeguimientosByProfesional = async (profesionalId) => {
+  const result = await pool.query(
+    `SELECT
+       s.id,
+       s.cliente_id,
+       s.consulta_number,
+       s.fecha_seguimiento,
+       s.observaciones_seguimiento,
+       s.horas_seguimiento,
+       s.created_at,
+       s.updated_at
+     FROM seguimientos s
+     INNER JOIN clients cl ON s.cliente_id = cl.id
+     WHERE cl.profesional_id = $1
+     ORDER BY s.fecha_seguimiento ASC, s.created_at ASC`,
+    [profesionalId]
+  );
+  return result.rows;
+};
+
+// ============================================
 // Verificar que una consulta existe y está cerrada
 // Devuelve true si el par (cliente_id, consulta_number)
 // existe en la tabla consultas con estado 'Cerrado'

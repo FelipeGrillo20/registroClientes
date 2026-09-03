@@ -80,7 +80,11 @@ exports.getSeguimientosByConsulta = async (req, res) => {
 // ============================================
 exports.getAllSeguimientos = async (req, res) => {
   try {
-    const seguimientos = await seguimientoModel.getAllSeguimientos();
+    const userRole = req.user?.rol;
+    const userId = req.user?.id;
+    const seguimientos = userRole === 'admin'
+      ? await seguimientoModel.getAllSeguimientos()
+      : await seguimientoModel.getSeguimientosByProfesional(userId);
     res.json(seguimientos);
   } catch (err) {
     console.error("Error obteniendo todos los seguimientos:", err);

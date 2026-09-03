@@ -6,6 +6,7 @@
   
   // Elementos del DOM - Perfil
   const btnBack = document.getElementById("btnBack");
+  const btnEmpresasProfesional = document.getElementById("btnEmpresasProfesional");
   const avatarImage = document.getElementById("avatarImage");
   const avatarPlaceholder = document.getElementById("avatarPlaceholder");
   const uploadAvatar = document.getElementById("uploadAvatar");
@@ -75,6 +76,12 @@
       }
       // Cargar lista de usuarios
       cargarUsuarios();
+    } else if (userData && userData.rol === 'profesional') {
+      // El admin ya tiene acceso a Informe Empresas en el panel de arriba;
+      // el profesional lo ve aquí, junto al botón "Volver".
+      if (btnEmpresasProfesional) {
+        btnEmpresasProfesional.style.display = 'inline-flex';
+      }
     }
   }
   
@@ -304,6 +311,15 @@
     // ⭐ NUEVO: Botón Informe Empresas (solo admin)
     if (btnEmpresas) {
       btnEmpresas.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = "informe-empresas.html";
+      });
+    }
+
+    // Botón Informe Empresas para profesionales (junto a "Volver")
+    if (btnEmpresasProfesional) {
+      btnEmpresasProfesional.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         window.location.href = "informe-empresas.html";

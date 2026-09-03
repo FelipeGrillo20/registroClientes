@@ -11,9 +11,16 @@
   <div class="profile-container">
     <!-- Botón de regreso -->
     <div id="userInfo" class="user-info-bar"></div>
-    <button class="btn-back" id="btnBack" title="Volver">
-      ← Volver
-    </button>
+    <div class="profile-top-actions">
+      <button class="btn-back" id="btnBack" title="Volver">
+        ← Volver
+      </button>
+      <!-- Solo para profesionales: los admin ya tienen este acceso en el
+           panel de Gestión de Usuarios más abajo -->
+      <button class="btn-back" id="btnEmpresasProfesional" title="Ver Informe de Empresas" style="display:none;">
+        🏢 Informe Empresas
+      </button>
+    </div>
 
     <!-- Tarjeta de perfil -->
     <div class="profile-card">

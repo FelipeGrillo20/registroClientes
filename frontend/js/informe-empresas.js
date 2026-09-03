@@ -45,6 +45,7 @@
   let profesionales   = [];  // catálogo de profesionales + admin
   let charts          = {};  // instancias Chart.js activas
   let lastSnapshot    = null; // snapshot para el informe imprimible
+  let esProfesional   = false; // true si el usuario logueado tiene rol "profesional"
 
   // ─── HELPERS JWT ───────────────────────────────────
   function getToken() {
@@ -58,14 +59,21 @@
 
   // ─── INIT ───────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", async () => {
-    // Verificar que es admin (auth-check.js ya redirige si no hay sesión,
-    // pero aquí protegemos la vista en caso de carga directa)
+    // Admin ve el informe de todas las empresas/profesionales. Profesional
+    // también puede entrar, pero solo ve sus propios trabajadores/sesiones
+    // (el backend ya scoping por profesional_id en cada endpoint) y no ve
+    // el filtro "Profesionales" (no aplica — solo tiene los suyos).
     // El proyecto guarda el usuario bajo la clave "userData" (ver perfil.js)
     const raw = localStorage.getItem("userData");
     const userData = raw ? JSON.parse(raw) : {};
-    if (userData.rol !== "admin") {
+    if (userData.rol !== "admin" && userData.rol !== "profesional") {
       window.location.href = "perfil.html";
       return;
+    }
+    esProfesional = userData.rol === "profesional";
+    if (esProfesional) {
+      const filterGroupProfesional = document.getElementById("filterGroupProfesional");
+      if (filterGroupProfesional) filterGroupProfesional.style.display = "none";
     }
 
     // Botones de navegación
@@ -88,8 +96,9 @@
     // Cargar catálogo empresas
     await cargarEmpresas();
 
-    // Cargar catálogo de profesionales (profesional + admin)
-    await cargarProfesionales();
+    // Cargar catálogo de profesionales (solo admin — GET /api/auth/users
+    // requiere rol admin, y un profesional no necesita este selector).
+    if (!esProfesional) await cargarProfesionales();
 
     // Primera carga
     await aplicarFiltros();
@@ -145,6 +154,30 @@
 
     renderEmpresaOptions(empresasConRegistros, "");
     setupEmpresaBuscador(empresasConRegistros);
+  }
+
+  // Un profesional solo ve, en el filtro Modalidad, las modalidades donde
+  // realmente tiene datos registrados (evita mostrar opciones vacías que no
+  // le aportan nada, ya que solo puede consultar sus propios informes).
+  function actualizarOpcionesModalidad() {
+    const sel = document.getElementById("filterModalidad");
+    if (!sel) return;
+
+    const disponibles = {
+      orientacion: rawConsultas.length    > 0,
+      vigilancia:  rawConsultasSve.length > 0,
+      entrega:     rawEntregas.length     > 0,
+    };
+
+    const actual = sel.value;
+    let html = '<option value="">Todas</option>';
+    if (disponibles.orientacion) html += '<option value="orientacion">Orientación Psicosocial</option>';
+    if (disponibles.vigilancia)  html += '<option value="vigilancia">SVE</option>';
+    if (disponibles.entrega)     html += '<option value="entrega">Entrega Individual de Resultados</option>';
+    sel.innerHTML = html;
+
+    // Si la modalidad que tenía seleccionada ya no está disponible, volver a "Todas"
+    sel.value = (actual === "" || disponibles[actual]) ? actual : "";
   }
 
   // Renderiza las opciones del buscador (con highlight del término buscado).
@@ -487,6 +520,10 @@
       // Poblar el buscador de empresa (solo las que tienen registros)
       // Se llama en cada refresh para reflejar nuevos registros
       poblarSelectEmpresa();
+
+      // Un profesional solo ve las modalidades donde realmente tiene datos
+      // (admin ve siempre las 3, para poder explorar cualquier empresa)
+      if (esProfesional) actualizarOpcionesModalidad();
 
       // Sedes disponibles: solo las que realmente tienen los clientes
       // filtradas ya por la empresa (subcontratista) seleccionada
@@ -2145,7 +2182,13 @@
 
   function abrirInforme() {
     if (!lastSnapshot) return;
-    sessionStorage.setItem("informeSnapshot", JSON.stringify(lastSnapshot));
+    // Profesional que genera el informe (el usuario logueado en este
+    // momento) — se muestra en el encabezado del reporte imprimible, sin
+    // importar si lo está generando para sí mismo o para otra empresa.
+    const rawUser = localStorage.getItem("userData");
+    const userData = rawUser ? JSON.parse(rawUser) : {};
+    const snapshot = { ...lastSnapshot, generadoPor: userData.nombre || null };
+    sessionStorage.setItem("informeSnapshot", JSON.stringify(snapshot));
     window.open("reporte-empresa.html", "_blank");
   }
 

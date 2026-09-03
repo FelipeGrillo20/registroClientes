@@ -95,6 +95,16 @@ body {
   align-items: stretch; /* Cambiado de 'center' a 'stretch' para que los hijos ocupen todo el ancho */
 }
 
+/* Fila con el botón de regreso y (para profesionales) el acceso a Informe Empresas */
+.profile-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  margin-bottom: 15px;
+}
+
 /* Botón de regreso */
 .btn-back {
   background: rgba(255, 255, 255, 0.2);
@@ -106,7 +116,6 @@ body {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 15px;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;

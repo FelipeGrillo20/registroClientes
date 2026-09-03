@@ -355,10 +355,12 @@ window.PlantillaPDF = (function () {
     const marginR = 25;
     const contentW = pageW - marginL - marginR;
 
-    // Logo superior derecho
+    // Logo superior derecho — 45x18mm distorsionaba el PNG real (672x182px,
+    // relación ~3.69:1), estirándolo verticalmente y engordando las letras.
+    // Con el ancho fijo en 45mm, la altura proporcional real es ~12.2mm.
     if (logoBase64) {
       const logoAncho = 45;
-      const logoAlto  = 18;
+      const logoAlto  = 12.2;
       doc.addImage(logoBase64, 'PNG', pageW - marginR - logoAncho, 8, logoAncho, logoAlto);
     } else {
       doc.setFont('helvetica', 'bold');

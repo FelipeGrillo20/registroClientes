@@ -1198,6 +1198,14 @@
             <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
           </tr>`;
       });
+      const totalConsultasSedes = filas.reduce((s, r) => s + r.consultas, 0);
+      const totalSesionesSedes  = filas.reduce((s, r) => s + r.sesiones, 0);
+      tableHTML += `
+          <tr class="totals-row">
+            <td colspan="2"><strong>Total</strong></td>
+            <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalConsultasSedes}</td>
+            <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${totalSesionesSedes}</td>
+          </tr>`;
       tableHTML += "</tbody></table>";
       sedesEl.innerHTML = tableHTML;
     }

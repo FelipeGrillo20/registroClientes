@@ -394,11 +394,15 @@
     .sedes-table tbody tr:last-child td { border-bottom: none; }
     .sedes-table tbody tr.totals-row td { background: #ede9fe; border-top: 2px solid var(--indigo); color: var(--slate); }
     /* Columna Empresa agrupada por rowspan (tabla de Análisis por Sede
-       OP/SVE): tono suave para distinguir el agrupamiento del resto de la fila. */
-    .sedes-table-empresa tbody td:first-child {
-      background: #f8f8fc;
+       OP/SVE): tonos alternados por empresa para que se distinga claramente
+       dónde termina un grupo y empieza el siguiente. Se aplica con una clase
+       explícita (no :first-child) porque, en las filas sin celda de empresa
+       —absorbidas por el rowspan—, :first-child recaería sobre "Sede". */
+    .sedes-table-empresa tbody td.empresa-cell {
       border-right: 1px solid #e0e1f2;
     }
+    .sedes-table-empresa tbody td.empresa-cell-a { background: #f2f1fc; }
+    .sedes-table-empresa tbody td.empresa-cell-b { background: #e6e4f9; }
 
     .badge {
       display: inline-block;
@@ -1184,13 +1188,16 @@
             </tr>
           </thead>
           <tbody>`;
+      let grupoEmpresaIdx = -1;
       filas.forEach((r, idx) => {
         const esNuevaEmpresa = idx === 0 || filas[idx - 1].empresa !== r.empresa;
         tableHTML += `<tr>`;
         if (esNuevaEmpresa) {
+          grupoEmpresaIdx++;
           let rowspan = 1;
           while (idx + rowspan < filas.length && filas[idx + rowspan].empresa === r.empresa) rowspan++;
-          tableHTML += `<td rowspan="${rowspan}"><strong>${r.empresa}</strong></td>`;
+          const tono = grupoEmpresaIdx % 2 === 0 ? "empresa-cell-a" : "empresa-cell-b";
+          tableHTML += `<td class="empresa-cell ${tono}" rowspan="${rowspan}"><strong>${r.empresa}</strong></td>`;
         }
         tableHTML += `
             <td>${r.sede}</td>

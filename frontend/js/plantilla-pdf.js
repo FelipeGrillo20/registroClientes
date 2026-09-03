@@ -188,7 +188,7 @@ window.PlantillaPDF = (function () {
     return resultado;
   }
 
-  function renderParrafoPDF(doc, par, marginL, y, contentW, pageH, resetFont, nuevaPagina) {
+  function renderParrafoPDF(doc, par, marginL, y, contentW, pageH, resetFont) {
     const textoCompleto = par.segmentos.map(s => s.texto).join('');
     if (!textoCompleto.trim()) return y;
 
@@ -199,7 +199,15 @@ window.PlantillaPDF = (function () {
     let charGlobal = 0;
 
     lineas.forEach((lineaTexto, lineaIdx) => {
-      nuevaPagina();
+      // Salto de página propio (no delegado a un callback externo): "y" es
+      // un parámetro LOCAL de esta función. El callback nuevaPaginaSiNecesario
+      // de renderHTMLenPDF cierra sobre SU PROPIA variable "y" —distinta de
+      // esta—, así que llamarlo aquí no detectaba el avance real del cursor
+      // dentro de un párrafo largo: las líneas seguían dibujándose más allá
+      // del margen inferior (hasta salirse de la hoja) porque el chequeo
+      // externo veía siempre el mismo "y" congelado, sin enterarse de los
+      // incrementos locales, hasta que esta función retornaba.
+      if (y > pageH - 55) { doc.addPage(); y = 25; }
       const esUltima = lineaIdx === lineas.length - 1;
 
       resetFont(false, false);
@@ -319,7 +327,7 @@ window.PlantillaPDF = (function () {
         return;
       }
 
-      y = renderParrafoPDF(doc, par, marginL, y, contentW, pageH, resetFont, nuevaPaginaSiNecesario);
+      y = renderParrafoPDF(doc, par, marginL, y, contentW, pageH, resetFont);
     });
 
     return y;

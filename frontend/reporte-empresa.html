@@ -1152,7 +1152,12 @@
     }
   } else {
     // OP / SVE: una fila por Empresa + Sede, solo Consultas y Sesiones.
-    const filas = (d.sedes || []).slice().sort((a, b) => b.sesiones - a.sesiones);
+    // Agrupadas por empresa (la columna Empresa solo se muestra una vez por
+    // grupo, con rowspan) y, dentro de cada empresa, ordenadas por sesiones.
+    const filas = (d.sedes || []).slice().sort((a, b) => {
+      const cmpEmpresa = a.empresa.localeCompare(b.empresa);
+      return cmpEmpresa !== 0 ? cmpEmpresa : b.sesiones - a.sesiones;
+    });
     if (filas.length === 0) {
       sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
     } else {
@@ -1167,10 +1172,15 @@
             </tr>
           </thead>
           <tbody>`;
-      filas.forEach(r => {
+      filas.forEach((r, idx) => {
+        const esNuevaEmpresa = idx === 0 || filas[idx - 1].empresa !== r.empresa;
+        tableHTML += `<tr>`;
+        if (esNuevaEmpresa) {
+          let rowspan = 1;
+          while (idx + rowspan < filas.length && filas[idx + rowspan].empresa === r.empresa) rowspan++;
+          tableHTML += `<td rowspan="${rowspan}"><strong>${r.empresa}</strong></td>`;
+        }
         tableHTML += `
-          <tr>
-            <td><strong>${r.empresa}</strong></td>
             <td>${r.sede}</td>
             <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
             <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>

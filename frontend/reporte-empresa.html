@@ -362,8 +362,12 @@
     /* ── TABLA SEDES ───────────────────────────────── */
     .sedes-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 13px;
+      border: 1px solid #d7dce6;
+      border-radius: 10px;
+      overflow: hidden;
     }
     .sedes-table thead tr {
       background: var(--indigo);
@@ -376,17 +380,25 @@
       font-size: 11px;
       letter-spacing: 0.4px;
       text-transform: uppercase;
+      border-right: 1px solid rgba(255,255,255,0.18);
     }
-    .sedes-table thead th:first-child { border-radius: 8px 0 0 0; }
-    .sedes-table thead th:last-child  { border-radius: 0 8px 0 0; }
-    .sedes-table tbody tr:nth-child(even) { background: var(--bg-soft); }
+    .sedes-table thead th:last-child { border-right: none; }
+    .sedes-table tbody tr:nth-child(even) { background: #f6f7fb; }
     .sedes-table tbody td {
       padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid #e4e8f0;
+      border-right: 1px solid #e4e8f0;
       color: var(--slate);
     }
+    .sedes-table tbody td:last-child { border-right: none; }
     .sedes-table tbody tr:last-child td { border-bottom: none; }
     .sedes-table tbody tr.totals-row td { background: #ede9fe; border-top: 2px solid var(--indigo); color: var(--slate); }
+    /* Columna Empresa agrupada por rowspan (tabla de Análisis por Sede
+       OP/SVE): tono suave para distinguir el agrupamiento del resto de la fila. */
+    .sedes-table-empresa tbody td:first-child {
+      background: #f8f8fc;
+      border-right: 1px solid #e0e1f2;
+    }
 
     .badge {
       display: inline-block;
@@ -1162,7 +1174,7 @@
       sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
     } else {
       let tableHTML = `
-        <table class="sedes-table">
+        <table class="sedes-table sedes-table-empresa">
           <thead>
             <tr>
               <th>Empresa</th>

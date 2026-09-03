@@ -518,33 +518,27 @@
     aplicarEtiquetasModalidad(esEntrega);
 
     // Mostrar/ocultar tarjetas KPI según modalidad
-    const cardConfi      = document.getElementById("cardConfidenciales");
-    const cardCritico    = document.getElementById("cardCriticos");
     const cardProf       = document.getElementById("cardProfesionales");
-    const cardSesiones   = document.getElementById("cardSesiones");
     const cardTrabajadores = document.getElementById("cardTrabajadores");
     const cardConAdjunto = document.getElementById("cardConAdjunto");
-    const cardHorasSeguimiento = document.getElementById("cardHorasSeguimiento");
     const cardTotalHorasAtendidas = document.getElementById("cardTotalHorasAtendidas");
-    const cardHorasSesion = document.getElementById("cardHorasSesion");
+    const cardCasosAbiertos = document.getElementById("cardCasosAbiertos");
+    const cardCasosCerrados = document.getElementById("cardCasosCerrados");
     const kpiGrid       = document.querySelector(".kpi-grid");
-    if (cardConfi)   cardConfi.style.display   = (esSVE || esEntrega) ? "none" : "";
-    if (cardCritico) cardCritico.style.display  = (esSVE || esEntrega) ? "none" : "";
-    if (cardHorasSeguimiento) cardHorasSeguimiento.style.display = (esSVE || esEntrega) ? "none" : "";
-    if (cardTotalHorasAtendidas) cardTotalHorasAtendidas.style.display = (esSVE || esEntrega) ? "none" : "";
-    // Horas sesión aplica tanto a OP como a SVE (ambas tablas de sesiones
-    // tienen horas_sesion) — solo se oculta en Entrega, igual que "Total de sesiones".
-    if (cardHorasSesion) cardHorasSesion.style.display = esEntrega ? "none" : "";
     if (cardProf)    cardProf.style.display     = esEntrega ? "" : "none";
     if (cardConAdjunto) cardConAdjunto.style.display = esEntrega ? "" : "none";
-    // "Entregas totales" y "Trabajadores atendidos" no se muestran en
+    // Compartidas con Entrega ("Entregas individuales" / "Pruebas de
+    // profundidad", ver aplicarEtiquetasModalidad) — ocultas en OP/SVE,
+    // donde el Resumen Ejecutivo solo muestra Trabajadores y Total horas atendidas.
+    if (cardCasosAbiertos) cardCasosAbiertos.style.display = esEntrega ? "" : "none";
+    if (cardCasosCerrados) cardCasosCerrados.style.display = esEntrega ? "" : "none";
+    // "Trabajadores atendidos" y "Total horas atendidas" no se muestran en
     // Entrega — el desglose ya lo dan "Entregas individuales" y
     // "Pruebas de profundidad".
-    if (cardSesiones) cardSesiones.style.display = esEntrega ? "none" : "";
     if (cardTrabajadores) cardTrabajadores.style.display = esEntrega ? "none" : "";
+    if (cardTotalHorasAtendidas) cardTotalHorasAtendidas.style.display = esEntrega ? "none" : "";
     if (kpiGrid) {
-      kpiGrid.classList.remove("kpi-grid-sve", "kpi-grid-entrega");
-      if (esSVE)     kpiGrid.classList.add("kpi-grid-sve");
+      kpiGrid.classList.remove("kpi-grid-entrega");
       if (esEntrega) kpiGrid.classList.add("kpi-grid-entrega");
     }
     // Sección vínculo: solo en Orientación Psicosocial
@@ -622,40 +616,15 @@
 
   // ── SECCIÓN 1: KPIs ─────────────────────────────────
   // Sesiones y casos ya filtrados por el periodo seleccionado.
+  // Resumen Ejecutivo solo muestra 2 tarjetas: Trabajadores atendidos y
+  // Total horas atendidas (Horas sesión + Horas Seguimiento). El resto de
+  // cálculos (casos, confidencialidad, etc.) siguen viviendo en sus propias
+  // secciones (Tendencia, Complejidad, Cobertura), que no dependen de este KPI.
   function renderKPIs(clientes, sesiones, casos, seguimientos = []) {
 
     // ── Trabajadores atendidos ─────────────────────────
     // Únicos con al menos 1 sesión en el periodo.
     const trabConSesion = new Set(sesiones.map(s => s.cliente_id));
-
-    // ── Total sesiones ─────────────────────────────────
-    const totalSesiones = sesiones.length;
-
-    // ── Total consultas ────────────────────────────────
-    // Igual a trabajadores atendidos: cada trabajador con sesión en el periodo = 1 consulta.
-    const totalConsultas = trabConSesion.size;
-
-    // ── Casos abiertos y cerrados ──────────────────────
-    // Misma lógica que la gráfica "Abiertos vs Cerrados" (renderEstados):
-    // sobre casos del periodo — abierto si tiene al menos 1 sesión "Abierto",
-    // cerrado si todas sus sesiones están "Cerrado". Siempre suman = total consultas.
-    let casosAbiertos = 0;
-    let casosCerrados = 0;
-    casos.forEach(ss => {
-      const tieneAbierta = ss.some(s => s.estado === "Abierto");
-      if (tieneAbierta) casosAbiertos++;
-      else casosCerrados++;
-    });
-
-    // ── Casos confidenciales ───────────────────────────
-    const casosConfi = new Set();
-    sesiones.filter(s => s.observaciones_confidenciales === true).forEach(s =>
-      casosConfi.add(`${s.cliente_id}_${s.consulta_number}`)
-    );
-
-    // ── Casos críticos ─────────────────────────────────
-    let criticos = 0;
-    casos.forEach(ss => { if (clasificarCaso(ss) === "critico") criticos++; });
 
     // ── Horas de seguimiento post-cierre ───────────────
     const totalHorasSeguimiento = seguimientos.reduce(
@@ -673,13 +642,6 @@
     const totalHorasAtendidas = totalHorasSesion + totalHorasSeguimiento;
 
     setText("kpiTrabajadores",  trabConSesion.size);
-    setText("kpiSesiones",      totalSesiones);
-    setText("kpiAbiertos",      casosAbiertos);
-    setText("kpiCerrados",      casosCerrados);
-    setText("kpiConfidenciales",casosConfi.size);
-    setText("kpiCriticos",      criticos);
-    setText("kpiHorasSeguimiento", totalHorasSeguimiento);
-    setText("kpiHorasSesion",   totalHorasSesion);
     setText("kpiTotalHorasAtendidas", totalHorasAtendidas);
   }
 
@@ -1516,7 +1478,6 @@
     ).size;
 
     setText("kpiTrabajadores",  trabConEntrega.size);
-    setText("kpiSesiones",      entregas.length);
     setText("kpiAbiertos",      conPlantilla);
     setText("kpiCerrados",      conPruebaSeleccionada);
     setText("kpiConAdjunto",    conArchivoPruebas);

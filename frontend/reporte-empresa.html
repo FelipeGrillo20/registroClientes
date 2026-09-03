@@ -185,11 +185,11 @@
     /* ── KPI GRID ──────────────────────────────────── */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
-    /* SVE: solo 4 KPIs */
-    .kpi-grid-sve { grid-template-columns: repeat(4, 1fr); }
+    /* Entrega: 4 KPIs */
+    .kpi-grid-entrega { grid-template-columns: repeat(4, 1fr); }
     .kpi-card {
       background: var(--bg-soft);
       border: 1px solid var(--border);
@@ -719,23 +719,7 @@
     { icon: SVG.reingreso,label:"Profesionales activos",           val: d.kpis.profActivos,           cls:"kpi-c7" },
   ] : [
     { icon: SVG.personas, label:"Trabajadores atendidos", val: d.kpis.trabajadores,  cls:"kpi-c1" },
-    // Total horas atendidas: solo en OP (depende de Horas Seguimiento, que no existe en SVE)
-    ...(!d.esSVE ? [
-      { icon: SVG.reingreso,label:"Total horas atendidas", val: d.kpis.horasAtendidas, cls:"kpi-c1" },
-    ] : []),
-    { icon: SVG.lista,    label:"Total de sesiones",      val: d.kpis.sesiones,      cls:"kpi-c2" },
-    // Horas Seguimiento: solo en OP
-    ...(!d.esSVE ? [
-      { icon: SVG.reingreso,label:"Horas Seguimiento",    val: d.kpis.horasSeguimiento, cls:"kpi-c6" },
-    ] : []),
-    { icon: SVG.lista,    label:"Horas sesión",           val: d.kpis.horasSesion,   cls:"kpi-c2" },
-    { icon: SVG.candadoA, label:"Casos abiertos",         val: d.kpis.abiertos,      cls:"kpi-c3" },
-    { icon: SVG.check,    label:"Casos cerrados",         val: d.kpis.cerrados,      cls:"kpi-c7" },
-    // Confidenciales y críticos: solo en OP
-    ...(!d.esSVE ? [
-      { icon: SVG.candadoC, label:"Casos confidenciales", val: d.kpis.confidenciales,cls:"kpi-c4" },
-      { icon: SVG.alerta,   label:"Casos críticos",       val: d.kpis.criticos,      cls:"kpi-c5" },
-    ] : []),
+    { icon: SVG.reingreso,label:"Total horas atendidas",  val: d.kpis.horasAtendidas, cls:"kpi-c1" },
   ];
   const kpiGrid = document.getElementById("rKpiGrid");
   kpiDef.forEach(k => {

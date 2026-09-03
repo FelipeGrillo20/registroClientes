@@ -275,12 +275,8 @@ body {
 /* ─── KPI GRID ──────────────────────────────────────── */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-}
-/* SVE: solo 4 tarjetas visibles */
-.kpi-grid.kpi-grid-sve {
-  grid-template-columns: repeat(4, 1fr);
 }
 /* Entrega Individual de Resultados: 4 tarjetas visibles */
 .kpi-grid.kpi-grid-entrega {

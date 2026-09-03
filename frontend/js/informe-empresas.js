@@ -1941,50 +1941,43 @@
       ? new Date(Math.max(...fechas)).toLocaleDateString("es-CO", {day:"2-digit",month:"long",year:"numeric"})
       : "—";
 
-    // Sedes
-    const esSveSnapSedes = document.getElementById("filterModalidad").value === "vigilancia";
-    const bySede = {};
+    // Sedes — agrupadas por Empresa (cliente final / subcontratista del
+    // trabajador, mismo campo que usa el badge de filtro "Empresa" de esta
+    // página) y luego por Sede. Solo Consultas y Sesiones — sin desglose de
+    // complejidad, que ya se ve en la sección 04.
+    function empresaDeClienteSnap(cl) {
+      return cl?.subcontratista_definitivo || cl?.subcontratista_nombre || "Sin empresa";
+    }
+    const bySedeEmpresaSnap = {}; // { [empresa]: { [sede]: {consultas, sesiones} } }
     sesiones.forEach(s => {
       const cl = rawClients.find(c => c.id === s.cliente_id);
       const sede = cl?.sede || "Sin sede";
-      if (!bySede[sede]) {
-        bySede[sede] = esSveSnapSedes
-          ? { consultas: 0, sesiones: 0, Alto: 0, Medio: 0, Bajo: 0 }
-          : { consultas: 0, sesiones: 0, normal: 0, complejo: 0, observacion: 0, critico: 0 };
-      }
-      bySede[sede].sesiones++;
+      const emp  = empresaDeClienteSnap(cl);
+      if (!bySedeEmpresaSnap[emp]) bySedeEmpresaSnap[emp] = {};
+      if (!bySedeEmpresaSnap[emp][sede]) bySedeEmpresaSnap[emp][sede] = { consultas: 0, sesiones: 0 };
+      bySedeEmpresaSnap[emp][sede].sesiones++;
     });
-    // Consultas (casos únicos) por sede — común a ambas modalidades
+    // Consultas (casos únicos) por empresa+sede
     casos.forEach(ss => {
       const cl = rawClients.find(c => c.id === ss[0]?.cliente_id);
       const sede = cl?.sede || "Sin sede";
-      if (bySede[sede]) bySede[sede].consultas++;
+      const emp  = empresaDeClienteSnap(cl);
+      if (bySedeEmpresaSnap[emp] && bySedeEmpresaSnap[emp][sede]) bySedeEmpresaSnap[emp][sede].consultas++;
     });
-    if (esSveSnapSedes) {
-      // SVE: nivel de complejidad (Alto/Medio/Bajo) — el más antiguo por caso
-      const casosEnPeriodoSede = new Set(casos.keys());
-      const casoNivelPorSede = {};
-      rawConsultasSve
-        .filter(s => casosEnPeriodoSede.has(`${s.cliente_id}_${s.consulta_number}`) && s.nivel_complejidad)
-        .forEach(s => {
-          const clave = `${s.cliente_id}_${s.consulta_number}`;
-          const f = new Date(s.fecha);
-          if (!casoNivelPorSede[clave] || f < casoNivelPorSede[clave].fecha) {
-            const cl = rawClients.find(c => c.id === s.cliente_id);
-            casoNivelPorSede[clave] = { nivel: s.nivel_complejidad, sede: cl?.sede || "Sin sede", fecha: f };
-          }
+    // Unificar nombres de sede ("Ciudad" vs "Ciudad - Departamento") dentro
+    // de cada empresa, y aplanar a una lista de filas para la tabla.
+    const sedesFilas = [];
+    Object.keys(bySedeEmpresaSnap).forEach(emp => {
+      const unificado = unificarSedes(bySedeEmpresaSnap[emp]);
+      Object.keys(unificado).forEach(sede => {
+        sedesFilas.push({
+          empresa:   emp,
+          sede,
+          consultas: unificado[sede].consultas,
+          sesiones:  unificado[sede].sesiones,
         });
-      Object.values(casoNivelPorSede).forEach(({ nivel, sede }) => {
-        if (bySede[sede] && bySede[sede][nivel] !== undefined) bySede[sede][nivel]++;
       });
-    } else {
-      casos.forEach(ss => {
-        const cl = rawClients.find(c => c.id === ss[0]?.cliente_id);
-        const sede = cl?.sede || "Sin sede";
-        if (bySede[sede]) bySede[sede][clasificarCaso(ss)]++;
-      });
-    }
-    const bySedeUnificado = unificarSedes(bySede);
+    });
 
     const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -2144,7 +2137,7 @@
       complejidad: comp,
       cobertura: { unicos, promedio, virtuales, presenciales, masReciente,
         modFrecuente: virtuales >= presenciales ? "Virtual" : "Presencial" },
-      sedes: bySedeUnificado,
+      sedes: sedesFilas,
       listadoTrabajadores,
       listadoSeguimientos,
     };

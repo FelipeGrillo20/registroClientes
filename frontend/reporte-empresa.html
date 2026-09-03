@@ -1118,95 +1118,67 @@
   }
 
   // ─── SEDES ──────────────────────────────────────
-  const sedes = d.sedes;
-  const sedeSortKey = d.esEntrega ? "total" : "sesiones";
-  const sedeKeys = Object.keys(sedes).sort((a,b) => sedes[b][sedeSortKey] - sedes[a][sedeSortKey]);
   const sedesEl = document.getElementById("rSedesContent");
 
-  if (sedeKeys.length === 0) {
-    sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
-  } else if (d.esEntrega) {
-    let tableHTML = `
-      <table class="sedes-table">
-        <thead>
+  if (d.esEntrega) {
+    const sedes = d.sedes;
+    const sedeKeys = Object.keys(sedes).sort((a,b) => sedes[b].total - sedes[a].total);
+    if (sedeKeys.length === 0) {
+      sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
+    } else {
+      let tableHTML = `
+        <table class="sedes-table">
+          <thead>
+            <tr>
+              <th>Sede</th>
+              <th style="text-align:center">Entregas</th>
+              <th style="text-align:center">Con seguimiento</th>
+              <th style="text-align:center">Sin seguimiento</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      sedeKeys.forEach(s => {
+        const r = sedes[s];
+        tableHTML += `
           <tr>
-            <th>Sede</th>
-            <th style="text-align:center">Entregas</th>
-            <th style="text-align:center">Con seguimiento</th>
-            <th style="text-align:center">Sin seguimiento</th>
-          </tr>
-        </thead>
-        <tbody>`;
-    sedeKeys.forEach(s => {
-      const r = sedes[s];
-      tableHTML += `
-        <tr>
-          <td><strong>${s}</strong></td>
-          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.total}</td>
-          <td style="text-align:center"><span class="badge badge-normal">${r.conSeguimiento}</span></td>
-          <td style="text-align:center"><span class="badge badge-complejo">${r.sinSeguimiento}</span></td>
-        </tr>`;
-    });
-    tableHTML += "</tbody></table>";
-    sedesEl.innerHTML = tableHTML;
-  } else if (d.esSVE) {
-    let tableHTML = `
-      <table class="sedes-table">
-        <thead>
-          <tr>
-            <th>Sede</th>
-            <th style="text-align:center">Consultas</th>
-            <th style="text-align:center">Sesiones</th>
-            <th style="text-align:center">Alto</th>
-            <th style="text-align:center">Medio</th>
-            <th style="text-align:center">Bajo</th>
-          </tr>
-        </thead>
-        <tbody>`;
-    sedeKeys.forEach(s => {
-      const r = sedes[s];
-      tableHTML += `
-        <tr>
-          <td><strong>${s}</strong></td>
-          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
-          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
-          <td style="text-align:center"><span class="badge badge-critico">${r.Alto}</span></td>
-          <td style="text-align:center"><span class="badge badge-complejo">${r.Medio}</span></td>
-          <td style="text-align:center"><span class="badge badge-normal">${r.Bajo}</span></td>
-        </tr>`;
-    });
-    tableHTML += "</tbody></table>";
-    sedesEl.innerHTML = tableHTML;
+            <td><strong>${s}</strong></td>
+            <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.total}</td>
+            <td style="text-align:center"><span class="badge badge-normal">${r.conSeguimiento}</span></td>
+            <td style="text-align:center"><span class="badge badge-complejo">${r.sinSeguimiento}</span></td>
+          </tr>`;
+      });
+      tableHTML += "</tbody></table>";
+      sedesEl.innerHTML = tableHTML;
+    }
   } else {
-    let tableHTML = `
-      <table class="sedes-table">
-        <thead>
+    // OP / SVE: una fila por Empresa + Sede, solo Consultas y Sesiones.
+    const filas = (d.sedes || []).slice().sort((a, b) => b.sesiones - a.sesiones);
+    if (filas.length === 0) {
+      sedesEl.innerHTML = '<div class="empty-state"><p>No hay datos de sedes para el periodo seleccionado.</p></div>';
+    } else {
+      let tableHTML = `
+        <table class="sedes-table">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Sede</th>
+              <th style="text-align:center">Consultas</th>
+              <th style="text-align:center">Sesiones</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      filas.forEach(r => {
+        tableHTML += `
           <tr>
-            <th>Sede</th>
-            <th style="text-align:center">Consultas</th>
-            <th style="text-align:center">Sesiones</th>
-            <th style="text-align:center">Normal</th>
-            <th style="text-align:center">Complejo</th>
-            <th style="text-align:center">En observación</th>
-            <th style="text-align:center">Crítico</th>
-          </tr>
-        </thead>
-        <tbody>`;
-    sedeKeys.forEach(s => {
-      const r = sedes[s];
-      tableHTML += `
-        <tr>
-          <td><strong>${s}</strong></td>
-          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
-          <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
-          <td style="text-align:center"><span class="badge badge-normal">${r.normal}</span></td>
-          <td style="text-align:center"><span class="badge badge-complejo">${r.complejo}</span></td>
-          <td style="text-align:center"><span class="badge badge-observ">${r.observacion}</span></td>
-          <td style="text-align:center"><span class="badge badge-critico">${r.critico}</span></td>
-        </tr>`;
-    });
-    tableHTML += "</tbody></table>";
-    sedesEl.innerHTML = tableHTML;
+            <td><strong>${r.empresa}</strong></td>
+            <td>${r.sede}</td>
+            <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.consultas}</td>
+            <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:500">${r.sesiones}</td>
+          </tr>`;
+      });
+      tableHTML += "</tbody></table>";
+      sedesEl.innerHTML = tableHTML;
+    }
   }
 
   // ─── TOOLTIP STYLE ──────────────────────────────

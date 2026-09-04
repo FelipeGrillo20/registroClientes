@@ -268,6 +268,34 @@
        de .charts-row (~230px disponibles). */
     .chart-wrap-sm { width: 210px; height: 155px; }
 
+    /* Leyenda propia en grilla de 2 columnas (reemplaza la leyenda
+       automática de Chart.js en Vínculo y Complejidad): con 2 elementos
+       quedan uno al lado del otro, con 4 quedan 2 arriba y 2 abajo —
+       Chart.js por sí solo solo garantiza "una fila por elemento" o
+       envolver por ancho disponible, no una grilla fija. */
+    .mini-legend-grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      justify-content: center;
+      column-gap: 24px;
+      row-gap: 6px;
+      margin-top: 12px;
+    }
+    .mini-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--slate-m);
+      white-space: nowrap;
+    }
+    .mini-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* ── Tabla vínculo (reporte) ── */
     #rTablaVinculo { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
     .rep-vinculo-row {
@@ -568,6 +596,7 @@
         <div class="chart-box">
           <div class="chart-label">Distribución por vínculo</div>
           <div class="chart-wrap chart-wrap-sm"><canvas id="rChartVinculo"></canvas></div>
+          <div class="mini-legend-grid2" id="rMiniLegendVinculo"></div>
         </div>
         <div class="chart-box">
           <div class="chart-label">Detalle</div>
@@ -586,6 +615,7 @@
         <div class="chart-box">
           <div class="chart-label" id="rTituloComplejidadChart">Distribución de casos</div>
           <div class="chart-wrap"><canvas id="rChartComp"></canvas></div>
+          <div class="mini-legend-grid2" id="rMiniLegendComp"></div>
         </div>
         <div class="comp-legend" id="rCompLegend"></div>
       </div>
@@ -910,11 +940,28 @@
         options: {
           responsive: true, maintainAspectRatio: false, cutout: "62%",
           plugins: {
-            legend: { position:"bottom", labels:{ font:{size:11}, padding:10, boxWidth:12 } },
+            // Leyenda propia en grilla (#rMiniLegendVinculo) en vez de la
+            // automática de Chart.js — así "Trabajador" y "Familiar
+            // Trabajador" quedan uno al lado del otro, garantizado.
+            legend: { display: false },
             tooltip: tooltipStyle()
           }
         }
       }));
+    }
+
+    // Mini-leyenda en grilla, debajo de la dona
+    const miniLegendV = document.getElementById("rMiniLegendVinculo");
+    if (miniLegendV) {
+      const itemsV = [
+        { label: "Trabajador",          count: vinc.trabajadores, color: "#4f46e5" },
+        { label: "Familiar Trabajador", count: vinc.familiares,   color: "#0d9488" },
+      ];
+      miniLegendV.innerHTML = itemsV.map(it => `
+        <span class="mini-legend-item">
+          <span class="mini-legend-dot" style="background:${it.color}"></span>
+          ${it.label} (${it.count} — ${vincPct(it.count)}%)
+        </span>`).join("");
     }
 
     // Tabla de detalle
@@ -956,11 +1003,27 @@
       options: {
         responsive:true, maintainAspectRatio:false, cutout:"62%",
         plugins: {
-          legend:{ position:"bottom", labels:{font:{size:11},padding:10,boxWidth:12} },
+          // Leyenda propia en grilla (#rMiniLegendComp) en vez de la
+          // automática de Chart.js: con 4 elementos (caso OP) quedan 2
+          // arriba y 2 abajo, garantizado.
+          legend: { display: false },
           tooltip: tooltipStyle()
         }
       }
     }));
+
+    const miniLegendC = document.getElementById("rMiniLegendComp");
+    if (miniLegendC) {
+      miniLegendC.innerHTML = items.map((i, idx) => {
+        const pct = total > 0 ? Math.round(i.count/total*100) : 0;
+        return `
+          <span class="mini-legend-item">
+            <span class="mini-legend-dot" style="background:${colors[idx]}"></span>
+            ${i.name} (${i.count} — ${pct}%)
+          </span>`;
+      }).join("");
+    }
+
     const legend = document.getElementById("rCompLegend");
     legend.innerHTML = "";
     items.forEach((i, idx) => {

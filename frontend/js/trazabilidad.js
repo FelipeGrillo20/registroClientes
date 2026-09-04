@@ -978,7 +978,13 @@ function exportarExcel() {
     // Vínculo, Sede, Nombre, Cédula
     const vinculo = client.vinculo || '-';
     const sede    = client.sede    || '-';
-    const cedula  = String(client.cedula || '-');
+    // Como number cuando es puramente numérica (caso normal) para que Excel
+    // la trate como número real y no como texto; si trae letras (p. ej.
+    // cédulas de extranjería con prefijo) se deja como texto tal cual.
+    const cedulaRaw = client.cedula;
+    const cedula = cedulaRaw && /^\d+$/.test(String(cedulaRaw).trim())
+      ? Number(cedulaRaw)
+      : (cedulaRaw || '-');
 
     // Nombre: si es Familiar Trabajador, incluir info del trabajador relacionado
     let nombre = client.nombre || '-';
@@ -1009,11 +1015,11 @@ function exportarExcel() {
           .reverse()
           .join('/');
       }
-      numSesion        = '0';
-      horasSesion      = '0';
-      horasSeguimiento = String(parseInt(seguimiento.horas_seguimiento) || 1);
+      numSesion        = 0;
+      horasSesion      = 0;
+      horasSeguimiento = parseInt(seguimiento.horas_seguimiento) || 1;
       // Sesiones sugeridas — heredada del caso (ver buildMatrizRows)
-      sesionessugeridas = seguimiento.consultas_sugeridas ? String(seguimiento.consultas_sugeridas) : '-';
+      sesionessugeridas = seguimiento.consultas_sugeridas ? parseInt(seguimiento.consultas_sugeridas) : '-';
       observaciones    = seguimiento.observaciones_seguimiento || '-';
       profesional      = getNombreProfesional(seguimiento.profesional_id);
       estado           = 'Cerrado';
@@ -1026,10 +1032,10 @@ function exportarExcel() {
       .join('/');
       }
       motivoConsulta   = consulta.motivo_consulta || '-';
-      numSesion        = sesionNum !== null ? String(sesionNum) : '-';
-      horasSesion      = String(parseInt(consulta.horas_sesion) || 1);
+      numSesion        = sesionNum !== null ? sesionNum : '-';
+      horasSesion      = parseInt(consulta.horas_sesion) || 1;
       // Sesiones sugeridas — se guarda por sesión (tabla consultas), no en el cliente
-      sesionessugeridas = consulta.consultas_sugeridas ? String(consulta.consultas_sugeridas) : '-';
+      sesionessugeridas = consulta.consultas_sugeridas ? parseInt(consulta.consultas_sugeridas) : '-';
       observaciones    = consulta.columna1 || '-';
       modalidad        = consulta.modalidad || '-';
       estado           = consulta.estado || '-';

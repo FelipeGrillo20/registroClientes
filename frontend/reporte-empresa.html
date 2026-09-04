@@ -254,8 +254,19 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .chart-wrap { position: relative; width: 100%; height: 170px; }
-    .chart-wrap-sm { height: 155px; }
+    /* Medidas fijas y cuadradas (no % de ancho): así, sin importar cuánto
+       crezca .chart-box (columnas de grid variables), la caja del canvas
+       nunca deja de ser un cuadrado perfecto y la dona se mantiene circular
+       — un ancho fluido con alto fijo la deformaba en óvalo al imprimir. */
+    .chart-wrap { position: relative; width: 170px; height: 170px; margin: 0 auto; }
+    /* Más ancha que alta a propósito: Chart.js reserva el espacio de la
+       leyenda inferior aparte del área del arco (que sigue usando el menor
+       de los dos lados disponibles), así que ensanchar aquí no deforma el
+       círculo — solo le da a las leyendas "Abiertas"/"Cerradas" (y
+       "Trabajador"/"Familiar Trabajador") el ancho que necesitan para no
+       partirse en dos líneas. Cabe con margen en la columna angosta (1fr)
+       de .charts-row (~230px disponibles). */
+    .chart-wrap-sm { width: 210px; height: 155px; }
 
     /* ── Tabla vínculo (reporte) ── */
     #rTablaVinculo { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
@@ -654,6 +665,21 @@
   Chart.defaults.borderColor = "#e2e8f0";
   Chart.defaults.font.family = "'DM Sans', sans-serif";
 
+  // Chart.js dibuja cada gráfica dona sobre el tamaño de su canvas EN EL
+  // MOMENTO en que se crea (pantalla). Al pasar a modo impresión/PDF el
+  // layout puede cambiar de ancho, pero el canvas no se vuelve a medir por
+  // su cuenta — el navegador entonces estira ese mismo bitmap para llenar
+  // la caja impresa, y el círculo se ve alargado. Guardamos cada instancia
+  // para forzar un chart.resize() justo antes de imprimir (y al volver de
+  // la vista de impresión, para que en pantalla se vea igual de bien).
+  const chartInstances = [];
+  window.addEventListener('beforeprint', () => {
+    chartInstances.forEach(c => c && c.resize());
+  });
+  window.addEventListener('afterprint', () => {
+    chartInstances.forEach(c => c && c.resize());
+  });
+
   const raw = sessionStorage.getItem("informeSnapshot");
   if (!raw) {
     document.getElementById("reportBody").innerHTML =
@@ -825,7 +851,7 @@
   const pA = tot > 0 ? Math.round(ab/tot*100) : 0;
   const pC = tot > 0 ? Math.round(ce/tot*100) : 0;
   const ctxE = document.getElementById("rChartEstados").getContext("2d");
-  new Chart(ctxE, {
+  chartInstances.push(new Chart(ctxE, {
     type: "doughnut",
     data: {
       labels: [`${estadosLabels[0]} (${ab} — ${pA}%)`, `${estadosLabels[1]} (${ce} — ${pC}%)`],
@@ -844,7 +870,7 @@
         }}
       }
     }
-  });
+  }));
 
   // ─── VÍNCULO (solo OP) ─────────────────────────────
   const secVinculoEl = document.getElementById("secVinculo");
@@ -868,7 +894,7 @@
     // Gráfica dona
     const ctxV = document.getElementById("rChartVinculo");
     if (ctxV) {
-      new Chart(ctxV.getContext("2d"), {
+      chartInstances.push(new Chart(ctxV.getContext("2d"), {
         type: "doughnut",
         data: {
           labels: [
@@ -888,7 +914,7 @@
             tooltip: tooltipStyle()
           }
         }
-      });
+      }));
     }
 
     // Tabla de detalle
@@ -921,7 +947,7 @@
   function renderCompRep(items, colors) {
     const total = items.reduce((s, i) => s + i.count, 0);
     const ctxC = document.getElementById("rChartComp").getContext("2d");
-    new Chart(ctxC, {
+    chartInstances.push(new Chart(ctxC, {
       type: "doughnut",
       data: {
         labels: items.map(i => `${i.name} (${i.count} — ${total>0?Math.round(i.count/total*100):0}%)`),
@@ -934,7 +960,7 @@
           tooltip: tooltipStyle()
         }
       }
-    });
+    }));
     const legend = document.getElementById("rCompLegend");
     legend.innerHTML = "";
     items.forEach((i, idx) => {

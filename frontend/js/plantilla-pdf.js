@@ -80,7 +80,7 @@ window.PlantillaPDF = (function () {
   // ============================================================
   const PDF_FONT_SIZE = 11;
   const PDF_LINE_H    = 6.5;
-  const PDF_BLANK_H   = 5.5;
+  const PDF_PARA_GAP  = 2.2; // separación entre párrafos consecutivos (un "Enter")
   const PDF_COLOR     = [50, 50, 50];
 
   function construirMapaSegmentos(segmentos) {
@@ -131,22 +131,78 @@ window.PlantillaPDF = (function () {
     return segs;
   }
 
+  // Bloques que el editor (o un pegado externo) usa como "un párrafo".
+  const TAGS_BLOQUE = ['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+
   function extraerParrafos(editorEl) {
     const resultado = [];
 
-    function procesarNodo(nodo, fmtPadre) {
+    // El navegador no siempre envuelve cada párrafo en su propio <div>/<p>:
+    // la primera línea escrita (antes del primer "Enter"), o texto pegado
+    // desde otra fuente, suelen quedar como nodos de texto/negrita/cursiva
+    // SUELTOS directamente bajo el editor. Antes, cada uno de esos nodos
+    // sueltos se procesaba como un "párrafo" independiente, así que un
+    // texto como "Hola **mundo**" (negrita a mitad de frase) se partía en
+    // 3 líneas separadas en el PDF. Acá se van acumulando en un buffer y
+    // solo se cierran como un párrafo cuando aparece un bloque real o un
+    // salto de línea explícito.
+    let bufferSegmentos = [];
+
+    function flushBuffer() {
+      if (bufferSegmentos.length === 0) return;
+      const texto = bufferSegmentos.map(s => s.texto).join('');
+      if (texto.trim()) {
+        resultado.push({ texto, align: 'justify', segmentos: bufferSegmentos, esBr: false, esLista: false });
+      }
+      bufferSegmentos = [];
+    }
+
+    // Marca "línea en blanco" (separación de párrafo) — colapsando
+    // cualquier secuencia de varias seguidas (doble/triple "Enter", o
+    // varios <br>/párrafos vacíos de un texto pegado) en una sola, para
+    // que nunca quede más de un espacio de separación de más.
+    function pushBlankMarker() {
+      const ultima = resultado[resultado.length - 1];
+      if (!ultima || !ultima.esBr) resultado.push({ esBr: true, texto: '' });
+    }
+
+    // Acumula texto/formato "inline" (texto suelto, <b>/<strong>/<i>/<em>/
+    // <u>/<span>, etc.) en bufferSegmentos. Un <br>, o un salto de línea
+    // "crudo" (\n) dentro del propio texto —común en pegados de texto
+    // plano que el navegador no convirtió en <br>/<div>—, cierra el
+    // párrafo acumulado hasta ese punto.
+    function acumularInline(nodo, fmt) {
       if (nodo.nodeType === Node.TEXT_NODE) {
-        const txt = nodo.textContent;
-        if (txt) resultado.push({ texto: txt, align: 'justify', segmentos: [{ ...fmtPadre, texto: txt }], esBr: false, esLista: false });
+        const partes = nodo.textContent.split(/\n+/);
+        partes.forEach((parte, i) => {
+          if (parte) bufferSegmentos.push({ ...fmt, texto: parte });
+          if (i < partes.length - 1) { flushBuffer(); pushBlankMarker(); }
+        });
+        return;
+      }
+      if (nodo.nodeType !== Node.ELEMENT_NODE) return;
+      const tag = nodo.tagName.toLowerCase();
+      if (tag === 'br') { flushBuffer(); pushBlankMarker(); return; }
+      const est = nodo.style;
+      const bold      = fmt.bold      || tag === 'b' || tag === 'strong' || est.fontWeight === 'bold';
+      const italic    = fmt.italic    || tag === 'i' || tag === 'em'     || est.fontStyle === 'italic';
+      const underline = fmt.underline || tag === 'u' || (est.textDecoration && est.textDecoration.includes('underline'));
+      nodo.childNodes.forEach(hijo => acumularInline(hijo, { bold, italic, underline }));
+    }
+
+    function procesarNodo(nodo) {
+      if (nodo.nodeType === Node.TEXT_NODE) {
+        acumularInline(nodo, { bold: false, italic: false, underline: false });
         return;
       }
       if (nodo.nodeType !== Node.ELEMENT_NODE) return;
 
       const tag = nodo.tagName.toLowerCase();
 
-      if (tag === 'br') { resultado.push({ esBr: true, texto: '' }); return; }
+      if (tag === 'br') { flushBuffer(); pushBlankMarker(); return; }
 
       if (tag === 'ul' || tag === 'ol') {
+        flushBuffer();
         let contador = 1;
         nodo.querySelectorAll(':scope > li').forEach(li => {
           const viñeta = tag === 'ol' ? `${contador++}.` : '•';
@@ -164,27 +220,31 @@ window.PlantillaPDF = (function () {
         return;
       }
 
-      if (['div','p','h1','h2','h3','h4','h5','h6'].includes(tag)) {
+      if (TAGS_BLOQUE.includes(tag)) {
+        flushBuffer();
+
         // Si el div contiene una lista anidada, procesarla directamente
         const listaAnidada = nodo.querySelector('ul, ol');
         if (listaAnidada) {
-          // Procesar los hijos para llegar a la lista
-          nodo.childNodes.forEach(hijo => procesarNodo(hijo, fmtPadre));
+          nodo.childNodes.forEach(procesarNodo);
           return;
         }
 
-        const align = detectarAlign(nodo);
         const textoPlano = nodo.innerText || nodo.textContent || '';
-        if (!textoPlano.trim()) { resultado.push({ esBr: true, texto: '' }); return; }
-        const segs = extraerSegmentosInline(nodo, { bold: false, italic: false, underline: false });
+        if (!textoPlano.trim()) { pushBlankMarker(); return; }
+        const align = detectarAlign(nodo);
+        const segs  = extraerSegmentosInline(nodo, { bold: false, italic: false, underline: false });
         resultado.push({ texto: segs.map(s => s.texto).join(''), align, segmentos: segs, esBr: false, esLista: false });
         return;
       }
 
-      nodo.childNodes.forEach(hijo => procesarNodo(hijo, fmtPadre));
+      // Cualquier otro tag fuera de un bloque (span suelto, etc.): se
+      // acumula como parte del párrafo corriente, no como uno nuevo.
+      acumularInline(nodo, { bold: false, italic: false, underline: false });
     }
 
-    editorEl.childNodes.forEach(n => procesarNodo(n, { bold: false, italic: false, underline: false }));
+    editorEl.childNodes.forEach(procesarNodo);
+    flushBuffer(); // por si el editor termina con texto suelto sin cerrar
     return resultado;
   }
 
@@ -271,7 +331,12 @@ window.PlantillaPDF = (function () {
       nuevaPaginaSiNecesario();
 
       if (par.esBr || par.texto.trim() === '') {
-        y += PDF_BLANK_H;
+        // No suma espacio propio: cada párrafo real ya deja su separación
+        // (PDF_PARA_GAP) al terminar de dibujarse. Si sumara algo aquí
+        // también, un "doble Enter" quedaría con el doble de espacio que
+        // uno solo — y ya llegan colapsadas a un único marcador por
+        // extraerParrafos(), así que "un Enter" y "varios Enter seguidos"
+        // se ven exactamente igual.
         return;
       }
 
@@ -328,6 +393,7 @@ window.PlantillaPDF = (function () {
       }
 
       y = renderParrafoPDF(doc, par, marginL, y, contentW, pageH, resetFont);
+      y += PDF_PARA_GAP;
     });
 
     return y;

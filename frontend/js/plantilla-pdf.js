@@ -223,9 +223,18 @@ window.PlantillaPDF = (function () {
       if (TAGS_BLOQUE.includes(tag)) {
         flushBuffer();
 
-        // Si el div contiene una lista anidada, procesarla directamente
-        const listaAnidada = nodo.querySelector('ul, ol');
-        if (listaAnidada) {
+        // Si el bloque envuelve OTROS bloques o una lista, no es un párrafo
+        // en sí mismo — es un contenedor — y hay que entrar a sus hijos en
+        // vez de aplanarlo como un único párrafo. Esto pasa, por ejemplo,
+        // al usar el botón "Justificar" de la barra de herramientas sobre
+        // varios párrafos ya escritos: Chrome envuelve TODO en un
+        // <div style="text-align:justify"> que contiene los <div> de cada
+        // párrafo ADENTRO (anidados), no al lado. Antes solo se revisaba
+        // si había una lista anidada; con texto normal, ese div contenedor
+        // se procesaba entero con extraerSegmentosInline(), que no respeta
+        // los <div>/<br> internos y pega todos los párrafos en uno solo.
+        const tieneBloqueAnidado = nodo.querySelector(TAGS_BLOQUE.join(',') + ', ul, ol');
+        if (tieneBloqueAnidado) {
           nodo.childNodes.forEach(procesarNodo);
           return;
         }

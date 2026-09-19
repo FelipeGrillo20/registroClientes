@@ -988,6 +988,16 @@ body {
   background: white;
 }
 
+/* Al fusionar dos párrafos con "Backspace" al inicio de uno, Chrome a
+   veces deja un <span style="font-size: 0.93em;"> vacío o envolvente como
+   residuo de la fusión — casualmente el mismo valor que el font-size base
+   del editor de arriba. Anidado dentro de ese 0.93em ya existente, el
+   tamaño se compone (0.93 × 0.93 ≈ 0.86 del tamaño real) y el texto se ve
+   ligeramente más chico, aunque no afecta el PDF (que usa un tamaño fijo,
+   sin leer el font-size del HTML). Se fuerza a heredar siempre el tamaño
+   real del contenedor, ignorando cualquier font-size residual como ese. */
+.editor-content * { font-size: inherit !important; }
+
 .editor-content::-webkit-scrollbar { width: 5px; }
 .editor-content::-webkit-scrollbar-track { background: #f0f0f5; }
 .editor-content::-webkit-scrollbar-thumb { background: #c5cbda; border-radius: 3px; }
